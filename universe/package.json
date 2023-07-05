@@ -1,0 +1,31 @@
+{
+  "name": "com.nostr.universe",
+  "displayName": "Nostr Universe",
+  "version": "1.0.0",
+  "description": "Nostr Universe app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ecosystem:cordova"
+  ],
+  "author": "Apache Cordova Team",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "cordova-android": "^12.0.0",
+    "cordova-plugin-device": "^2.1.0",
+    "cordova-plugin-inappbrowser": "^5.0.0",
+    "nostr-cordova-plugin-secure-key": "github:nostrband/nostr-keystore-cordova-plugin"
+  },
+  "cordova": {
+    "platforms": [
+      "android"
+    ],
+    "plugins": {
+      "cordova-plugin-device": {},
+      "nostr-keystore-cordova-plugin": {},
+      "cordova-plugin-inappbrowser": {}
+    }
+  }
+}
