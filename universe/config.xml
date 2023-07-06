@@ -8,5 +8,6 @@
     <content src="index.html" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
+    <access origin="*" />
     <icon src='www/img/ico.png' />
 </widget>
