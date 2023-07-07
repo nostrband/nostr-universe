@@ -5,9 +5,10 @@
    <author email="artur.briugeman@gmail.com" href="https://nostr.band/">
         Nostr.Band Team
     </author>
+    <access origin="*" />
     <content src="index.html" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
-    <access origin="*" />
+    <allow-navigation href="https://*/*" />
     <icon src='www/img/ico.png' />
 </widget>
