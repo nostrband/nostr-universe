@@ -11,10 +11,9 @@ const App = () => {
       console.log("DGFDGFDGDFGDF1")
     });*/
 
-    //webkit.messageHandlers.cordova_iab.postMessage(stringifiedMessageObj);"
 
     let NostrKeyStore = {
-      getPublicKey: function () {
+      getPublicKey: async function () {
         return new Promise((resolve, reject) => {
           cordova.plugins.NostrKeyStore.getPublicKey(function (res) {
             resolve(res.pubKey.replaceAll("\"", ""))
@@ -50,24 +49,52 @@ const App = () => {
 
 
 
-    ref.addEventListener('loadstop', () => {
+    ref.addEventListener('loadstop', async (event) => {
+      // ref.executeScript({
+      //   code: utilsText + '; ' + utilsText1 + '; ' + utilsText2 + '; ' + utilsText3 + '; ' + utilsText4 + '; let NostrKeyStore = { getPublicKey: function () {return new Promise((resolve, reject) => { cordova.plugins.NostrKeyStore.getPublicKey( function (res) { resolve(res.pubKey.replaceAll("\\"", "")); console.log(`key`); },  function (error) {reject(error)})})}, signEvent: function (msg) {return new Promise((resolve, reject) => {cordova.plugins.NostrKeyStore.signEvent(function (res) {resolve(res)}, function (error) {reject(error)}, msg)})}}; window.nostr = NostrKeyStore;'
+      // }, function () {
+      //   console.log('script injected');
+      // });
       ref.executeScript({
-        code: utilsText + '; ' + utilsText1 + '; ' + utilsText2 + '; ' + utilsText3 + '; ' + utilsText4 +'; let NostrKeyStore = { getPublicKey: function () { return new Promise((resolve, reject) => { cordova.plugins.NostrKeyStore.getPublicKey( function (res) { resolve(res.pubKey.replaceAll("\\"", "")) },  function (error) {reject(error)})})}, signEvent: function (msg) {return new Promise((resolve, reject) => {cordova.plugins.NostrKeyStore.signEvent(function (res) {resolve(res)}, function (error) {reject(error)}, msg)})}}; window.nostr = NostrKeyStore;'
+        code: 'let NostrKeyStore = { getPublicKey: function () {webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify({my_message: "this is the message"}));}, signEvent: function (msg) {return new Promise((resolve, reject) => {cordova.plugins.NostrKeyStore.signEvent(function (res) {resolve(res)}, function (error) {reject(error)}, msg)})}}; window.nostr = NostrKeyStore;'
       }, function () {
         console.log('script injected');
       });
+
       console.log("DGFDGFDGDFGDFloadstop2")
     });
 
-    ref.show();
+    // ref.show();
+    ref.addEventListener('message', async (params) => {
+      console.log('start getPublicKey')
+
+      if (params.data.my_message === 'this is the message') {
+
+        let publicKey = await window.nostr.getPublicKey()
+
+        // ref.executeScript({
+        //   code: "\
+        //   var message = '2ab0beeb48b98962edaed475c83305d2f5af5baec07f0c1291379a3703672634';\
+        //   var messageObj = {my_message: message};\
+        //   var stringifiedMessageObj = JSON.stringify(messageObj);\
+        //   webkit.messageHandlers.cordova_iab.postMessage(stringifiedMessageObj);"
+        // },
+        //   function () {
+        //     console.log('script injected1111');
+        //   })
+      }
+
+      console.log("message received: " + JSON.stringify(params.data))
+    })
 
   }
 
-    function executeScriptCallBack(obj) {
-        console.log("DGFDGFDGDFGDFloadstop3")
-      console.log(JSON.stringify(obj))
-        console.log("DGFDGFDGDFGDFloadstop4")
-    }
+  function executeScriptCallBack(obj) {
+    console.log("DGFDGFDGDFGDFloadstop3")
+    console.log(JSON.stringify(obj))
+    console.log("DGFDGFDGDFGDFloadstop4")
+  }
+
 
 
   return (

@@ -25,5 +25,12 @@ function onDeviceReady() {
   window.ref = cordova.InAppBrowser;
 
   console.log('Device is ready');
+  // this.inAppBrowserRef.on('message').subscribe((event) => {
+  //   console.log(' postmessage received')
+  //   if (event.data.message) {
+  //     console.log(postObject.data.message)
+  //   }
+
+  // })
 }
 

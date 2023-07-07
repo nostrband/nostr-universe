@@ -25,4 +25,5 @@ function onDeviceReady() {
   window.ref = cordova.InAppBrowser;
 
   console.log('Device is ready');
+
 }
