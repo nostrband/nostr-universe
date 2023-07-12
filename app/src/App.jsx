@@ -7,35 +7,31 @@ const App = () => {
 
     ref.addEventListener('loadstop', async () => {
 
-      function methodGetPublicKey() {
+      function startMethod(msg) {
         const id = Date.now().toString();
         window.nostrCordovaPlugin.requests[id] = {};
+        let method = '';
+        let params = '';
+
+        if (msg) {
+          method = "signEvent"
+          params = msg;
+        } else {
+          method = "getPublicKey"
+        }
 
         return new Promise(function (ok, err) {
           window.nostrCordovaPlugin.requests[id] = {
             res: ok,
             rej: err
           }
-          webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify({ method: "getPublicKey", id: id }));
+          webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify({ method, id, params }));
         });
-      };
-
-      function methodSignEvent(msg) {
-        const id = Date.now().toString();
-        window.nostrCordovaPlugin.requests[id] = {};
-
-        return new Promise(function (ok, err) {
-          window.nostrCordovaPlugin.requests[id] = {
-            res: ok,
-            rej: err
-          }
-          webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify({ method: "signEvent", id: id, msg }));
-        });
-      };
+      }
 
       ref.executeScript({
         code: `window.nostrCordovaPlugin = { requests: {} }; 
-        const nostrKey = {getPublicKey: ${methodGetPublicKey}, signEvent: ${methodSignEvent}}; 
+        const nostrKey = {getPublicKey: ${startMethod}, signEvent: ${startMethod}}; 
         window.nostr = nostrKey;`
       }, function () {
         console.log('script injected window nostr');
@@ -44,42 +40,25 @@ const App = () => {
 
 
     ref.addEventListener('message', async (params) => {
-      if (params.data.method === 'getPublicKey') {
-        const id = params.data.id.toString()
-        const reply = await window.nostr.getPublicKey();
-        const jsonReply = JSON.stringify(reply);
-        const err = new Error("New error");
-        const code = `const req = window.nostrCordovaPlugin.requests[${id}]; 
-        if (${jsonReply}) {
-          req.res(${jsonReply}); 
-        } else {
-          req.rej(${JSON.stringify(err)});
-        };
-        delete window.nostrCordovaPlugin.requests[${id}];
-        `;
+      const id = params.data.id.toString();
+      const method = params.data.method;
+      const err = new Error(`New error in ${method} method`);
 
-        ref.executeScript({ code }, function () {
-          console.log('script injected publicKey');
-        });
-      }
+      const reply = await window.nostr[method](params.data.params);
+      const jsonReply = JSON.stringify(reply);
 
-      if (params.data.method === 'signEvent') {
-        const id = params.data.id.toString()
-        const event = await window.nostr.signEvent(params.data.msg);
-        const jsonEvent = JSON.stringify(event);
-        const err = new Error("New error");
-        const code = `const req = window.nostrCordovaPlugin.requests[${id}]; 
-        if (${jsonEvent}) {
-          req.res(${jsonEvent}); 
-        } else {
-          req.rej(${JSON.stringify(err)});
-        };
-        delete window.nostrCordovaPlugin.requests[${id}];`;
+      const code = `const req = window.nostrCordovaPlugin.requests[${id}]; 
+      if (${jsonReply}) {
+        req.res(${jsonReply}); 
+      } else {
+        req.rej(${JSON.stringify(err)});
+      };
+      delete window.nostrCordovaPlugin.requests[${id}];
+      `;
 
-        ref.executeScript({ code }, function () {
-          console.log('script injected signEvent');
-        });
-      }
+      ref.executeScript({ code }, function () {
+        console.log(`script injected ${method}`);
+      });
 
       console.log("message received: " + JSON.stringify(params.data))
     })
