@@ -5,30 +5,79 @@ const App = () => {
   const open = async (url) => {
     var ref = cordova.InAppBrowser.open(url, '_blank', 'location=yes');
 
-    ref.addEventListener('loadstop', async (event) => {
+    ref.addEventListener('loadstop', async () => {
+
+      function methodGetPublicKey() {
+        const id = Date.now().toString();
+        window.nostrCordovaPlugin.requests[id] = {};
+
+        return new Promise(function (ok, err) {
+          window.nostrCordovaPlugin.requests[id] = {
+            res: ok,
+            rej: err
+          }
+          webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify({ method: "getPublicKey", id: id }));
+        });
+      };
+
+      function methodSignEvent(msg) {
+        const id = Date.now().toString();
+        window.nostrCordovaPlugin.requests[id] = {};
+
+        return new Promise(function (ok, err) {
+          window.nostrCordovaPlugin.requests[id] = {
+            res: ok,
+            rej: err
+          }
+          webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify({ method: "signEvent", id: id, msg }));
+        });
+      };
 
       ref.executeScript({
-        code: 'window.localStorage.setItem("nostrPluginResponse", ""); let startDateNostrPluginResponse = Date.now(); let timeoutNostrPluginResponse = 100000; let NostrKeyStore = { getPublicKey: function () {webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify({my_message: "this is the message"})); return new Promise(waitForFoo);}, signEvent: function (msg) {return new Promise((resolve, reject) => {cordova.plugins.NostrKeyStore.signEvent(function (res) {resolve(res)}, function (error) {reject(error)}, msg)})}}; window.nostr = NostrKeyStore; console.log("BEFORE"); function waitForFoo(resolve, reject) { let nostrPluginResponse = window.localStorage.getItem("nostrPluginResponse"); console.log(nostrPluginResponse); if (nostrPluginResponse !== "") {console.log("nostrPluginResponse is empty"); resolve(nostrPluginResponse);} else if (timeoutNostrPluginResponse && (Date.now() - startDateNostrPluginResponse) >= timeoutNostrPluginResponse) { console.log("nostrPluginResponse rejected"); reject(new Error("timeout"));} else { console.log("nostrPluginResponse new timeOut"); setTimeout(waitForFoo.bind(this, resolve, reject), 1000);}}'
+        code: `window.nostrCordovaPlugin = { requests: {} }; 
+        const nostrKey = {getPublicKey: ${methodGetPublicKey}, signEvent: ${methodSignEvent}}; 
+        window.nostr = nostrKey;`
       }, function () {
         console.log('script injected window nostr');
       });
     });
 
+
     ref.addEventListener('message', async (params) => {
-      console.log('start getPublicKey')
+      if (params.data.method === 'getPublicKey') {
+        const id = params.data.id.toString()
+        const reply = await window.nostr.getPublicKey();
+        const jsonReply = JSON.stringify(reply);
+        const err = new Error("New error");
+        const code = `const req = window.nostrCordovaPlugin.requests[${id}]; 
+        if (${jsonReply}) {
+          req.res(${jsonReply}); 
+        } else {
+          req.rej(${JSON.stringify(err)});
+        };
+        delete window.nostrCordovaPlugin.requests[${id}];
+        `;
 
-      if (params.data.my_message === 'this is the message') {
-
-        let publicKey = await window.nostr.getPublicKey()
-        publicKey = publicKey.replaceAll("\"", "")
-
-        console.log('publicKey from plugin ' + publicKey);
-        let script = 'console.log(window.localStorage.getItem("nostrPluginResponse") + " firstNostrPluginResponse"); window.localStorage.setItem("nostrPluginResponse", "' + publicKey + '"); console.log(window.localStorage.getItem("nostrPluginResponse") + " secondNostrPluginResponse");'
-        console.log('script ' + script);
-        ref.executeScript({
-          code: script
-        }, function () {
+        ref.executeScript({ code }, function () {
           console.log('script injected publicKey');
+        });
+      }
+
+      if (params.data.method === 'signEvent') {
+        const id = params.data.id.toString()
+        const event = await window.nostr.signEvent(params.data.msg);
+        const jsonEvent = JSON.stringify(event);
+        const err = new Error("New error");
+        const code = `const req = window.nostrCordovaPlugin.requests[${id}]; 
+        if (${jsonEvent}) {
+          req.res(${jsonEvent}); 
+        } else {
+          req.rej(${JSON.stringify(err)});
+        };
+        delete window.nostrCordovaPlugin.requests[${id}];`;
+
+        ref.executeScript({ code }, function () {
+          console.log('script injected signEvent');
         });
       }
 
