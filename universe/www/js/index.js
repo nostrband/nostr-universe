@@ -17,20 +17,12 @@
  * under the License.
  */
 
+
 // Wait for the deviceready event before using any of Cordova's device APIs.
 // See https://cordova.apache.org/docs/en/latest/cordova/events/events.html#deviceready
-document.addEventListener('deviceready', onDeviceReady, false);
+document.addEventListener("deviceready", onDeviceReady, false)
 
 function onDeviceReady() {
-  window.ref = cordova.InAppBrowser;
-
-  console.log('Device is ready');
-  // this.inAppBrowserRef.on('message').subscribe((event) => {
-  //   console.log(' postmessage received')
-  //   if (event.data.message) {
-  //     console.log(postObject.data.message)
-  //   }
-
-  // })
+  console.log('device ready');
 }
 

@@ -35,3 +35,9 @@
   touch-action: manipulation; 
   vertical-align: top;
 }
+
+.key {
+  word-wrap: break-word;
+  width: 80vw;
+  margin-bottom: 20px;
+}

@@ -1,6 +1,18 @@
+import { nip19 } from 'nostr-tools';
+import { useEffect, useState } from 'react';
 import './App.css';
 
 const App = () => {
+  const [npub, setNpub] = useState('');
+  const storage = window.localStorage;
+
+  useEffect(() => {
+    const key = storage.getItem('npub');
+
+    if (key) {
+      setNpub(key.replace(/"/g, ''))
+    }
+  }, [])
 
   const open = async (url) => {
     var ref = cordova.InAppBrowser.open(url, '_blank', 'location=yes');
@@ -43,8 +55,12 @@ const App = () => {
       const id = params.data.id.toString();
       const method = params.data.method;
       const err = new Error(`New error in ${method} method`);
-
       const reply = await window.nostr[method](params.data.params);
+      if (method === 'getPublicKey') {
+        let npub = nip19.npubEncode(reply);
+        storage.setItem('npub', JSON.stringify(npub));
+        setNpub(npub.replace(/"/g, ''))
+      }
       const jsonReply = JSON.stringify(reply);
 
       const code = `const req = window.nostrCordovaPlugin.requests[${id}]; 
@@ -68,6 +84,7 @@ const App = () => {
   return (
     <div className="App">
       <header className="App-header">
+        {npub && <div className='key'>Key: {npub}</div>}
         <button className='btn' id='button1' onClick={() => open('https://nostr.band/')}
         >
           Go to https://nostr.band/
