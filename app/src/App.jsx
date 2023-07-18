@@ -1,15 +1,16 @@
 import { nip19 } from 'nostr-tools';
 import { useEffect, useRef, useState } from 'react';
+import Button from 'react-bootstrap/Button';
+import Dropdown from 'react-bootstrap/Dropdown';
 import './App.css';
 
 import { AiOutlineClose, AiOutlineSearch } from "react-icons/ai";
 import { BiSolidPencil } from "react-icons/bi";
-import { IoMdArrowDropdown } from "react-icons/io";
+import { BsFillPersonFill } from "react-icons/bs";
 import { MdOutlineDone } from "react-icons/md";
 
 import { Modal } from './components/ModalWindow';
 import { IconBtn } from './components/iconBtn';
-import avatar from './icons/avatar.png';
 import coracleIcon from './icons/coracle.png';
 import irisIcon from './icons/iris.png';
 import nostrIcon from './icons/nb.png';
@@ -26,7 +27,6 @@ const apps = [{ title: 'Nostr', img: nostrIcon, link: 'https://nostr.band/' },
 
 const App = () => {
   const [npub, setNpub] = useState('');
-  const [isOpenKeysList, setIsOpenKeysList] = useState(false);
   const [modalActive, setModalActive] = useState(false);
   const [keys, setKeys] = useState();
   const [openKey, setOpenKey] = useState();
@@ -60,20 +60,16 @@ const App = () => {
         if (keys.length) {
           setKeys(keys)
         }
-      } else {
-        setNpub('Key is not chosen')
       }
-      // }
-      console.log(JSON.stringify(list))
     }
   }, [])
-  const openListKeys = async () => {
-    setIsOpenKeysList((prev) => !prev)
-  }
 
   const addKey = async () => {
     const key = await promiseAddKey();
+    const list = await getListKeys();
+
     if (key) {
+      console.log('addKey', JSON.stringify(key))
       const list = await getListKeys();
       if (list.currentAlias) {
         const currentKey = nip19.npubEncode(list.currentAlias).replace(/"/g, '');
@@ -83,7 +79,6 @@ const App = () => {
         }
         const keys = Object.keys(list).filter((key) => key !== 'currentAlias');
         if (keys.length) {
-          // const infoKeys = keys.map((key) => nip19.npubEncode(key).replace(/"/g, ''))
           setKeys(keys)
         }
       }
@@ -96,9 +91,11 @@ const App = () => {
     return new Promise((resolve, reject) => {
       cordova.plugins.NostrKeyStore.addKey(
         function (res) {
+          console.log('res', JSON.stringify(res))
           resolve(res)
         },
         function (error) {
+          console.log('err', JSON.stringify(error))
           reject(error)
         }
       )
@@ -178,25 +175,49 @@ const App = () => {
   }
 
   async function copyKey() {
-    const text = list[openKey].publicKey
-
-    await cordova.plugins.clipboard.copy(text, (val) => {
-      console.log('I success', val)
-    }, () => {
-      console.log('I err')
-    });
+    const text = nip19.npubEncode(list[openKey].publicKey);
+    cordova.plugins.clipboard.copy(text, (val) => alert(val));
   }
 
   const showKey = async () => {
     const key = await promiseShowKey({ publicKey: openKey })
-    console.log(JSON.stringify(key))
   }
 
   function promiseShowKey(msg) {
     return new Promise((resolve, reject) => {
       cordova.plugins.NostrKeyStore.showKey(
         function (res) {
-          console.log(JSON.stringify(res), 'I work')
+          resolve(res)
+        },
+        function (error) {
+          reject(error)
+        },
+        msg
+      )
+    })
+  }
+
+  const selectKey = async (ind) => {
+    const key = keys[ind];
+    const res = await promiseSelectKey({ publicKey: key })
+    if (res) {
+      if (list.currentAlias) {
+        const currentKey = nip19.npubEncode(res.currentAlias).replace(/"/g, '');
+        setNpub(currentKey);
+        setList(res);
+        const keys = Object.keys(res).filter((key) => key !== 'currentAlias');
+        if (keys.length) {
+          setKeys(keys)
+        }
+      }
+    }
+
+  }
+
+  function promiseSelectKey(msg) {
+    return new Promise((resolve, reject) => {
+      cordova.plugins.NostrKeyStore.selectKey(
+        function (res) {
           resolve(res)
         },
         function (error) {
@@ -208,11 +229,9 @@ const App = () => {
   }
 
   const editKey = async () => {
-    console.log('value', ref.current.value)
     const keysList = await promiseEditKey({ publicKey: openKey, name: ref.current.value })
 
     if (keysList) {
-
       setList(keysList);
       const keys = Object.keys(keysList).filter((key) => key !== 'currentAlias');
       if (keys.length) {
@@ -225,7 +244,6 @@ const App = () => {
     return new Promise((resolve, reject) => {
       cordova.plugins.NostrKeyStore.editKey(
         function (res) {
-          console.log(JSON.stringify(res), 'I work')
           resolve(res)
         },
         function (error) {
@@ -236,48 +254,58 @@ const App = () => {
     })
   }
 
-  const submit = (ev) => {
-    ev.preventDefault();
-    console.log(ev.target.search.value)
-  }
 
   return (
     <>
-      <header className="header">
-        <img src={avatar} alt='avatar image' className='iconImg' />
-        <div className='keyInfo'>
-          <div className='key'>{npub}</div>
-          <button className='dropDown' onClick={openListKeys}>
-            <IoMdArrowDropdown color='white' size={24} className='iconDropDown' />
-          </button>
-        </div>
-        <div className={isOpenKeysList ? 'keysList isOpen' : 'keysList'}>
-          <ul className='list'>
-            {keys && keys.length && keys.map((key) => nip19.npubEncode(key).replace(/"/g, '')).map((key, ind) => {
-              return (<li className='listItem itemKey' key={key}>
-                <img src={avatar} alt='avatar image' className='iconImg' />
-                <div className='key'>{key}</div>
-                <button className='editBtn' data-key={ind} onClick={(ev) => editBtnClick(ev)}>
-                  <BiSolidPencil color='white' size={20} className='iconDropDown' />
-                </button>
-              </li>)
-            }
-            )
-            }
+      <style type="text/css">
+        {`
+    .btn-primary {
+      --bs-btn-bg: none;
+      --bs-btn-active-bg: none;
+      --bs-btn-border-color: none;
+      --bs-btn-hover-bg: none;
+      --bs-btn-hover-border-color: none;
+      --bs-btn-focus-shadow-rgb: 60,153,110;
+      --bs-btn-disabled-bg: none;
+      --bs-btn-disabled-border-color: none;
+      font-size: 1.5rem;
+    }
+    .dropdown-menu {
+      --bs-dropdown-link-active-bg: none;
+      --bs-dropdown-min-width: 80vw;
+    }
+    `}
+      </style>
+      <header className="container d-flex align-items-center justify-content-between" style={{ padding: '10px' }}>
+        <BsFillPersonFill color='white' size={35} />
+        <Dropdown data-bs-theme="dark"
+          drop='down-centered'>
+          <Dropdown.Toggle id="dropdown-basic"
+          >
+            {npub ? npub.substring(0, 10) + "..." + npub.substring(59) : 'Key is not chosen'}
+          </Dropdown.Toggle>
 
-            <li className='listItem btn'>
-              <button className='addBtn' onClick={addKey}>
-                + Add keys
-              </button>
-            </li>
-          </ul>
-        </div>
+          <Dropdown.Menu>
+            {keys && keys.length && keys.map((key) => nip19.npubEncode(key).replace(/"/g, '')).map((key, ind) => {
+              return (<Dropdown.Item href={`#/${key + 1}`} className='d-flex align-items-center gap-4'>
+                <BsFillPersonFill color='white' size={35} />
+                <div className='fs-3 text-white flex-grow-1' onClick={() => selectKey(ind)}>{key.substring(0, 10) + "..." + key.substring(59)}</div>
+                <div onClick={editBtnClick} data-key={ind}>
+                  <BiSolidPencil color='white' size={26} className=' pe-none ' />
+                </div>
+              </Dropdown.Item>)
+            })}
+            {keys && <Dropdown.Divider />}
+            <Dropdown.Item href="#/action-15" className=' d-flex justify-content-center  '>
+              <Button variant="secondary" size="lg" onClick={addKey}>+ Add keys</Button>
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+
+        <AiOutlineSearch color='white' size={35} onClick={() => console.log('search')} />
       </header>
+      <hr className='m-0' />
       <div className="wrapper">
-        <form className='form' onSubmit={(ev) => submit(ev)}>
-          <input className='input' name='search' type="search" placeholder="Search..." />
-          <button className="button" type='submit'><AiOutlineSearch color='gray' size={20} className='iconDropDown' /></button>
-        </form>
         <section className='section'>
           <h3>Apps</h3>
           <div className='contentWrapper'>
@@ -289,16 +317,14 @@ const App = () => {
         {modalActive && (<div>
           <div className='modalTitle'>
             <h2>Edit key</h2>
-            <button className='dropDown' onClick={() => setModalActive(false)}>
-              <AiOutlineClose color='white' size={24} className='iconDropDown' />
-            </button>
+            <AiOutlineClose color='white' size={30} onClick={() => setModalActive(false)} />
           </div>
           <div className='modalKey'>
             {nip19.npubEncode(list[openKey].publicKey).replace(/"/g, '')}
           </div>
           <div className='modalBtnWrapper'>
-            <button className='addBtn' onClick={copyKey}>Copy</button>
-            <button className='addBtn' onClick={showKey}>Show secret</button>
+            <Button variant="secondary" size="lg" onClick={copyKey}>Copy</Button>
+            <Button variant="secondary" size="lg" onClick={showKey}>Show secret</Button>
           </div>
           <div>
             <h2 className='modalTitle'>Attributes</h2>

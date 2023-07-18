@@ -13,21 +13,6 @@ body {
   padding: 10px 15px;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  max-width: 100vw;
-  justify-content: space-between;
-  border-bottom: solid 2px grey;
-  padding: 10px 15px;
-  position: relative;
-}
-
-.key {
-  word-wrap: break-word;
-  width: 60vw;
-}
-
 .section {
   display: flex;
   flex-direction: column;
@@ -41,16 +26,6 @@ body {
   padding-bottom: 10px;
   display: flex;
   gap: 20px;
-}
-
-::-webkit-scrollbar {
-   height: 4px;
-   scroll-behavior: smooth;
-}
-
-::-webkit-scrollbar-thumb {
-  border-radius: 0;
-  background: #706d6dd4; 
 }
 
 .iconImg {
@@ -71,11 +46,17 @@ body {
   color: white;
 }
 
-.option {
-  word-wrap: break-word;
+::-webkit-scrollbar {
+   height: 4px;
+   scroll-behavior: smooth;
 }
 
-.dropDown,
+::-webkit-scrollbar-thumb {
+  border-radius: 0;
+  background: #706d6dd4; 
+}
+
+
 .editBtn {
   width: 30px;
   height: 30px;
@@ -85,75 +66,6 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0;
-}
-
-.keyInfo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.iconDropDown {
-  pointer-events: none;
-}
-
-.keysList {
-  display: none;
-  width: 93%;
-  position: absolute;
-  top: 95px;
-  background: #282c34;
-  border: 1px solid #58595c;
-}
-
-.isOpen {
- display: flex;
-}
-
-.list {
-font-size: 1.2rem;
-margin: 0;
-width: 100%;
-padding: 15px 10px;
-display: flex;
-flex-direction: column;
-gap: 10px;
-}
-
-.listItem {
-  width: 100%;
-  list-style: none;
-  word-wrap: break-word;
-  margin: 0;
-  padding: 0;
-  padding-bottom: 10px;
-}
-
-.listItem.btn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.itemKey {
-  border-bottom: solid 2px grey;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.addBtn {
-  width: 150px;
-  height: 30px;
-  border: 1px solid white;
-  background: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  color: white;
-  font-size: 1.2rem;
 }
 
 .modal {
@@ -220,38 +132,4 @@ gap: 10px;
 
 .attributeWrapper input {
   font-size: 1.1rem;
-}
-
-.form {
-  position: relative;
-  width: 300px;
-  margin: 0 auto;
-}
-
-.input, 
-.button {
-  border: none;
-  outline: none;
-  border-radius: 3px;
-}
-
-.input {
-  width: 100%;
-  height: 40px;
-  background: white;
-  padding-left: 42px;
-}
-
-.button {
-  height: 30px;
-  width: 30px;
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  background: none;
-  border: 1px solid grey;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
 }
