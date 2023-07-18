@@ -16,7 +16,7 @@
     "cordova-android": "12.0.0",
     "cordova-clipboard": "^1.3.0",
     "cordova-plugin-device": "2.1.0",
-    "cordova-plugin-inappbrowser": "5.0.0",
+    "cordova-plugin-inappbrowser": "github:nostrband/cordova-plugin-inappbrowser",
     "nostr-cordova-plugin-secure-key": "github:nostrband/nostr-keystore-cordova-plugin#develop"
   },
   "cordova": {
@@ -25,9 +25,9 @@
     ],
     "plugins": {
       "cordova-plugin-device": {},
-      "cordova-plugin-inappbrowser": {},
       "nostr-keystore-cordova-plugin": {},
-      "cordova-clipboard": {}
+      "cordova-clipboard": {},
+      "cordova-plugin-inappbrowser": {}
     }
   }
 }

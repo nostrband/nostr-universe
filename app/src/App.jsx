@@ -31,6 +31,7 @@ const App = () => {
   const [keys, setKeys] = useState();
   const [openKey, setOpenKey] = useState();
   const [list, setList] = useState();
+  const [tabs, setTabs] = useState([]);
   const ref = useRef();
 
   function getListKeys() {
@@ -102,10 +103,20 @@ const App = () => {
     })
   }
 
-  const open = async (url) => {
-    var ref = cordova.InAppBrowser.open(url, '_blank', 'location=yes');
+  const open = async (url, app) => {
+    const ref = cordova.InAppBrowser.open(url, '_blank', 'location=yes,closebuttonhide=yes,multitab=yes,menubutton=yes');
 
-    ref.addEventListener('loadstop', async () => {
+    const tab = {
+      ref,
+      app,
+      url
+    };
+    setTabs((prev) => [tab, ...tabs]);
+
+    ref.addEventListener('loadstop', async (event) => {
+
+      console.log("loadstop", event.url);
+      tab.url = event.url;
 
       function startMethod(msg) {
         const id = Date.now().toString();
@@ -138,6 +149,10 @@ const App = () => {
       });
     });
 
+    ref.addEventListener('menu', async () => {
+      console.log("menu click");
+      // send message to the ref tab to make it show our menu
+    });
 
     ref.addEventListener('message', async (params) => {
       const id = params.data.id.toString();
@@ -166,6 +181,10 @@ const App = () => {
       console.log("message received: " + JSON.stringify(params.data))
     })
 
+  }
+
+  const show = async (tab) => {
+    tab.ref.show();
   }
 
   const editBtnClick = (ev) => {
@@ -306,10 +325,18 @@ const App = () => {
       </header>
       <hr className='m-0' />
       <div className="wrapper">
+        {tabs.length > 0 && (
+          <section className='section'>
+            <h3>Tabs</h3>
+            <div className='contentWrapper'>
+              {tabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} onClick={() => show(tab)} />)}
+            </div>
+          </section>
+        )}
         <section className='section'>
           <h3>Apps</h3>
           <div className='contentWrapper'>
-            {apps.map((app) => <IconBtn key={app.title} data={app} onClick={() => open(app.link)} />)}
+            {apps.map((app) => <IconBtn key={app.title} data={app} onClick={() => open(app.link, app)} />)}
           </div>
         </section>
       </div>
