@@ -38,6 +38,7 @@ const App = () => {
     return new Promise((resolve, reject) => {
       cordova.plugins.NostrKeyStore.listKeys(
         function (res) {
+	  console.log("list", res);
           resolve(res)
         },
         function (error) {
@@ -104,15 +105,20 @@ const App = () => {
   }
 
   const open = async (url, app) => {
-    const ref = cordova.InAppBrowser.open(url, '_blank', 'location=yes,closebuttonhide=yes,multitab=yes,menubutton=yes');
+    const header = document.getElementById('header');
+    const offset = header.offsetHeight + header.offsetTop;
+    const top = Math.round(window.devicePixelRatio * offset);
+    const ref = cordova.InAppBrowser.open(url, '_blank', 'location=yes,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=' + top);
 
     const tab = {
+      id: "" + Math.random(),
       ref,
       app,
       url
     };
     setTabs((prev) => [tab, ...tabs]);
 
+    // init the web pages after loading
     ref.addEventListener('loadstop', async (event) => {
 
       console.log("loadstop", event.url);
@@ -149,13 +155,32 @@ const App = () => {
       });
     });
 
+    // tab menu, for now just closes the tab
     ref.addEventListener('menu', async () => {
-      console.log("menu click");
+      console.log("menu click tab", tab.id);
+      // FIXME just for now a hack to close a tab
+
+      // close & remove tab
+      ref.close();
+      setTabs((prev) => prev.filter(t => t.id != tab.id));
+
       // send message to the ref tab to make it show our menu
     });
 
+    // handle clicks outside the inappbrowser to
+    // intercept them and forward to our main window
+    ref.addEventListener('click', async (event) => {
+      console.log("click", event.x, event.y);
+      ref.hide();
+
+      const x = event.x / window.devicePixelRatio;
+      const y = event.y / window.devicePixelRatio;
+      document.elementFromPoint(x, y).click();
+    });
+
+    // handle api requests
     ref.addEventListener('message', async (params) => {
-      const id = params.data.id.toString();
+	const id = params.data.id.toString();
       const method = params.data.method;
       const err = new Error(`New error in ${method} method`);
       const reply = await window.nostr[method](params.data.params);
@@ -180,7 +205,10 @@ const App = () => {
 
       console.log("message received: " + JSON.stringify(params.data))
     })
+  }
 
+  const show = async (tab) => {
+    tab.ref.show();
   }
 
   const show = async (tab) => {
@@ -293,9 +321,9 @@ const App = () => {
       --bs-dropdown-link-active-bg: none;
       --bs-dropdown-min-width: 80vw;
     }
-    `}
+	`}
       </style>
-      <header className="container d-flex align-items-center justify-content-between" style={{ padding: '10px' }}>
+      <header id="header" className="container d-flex align-items-center justify-content-between" style={{ padding: '10px' }}>
         <BsFillPersonFill color='white' size={35} />
         <Dropdown data-bs-theme="dark"
           drop='down-centered'>

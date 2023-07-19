@@ -11,4 +11,5 @@
     <allow-intent href="https://*/*" />
     <allow-navigation href="https://*/*" />
     <icon src='www/img/ico.png' />
+    <preference name="StatusBarOverlaysWebView" value="false" />
 </widget>
