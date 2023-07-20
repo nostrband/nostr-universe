@@ -17,13 +17,13 @@ import nostrIcon from './icons/nb.png';
 import satelliteIcon from './icons/satellite.png';
 import snortIcon from './icons/snort.png';
 
-const apps = [{ title: 'Nostr', img: nostrIcon, link: 'https://nostr.band/' },
-{ title: 'Snort', img: snortIcon, link: 'https://snort.social/' },
-{ title: 'Iris', img: irisIcon, link: 'https://iris.to/' },
-{ title: 'Coracle', img: coracleIcon, link: 'https://coracle.social/' },
-{ title: 'Satellite', img: satelliteIcon, link: 'https://satellite.earth/' }];
-
-
+const apps = [
+  { title: 'Nostr', img: nostrIcon, link: 'https://nostr.band/' },
+  { title: 'Snort', img: snortIcon, link: 'https://snort.social/' },
+  { title: 'Iris', img: irisIcon, link: 'https://iris.to/' },
+  { title: 'Coracle', img: coracleIcon, link: 'https://coracle.social/' },
+  { title: 'Satellite', img: satelliteIcon, link: 'https://satellite.earth/' }
+];
 
 const App = () => {
   const [npub, setNpub] = useState('');
@@ -55,7 +55,7 @@ const App = () => {
       console.log('device ready');
       const list = await getListKeys();
       if (list.currentAlias) {
-        const currentKey = nip19.npubEncode(list.currentAlias).replace(/"/g, '');
+        const currentKey = nip19.npubEncode(list.currentAlias);
         setNpub(currentKey);
         setList(list);
         const keys = Object.keys(list).filter((key) => key !== 'currentAlias');
@@ -74,7 +74,7 @@ const App = () => {
       console.log('addKey', JSON.stringify(key))
       const list = await getListKeys();
       if (list.currentAlias) {
-        const currentKey = nip19.npubEncode(list.currentAlias).replace(/"/g, '');
+        const currentKey = nip19.npubEncode(list.currentAlias);
         setList(list);
         if (currentKey !== npub) {
           setNpub(currentKey);
@@ -108,7 +108,11 @@ const App = () => {
     const header = document.getElementById('header');
     const offset = header.offsetHeight + header.offsetTop;
     const top = Math.round(window.devicePixelRatio * offset);
-    const ref = cordova.InAppBrowser.open(url, '_blank', 'location=yes,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=' + top);
+    // FIXME what shall we do if npub not set?
+    const db = npub ? "db_" + npub.substring(0, 15) : "";
+    const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},database=${db}`;
+    console.log("options", options);
+    const ref = cordova.InAppBrowser.open(url, '_blank', options);
 
     const tab = {
       id: "" + Math.random(),
@@ -124,36 +128,73 @@ const App = () => {
       console.log("loadstop", event.url);
       tab.url = event.url;
 
-      function startMethod(msg) {
-        const id = Date.now().toString();
-        window.nostrCordovaPlugin.requests[id] = {};
-        let method = '';
-        let params = '';
-
-        if (msg) {
-          method = "signEvent"
-          params = msg;
-        } else {
-          method = "getPublicKey"
-        }
-
-        return new Promise(function (ok, err) {
-          window.nostrCordovaPlugin.requests[id] = {
-            res: ok,
-            rej: err
+      const fn = function () {
+	window.nostrCordovaPlugin = { requests: {} };
+        const _call = function (method, ...params) {
+          const id = Date.now().toString();
+          window.nostrCordovaPlugin.requests[id] = {};
+          return new Promise(function (ok, err) {
+            window.nostrCordovaPlugin.requests[id] = { res: ok, rej: err };
+	    const msg = JSON.stringify({ method, id, params: [...params] });
+	    console.log("iab sending req ", id, "method", method, "msg", msg);
+            webkit.messageHandlers.cordova_iab.postMessage(msg);
+          });
+	};
+        const _gen = function (method) {
+	  return function(...a) { return _call(method, ...a); };
+	}
+        const nostrKey = {
+          getPublicKey: _gen("getPublicKey"),
+          signEvent: _gen("signEvent"),
+          nip04: {
+            encrypt: _gen("encrypt"),
+            decrypt: _gen("decrypt"),
           }
-          webkit.messageHandlers.cordova_iab.postMessage(JSON.stringify({ method, id, params }));
-        });
-      }
+        };
+        window.nostr = nostrKey;
+      };
 
+      const code = `(${fn.toString()})()`;
       ref.executeScript({
-        code: `window.nostrCordovaPlugin = { requests: {} }; 
-        const nostrKey = {getPublicKey: ${startMethod}, signEvent: ${startMethod}}; 
-        window.nostr = nostrKey;`
+        code
       }, function () {
         console.log('script injected window nostr');
       });
+
     });
+
+    // handle api requests
+    ref.addEventListener('message', async (params) => {
+      // console.log("got iab message", JSON.stringify(params));
+      const id = params.data.id.toString();
+      const method = params.data.method;
+      const nostr = ["encrypt", "decrypt"].includes(method) ? window.nostr.nip04 : window.nostr;
+      const f = nostr[method];
+      const reply = await nostr[method](...params.data.params);
+
+      // FIXME remove later when we switch to onboarding
+      if (method === 'getPublicKey') {
+	// in case we initialized it while the first getPublicKey call???
+        let npub = nip19.npubEncode(reply);
+	console.log("npub", npub);
+        setNpub(npub);
+      }
+
+      const fn = function(id, method, jsonReply) {
+	const req = window.nostrCordovaPlugin.requests[id];
+	if (jsonReply) {
+          req.res(jsonReply);
+	} else {
+          req.rej(new Error(`New error in ${method} method`));
+	};
+	delete window.nostrCordovaPlugin.requests[id];
+      };
+
+      const code = `(${fn.toString()})(${JSON.stringify(id)}, ${JSON.stringify(method)}, ${JSON.stringify(reply)})`;
+      ref.executeScript({ code }, function () {
+        console.log(`script injected ${method}`);
+      });
+    })
 
     // tab menu, for now just closes the tab
     ref.addEventListener('menu', async () => {
@@ -178,33 +219,6 @@ const App = () => {
       document.elementFromPoint(x, y).click();
     });
 
-    // handle api requests
-    ref.addEventListener('message', async (params) => {
-	const id = params.data.id.toString();
-      const method = params.data.method;
-      const err = new Error(`New error in ${method} method`);
-      const reply = await window.nostr[method](params.data.params);
-      if (method === 'getPublicKey') {
-        let npub = nip19.npubEncode(reply);
-        setNpub(npub.replace(/"/g, ''))
-      }
-      const jsonReply = JSON.stringify(reply);
-
-      const code = `const req = window.nostrCordovaPlugin.requests[${id}]; 
-      if (${jsonReply}) {
-        req.res(${jsonReply}); 
-      } else {
-        req.rej(${JSON.stringify(err)});
-      };
-      delete window.nostrCordovaPlugin.requests[${id}];
-      `;
-
-      ref.executeScript({ code }, function () {
-        console.log(`script injected ${method}`);
-      });
-
-      console.log("message received: " + JSON.stringify(params.data))
-    })
   }
 
   const show = async (tab) => {
@@ -245,7 +259,7 @@ const App = () => {
     const res = await promiseSelectKey({ publicKey: key })
     if (res) {
       if (list.currentAlias) {
-        const currentKey = nip19.npubEncode(res.currentAlias).replace(/"/g, '');
+        const currentKey = nip19.npubEncode(res.currentAlias);
         setNpub(currentKey);
         setList(res);
         const keys = Object.keys(res).filter((key) => key !== 'currentAlias');
@@ -329,7 +343,7 @@ const App = () => {
           </Dropdown.Toggle>
 
           <Dropdown.Menu>
-            {keys && keys.length && keys.map((key) => nip19.npubEncode(key).replace(/"/g, '')).map((key, ind) => {
+            {keys && keys.length && keys.map((key) => nip19.npubEncode(key)).map((key, ind) => {
               return (<Dropdown.Item href={`#/${key + 1}`} className='d-flex align-items-center gap-4'>
                 <BsFillPersonFill color='white' size={35} />
                 <div className='fs-3 text-white flex-grow-1' onClick={() => selectKey(ind)}>{key.substring(0, 10) + "..." + key.substring(59)}</div>
@@ -371,7 +385,7 @@ const App = () => {
             <AiOutlineClose color='white' size={30} onClick={() => setModalActive(false)} />
           </div>
           <div className='modalKey'>
-            {nip19.npubEncode(list[openKey].publicKey).replace(/"/g, '')}
+            {nip19.npubEncode(list[openKey].publicKey)}
           </div>
           <div className='modalBtnWrapper'>
             <Button variant="secondary" size="lg" onClick={copyKey}>Copy</Button>
