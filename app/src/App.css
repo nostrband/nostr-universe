@@ -13,19 +13,10 @@ body {
   padding: 10px 15px;
 }
 
-.section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
 .contentWrapper {
   width: 100%;
   overflow: auto;
   white-space: nowrap;
-  padding-bottom: 10px;
-  display: flex;
-  gap: 20px;
 }
 
 .iconImg {
@@ -56,80 +47,13 @@ body {
   background: #706d6dd4; 
 }
 
-
-.editBtn {
-  width: 30px;
-  height: 30px;
-  border: 1px solid white;
-  background: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.modal {
-  height: 100vh;
-  width: 100vw;
-  background-color: #2d2d2e;
-  position: fixed;
-  top: 0;
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  transition: 0.5s;
-  pointer-events: none;
-  z-index: 4;
-}
-
-.modal__content {
+.modalContent {
   transform: scale(0.5);
   transition: 0.2s;
   width:100vw;
   height: 100vh;
 }
 
-.modal__content.active {
+.modalContent.active {
   transform: scale(1);
-}
-
-.modal.active {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.modalTitle {
-  display: flex;
-  padding: 5px 15px;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modalKey {
-  word-wrap: break-word;
-  width: 100vw;
-  font-size: 1.5rem;
-  padding: 5px 20px;
-  border-bottom: solid 2px grey;
-}
-
-.modalBtnWrapper {
-  display: flex;
-  padding: 20px 20px;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.attributeWrapper {
-  display: flex;
-  padding: 5px 20px;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 1.5rem;
-}
-
-.attributeWrapper input {
-  font-size: 1.1rem;
 }
