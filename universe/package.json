@@ -27,9 +27,9 @@
     "plugins": {
       "cordova-plugin-device": {},
       "cordova-clipboard": {},
-      "nostr-keystore-cordova-plugin": {},
       "cordova-plugin-statusbar": {},
-      "cordova-plugin-inappbrowser": {}
+      "cordova-plugin-inappbrowser": {},
+      "nostr-keystore-cordova-plugin": {}
     }
   }
 }
