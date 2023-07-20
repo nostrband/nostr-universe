@@ -213,6 +213,10 @@ const App = () => {
     tab.ref.show();
   }
 
+  const show = async (tab) => {
+    tab.ref.show();
+  }
+
   const editBtnClick = (ev) => {
     const index = ev.target.dataset.key;
     setOpenKey(keys[index])
