@@ -1,14 +1,16 @@
 import { nip19 } from 'nostr-tools';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';
+
 import './App.css';
 
-import { AiOutlineSearch } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineSearch } from "react-icons/ai";
 import { BiSolidPencil } from "react-icons/bi";
-import { BsFillPersonFill } from "react-icons/bs";
+import { BsArrowRightCircle, BsFillPersonFill } from "react-icons/bs";
 
 import { EditKey } from './components/EditKey';
+import { Input } from './components/Input';
 import { Modal } from './components/ModalWindow';
 import { IconBtn } from './components/iconBtn';
 import coracleIcon from './icons/coracle.png';
@@ -46,10 +48,12 @@ export const getNpubKey = (key) => {
 const App = () => {
   const [npub, setNpub] = useState('');
   const [modalActive, setModalActive] = useState(false);
+  const [isOpenSearch, setIsOpenSearch] = useState(false);
   const [keys, setKeys] = useState();
   const [openKey, setOpenKey] = useState();
   const [list, setList] = useState();
   const [tabs, setTabs] = useState([]);
+  const inputSearchRef = useRef();
 
   useEffect(async () => {
     document.addEventListener("deviceready", onDeviceReady, false)
@@ -118,20 +122,20 @@ const App = () => {
       tab.url = event.url;
 
       const fn = function () {
-	window.nostrCordovaPlugin = { requests: {} };
+        window.nostrCordovaPlugin = { requests: {} };
         const _call = function (method, ...params) {
           const id = Date.now().toString();
           window.nostrCordovaPlugin.requests[id] = {};
           return new Promise(function (ok, err) {
             window.nostrCordovaPlugin.requests[id] = { res: ok, rej: err };
-	    const msg = JSON.stringify({ method, id, params: [...params] });
-	    console.log("iab sending req ", id, "method", method, "msg", msg);
+            const msg = JSON.stringify({ method, id, params: [...params] });
+            console.log("iab sending req ", id, "method", method, "msg", msg);
             webkit.messageHandlers.cordova_iab.postMessage(msg);
           });
-	};
+        };
         const _gen = function (method) {
-	  return function(...a) { return _call(method, ...a); };
-	}
+          return function (...a) { return _call(method, ...a); };
+        }
         const nostrKey = {
           getPublicKey: _gen("getPublicKey"),
           signEvent: _gen("signEvent"),
@@ -163,20 +167,20 @@ const App = () => {
 
       // FIXME remove later when we switch to onboarding
       if (method === 'getPublicKey') {
-	// in case we initialized it while the first getPublicKey call???
+        // in case we initialized it while the first getPublicKey call???
         let npub = nip19.npubEncode(reply);
-	console.log("npub", npub);
+        console.log("npub", npub);
         setNpub(npub);
       }
 
-      const fn = function(id, method, jsonReply) {
-	const req = window.nostrCordovaPlugin.requests[id];
-	if (jsonReply) {
+      const fn = function (id, method, jsonReply) {
+        const req = window.nostrCordovaPlugin.requests[id];
+        if (jsonReply) {
           req.res(jsonReply);
-	} else {
+        } else {
           req.rej(new Error(`New error in ${method} method`));
-	};
-	delete window.nostrCordovaPlugin.requests[id];
+        };
+        delete window.nostrCordovaPlugin.requests[id];
       };
 
       const code = `(${fn.toString()})(${JSON.stringify(id)}, ${JSON.stringify(method)}, ${JSON.stringify(reply)})`;
@@ -260,6 +264,24 @@ const App = () => {
     }
   }
 
+  const closeModal = () => {
+    setIsOpenSearch(false);
+    inputSearchRef.current.focus()
+  }
+
+  const handleClickSearchBtn = () => {
+    const url = new URL('/', inputSearchRef.current.value);
+
+    if (url) {
+      const title = url.hostname;
+      const link = url;
+      const img = url + '/favicon.ico';
+      const app = { title, img, link };
+      open(url, app);
+      closeModal();
+    }
+  }
+
   return (
     <>
       <style type="text/css">
@@ -307,7 +329,7 @@ const App = () => {
           </Dropdown.Menu>
         </Dropdown>
 
-        <AiOutlineSearch color='white' size={35} onClick={() => console.log('search')} />
+        <AiOutlineSearch color='white' size={35} onClick={() => setIsOpenSearch(true)} />
       </header>
       <hr className='m-0' />
       <div className="text-center p-3">
@@ -333,6 +355,18 @@ const App = () => {
             showKey={showKey}
             editKey={editKey}
             setModalActive={setModalActive} />}
+      </Modal >
+      <Modal activeModal={isOpenSearch}>
+        {isOpenSearch &&
+          (<div className='d-flex flex-column'>
+            <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
+              <AiOutlineClose color='white' size={30} onClick={closeModal} />
+            </div>
+            <div className='d-flex px-3 gap-3 align-items-center align-self-center '>
+              <Input ref={inputSearchRef} />
+              <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
+            </div>
+          </div>)}
       </Modal >
     </>
   );
