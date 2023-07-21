@@ -93,6 +93,53 @@ const App = () => {
     }
   }
 
+  const initTab = () => {
+    // this code will be executed in the opened tab,
+    // should only refer to local vars bcs it will be
+    // sent to the tab as a string
+
+    const initWindowNostr = () => {
+      window.nostrCordovaPlugin = { requests: {} };
+      const _call = function (method, ...params) {
+	const id = Date.now().toString();
+	window.nostrCordovaPlugin.requests[id] = {};
+	return new Promise(function (ok, err) {
+          window.nostrCordovaPlugin.requests[id] = { res: ok, rej: err };
+	  const msg = JSON.stringify({ method, id, params: [...params] });
+	  console.log("iab sending req ", id, "method", method, "msg", msg);
+          webkit.messageHandlers.cordova_iab.postMessage(msg);
+	});
+      };
+      const _gen = function (method) {
+	return function(...a) { return _call(method, ...a); };
+      }
+      const nostrKey = {
+	getPublicKey: _gen("getPublicKey"),
+	signEvent: _gen("signEvent"),
+	nip04: {
+          encrypt: _gen("encrypt"),
+          decrypt: _gen("decrypt"),
+	}
+      };
+
+      // NIP-07 API
+      window.nostr = nostrKey;
+
+      // our own API
+      window.nostrCordovaPlugin.setUrl = _gen("setUrl");
+    };
+
+    const initUrlChange = () => {
+      addEventListener("popstate", (event) => {
+	console.log("popstate", document.location);
+	window.nostrCordovaPlugin.setUrl(document.location);
+      });
+    };
+
+    initWindowNostr();
+    initUrlChange();
+  }
+
   const open = async (url, app) => {
     const header = document.getElementById('header');
     const offset = header.offsetHeight + header.offsetTop;
@@ -117,33 +164,7 @@ const App = () => {
       console.log("loadstop", event.url);
       tab.url = event.url;
 
-      const fn = function () {
-	window.nostrCordovaPlugin = { requests: {} };
-        const _call = function (method, ...params) {
-          const id = Date.now().toString();
-          window.nostrCordovaPlugin.requests[id] = {};
-          return new Promise(function (ok, err) {
-            window.nostrCordovaPlugin.requests[id] = { res: ok, rej: err };
-	    const msg = JSON.stringify({ method, id, params: [...params] });
-	    console.log("iab sending req ", id, "method", method, "msg", msg);
-            webkit.messageHandlers.cordova_iab.postMessage(msg);
-          });
-	};
-        const _gen = function (method) {
-	  return function(...a) { return _call(method, ...a); };
-	}
-        const nostrKey = {
-          getPublicKey: _gen("getPublicKey"),
-          signEvent: _gen("signEvent"),
-          nip04: {
-            encrypt: _gen("encrypt"),
-            decrypt: _gen("decrypt"),
-          }
-        };
-        window.nostr = nostrKey;
-      };
-
-      const code = `(${fn.toString()})()`;
+      const code = `(${initTab.toString()})()`;
       ref.executeScript({
         code
       }, function () {
@@ -157,29 +178,53 @@ const App = () => {
       // console.log("got iab message", JSON.stringify(params));
       const id = params.data.id.toString();
       const method = params.data.method;
-      const nostr = ["encrypt", "decrypt"].includes(method) ? window.nostr.nip04 : window.nostr;
-      const f = nostr[method];
-      const reply = await nostr[method](...params.data.params);
-
-      // FIXME remove later when we switch to onboarding
-      if (method === 'getPublicKey') {
-	// in case we initialized it while the first getPublicKey call???
-        let npub = nip19.npubEncode(reply);
-	console.log("npub", npub);
-        setNpub(npub);
+      let target = null;
+      switch (method) {
+	case "encrypt":
+	case "decrypt":
+	  target = window.nostr.nip04;
+	  break;
+	case "getPublicKey":
+	case "signEvent":
+	  target = window.nostr;
+	  break;
+	case "setUrl":
+	  target = api;
+	  break;
       }
 
-      const fn = function(id, method, jsonReply) {
+      let err = null;
+      let reply = null;
+      if (target) {
+	try {
+	  reply = await target[method](...params.data.params);
+	} catch (e) {
+	  err = `${e}`;
+	}
+
+	// FIXME remove later when we switch to onboarding
+	if (method === 'getPublicKey') {
+	  // in case we initialized it while the first getPublicKey call???
+          let npub = nip19.npubEncode(reply);
+	  console.log("npub", npub);
+          setNpub(npub);
+	}
+      } else {
+	err = `Unknown method ${method}`;
+      }
+
+      const fn = function(id, method, jsonReply, err) {
 	const req = window.nostrCordovaPlugin.requests[id];
-	if (jsonReply) {
+	if (!err) {
           req.res(jsonReply);
 	} else {
-          req.rej(new Error(`New error in ${method} method`));
+          req.rej(new Error(err));
 	};
 	delete window.nostrCordovaPlugin.requests[id];
       };
 
-      const code = `(${fn.toString()})(${JSON.stringify(id)}, ${JSON.stringify(method)}, ${JSON.stringify(reply)})`;
+      const args = [id, method, reply, err];
+      const code = `(${fn.toString()})(...${JSON.stringify(args)})`;
       ref.executeScript({ code }, function () {
         console.log(`script injected ${method}`);
       });
