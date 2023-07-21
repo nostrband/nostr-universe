@@ -70,6 +70,17 @@ const App = () => {
     }
   }, [])
 
+  const API = {
+    setUrl: function (tab, url) {
+      console.log("tab", tab.id, "setUrl", url);
+      tab.url = url;
+      // FIXME write to db
+    },
+    decodeBech32: function (tab, s) {
+      return nip19.decode(s);
+    }
+  };
+
   const addKey = async () => {
     const key = await getPromisePlugin('addKey');
 
@@ -127,17 +138,162 @@ const App = () => {
 
       // our own API
       window.nostrCordovaPlugin.setUrl = _gen("setUrl");
+      window.nostrCordovaPlugin.decodeBech32 = _gen("decodeBech32");
     };
 
     const initUrlChange = () => {
-      addEventListener("popstate", (event) => {
-	console.log("popstate", document.location);
-	window.nostrCordovaPlugin.setUrl(document.location);
+
+      // popstate event doesn't work for history.pushState which most SPAs use
+      const body = document.querySelector("body");
+      let oldHref = document.location.href;
+      const observer = new MutationObserver(mutations => {
+	if (oldHref !== document.location.href) {
+	  oldHref = document.location.href;
+	  console.log("url change", document.location.href);
+	  window.nostrCordovaPlugin.setUrl(document.location.href);
+	}
       });
+      observer.observe(body, { childList: true, subtree: true });
     };
 
     initWindowNostr();
     initUrlChange();
+  }
+
+  // executed in the tab
+  const nostrZapConnect = () => {
+
+    let onlongtouch = null;
+    let timer = null;
+    let touchduration = 800; // length of time we want the user to touch before we do something
+
+    const touchstart = (e) => {
+      // Error: unable to preventdefault inside passive event listener due to target being treated as passive
+      // e.preventDefault();
+      if (!timer) {
+        timer = setTimeout(() => onlongtouch(e), touchduration);
+      }
+    }
+
+    const touchend = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    }
+
+    const zap = async (value) => {
+      // limit prefixes to small ascii chars
+      const BECH32_REGEX =
+	/[a-z]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g
+
+      const array = [...value.matchAll(BECH32_REGEX)].map(a => a[0]);
+
+      let bech32 = "";
+      for (let b32 of array) {
+	try {
+	  const {type, data} = await window.nostrCordovaPlugin.decodeBech32(b32);
+	  console.log("b32", b32, "type", type, "data", data);
+	  switch (type) {
+	    case "npub":
+	      bech32 = b32;
+	      break;
+	  }
+	} catch (e) {
+	  console.log("bad b32", b32, "e", e);
+	}
+
+	if (bech32)
+	  break;
+      }
+
+      if (!bech32)
+	return false;
+
+      console.log("zapping", bech32);
+      const d = document.createElement("div");
+      d.setAttribute("data-npub", bech32);
+      window.nostrZap.initTarget(d);
+      d.click();
+      d.remove();
+
+      return true;
+    }
+
+    const zapByAttr = async (e, attrName) => {
+      const value = e.target.getAttribute(attrName);
+      console.log("attr", attrName, "value", value);
+      if (!value)
+	return false;
+
+      return zap(value);
+    }
+
+    onlongtouch = async (e) => {
+      timer = null;
+      console.log("longtouch", e.target);
+      try {
+	return await zapByAttr(e, "href")
+	    || await zapByAttr(e, "id")
+	    || await zapByAttr(e, "data-npub")
+	    || await zapByAttr(e, "data-id")
+	    || await zapByAttr(e, "data-note-id")
+	    || await zap(document.location.href)
+	;
+      } catch (e) {
+	console.log("zap failed", e);
+      }
+    };
+
+    // assume content is already loaded
+    window.addEventListener("touchstart", touchstart, false);
+    window.addEventListener("touchend", touchend, false);
+    window.addEventListener("mousedown", touchstart, false);
+    window.addEventListener("mouseup", touchend, false);
+  };
+
+  // get local file by path as string, async
+  const getAsset = async (path) => {
+    return new Promise((ok, err) => {
+      const r = new XMLHttpRequest();
+      r.open("GET", path, true);
+      r.onload = (e) => {
+	if (r.readyState === 4) {
+	  if (r.status === 200) {
+	    console.log("got asset ", path);
+	    ok(r.responseText);
+	  } else {
+	    err("failed to get asset "+path+" r "+r.statusText);
+	  }
+	}
+      };
+      r.onerror = (e) => {
+	err("failed to get asset "+path+" r "+r.statusText);
+      };
+      r.send(null);
+    });
+  };
+
+  // must not be () => {} form bcs it wont be able to access 'this'
+  async function executeScriptAsync(code, name) {
+    const self = this;
+    return new Promise((ok, err) => {
+      try {
+	self.executeScript({code}, (v) => {
+	  console.log("injected script", name);
+	  ok(v);
+	});
+      } catch (e) {
+	console.log("failed to inject script", name);
+	err(e);
+      }
+    });
+  }
+
+  async function executeFuncAsync(name, fn, ...args) {
+    const code = `(${fn.toString()})(...${JSON.stringify(args)})`;
+    console.log("fn", name, "code", code);
+    return this.executeScriptAsync(code, name);
   }
 
   const open = async (url, app) => {
@@ -149,6 +305,8 @@ const App = () => {
     const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},database=${db}`;
     console.log("options", options);
     const ref = cordova.InAppBrowser.open(url, '_blank', options);
+    ref.executeScriptAsync = executeScriptAsync;
+    ref.executeFuncAsync = executeFuncAsync;
 
     const tab = {
       id: "" + Math.random(),
@@ -164,13 +322,16 @@ const App = () => {
       console.log("loadstop", event.url);
       tab.url = event.url;
 
-      const code = `(${initTab.toString()})()`;
-      ref.executeScript({
-        code
-      }, function () {
-        console.log('script injected window nostr');
-      });
+      // main init to enable comms interface
+      await ref.executeFuncAsync("initTab", initTab);
 
+      // nostr-zap
+      const asset = await getAsset("js/nostr-zap.js");
+      console.log("nostr-zap asset", asset.length);
+      await ref.executeScriptAsync(asset, "nostr-zap");
+
+      // init nostr-zap
+      await ref.executeFuncAsync("nostrZapConnect", nostrZapConnect);
     });
 
     // handle api requests
@@ -179,6 +340,7 @@ const App = () => {
       const id = params.data.id.toString();
       const method = params.data.method;
       let target = null;
+      let targetArgs = params.data.params;
       switch (method) {
 	case "encrypt":
 	case "decrypt":
@@ -189,7 +351,9 @@ const App = () => {
 	  target = window.nostr;
 	  break;
 	case "setUrl":
-	  target = api;
+	case "decodeBech32":
+	  target = API;
+	  targetArgs = [tab, ...targetArgs];
 	  break;
       }
 
@@ -197,7 +361,7 @@ const App = () => {
       let reply = null;
       if (target) {
 	try {
-	  reply = await target[method](...params.data.params);
+	  reply = await target[method](...targetArgs);
 	} catch (e) {
 	  err = `${e}`;
 	}
@@ -213,7 +377,7 @@ const App = () => {
 	err = `Unknown method ${method}`;
       }
 
-      const fn = function(id, method, jsonReply, err) {
+      function fn(id, method, jsonReply, err) {
 	const req = window.nostrCordovaPlugin.requests[id];
 	if (!err) {
           req.res(jsonReply);
@@ -224,11 +388,8 @@ const App = () => {
       };
 
       const args = [id, method, reply, err];
-      const code = `(${fn.toString()})(...${JSON.stringify(args)})`;
-      ref.executeScript({ code }, function () {
-        console.log(`script injected ${method}`);
-      });
-    })
+      await ref.executeFuncAsync("method " + method, fn, ...args);
+    });
 
     // tab menu, for now just closes the tab
     ref.addEventListener('menu', async () => {
@@ -326,7 +487,7 @@ const App = () => {
     }
 	`}
       </style>
-      <header id="header" className="container d-flex align-items-center justify-content-between" style={{ padding: '10px' }}>
+      <header id="header" className="container d-flex align-items-center justify-content-between" style={{ padding: '0 10px 0 10px' }}>
         <BsFillPersonFill color='white' size={35} />
         <Dropdown data-bs-theme="dark"
           drop='down-centered'>
