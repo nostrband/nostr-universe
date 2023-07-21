@@ -282,6 +282,11 @@ const App = () => {
     }
   }
 
+  const submitSearchInput = (ev) => {
+    ev.preventDefault();
+    handleClickSearchBtn();
+  }
+
   return (
     <>
       <style type="text/css">
@@ -362,10 +367,10 @@ const App = () => {
             <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
               <AiOutlineClose color='white' size={30} onClick={closeModal} />
             </div>
-            <div className='d-flex px-3 gap-3 align-items-center align-self-center '>
+            <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
               <Input ref={inputSearchRef} />
               <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
-            </div>
+            </form>
           </div>)}
       </Modal >
     </>
