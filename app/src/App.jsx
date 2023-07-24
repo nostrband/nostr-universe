@@ -2,8 +2,8 @@ import { nip19 } from 'nostr-tools';
 import { useEffect, useRef, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';
-
 import './App.css';
+import { addTabToDB, db, deleteTabDB, updateTabDB } from './db';
 
 import { AiOutlineClose, AiOutlineSearch } from "react-icons/ai";
 import { BiSolidPencil } from "react-icons/bi";
@@ -55,6 +55,23 @@ const App = () => {
   const [tabs, setTabs] = useState([]);
   const inputSearchRef = useRef();
 
+  const openTabsFromDB = (list) => {
+    if (list) {
+      const orderedList = [...list].sort((prev, next) => next.order - prev.order);
+      orderedList.forEach((tab) => {
+        const header = document.getElementById('header');
+        const offset = header.offsetHeight + header.offsetTop;
+        const top = Math.round(window.devicePixelRatio * offset);
+        // const db = npub ? "db_" + npub.substring(0, 15) : "";
+        const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},hidden=yes`;
+        const ref = cordova.InAppBrowser.open(tab.url, '_blank', options);
+        tab.ref = ref;
+      });
+
+      setTabs([...orderedList]);
+    }
+  }
+
   useEffect(async () => {
     document.addEventListener("deviceready", onDeviceReady, false)
 
@@ -67,10 +84,15 @@ const App = () => {
         setNpub(currentKey);
         setList(list);
         const keys = Object.keys(list).filter((key) => key !== 'currentAlias');
+
         if (keys.length) {
           setKeys(keys)
         }
       }
+
+      const currentAlias = list.currentAlias ? list.currentAlias : 'without publicKey';
+      const tabsList = await db.tabsList.where('publicKey').equals(currentAlias).toArray();
+      openTabsFromDB(tabsList);
     }
   }, [])
 
@@ -93,6 +115,9 @@ const App = () => {
         if (keys.length) {
           setKeys(keys)
         }
+
+        const tabsList = await db.tabsList.where('publicKey').equals(list.currentAlias).toArray();
+        openTabsFromDB(tabsList);
       }
     }
   }
@@ -149,33 +174,33 @@ const App = () => {
     const offset = header.offsetHeight + header.offsetTop;
     const top = Math.round(window.devicePixelRatio * offset);
     // FIXME what shall we do if npub not set?
-    const db = npub ? "db_" + npub.substring(0, 15) : "";
-    const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},database=${db}`;
+    // const db = npub ? "db_" + npub.substring(0, 15) : "";
+    // const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},database=${db}`;
+    const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top}`;
     console.log("options", options);
     const ref = cordova.InAppBrowser.open(url, '_blank', options);
-
     const tab = {
       id: "" + Math.random(),
       ref,
       app,
-      url
+      url,
+      order: tabs.length + 1
     };
+
     setTabs((prev) => [tab, ...tabs]);
 
-    // init the web pages after loading
-    ref.addEventListener('loadstop', async (event) => {
+    await addTabToDB(tab, list);
 
-      console.log("loadstop", event.url);
+    ref.addEventListener('loadstop', async (event) => {
       tab.url = event.url;
+      await updateTabDB(tab);
 
       const code = `(${initTab.toString()})()`;
-
       ref.executeScript({
         code
       }, function () {
         console.log('script injected window nostr');
       });
-
     });
 
     // handle api requests
@@ -241,9 +266,9 @@ const App = () => {
       // FIXME just for now a hack to close a tab
 
       // close & remove tab
+      await deleteTabDB(tab.id);
       ref.close();
       setTabs((prev) => prev.filter(t => t.id != tab.id));
-
       // send message to the ref tab to make it show our menu
     });
 
@@ -252,7 +277,6 @@ const App = () => {
     ref.addEventListener('click', async (event) => {
       console.log("click", event.x, event.y);
       ref.hide();
-
       const x = event.x / window.devicePixelRatio;
       const y = event.y / window.devicePixelRatio;
       document.elementFromPoint(x, y).click();
@@ -261,6 +285,31 @@ const App = () => {
 
   const show = async (tab) => {
     tab.ref.show();
+
+    tab.ref.addEventListener('loadstop', async (event) => {
+      tab.url = event.url;
+      await updateTabDB(tab);
+
+      //Is this necessary in tabs section?
+      const code = `(${initTab.toString()})()`;
+      tab.ref.executeScript({
+        code
+      }, function () {
+        console.log('script injected window nostr');
+      });
+    });
+
+    tab.ref.addEventListener('menu', async () => {
+      console.log("menu click tab", tab.id);
+      // FIXME just for now a hack to close a tab
+
+      // close & remove tab
+      await deleteTabDB(tab.id)
+      tab.ref.close();
+      setTabs((prev) => prev.filter(t => t.id != tab.id));
+
+      // send message to the ref tab to make it show our menu
+    });
   }
 
   const editBtnClick = (ev) => {
@@ -283,18 +332,20 @@ const App = () => {
     const res = await getPromisePlugin('selectKey', { publicKey: key });
 
     if (res) {
-      if (list.currentAlias) {
+      if (res.currentAlias && res.currentAlias !== list.currentAlias) {
         const currentKey = getNpubKey(res.currentAlias);
         setNpub(currentKey);
         setList(res);
         const keys = Object.keys(res).filter((key) => key !== 'currentAlias');
 
         if (keys.length) {
-          setKeys(keys)
+          setKeys(keys);
         }
       }
-    }
 
+      const tabsList = await db.tabsList.where('publicKey').equals(res.currentAlias).toArray();
+      openTabsFromDB(tabsList);
+    }
   }
 
   const editKey = async (keyInfoObj) => {
@@ -320,10 +371,10 @@ const App = () => {
 
     if (url) {
       const title = url.hostname;
-      const link = url;
-      const img = url + '/favicon.ico';
+      const link = inputSearchRef.current.value + '/';
+      const img = inputSearchRef.current.value + '/' + '/favicon.ico';
       const app = { title, img, link };
-      open(url, app);
+      open(link, app);
       closeModal();
     }
   }
@@ -383,15 +434,17 @@ const App = () => {
         <AiOutlineSearch color='white' size={35} onClick={() => setIsOpenSearch(true)} />
       </header>
       <hr className='m-0' />
+      <button onClick={() => db.delete()}>Delete DB</button>
+
       <div className="text-center p-3">
-        {tabs.length > 0 && (
+        {tabs && tabs.length > 0 &&
           <section className='d-flex flex-column align-items-start'>
             <h3>Tabs</h3>
             <div className='contentWrapper pb-2 d-flex gap-4'>
               {tabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} onClick={() => show(tab)} />)}
             </div>
           </section>
-        )}
+        }
         <section className='d-flex flex-column align-items-start'>
           <h3>Apps</h3>
           <div className='contentWrapper pb-2 d-flex gap-4'>
