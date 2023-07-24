@@ -100,23 +100,30 @@ const App = () => {
     const key = await getPromisePlugin('addKey');
 
     if (key) {
-      const list = await getPromisePlugin('listKeys');
+      const listKeys = await getPromisePlugin('listKeys');
 
-      if (list.currentAlias) {
-        const currentKey = getNpubKey(list.currentAlias);
-        setList(list);
+      if (!list && listKeys.currentAlias) {
+        const tabs = await db.tabsList.where('publicKey').equals('without publicKey').toArray();
+        tabs.forEach(async (tab) => {
+          await db.tabsList.update(tab.id, { publicKey: listKeys.currentAlias });
+        })
+      }
+
+      if (listKeys.currentAlias) {
+        const currentKey = getNpubKey(listKeys.currentAlias);
+        setList(listKeys);
 
         if (currentKey !== npub) {
           setNpub(currentKey);
         }
 
-        const keys = Object.keys(list).filter((key) => key !== 'currentAlias');
+        const keys = Object.keys(listKeys).filter((key) => key !== 'currentAlias');
 
         if (keys.length) {
           setKeys(keys)
         }
 
-        const tabsList = await db.tabsList.where('publicKey').equals(list.currentAlias).toArray();
+        const tabsList = await db.tabsList.where('publicKey').equals(listKeys.currentAlias).toArray();
         openTabsFromDB(tabsList);
       }
     }
