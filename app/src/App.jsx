@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';
 import './App.css';
-import { db, addTabToDB, deleteTabDB, updateTabDB, listTabs } from './db';
 import { browser } from './browser';
+import { addTabToDB, db, deleteTabDB, listTabs, updateTabDB } from './db';
 
 import { AiOutlineClose, AiOutlineSearch } from "react-icons/ai";
 import { BiSolidPencil } from "react-icons/bi";
@@ -66,11 +66,20 @@ const App = () => {
   const [list, setList] = useState();
   const [tabs, setTabs] = useState([]);
   const inputSearchRef = useRef();
+  const [nostrTabs, setNostrTabs] = useState([]);
+  const [otherTabs, setOtherTabs] = useState([]);
+  const [openedTab, setOpenedTab] = useState()
+
+  const nostrAppsLinks = apps.map((app) => app = app.link);
 
   const openTabsFromDB = (list) => {
     if (list) {
       const orderedList = [...list].sort((prev, next) => next.order - prev.order);
       orderedList.forEach(async (tab) => { await openTab(tab, /* hidden */true); });
+      const otherTabsList = orderedList.filter((tab) => !nostrAppsLinks.includes(tab.app.link));
+      const nostrTabsList = orderedList.filter((tab) => nostrAppsLinks.includes(tab.app.link));
+      setOtherTabs([...otherTabsList]);
+      setNostrTabs([...nostrTabsList]);
       setTabs([...orderedList]);
     }
   }
@@ -95,6 +104,27 @@ const App = () => {
 
       const currentAlias = list.currentAlias ? list.currentAlias : 'without publicKey';
       const tabsList = await listTabs(currentAlias);
+      const isExistNostrLink = tabsList.some((tab) => nostrAppsLinks.includes(tab.app.link))
+
+      if (!isExistNostrLink) {
+        const tabs = [];
+
+        apps.forEach((app, ind) => {
+          const tab = {
+            id: "" + Math.random(),
+            app,
+            url: app.link,
+            order: apps.length - ind,
+            publicKey: currentAlias
+          };
+          tabs.push(tab)
+        });
+        await db.tabsList.bulkAdd(tabs);
+
+        const tabsList = await listTabs(currentAlias);
+        openTabsFromDB(tabsList);
+        return;
+      }
       openTabsFromDB(tabsList);
     }
   }, [])
@@ -139,8 +169,8 @@ const App = () => {
       API,
       apiCtx: tab,
       onLoadStop: async function (event) {
-	tab.url = event.url;
-	await updateTabDB(tab);
+        tab.url = event.url;
+        await updateTabDB(tab);
       },
       onGetPubkey: async function (pubkey) {
         let npub = nip19.npubEncode(pubkey);
@@ -148,18 +178,24 @@ const App = () => {
         setNpub(npub);
       },
       onClick: async function (x, y) {
-	console.log("click", x, y);
-	tab.ref.hide();
-	document.elementFromPoint(x, y).click();
+        console.log("click", x, y);
+        tab.ref.hide();
+        document.elementFromPoint(x, y).click();
       },
       onMenu: async function () {
-	console.log("menu click tab", tab.id);
-	// FIXME just for now a hack to close a tab
+        console.log("menu click tab", tab.id);
+        // FIXME just for now a hack to close a tab
 
-	// close & remove tab
-	await deleteTabDB(tab.id)
-	tab.ref.close();
-	setTabs((prev) => prev.filter(t => t.id != tab.id));
+        // close & remove tab
+        await deleteTabDB(tab.id)
+        tab.ref.close();
+        setTabs((prev) => prev.filter(t => t.id != tab.id));
+        if (nostrAppsLinks.includes(tab.app.link)) {
+          setNostrTabs((prev) => prev.filter(t => t.id != tab.id));
+        }
+        if (!nostrAppsLinks.includes(tab.app.link)) {
+          setOtherTabs((prev) => prev.filter(t => t.id != tab.id));
+        }
       },
     };
 
@@ -168,6 +204,20 @@ const App = () => {
   };
 
   const open = async (url, app, hidden) => {
+    const hiddenNostrTab = nostrTabs.find((tab) => tab.app.link === url);
+    if (hiddenNostrTab) {
+      hiddenNostrTab.ref.show();
+      setOpenedTab(hiddenNostrTab.id);
+      return;
+    }
+
+    const hiddenOtherTab = otherTabs.find((tab) => tab.app.link === url);
+
+    if (hiddenOtherTab) {
+      hiddenOtherTab.ref.show();
+      setOpenedTab(hiddenOtherTab.id);
+      return;
+    }
 
     const tab = {
       id: "" + Math.random(),
@@ -178,14 +228,22 @@ const App = () => {
     };
 
     await openTab(tab);
-
+    setOpenedTab(tab.id);
     setTabs((prev) => [tab, ...tabs]);
+
+    if (nostrAppsLinks.includes(tab.app.link)) {
+      setNostrTabs(() => [tab, ...nostrTabs]);
+    }
+    if (!nostrAppsLinks.includes(tab.app.link)) {
+      setOtherTabs(() => [tab, ...otherTabs]);
+    }
 
     await addTabToDB(tab, list);
   }
 
   const show = async (tab) => {
     tab.ref.show();
+    setOpenedTab(tab.id)
   }
 
   const editBtnClick = (ev) => {
@@ -313,21 +371,30 @@ const App = () => {
       <button onClick={() => db.delete()}>Delete DB</button>
 
       <div className="text-center p-3">
-        {tabs && tabs.length > 0 &&
-          <section className='d-flex flex-column align-items-start'>
-            <h3>Tabs</h3>
-            <div className='contentWrapper pb-2 d-flex gap-4'>
-              {tabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} onClick={() => show(tab)} />)}
-            </div>
-          </section>
-        }
         <section className='d-flex flex-column align-items-start'>
           <h3>Apps</h3>
-          <div className='contentWrapper pb-2 d-flex gap-4'>
-            {apps.map((app) => <IconBtn key={app.title} data={app} onClick={() => open(app.link, app)} />)}
+          <div className='contentWrapper pb-2 d-flex gap-4' style={{ maxWidth: '100%' }}>
+            {apps.map((app) => <IconBtn key={app.title} data={app} size='big' onClick={() => open(app.link, app)} />)}
           </div>
         </section>
       </div>
+      <footer id='footer' className="container p-0 d-flex flex-column position-fixed bottom-0">
+        <hr className='m-0' />
+        <div className="container d-flex align-items-center gap-2 p-1">
+          {otherTabs.length > 0 &&
+            <div className='contentWrapper d-flex gap-2' style={{ maxWidth: '130px' }}>
+              {otherTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => show(tab)} />)}
+            </div>
+          }
+          {otherTabs.length > 0 &&
+            <div style={{ width: '2px', height: '70px', backgroundColor: '#706d6dd4' }}></div>}
+          {nostrTabs.length > 0 &&
+            <div className='contentWrapper d-flex gap-2' style={{ flex: '1' }}>
+              {nostrTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => show(tab)} />)}
+            </div>
+          }
+        </div>
+      </footer >
       <Modal activeModal={modalActive}>
         {modalActive &&
           <EditKey keyProp={list[openKey]}

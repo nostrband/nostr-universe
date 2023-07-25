@@ -46,9 +46,9 @@ const initTab = () => {
     let oldHref = document.location.href;
     const observer = new MutationObserver(mutations => {
       if (oldHref !== document.location.href) {
-	oldHref = document.location.href;
-	console.log("url change", document.location.href);
-	window.nostrCordovaPlugin.setUrl(document.location.href);
+        oldHref = document.location.href;
+        console.log("url change", document.location.href);
+        window.nostrCordovaPlugin.setUrl(document.location.href);
       }
     });
     observer.observe(body, { childList: true, subtree: true });
@@ -85,24 +85,24 @@ const nostrZapConnect = () => {
     const BECH32_REGEX =
       /[a-z]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g
 
-      const array = [...value.matchAll(BECH32_REGEX)].map(a => a[0]);
+    const array = [...value.matchAll(BECH32_REGEX)].map(a => a[0]);
 
     let bech32 = "";
     for (let b32 of array) {
       try {
-	const {type, data} = await window.nostrCordovaPlugin.decodeBech32(b32);
-	console.log("b32", b32, "type", type, "data", data);
-	switch (type) {
-	  case "npub":
-	    bech32 = b32;
-	    break;
-	}
+        const { type, data } = await window.nostrCordovaPlugin.decodeBech32(b32);
+        console.log("b32", b32, "type", type, "data", data);
+        switch (type) {
+          case "npub":
+            bech32 = b32;
+            break;
+        }
       } catch (e) {
-	console.log("bad b32", b32, "e", e);
+        console.log("bad b32", b32, "e", e);
       }
 
       if (bech32)
-	break;
+        break;
     }
 
     if (!bech32)
@@ -132,12 +132,12 @@ const nostrZapConnect = () => {
     console.log("longtouch", e.target);
     try {
       return await zapByAttr(e, "href")
-	  || await zapByAttr(e, "id")
-	  || await zapByAttr(e, "data-npub")
-	  || await zapByAttr(e, "data-id")
-	  || await zapByAttr(e, "data-note-id")
-	  || await zap(document.location.href)
-      ;
+        || await zapByAttr(e, "id")
+        || await zapByAttr(e, "data-npub")
+        || await zapByAttr(e, "data-id")
+        || await zapByAttr(e, "data-note-id")
+        || await zap(document.location.href)
+        ;
     } catch (e) {
       console.log("zap failed", e);
     }
@@ -157,16 +157,16 @@ const getAsset = async (path) => {
     r.open("GET", path, true);
     r.onload = (e) => {
       if (r.readyState === 4) {
-	if (r.status === 200) {
-	  console.log("got asset ", path);
-	  ok(r.responseText);
-	} else {
-	  err("failed to get asset "+path+" r "+r.statusText);
-	}
+        if (r.status === 200) {
+          console.log("got asset ", path);
+          ok(r.responseText);
+        } else {
+          err("failed to get asset " + path + " r " + r.statusText);
+        }
       }
     };
     r.onerror = (e) => {
-      err("failed to get asset "+path+" r "+r.statusText);
+      err("failed to get asset " + path + " r " + r.statusText);
     };
     r.send(null);
   });
@@ -177,9 +177,9 @@ async function executeScriptAsync(code, name) {
   const self = this;
   return new Promise((ok, err) => {
     try {
-      self.executeScript({code}, (v) => {
-	console.log("injected script", name);
-	ok(v);
+      self.executeScript({ code }, (v) => {
+        console.log("injected script", name);
+        ok(v);
       });
     } catch (e) {
       console.log("failed to inject script", name);
@@ -205,7 +205,7 @@ export async function open(params) {
   // const db = npub ? "db_" + npub.substring(0, 15) : "";
   // const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},database=${db}`;
 
-  const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},hidden=${params.hidden ? "yes" : "no"}`;
+  const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},hidden=${params.hidden ? "yes" : "no"}, bottomoffset=100px`;
   console.log("browser options", options);
 
   const ref = cordova.InAppBrowser.open(params.url, '_blank', options);
@@ -238,31 +238,31 @@ export async function open(params) {
     switch (method) {
       case "encrypt":
       case "decrypt":
-	target = window.nostr.nip04;
-	break;
+        target = window.nostr.nip04;
+        break;
       case "getPublicKey":
       case "signEvent":
-	target = window.nostr;
-	break;
+        target = window.nostr;
+        break;
       case "setUrl":
       case "decodeBech32":
-	target = params.API;
-	targetArgs = [params.apiCtx, ...targetArgs];
-	break;
+        target = params.API;
+        targetArgs = [params.apiCtx, ...targetArgs];
+        break;
     }
 
     let err = null;
     let reply = null;
     if (target) {
       try {
-	reply = await target[method](...targetArgs);
+        reply = await target[method](...targetArgs);
       } catch (e) {
-	err = `${e}`;
+        err = `${e}`;
       }
 
       // FIXME remove later when we switch to onboarding
       if (method === 'getPublicKey' && params.onGetPubkey) {
-	await params.onGetPubkey(reply);
+        await params.onGetPubkey(reply);
       }
     } else {
       err = `Unknown method ${method}`;
