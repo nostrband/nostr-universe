@@ -21,7 +21,7 @@ export const Profile = (props) => {
       <Card.Body style={{padding: "6px"}}>
 	<center>
 	  {picture
-	  ? (<img src={picture} style={{borderRadius: "50%"}} width={"60%"} />)
+	  ? (<img src={picture} style={{borderRadius: "50%", width: "60%", aspectRatio: "1 / 1", objectFit: "cover"}} />)
 	  : (<BsFillPersonFill color='black' size={55} />)
 	  }
 	  <Card.Title>{name}</Card.Title>

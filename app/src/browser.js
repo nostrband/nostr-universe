@@ -202,9 +202,9 @@ export async function open(params) {
   const topOffset = header.offsetHeight + header.offsetTop;
   const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)));
   const footer = document.getElementById('footer');
-  const bottomOffset = footer.offsetHeight;
+  const bottomOffset = footer.offsetHeight - 1;
   const bottom = Math.round(window.devicePixelRatio * (bottomOffset + (params.bottom || 0)));
-  const loc = params.menu ? "no" : "yes";
+  const loc = "no"; // params.menu ? "no" : "yes";
   const menu = params.menu ? "no" : "yes";
   const hidden = params.hidden ? "yes" : "no";
 

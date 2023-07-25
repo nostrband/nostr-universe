@@ -393,7 +393,7 @@ const App = () => {
       <main>
         <button onClick={() => db.delete()}>Delete DB</button>
         {trendingProfiles && (
-          <div className='container-fluid p-3'>
+          <div className='container-fluid p-1'>
             <h3>Trending profiles</h3>
             <div className='d-flex flex-row flex-nowrap overflow-auto'>
               {trendingProfiles.map(p => (
@@ -403,14 +403,16 @@ const App = () => {
           </div>
         )}
 
-        <div className="text-center p-3">
-          <section className='d-flex flex-column align-items-start'>
-            <h3>Apps</h3>
-            <div className='contentWrapper pb-2 d-flex gap-4'>
-              {apps.map((app) => <IconBtn key={app.link} data={app} size='big' onClick={() => open(app.link, app)} />)}
-            </div>
-          </section>
-        </div>
+	{false && (
+          <div>
+            <h3 className="ps-3">Apps</h3>
+            <section className='container d-flex align-items-start'>
+              <div className='contentWrapper d-flex gap-4'>
+		{apps.map((app) => <IconBtn key={app.link} data={app} size='big' onClick={() => open(app.link, app)} />)}
+              </div>
+            </section>
+          </div>
+	)}
         <Modal activeModal={modalActive}>
           {modalActive &&
            <EditKey keyProp={list[openKey]}
@@ -436,19 +438,19 @@ const App = () => {
         <hr className='m-0' />
         <div className="container d-flex align-items-center gap-2 p-1">
           {otherTabs.length > 0 &&
-           <div className='contentWrapper d-flex gap-2' style={{ maxWidth: '130px' }}>
+           <div className='contentWrapper d-flex' style={{ maxWidth: '130px' }}>
              {otherTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => toggle(tab)} />)}
            </div>
           }
-	  <div style={{ width: '2px', height: '70px', backgroundColor: '#706d6dd4' }}></div>
-	  <div className='contentWrapper d-flex gap-2' style={{ flex: '1' }}>
+	  <div style={{ width: '2px', height: '50px', backgroundColor: '#706d6dd4' }}></div>
+	  <div className='contentWrapper d-flex' style={{ flex: '1' }}>
 	    {nostrTabs.length > 0 &&
 	     nostrTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => toggle(tab)} />)
 	    }
-	    <IconBtn key="addApp" data={{title: "Add", img: ""}} size='small' onClick={() => console.log("add app")} />
+	    <IconBtn key="addApp" data={{title: "Add", img: nostrIcon}} size='small' onClick={() => console.log("add app")} />
           </div>
         </div>
-      </footer >
+      </footer>
     </>
   );
 };
