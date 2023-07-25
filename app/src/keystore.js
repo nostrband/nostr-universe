@@ -15,6 +15,7 @@ const dummy = {
 
   selectKey: async function (pubkey) {
     console.log("SHOW KEY", pubkey);
+    return listKeys();
   },
 
   editKey: async function (info) {
@@ -39,7 +40,7 @@ const API = function (method) {
   const target = cordova.plugins.NostrKeyStore;
   return (...args) => {
     return new Promise((ok, err) => {
-      target[method](...[...args, ok, err]);
+      target[method](...[ok, err, ...args]);
     });
   };
 }
@@ -52,16 +53,16 @@ export async function addKey() {
   return API('addKey')();
 }
 
-export async function showKey(pubkey) {
-  return API('showKey')(pubkey);
+export async function showKey(req) {
+  return API('showKey')(req);
 }
 
-export async function selectKey(pubkey) {
-  return API('selectKey')(pubkey);
+export async function selectKey(req) {
+  return API('selectKey')(req);
 }
 
-export async function editKey(info) {
-  return API('editKey')(info);
+export async function editKey(req) {
+  return API('editKey')(req);
 }
 
 export async function getPublicKey() {
