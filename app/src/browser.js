@@ -1,5 +1,6 @@
 
 
+let menu = undefined;
 
 const initTab = () => {
   // this code will be executed in the opened tab,
@@ -199,16 +200,15 @@ export async function open(params) {
 
   const header = document.getElementById('header');
   const topOffset = header.offsetHeight + header.offsetTop;
-  const top = Math.round(window.devicePixelRatio * topOffset);
+  const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)));
   const footer = document.getElementById('footer');
   const bottomOffset = footer.offsetHeight;
-  const bottom = Math.round(window.devicePixelRatio * bottomOffset);
+  const bottom = Math.round(window.devicePixelRatio * (bottomOffset + (params.bottom || 0)));
+  const loc = params.menu ? "no" : "yes";
+  const menu = params.menu ? "no" : "yes";
+  const hidden = params.hidden ? "yes" : "no";
 
-  // database option is a noop now, so leave it for later
-  // const db = npub ? "db_" + npub.substring(0, 15) : "";
-  // const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},database=${db}`;
-
-  const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${params.hidden ? "yes" : "no"}`;
+  const options = `location=${loc},fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden}`;
   console.log("browser options", options);
 
   const ref = cordova.InAppBrowser.open(params.url, '_blank', options);
@@ -222,13 +222,15 @@ export async function open(params) {
     // main init to enable comms interface
     await ref.executeFuncAsync("initTab", initTab);
 
-    // nostr-zap
-    const asset = await getAsset("js/nostr-zap.js");
-    console.log("nostr-zap asset", asset.length);
-    await ref.executeScriptAsync(asset, "nostr-zap");
+    if (!params.menu) {
+      // nostr-zap
+      const asset = await getAsset("js/nostr-zap.js");
+      console.log("nostr-zap asset", asset.length);
+      await ref.executeScriptAsync(asset, "nostr-zap");
 
-    // init nostr-zap
-    await ref.executeFuncAsync("nostrZapConnect", nostrZapConnect);
+      // init nostr-zap
+      await ref.executeFuncAsync("nostrZapConnect", nostrZapConnect);
+    }
   });
 
   // handle api requests
@@ -291,6 +293,12 @@ export async function open(params) {
       await params.onMenu();
   });
 
+  // tab is hidden
+  ref.addEventListener('hide', async () => {
+    if (params.onHide)
+      await params.onHide();
+  });
+
   // handle clicks outside the inappbrowser to
   // intercept them and forward to our main window
   ref.addEventListener('click', async (event) => {
@@ -301,10 +309,47 @@ export async function open(params) {
       await params.onClick(x, y);
   });
 
+  // make sure we init the menu singleton
+  if (!params.menu)
+    await ensureMenu(params.API);
+
   // return to caller
   return ref;
 }
 
+async function ensureMenu(API) {
+  if (menu !== undefined)
+    return;
+
+  const params = {
+    url: "about:blank",
+    API,
+    apiCtx: null,
+    menu: true,
+    hidden: true,
+    top: 100,
+    bottom: 100,
+    onLoadStop: async function (event) {
+      // FIXME inject menu script
+      console.log("menu loaded");
+    },
+    onClick: async function (x, y) {
+      menu.hide();
+    },
+  };
+
+  // flags as 'starting' to avoid races
+  menu = null;
+
+  // launch it
+  menu = await open(params);
+}
+
+export async function showMenu() {
+  menu.show();
+}
+
 export const browser = {
-  open
+  open,
+  showMenu
 }

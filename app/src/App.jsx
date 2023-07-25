@@ -38,9 +38,11 @@ export const getNpubKey = (key) => {
 
 const API = {
   setUrl: async function (tab, url) {
-    console.log("tab", tab.id, "setUrl", url);
-    tab.url = url;
-    await updateTabDB(tab);
+    if (tab) {
+      console.log("tab", tab.id, "setUrl", url);
+      tab.url = url;
+      await updateTabDB(tab);
+    }
   },
   decodeBech32: function (tab, s) {
     return nip19.decode(s);
@@ -195,15 +197,22 @@ const App = () => {
       onClick: async function (x, y) {
         console.log("click", x, y);
         tab.ref.hide();
+	setOpenedTab(null);
         document.elementFromPoint(x, y).click();
+      },
+      onHide: async function () {
+	setOpenedTab(null);
       },
       onMenu: async function () {
         console.log("menu click tab", tab.id);
         // FIXME just for now a hack to close a tab
+	browser.showMenu();
+	return;
 
         // close & remove tab
         await deleteTabDB(tab.id)
         tab.ref.close();
+	setOpenedTab(null);
         setTabs((prev) => prev.filter(t => t.id != tab.id));
         if (nostrAppsLinks.includes(tab.app.link)) {
           setNostrTabs((prev) => prev.filter(t => t.id != tab.id));
@@ -257,9 +266,19 @@ const App = () => {
     await addTabToDB(tab, list);
   }
 
-  const show = async (tab) => {
+  const show = (tab) => {
     tab.ref.show();
     setOpenedTab(tab.id)
+  }
+
+  const toggle = (tab) => {
+    console.log("toggle", tab.id, openedTab);
+    if (tab.id === openedTab) {
+      tab.ref.hide();
+      setOpenedTab(null);
+    } else {
+      show(tab);
+    }
   }
 
   const editBtnClick = (ev) => {
@@ -394,40 +413,40 @@ const App = () => {
         </div>
         <Modal activeModal={modalActive}>
           {modalActive &&
-            <EditKey keyProp={list[openKey]}
-              copyKey={copyKey}
-              showKey={showKey}
-              editKey={editKey}
-              setModalActive={setModalActive} />}
+           <EditKey keyProp={list[openKey]}
+             copyKey={copyKey}
+             showKey={showKey}
+             editKey={editKey}
+             setModalActive={setModalActive} />}
         </Modal >
         <Modal activeModal={isOpenSearch}>
           {isOpenSearch &&
-            (<div className='d-flex flex-column'>
-              <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
-                <AiOutlineClose color='white' size={30} onClick={closeModal} />
-              </div>
-              <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
-                <Input ref={inputSearchRef} />
-                <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
-              </form>
-            </div>)}
+           (<div className='d-flex flex-column'>
+             <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
+               <AiOutlineClose color='white' size={30} onClick={closeModal} />
+             </div>
+             <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
+               <Input ref={inputSearchRef} />
+               <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
+             </form>
+           </div>)}
         </Modal >
       </main>
       <footer id='footer'>
         <hr className='m-0' />
         <div className="container d-flex align-items-center gap-2 p-1">
           {otherTabs.length > 0 &&
-            <div className='contentWrapper d-flex gap-2' style={{ maxWidth: '130px' }}>
-              {otherTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => show(tab)} />)}
-            </div>
+           <div className='contentWrapper d-flex gap-2' style={{ maxWidth: '130px' }}>
+             {otherTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => toggle(tab)} />)}
+           </div>
           }
-          {otherTabs.length > 0 &&
-            <div style={{ width: '2px', height: '70px', backgroundColor: '#706d6dd4' }}></div>}
-          {nostrTabs.length > 0 &&
-            <div className='contentWrapper d-flex gap-2' style={{ flex: '1' }}>
-              {nostrTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => show(tab)} />)}
-            </div>
-          }
+	  <div style={{ width: '2px', height: '70px', backgroundColor: '#706d6dd4' }}></div>
+	  <div className='contentWrapper d-flex gap-2' style={{ flex: '1' }}>
+	    {nostrTabs.length > 0 &&
+	     nostrTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => toggle(tab)} />)
+	    }
+	    <IconBtn key="addApp" data={{title: "Add", img: ""}} size='small' onClick={() => console.log("add app")} />
+          </div>
         </div>
       </footer >
     </>
