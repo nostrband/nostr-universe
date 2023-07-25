@@ -3,9 +3,9 @@
 }
 
 body {
-  min-height: 100vh;
   background-color: #282c34;
   color: white;
+  margin: 0;
 }
 
 .wrapper {
@@ -49,7 +49,8 @@ body {
 }
 
 ::-webkit-scrollbar {
-   height: 4px;
+   height: 0;
+   width: 4px;
    scroll-behavior: smooth;
 }
 
@@ -67,4 +68,33 @@ body {
 
 .modalContent.active {
   transform: scale(1);
+}
+
+#root {
+  height: 100vh;
+
+  /* grid container settings */
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'header'
+    'main'
+    'footer';
+}
+
+#root > header {
+  grid-area: header;
+}
+
+#root > main {
+  grid-area: main;
+  overflow: auto;
+  padding: 15px 5px 10px 5px;
+}
+
+#root > footer {
+  grid-area: footer;
+  overflow: auto;
+  scrollbar-width: thin;
 }

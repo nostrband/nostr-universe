@@ -198,14 +198,17 @@ async function executeFuncAsync(name, fn, ...args) {
 export async function open(params) {
 
   const header = document.getElementById('header');
-  const offset = header.offsetHeight + header.offsetTop;
-  const top = Math.round(window.devicePixelRatio * offset);
+  const topOffset = header.offsetHeight + header.offsetTop;
+  const top = Math.round(window.devicePixelRatio * topOffset);
+  const footer = document.getElementById('footer');
+  const bottomOffset = footer.offsetHeight;
+  const bottom = Math.round(window.devicePixelRatio * bottomOffset);
 
   // database option is a noop now, so leave it for later
   // const db = npub ? "db_" + npub.substring(0, 15) : "";
   // const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},database=${db}`;
 
-  const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},hidden=${params.hidden ? "yes" : "no"}, bottomoffset=100px`;
+  const options = `location=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=yes,zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${params.hidden ? "yes" : "no"}`;
   console.log("browser options", options);
 
   const ref = cordova.InAppBrowser.open(params.url, '_blank', options);
@@ -291,9 +294,9 @@ export async function open(params) {
   // handle clicks outside the inappbrowser to
   // intercept them and forward to our main window
   ref.addEventListener('click', async (event) => {
-    console.log("browser click", event.x, event.y);
     const x = event.x / window.devicePixelRatio;
     const y = event.y / window.devicePixelRatio;
+    console.log("browser click", event.x, event.y, " => ", x, y);
     if (params.onClick)
       await params.onClick(x, y);
   });
