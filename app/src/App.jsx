@@ -388,7 +388,7 @@ const App = () => {
           <section className='d-flex flex-column align-items-start'>
             <h3>Apps</h3>
             <div className='contentWrapper pb-2 d-flex gap-4'>
-              {apps.map((app) => <IconBtn key={app.link} data={app} onClick={() => open(app.link, app)} />)}
+              {apps.map((app) => <IconBtn key={app.link} data={app} size='big' onClick={() => open(app.link, app)} />)}
             </div>
           </section>
         </div>
