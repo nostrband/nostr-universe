@@ -282,89 +282,99 @@ const App = () => {
 
   return (
     <>
-      <style type="text/css">
-      </style>
-      <header id="header" className="container d-flex align-items-center justify-content-between" style={{ padding: '0 10px 0 10px' }}>
-	<BsFillPersonFill color='white' size={35} />
-	<Dropdown data-bs-theme="dark"
-	  drop='down-centered'>
-	  <Dropdown.Toggle id="dropdown-basic" variant="secondary"
-	  >
-	    {npub ? npub.substring(0, 10) + "..." + npub.substring(59) : 'Key is not chosen'}
-	  </Dropdown.Toggle>
+      <header id="header">
+	<div className="container d-flex align-items-center justify-content-between">
+	  <BsFillPersonFill color='white' size={35} />
+	  <Dropdown data-bs-theme="dark"
+	    drop='down-centered'>
+	    <Dropdown.Toggle id="dropdown-basic" variant="secondary"
+	    >
+	      {npub ? npub.substring(0, 10) + "..." + npub.substring(59) : 'Key is not chosen'}
+	    </Dropdown.Toggle>
 
-	  <Dropdown.Menu>
-	    {keys && keys.length && keys.map((key) => nip19.npubEncode(key)).map((key, ind) => {
-	      return (<Dropdown.Item key={key} href={`#/${key + 1}`} className='d-flex align-items-center gap-4'>
-		<BsFillPersonFill color='white' size={35} />
-		<div className='fs-3 text-white flex-grow-1' onClick={() => selectKey(ind)}>{key.substring(0, 10) + "..." + key.substring(59)}</div>
-		<div onClick={editBtnClick} data-key={ind}>
-		  <BiSolidPencil color='white' size={26} className=' pe-none ' />
-		</div>
-	      </Dropdown.Item>)
-	    })}
-	    {keys && <Dropdown.Divider />}
-	    <Dropdown.Item href="#/action-15" className=' d-flex justify-content-center  '>
-	      <Button variant="secondary" size="lg" onClick={addKey}>+ Add keys</Button>
-	    </Dropdown.Item>
-	  </Dropdown.Menu>
-	</Dropdown>
+	    <Dropdown.Menu>
+	      {keys && keys.length && keys.map((key) => nip19.npubEncode(key)).map((key, ind) => {
+		return (<Dropdown.Item key={key} href={`#/${key + 1}`} className='d-flex align-items-center gap-4'>
+		  <BsFillPersonFill color='white' size={35} />
+		  <div className='fs-3 text-white flex-grow-1' onClick={() => selectKey(ind)}>{key.substring(0, 10) + "..." + key.substring(59)}</div>
+		  <div onClick={editBtnClick} data-key={ind}>
+		    <BiSolidPencil color='white' size={26} className=' pe-none ' />
+		  </div>
+		</Dropdown.Item>)
+	      })}
+	      {keys && <Dropdown.Divider />}
+	      <Dropdown.Item href="#/action-15" className=' d-flex justify-content-center  '>
+		<Button variant="secondary" size="lg" onClick={addKey}>+ Add keys</Button>
+	      </Dropdown.Item>
+	    </Dropdown.Menu>
+	  </Dropdown>
 
-	<AiOutlineSearch color='white' size={35} onClick={() => setIsOpenSearch(true)} />
-      </header>
-      <hr className='m-0' />
-      <button onClick={() => db.delete()}>Delete DB</button>
-
-      {trendingProfiles && (
-	<div className='container-fluid p-3'>
-          <h3>Trending profiles</h3>
-          <div className='d-flex flex-row flex-nowrap overflow-auto'>
-	    {trendingProfiles.map(p => (
-	      <Profile key={p.npub} profile={p} onClick={onProfileClick} />
-	    ))}
-	  </div>
+	  <AiOutlineSearch color='white' size={35} onClick={() => setIsOpenSearch(true)} />
 	</div>
-      )}
+	<hr className='m-0' />
+      </header>
+      <main>
+	<button onClick={() => db.delete()}>Delete DB</button>
 
-      <div className="text-center p-3">
+	{trendingProfiles && (
+	  <div className='container-fluid p-3'>
+            <h3>Trending profiles</h3>
+            <div className='d-flex flex-row flex-nowrap overflow-auto'>
+	      {trendingProfiles.map(p => (
+		<Profile key={p.npub} profile={p} onClick={onProfileClick} />
+	      ))}
+	    </div>
+	  </div>
+	)}
 
-        {tabs && tabs.length > 0 &&
-         <section className='d-flex flex-column align-items-start'>
-           <h3>Tabs</h3>
-           <div className='contentWrapper pb-2 d-flex gap-4'>
-	     {tabs.map((tab) => <IconBtn key={tab.url} data={tab.app} onClick={() => show(tab)} />)}
-           </div>
-         </section>
-        }
+	<div className="text-center p-3">
+
+          {tabs && tabs.length > 0 &&
+           <section className='d-flex flex-column align-items-start'>
+             <h3>Tabs</h3>
+             <div className='contentWrapper pb-2 d-flex gap-4'>
+	       {tabs.map((tab) => <IconBtn key={tab.url} data={tab.app} onClick={() => show(tab)} />)}
+             </div>
+           </section>
+          }
+          <section className='d-flex flex-column align-items-start'>
+            <h3>Apps</h3>
+            <div className='contentWrapper pb-2 d-flex gap-4'>
+	      {apps.map((app) => <IconBtn key={app.link} data={app} onClick={() => open(app.link, app)} />)}
+            </div>
+          </section>
+	</div>
+	<Modal activeModal={modalActive}>
+          {modalActive &&
+           <EditKey keyProp={list[openKey]}
+             copyKey={copyKey}
+             showKey={showKey}
+             editKey={editKey}
+             setModalActive={setModalActive} />}
+	</Modal >
+	<Modal activeModal={isOpenSearch}>
+          {isOpenSearch &&
+           (<div className='d-flex flex-column'>
+             <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
+	       <AiOutlineClose color='white' size={30} onClick={closeModal} />
+             </div>
+             <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
+	       <Input ref={inputSearchRef} />
+	       <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
+             </form>
+           </div>)}
+	</Modal >
+      </main>
+      <footer id="footer">
+	<hr className='m-0' />
         <section className='d-flex flex-column align-items-start'>
-          <h3>Apps</h3>
-          <div className='contentWrapper pb-2 d-flex gap-4'>
+          <div className='contentWrapper p-1 d-flex gap-4'>
 	    {apps.map((app) => <IconBtn key={app.link} data={app} onClick={() => open(app.link, app)} />)}
           </div>
         </section>
-      </div>
-      <Modal activeModal={modalActive}>
-        {modalActive &&
-         <EditKey keyProp={list[openKey]}
-           copyKey={copyKey}
-           showKey={showKey}
-           editKey={editKey}
-           setModalActive={setModalActive} />}
-      </Modal >
-      <Modal activeModal={isOpenSearch}>
-        {isOpenSearch &&
-         (<div className='d-flex flex-column'>
-           <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
-	     <AiOutlineClose color='white' size={30} onClick={closeModal} />
-           </div>
-           <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
-	     <Input ref={inputSearchRef} />
-	     <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
-           </form>
-         </div>)}
-      </Modal >
+      </footer>
     </>
   );
-      };
+};
 
 export default App;
