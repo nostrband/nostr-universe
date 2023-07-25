@@ -5,6 +5,8 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import './App.css';
 import { db, addTabToDB, deleteTabDB, updateTabDB, listTabs } from './db';
 import { browser } from './browser';
+import { keystore } from './keystore';
+import { config } from './config';
 
 import { AiOutlineClose, AiOutlineSearch } from "react-icons/ai";
 import { BiSolidPencil } from "react-icons/bi";
@@ -14,6 +16,8 @@ import { EditKey } from './components/EditKey';
 import { Input } from './components/Input';
 import { Modal } from './components/ModalWindow';
 import { IconBtn } from './components/iconBtn';
+import { Profile } from './components/Profile';
+
 import coracleIcon from './icons/coracle.png';
 import irisIcon from './icons/iris.png';
 import nostrIcon from './icons/nb.png';
@@ -27,20 +31,6 @@ const apps = [
   { title: 'Coracle', img: coracleIcon, link: 'https://coracle.social/' },
   { title: 'Satellite', img: satelliteIcon, link: 'https://satellite.earth/' }
 ];
-
-const getPromisePlugin = (method, msg = '') => {
-  return new Promise((resolve, reject) => {
-    cordova.plugins.NostrKeyStore[method](
-      function (res) {
-        resolve(res)
-      },
-      function (error) {
-        reject(error)
-      },
-      msg ? msg : null
-    )
-  })
-};
 
 export const getNpubKey = (key) => {
   return nip19.npubEncode(key);
@@ -65,6 +55,7 @@ const App = () => {
   const [openKey, setOpenKey] = useState();
   const [list, setList] = useState();
   const [tabs, setTabs] = useState([]);
+  const [trendingProfiles, setTrendingProfiles] = useState();
   const inputSearchRef = useRef();
 
   const openTabsFromDB = (list) => {
@@ -75,12 +66,29 @@ const App = () => {
     }
   }
 
-  useEffect(async () => {
-    document.addEventListener("deviceready", onDeviceReady, false)
+  useEffect(() => {
+
+    async function fetchTrendingProfiles() {
+      const r = await fetch("https://api.nostr.band/v0/trending/profiles");
+      const tpr = await r.json();
+      const tp = tpr.profiles.map(p => {
+	try {
+	  const pr = JSON.parse(p.profile.content);
+	  pr.npub = getNpubKey(p.pubkey);
+	  return pr;
+	} catch (e) {
+	  console.log("failed to parse profile", e);
+	  return undefined;
+	}
+      });
+      if (tp.length > 10)
+	tp.length = 10;
+      setTrendingProfiles(tp);
+    }
 
     async function onDeviceReady() {
       console.log('device ready');
-      const list = await getPromisePlugin('listKeys');
+      const list = await keystore.listKeys();
 
       if (list.currentAlias) {
         const currentKey = getNpubKey(list.currentAlias);
@@ -96,14 +104,21 @@ const App = () => {
       const currentAlias = list.currentAlias ? list.currentAlias : 'without publicKey';
       const tabsList = await listTabs(currentAlias);
       openTabsFromDB(tabsList);
+
+      await fetchTrendingProfiles();
     }
+
+    if (config.DEBUG)
+      onDeviceReady();
+    else
+      document.addEventListener("deviceready", onDeviceReady, false);
   }, [])
 
   const addKey = async () => {
-    const key = await getPromisePlugin('addKey');
+    const key = await keystore.addKey();
 
     if (key) {
-      const listKeys = await getPromisePlugin('listKeys');
+      const listKeys = await keystore.listKeys();
 
       if (!list && listKeys.currentAlias) {
         const tabs = await db.tabsList.where('publicKey').equals('without publicKey').toArray();
@@ -169,6 +184,7 @@ const App = () => {
 
   const open = async (url, app, hidden) => {
 
+    console.log("open", url);
     const tab = {
       id: "" + Math.random(),
       app,
@@ -200,12 +216,12 @@ const App = () => {
   }
 
   const showKey = async () => {
-    await getPromisePlugin('showKey', { publicKey: openKey });
+    await keystore.showKey({ publicKey: openKey });
   }
 
   const selectKey = async (ind) => {
     const key = keys[ind];
-    const res = await getPromisePlugin('selectKey', { publicKey: key });
+    const res = await keystore.selectKey({ publicKey: key });
 
     if (res) {
       if (res.currentAlias && res.currentAlias !== list.currentAlias) {
@@ -225,7 +241,7 @@ const App = () => {
   }
 
   const editKey = async (keyInfoObj) => {
-    const keysList = await getPromisePlugin('editKey', keyInfoObj);
+    const keysList = await keystore.editKey(keyInfoObj);
 
     if (keysList) {
       setList(keysList);
@@ -260,96 +276,95 @@ const App = () => {
     handleClickSearchBtn();
   }
 
+  const onProfileClick = (npub) => {
+    console.log("show", npub);
+  }
+
   return (
     <>
       <style type="text/css">
-        {`
-    .btn-primary {
-      --bs-btn-bg: none;
-      --bs-btn-active-bg: none;
-      --bs-btn-border-color: none;
-      --bs-btn-hover-bg: none;
-      --bs-btn-hover-border-color: none;
-      --bs-btn-focus-shadow-rgb: 60,153,110;
-      --bs-btn-disabled-bg: none;
-      --bs-btn-disabled-border-color: none;
-      font-size: 1.5rem;
-    }
-    .dropdown-menu {
-      --bs-dropdown-link-active-bg: none;
-      --bs-dropdown-min-width: 80vw;
-    }
-	`}
       </style>
       <header id="header" className="container d-flex align-items-center justify-content-between" style={{ padding: '0 10px 0 10px' }}>
-        <BsFillPersonFill color='white' size={35} />
-        <Dropdown data-bs-theme="dark"
-          drop='down-centered'>
-          <Dropdown.Toggle id="dropdown-basic"
-          >
-            {npub ? npub.substring(0, 10) + "..." + npub.substring(59) : 'Key is not chosen'}
-          </Dropdown.Toggle>
+	<BsFillPersonFill color='white' size={35} />
+	<Dropdown data-bs-theme="dark"
+	  drop='down-centered'>
+	  <Dropdown.Toggle id="dropdown-basic" variant="secondary"
+	  >
+	    {npub ? npub.substring(0, 10) + "..." + npub.substring(59) : 'Key is not chosen'}
+	  </Dropdown.Toggle>
 
-          <Dropdown.Menu>
-            {keys && keys.length && keys.map((key) => nip19.npubEncode(key)).map((key, ind) => {
-              return (<Dropdown.Item href={`#/${key + 1}`} className='d-flex align-items-center gap-4'>
-                <BsFillPersonFill color='white' size={35} />
-                <div className='fs-3 text-white flex-grow-1' onClick={() => selectKey(ind)}>{key.substring(0, 10) + "..." + key.substring(59)}</div>
-                <div onClick={editBtnClick} data-key={ind}>
-                  <BiSolidPencil color='white' size={26} className=' pe-none ' />
-                </div>
-              </Dropdown.Item>)
-            })}
-            {keys && <Dropdown.Divider />}
-            <Dropdown.Item href="#/action-15" className=' d-flex justify-content-center  '>
-              <Button variant="secondary" size="lg" onClick={addKey}>+ Add keys</Button>
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
+	  <Dropdown.Menu>
+	    {keys && keys.length && keys.map((key) => nip19.npubEncode(key)).map((key, ind) => {
+	      return (<Dropdown.Item key={key} href={`#/${key + 1}`} className='d-flex align-items-center gap-4'>
+		<BsFillPersonFill color='white' size={35} />
+		<div className='fs-3 text-white flex-grow-1' onClick={() => selectKey(ind)}>{key.substring(0, 10) + "..." + key.substring(59)}</div>
+		<div onClick={editBtnClick} data-key={ind}>
+		  <BiSolidPencil color='white' size={26} className=' pe-none ' />
+		</div>
+	      </Dropdown.Item>)
+	    })}
+	    {keys && <Dropdown.Divider />}
+	    <Dropdown.Item href="#/action-15" className=' d-flex justify-content-center  '>
+	      <Button variant="secondary" size="lg" onClick={addKey}>+ Add keys</Button>
+	    </Dropdown.Item>
+	  </Dropdown.Menu>
+	</Dropdown>
 
-        <AiOutlineSearch color='white' size={35} onClick={() => setIsOpenSearch(true)} />
+	<AiOutlineSearch color='white' size={35} onClick={() => setIsOpenSearch(true)} />
       </header>
       <hr className='m-0' />
       <button onClick={() => db.delete()}>Delete DB</button>
 
+      {trendingProfiles && (
+	<div className='container-fluid p-3'>
+          <h3>Trending profiles</h3>
+          <div className='d-flex flex-row flex-nowrap overflow-auto'>
+	    {trendingProfiles.map(p => (
+	      <Profile key={p.npub} profile={p} onClick={onProfileClick} />
+	    ))}
+	  </div>
+	</div>
+      )}
+
       <div className="text-center p-3">
+
         {tabs && tabs.length > 0 &&
-          <section className='d-flex flex-column align-items-start'>
-            <h3>Tabs</h3>
-            <div className='contentWrapper pb-2 d-flex gap-4'>
-              {tabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} onClick={() => show(tab)} />)}
-            </div>
-          </section>
+         <section className='d-flex flex-column align-items-start'>
+           <h3>Tabs</h3>
+           <div className='contentWrapper pb-2 d-flex gap-4'>
+	     {tabs.map((tab) => <IconBtn key={tab.url} data={tab.app} onClick={() => show(tab)} />)}
+           </div>
+         </section>
         }
         <section className='d-flex flex-column align-items-start'>
           <h3>Apps</h3>
           <div className='contentWrapper pb-2 d-flex gap-4'>
-            {apps.map((app) => <IconBtn key={app.title} data={app} onClick={() => open(app.link, app)} />)}
+	    {apps.map((app) => <IconBtn key={app.link} data={app} onClick={() => open(app.link, app)} />)}
           </div>
         </section>
       </div>
       <Modal activeModal={modalActive}>
         {modalActive &&
-          <EditKey keyProp={list[openKey]}
-            copyKey={copyKey}
-            showKey={showKey}
-            editKey={editKey}
-            setModalActive={setModalActive} />}
+         <EditKey keyProp={list[openKey]}
+           copyKey={copyKey}
+           showKey={showKey}
+           editKey={editKey}
+           setModalActive={setModalActive} />}
       </Modal >
       <Modal activeModal={isOpenSearch}>
         {isOpenSearch &&
-          (<div className='d-flex flex-column'>
-            <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
-              <AiOutlineClose color='white' size={30} onClick={closeModal} />
-            </div>
-            <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
-              <Input ref={inputSearchRef} />
-              <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
-            </form>
-          </div>)}
+         (<div className='d-flex flex-column'>
+           <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
+	     <AiOutlineClose color='white' size={30} onClick={closeModal} />
+           </div>
+           <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
+	     <Input ref={inputSearchRef} />
+	     <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
+           </form>
+         </div>)}
       </Modal >
     </>
   );
-};
+      };
 
 export default App;
