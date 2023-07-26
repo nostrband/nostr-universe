@@ -13,20 +13,20 @@ export const Profile = (props) => {
   };
   
   const name = crop(props.profile?.name || props.profile?.display_name || npub, 15);
-  const about = crop(props.profile?.about || "", 30);
+  const about = crop(props.profile?.about || "", 25);
   const picture = props.profile?.picture || "";
 
   return (
-    <Card style={{ minWidth: '45%', marginRight: '5px' }}>
+    <Card style={{ minWidth: '40%', marginRight: '5px' }}>
       <Card.Body style={{padding: "6px"}}>
 	<center>
 	  {picture
 	  ? (<img src={picture} style={{borderRadius: "50%", width: "60%", aspectRatio: "1 / 1", objectFit: "cover"}} />)
 	  : (<BsFillPersonFill color='black' size={55} />)
 	  }
-	  <Card.Title>{name}</Card.Title>
+	  <Card.Title style={{marginBottom: "3px"}}>{name}</Card.Title>
 	  <small>{crop(npub, 13)}</small>
-	  <Card.Text style={{marginBottom: "3px"}}>{about}</Card.Text>
+	  <Card.Text style={{marginBottom: "3px", overflowWrap: "break-word"}}>{about}</Card.Text>
 	  <Button onClick={() => props.onClick(npub)}>View</Button>
 	</center>
       </Card.Body>

@@ -29,7 +29,12 @@ const apps = [
   { title: 'Snort', img: snortIcon, link: 'https://snort.social/' },
   { title: 'Iris', img: irisIcon, link: 'https://iris.to/' },
   { title: 'Coracle', img: coracleIcon, link: 'https://coracle.social/' },
-  { title: 'Satellite', img: satelliteIcon, link: 'https://satellite.earth/' }
+  { title: 'Satellite', img: satelliteIcon, link: 'https://satellite.earth/' },
+  { title: 'Zapddit', img: "https://zapddit.com/assets/icons/logo-without-text-zapddit.svg", link: 'https://zapddit.com/' },
+  { title: 'Agora', img: "https://agorasocial.app/images/favicon/120.png", link: 'https://agorasocial.app/' },
+  { title: 'Pinstr', img: "https://pinstr.app/favicon.ico", link: 'https://pinstr.app/' },
+  { title: 'Nosta', img: "https://nosta.me/images/apple-icon-120x120.png", link: 'https://nosta.me/' },
+  { title: 'NostrApp', img: "https://nostrapp.link/logo.png", link: 'https://nostrapp.link/' },
 ];
 
 export const getNpubKey = (key) => {
@@ -65,12 +70,14 @@ const App = () => {
 
   const nostrAppsLinks = apps.map((app) => app = app.link);
 
-  const openTabsFromDB = (list) => {
+  const openTabsFromDB = async (list) => {
     if (list) {
       const orderedList = [...list].sort((prev, next) => next.order - prev.order);
-      orderedList.forEach(async (tab) => { await openTab(tab, /* hidden */true); });
-      const otherTabsList = orderedList.filter((tab) => !nostrAppsLinks.includes(tab.app.link));
-      const nostrTabsList = orderedList.filter((tab) => nostrAppsLinks.includes(tab.app.link));
+
+      //orderedList.forEach(async (tab) => { await openTab(tab, /* hidden */true); });
+
+      const otherTabsList = orderedList.filter((tab) => !nostrAppsLinks.includes(tab.url));
+      const nostrTabsList = orderedList.filter((tab) => nostrAppsLinks.includes(tab.url));
       setOtherTabs([...otherTabsList]);
       setNostrTabs([...nostrTabsList]);
       setTabs([...orderedList]);
@@ -185,30 +192,29 @@ const App = () => {
       hidden,
       API,
       apiCtx: tab,
-      onLoadStop: async function (event) {
+      onLoadStop: async (event) => {
         tab.url = event.url;
         await updateTabDB(tab);
       },
-      onGetPubkey: async function (pubkey) {
+      onGetPubkey: (pubkey) => {
         let npub = nip19.npubEncode(pubkey);
         console.log("npub", npub);
         setNpub(npub);
       },
-      onClick: async function (x, y) {
+      onClick: (x, y) => {
         console.log("click", x, y);
-        tab.ref.hide();
-	setOpenedTab(null);
+	hide(tab);
         document.elementFromPoint(x, y).click();
       },
-      onHide: async function () {
+      onHide: () => {
 	setOpenedTab(null);
       },
-      onMenu: async function () {
+      onMenu: async () => {
         console.log("menu click tab", tab.id);
-        // FIXME just for now a hack to close a tab
-	browser.showMenu();
-	return;
+//	browser.showMenu(tab.ref);
+//	return;
 
+        // FIXME just for now a hack to close a tab
         // close & remove tab
         await deleteTabDB(tab.id)
         tab.ref.close();
@@ -221,29 +227,59 @@ const App = () => {
           setOtherTabs((prev) => prev.filter(t => t.id != tab.id));
         }
       },
+      onBlank: (url) => {
+	hide(tab);
+	open(url);
+      },
     };
 
     // open the browser
     tab.ref = await browser.open(params);
   };
 
+  const hide = (tab) => {
+    tab.ref.hide();
+    setOpenedTab(null);
+  }
+
+  const show = async (tab) => {
+    if (!tab.ref)
+      await openTab(tab, /* hidden */false);
+    else
+      tab.ref.show();
+    setOpenedTab(tab.id)
+  }
+
+  const toggle = (tab) => {
+    console.log("toggle", tab.id, openedTab);
+    if (tab.id === openedTab) {
+      hide(tab);
+    } else {
+      show(tab);
+    }
+  }
+
   const open = async (url, app, hidden) => {
     const hiddenNostrTab = nostrTabs.find((tab) => tab.app.link === url);
     if (hiddenNostrTab) {
-      hiddenNostrTab.ref.show();
-      setOpenedTab(hiddenNostrTab.id);
+      show(hiddenNostrTab);
       return;
     }
 
     const hiddenOtherTab = otherTabs.find((tab) => tab.app.link === url);
 
     if (hiddenOtherTab) {
-      hiddenOtherTab.ref.show();
-      setOpenedTab(hiddenOtherTab.id);
+      show(hiddenOtherTab);
       return;
     }
 
-    console.log("open", url);
+    if (!app)
+      app = {
+	link: url,
+	title: (new URL(url)).hostname,
+      };
+
+    console.log("open", url, JSON.stringify(app));
     const tab = {
       id: "" + Math.random(),
       app,
@@ -256,29 +292,14 @@ const App = () => {
     setOpenedTab(tab.id);
     setTabs((prev) => [tab, ...tabs]);
 
-    if (nostrAppsLinks.includes(tab.app.link)) {
+    if (nostrAppsLinks.includes(tab.app?.link)) {
       setNostrTabs(() => [tab, ...nostrTabs]);
     }
-    if (!nostrAppsLinks.includes(tab.app.link)) {
+    if (!nostrAppsLinks.includes(tab.app?.link)) {
       setOtherTabs(() => [tab, ...otherTabs]);
     }
 
     await addTabToDB(tab, list);
-  }
-
-  const show = (tab) => {
-    tab.ref.show();
-    setOpenedTab(tab.id)
-  }
-
-  const toggle = (tab) => {
-    console.log("toggle", tab.id, openedTab);
-    if (tab.id === openedTab) {
-      tab.ref.hide();
-      setOpenedTab(null);
-    } else {
-      show(tab);
-    }
   }
 
   const editBtnClick = (ev) => {
@@ -360,92 +381,87 @@ const App = () => {
   return (
     <>
       <header id="header">
-        <div className="container d-flex align-items-center justify-content-between">
-          <BsFillPersonFill color='white' size={35} />
-          <Dropdown data-bs-theme="dark"
-            drop='down-centered'>
-            <Dropdown.Toggle id="dropdown-basic" variant="secondary"
-            >
-              {npub ? npub.substring(0, 10) + "..." + npub.substring(59) : 'Key is not chosen'}
-            </Dropdown.Toggle>
+	<div className="container d-flex align-items-center justify-content-between">
+	  <BsFillPersonFill color='white' size={35} />
+	  <Dropdown data-bs-theme="dark"
+	    drop='down-centered'>
+	    <Dropdown.Toggle id="dropdown-basic" variant="secondary"
+	    >
+	      {npub ? npub.substring(0, 10) + "..." + npub.substring(59) : 'Key is not chosen'}
+	    </Dropdown.Toggle>
 
-            <Dropdown.Menu>
-              {keys && keys.length && keys.map((key) => nip19.npubEncode(key)).map((key, ind) => {
-                return (<Dropdown.Item key={key} href={`#/${key + 1}`} className='d-flex align-items-center gap-4'>
-                  <BsFillPersonFill color='white' size={35} />
-                  <div className='fs-3 text-white flex-grow-1' onClick={() => selectKey(ind)}>{key.substring(0, 10) + "..." + key.substring(59)}</div>
-                  <div onClick={editBtnClick} data-key={ind}>
-                    <BiSolidPencil color='white' size={26} className=' pe-none ' />
-                  </div>
-                </Dropdown.Item>)
-              })}
-              {keys && <Dropdown.Divider />}
-              <Dropdown.Item href="#/action-15" className=' d-flex justify-content-center  '>
-                <Button variant="secondary" size="lg" onClick={addKey}>+ Add keys</Button>
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+	    <Dropdown.Menu>
+	      {keys && keys.length && keys.map((key) => nip19.npubEncode(key)).map((key, ind) => {
+		return (<Dropdown.Item key={key} href={`#/${key + 1}`} className='d-flex align-items-center gap-4'>
+		  <BsFillPersonFill color='white' size={35} />
+		  <div className='fs-3 text-white flex-grow-1' onClick={() => selectKey(ind)}>{key.substring(0, 10) + "..." + key.substring(59)}</div>
+		  <div onClick={editBtnClick} data-key={ind}>
+		    <BiSolidPencil color='white' size={26} className=' pe-none ' />
+		  </div>
+		</Dropdown.Item>)
+	      })}
+	      {keys && <Dropdown.Divider />}
+	      <Dropdown.Item href="#/action-15" className=' d-flex justify-content-center  '>
+		<Button variant="secondary" size="lg" onClick={addKey}>+ Add keys</Button>
+	      </Dropdown.Item>
+	    </Dropdown.Menu>
+	  </Dropdown>
 
-          <AiOutlineSearch color='white' size={35} onClick={() => setIsOpenSearch(true)} />
-        </div>
-        <hr className='m-0' />
+	  <AiOutlineSearch color='white' size={35} onClick={() => setIsOpenSearch(true)} />
+	</div>
+	<hr className='m-0' />
       </header>
       <main>
-        <button onClick={() => db.delete()}>Delete DB</button>
-        {trendingProfiles && (
-          <div className='container-fluid p-1'>
+	<button onClick={() => db.delete()}>Delete DB</button>
+	{trendingProfiles && (
+	  <div className='container-fluid p-1'>
             <h3>Trending profiles</h3>
             <div className='d-flex flex-row flex-nowrap overflow-auto'>
               {trendingProfiles.map(p => (
-                <Profile key={p.npub} profile={p} onClick={onProfileClick} />
+		<Profile key={p.npub} profile={p} onClick={onProfileClick} />
               ))}
             </div>
-          </div>
-        )}
+	  </div>
+	)}
 
-	{false && (
-          <div>
+	{true && (
+	  <div>
             <h3 className="ps-3">Apps</h3>
             <section className='container d-flex align-items-start'>
               <div className='contentWrapper d-flex gap-4'>
 		{apps.map((app) => <IconBtn key={app.link} data={app} size='big' onClick={() => open(app.link, app)} />)}
               </div>
             </section>
-          </div>
+	  </div>
 	)}
-        <Modal activeModal={modalActive}>
-          {modalActive &&
-           <EditKey keyProp={list[openKey]}
-             copyKey={copyKey}
-             showKey={showKey}
-             editKey={editKey}
-             setModalActive={setModalActive} />}
-        </Modal >
-        <Modal activeModal={isOpenSearch}>
-          {isOpenSearch &&
-           (<div className='d-flex flex-column'>
-             <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
+	<Modal activeModal={modalActive}>
+	  {modalActive &&
+	   <EditKey keyProp={list[openKey]}
+	     copyKey={copyKey}
+	     showKey={showKey}
+	     editKey={editKey}
+	     setModalActive={setModalActive} />}
+	</Modal >
+	<Modal activeModal={isOpenSearch}>
+	  {isOpenSearch &&
+	   (<div className='d-flex flex-column'>
+	     <div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
                <AiOutlineClose color='white' size={30} onClick={closeModal} />
-             </div>
-             <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
+	     </div>
+	     <form className='d-flex px-3 gap-3 align-items-center align-self-center ' onSubmit={submitSearchInput}>
                <Input ref={inputSearchRef} />
                <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
-             </form>
-           </div>)}
-        </Modal >
+	     </form>
+	   </div>)}
+	</Modal >
       </main>
       <footer id='footer'>
-        <hr className='m-0' />
-        <div className="container d-flex align-items-center gap-2 p-1">
-          {otherTabs.length > 0 &&
-           <div className='contentWrapper d-flex' style={{ maxWidth: '130px' }}>
-             {otherTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => toggle(tab)} />)}
-           </div>
-          }
-	  <div style={{ width: '2px', height: '50px', backgroundColor: '#706d6dd4' }}></div>
-	  <div className='contentWrapper d-flex' style={{ flex: '1' }}>
-	    {nostrTabs.length > 0 &&
-	     nostrTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => toggle(tab)} />)
+	<hr className='m-0' />
+	<div className="container d-flex align-items-center gap-2 p-1">
+	  <div className='contentWrapper d-flex'>
+	    {otherTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => toggle(tab)} />)}
+	    <div style={{ width: '2px', height: '50px', backgroundColor: '#706d6dd4' }}></div>
+	    {nostrTabs.map((tab) => <IconBtn key={tab.app.title} data={tab.app} size='small' openedTab={openedTab === tab.id ? true : false} onClick={() => toggle(tab)} />)
 	    }
 	    <IconBtn key="addApp" data={{title: "Add", img: nostrIcon}} size='small' onClick={() => console.log("add app")} />
           </div>

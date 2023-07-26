@@ -1,7 +1,4 @@
 
-
-let menu = undefined;
-
 const initTab = () => {
   // this code will be executed in the opened tab,
   // should only refer to local vars bcs it will be
@@ -16,8 +13,8 @@ const initTab = () => {
       return new Promise(function (ok, err) {
         window.nostrCordovaPlugin.requests[id] = { res: ok, rej: err };
         const msg = JSON.stringify({ method, id, params: [...params] });
-        console.log("iab sending req ", id, "method", method, "msg", msg);
-        webkit.messageHandlers.cordova_iab.postMessage(msg);
+        console.log("iab sending req ", id, "method", method, "msg", msg, "webkit", window.webkit);
+        window.webkit.messageHandlers.cordova_iab.postMessage(msg);
       });
     };
     const _gen = function (method) {
@@ -36,6 +33,8 @@ const initTab = () => {
     window.nostr = nostrKey;
 
     // our own API
+    //    for (const name of apiMethods)
+    //      window.nostrCordovaPlugin[name] = _gen(name);
     window.nostrCordovaPlugin.setUrl = _gen("setUrl");
     window.nostrCordovaPlugin.decodeBech32 = _gen("decodeBech32");
   };
@@ -64,12 +63,16 @@ const nostrZapConnect = () => {
 
   let onlongtouch = null;
   let timer = null;
-  let touchduration = 800; // length of time we want the user to touch before we do something
+  let touchduration = 1300; // length of time we want the user to touch before we do something
+  let touchX = 0;
+  let touchY = 0;
 
   const touchstart = (e) => {
     // Error: unable to preventdefault inside passive event listener due to target being treated as passive
     // e.preventDefault();
     if (!timer) {
+      touchX = e.touches.item(0).screenX;
+      touchY = e.touches.item(0).screenY;
       timer = setTimeout(() => onlongtouch(e), touchduration);
     }
   }
@@ -130,6 +133,10 @@ const nostrZapConnect = () => {
 
   onlongtouch = async (e) => {
     timer = null;
+    if (Math.abs (e.touches.item(0).screenX - touchX) > 20
+	|| Math.abs (e.touches.item(0).screenY - touchY) > 20)
+      return;
+
     console.log("longtouch", e.target);
     try {
       return await zapByAttr(e, "href")
@@ -196,7 +203,7 @@ async function executeFuncAsync(name, fn, ...args) {
 }
 
 // returns ref to the browser window
-export async function open(params) {
+export function open(params) {
 
   const header = document.getElementById('header');
   const topOffset = header.offsetHeight + header.offsetTop;
@@ -204,11 +211,12 @@ export async function open(params) {
   const footer = document.getElementById('footer');
   const bottomOffset = footer.offsetHeight - 1;
   const bottom = Math.round(window.devicePixelRatio * (bottomOffset + (params.bottom || 0)));
-  const loc = "no"; // params.menu ? "no" : "yes";
+  const loc = "yes"; // params.menu ? "no" : "yes";
   const menu = params.menu ? "no" : "yes";
   const hidden = params.hidden ? "yes" : "no";
+  const geticon = params.geticon ? "yes" : "no";
 
-  const options = `location=${loc},fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden}`;
+  const options = `location=${loc},beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden},geticon=${geticon}`;
   console.log("browser options", options);
 
   const ref = cordova.InAppBrowser.open(params.url, '_blank', options);
@@ -220,9 +228,9 @@ export async function open(params) {
       await params.onLoadStop(event); // updateTabDB
 
     // main init to enable comms interface
-    await ref.executeFuncAsync("initTab", initTab);
+    await ref.executeFuncAsync("initTab", initTab, params.API ? Object.keys(params.API) : []);
 
-    if (!params.menu) {
+      if (!params.menu) {
       // nostr-zap
       const asset = await getAsset("js/nostr-zap.js");
       console.log("nostr-zap asset", asset.length);
@@ -249,11 +257,13 @@ export async function open(params) {
       case "signEvent":
         target = window.nostr;
         break;
-      case "setUrl":
-      case "decodeBech32":
-        target = params.API;
-        targetArgs = [params.apiCtx, ...targetArgs];
-        break;
+	//      case "setUrl":
+	//      case "decodeBech32":
+      default:
+	if (method in params.API) {
+          target = params.API;
+          targetArgs = [params.apiCtx, ...targetArgs];
+	}
     }
 
     let err = null;
@@ -309,44 +319,52 @@ export async function open(params) {
       await params.onClick(x, y);
   });
 
-  // make sure we init the menu singleton
-  if (!params.menu)
-    await ensureMenu(params.API);
+  ref.addEventListener('blank', async (event) => {
+    console.log("blank", event.url);
+    if (params.onBlank)
+      await params.onBlank(event.url);
+  });
 
   // return to caller
   return ref;
 }
 
-async function ensureMenu(API) {
-  if (menu !== undefined)
-    return;
+const generateMenu = () => {
+  document.body.innerHTML = "<div style='border: 1px solid #000; width: 100%, height: 100%; background-color: white;'><button onclick='javascript:parent.nostrCordovaPlugin.setUrl(\"test1\")'>test</button><br><button onclick='javascript:parent.nostrCordovaPlugin.setUrl(\"test2\")'>test2</button></div>";
+};
 
-  const params = {
-    url: "about:blank",
-    API,
-    apiCtx: null,
-    menu: true,
-    hidden: true,
-    top: 100,
-    bottom: 100,
-    onLoadStop: async function (event) {
-      // FIXME inject menu script
-      console.log("menu loaded");
-    },
-    onClick: async function (x, y) {
-      menu.hide();
-    },
-  };
+const createMenu = (code) => {
+  console.log("createMenu code ", code);
+  let iframe = document.createElement("iframe");
+  const html = `<body><script>${code}</script></body>`;
+  iframe.style.position = "absolute";
+  iframe.style.top = "50px";
+  iframe.style.right = "50px";
+  iframe.style.width = "300px";
+  iframe.style.height = "500px";
+  document.body.appendChild(iframe);
+  iframe.contentWindow.document.open();
+  iframe.contentWindow.document.write(html);
+  iframe.contentWindow.document.close();
 
-  // flags as 'starting' to avoid races
-  menu = null;
+  function onClick() {
+    if (iframe) {
+      console.log("close iframe");
+      iframe.remove();
+      window.removeEventListener('click', onClick);
+    }
+  }
 
-  // launch it
-  menu = await open(params);
-}
+  window.addEventListener('click', onClick);
+  iframe.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+};
 
-export async function showMenu() {
-  menu.show();
+export async function showMenu(ref) {
+  const args = [];
+  const code = `(${generateMenu.toString()})(...${JSON.stringify(args)})`;
+  await ref.executeFuncAsync("menu", createMenu, code);  
 }
 
 export const browser = {

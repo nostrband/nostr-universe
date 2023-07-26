@@ -1,5 +1,7 @@
 export const IconBtn = (props) => {
   const { title, img } = props.data;
+//  const img = props.data.img || "";
+//  const title = props.data.title || "---";
 
   const styleTitle = {
     small: { overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.8rem' },
@@ -11,7 +13,7 @@ export const IconBtn = (props) => {
 
   return (
     <button className={classes} onClick={props.onClick}>
-      <img src={img} alt='icon app' className={props.size === 'big' ? 'iconImgBig' : 'iconImgSmall'} />
+      <img src={img} alt='' className={props.size === 'big' ? 'iconImgBig' : 'iconImgSmall'} />
       {props.size === 'big' && (
 	<h5 className='iconTitle' style={styleTitle[props.size]}>{title}</h5>
       )}
