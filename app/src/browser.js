@@ -208,10 +208,10 @@ export function open(params) {
   const header = document.getElementById('header');
   const topOffset = header.offsetHeight + header.offsetTop;
   const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)));
-  const footer = document.getElementById('footer');
+  const footer = document.getElementById('tab-menu');
   const bottomOffset = footer.offsetHeight - 1;
   const bottom = Math.round(window.devicePixelRatio * (bottomOffset + (params.bottom || 0)));
-  const loc = "yes"; // params.menu ? "no" : "yes";
+  const loc = "no"; // params.menu ? "no" : "yes";
   const menu = params.menu ? "no" : "yes";
   const hidden = params.hidden ? "yes" : "no";
   const geticon = params.geticon ? "yes" : "no";
@@ -230,7 +230,7 @@ export function open(params) {
     // main init to enable comms interface
     await ref.executeFuncAsync("initTab", initTab, params.API ? Object.keys(params.API) : []);
 
-      if (!params.menu) {
+    if (!params.menu) {
       // nostr-zap
       const asset = await getAsset("js/nostr-zap.js");
       console.log("nostr-zap asset", asset.length);

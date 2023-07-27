@@ -3,13 +3,22 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { browser } from './browser'
 import { config } from './config'
-import { addTabToDB, db, deleteTabDB, listTabs, updateTabDB } from './db'
+import {
+	addTab,
+	db,
+	deleteTab,
+	getFlag,
+	listPins,
+	listTabs,
+	setFlag,
+	updateTab,
+} from './db'
 import { keystore } from './keystore'
 
 import { AiOutlineClose } from 'react-icons/ai'
 import { BsArrowRightCircle } from 'react-icons/bs'
 
-import { EditKey } from './components/EditKey'
+// import { EditKey } from './components/EditKey'
 import { Input } from './components/Input'
 import { Modal } from './components/UI/modal/Modal'
 import {
@@ -25,43 +34,65 @@ import { AppsList } from './components/apps/AppsList'
 import { Footer } from './layout/Footer'
 
 const apps = [
-	{ title: 'Nostr', img: nostrIcon, link: 'https://nostr.band/' },
-	{ title: 'Snort', img: snortIcon, link: 'https://snort.social/' },
-	{ title: 'Iris', img: irisIcon, link: 'https://iris.to/' },
-	{ title: 'Coracle', img: coracleIcon, link: 'https://coracle.social/' },
 	{
-		title: 'Satellite',
-		img: satelliteIcon,
-		link: 'https://satellite.earth/',
+		naddr: '10',
+		name: 'NostrApp',
+		picture: 'https://nostrapp.link/logo.png',
+		url: 'https://nostrapp.link/',
 	},
 	{
-		title: 'Zapddit',
-		img: 'https://zapddit.com/assets/icons/logo-without-text-zapddit.svg',
-		link: 'https://zapddit.com/',
+		naddr: '1',
+		name: 'Nostr',
+		picture: nostrIcon,
+		url: 'https://nostr.band/',
 	},
 	{
-		title: 'Agora',
-		img: 'https://agorasocial.app/images/favicon/120.png',
-		link: 'https://agorasocial.app/',
+		naddr: '2',
+		name: 'Snort',
+		picture: snortIcon,
+		url: 'https://snort.social/',
+	},
+	{ naddr: '3', name: 'Iris', picture: irisIcon, url: 'https://iris.to/' },
+	{
+		naddr: '4',
+		name: 'Coracle',
+		picture: coracleIcon,
+		url: 'https://coracle.social/',
 	},
 	{
-		title: 'Pinstr',
-		img: 'https://pinstr.app/favicon.ico',
-		link: 'https://pinstr.app/',
+		naddr: '5',
+		name: 'Satellite',
+		picture: satelliteIcon,
+		url: 'https://satellite.earth/',
 	},
 	{
-		title: 'Nosta',
-		img: 'https://nosta.me/images/apple-icon-120x120.png',
-		link: 'https://nosta.me/',
+		naddr: '6',
+		name: 'Zapddit',
+		picture:
+			'https://zapddit.com/assets/icons/logo-without-text-zapddit.svg',
+		url: 'https://zapddit.com/',
 	},
 	{
-		title: 'NostrApp',
-		img: 'https://nostrapp.link/logo.png',
-		link: 'https://nostrapp.link/',
+		naddr: '7',
+		name: 'Agora',
+		picture: 'https://agorasocial.app/images/favicon/120.png',
+		url: 'https://agorasocial.app/',
+	},
+	{
+		naddr: '8',
+		name: 'Pinstr',
+		picture: 'https://pinstr.app/favicon.ico',
+		url: 'https://pinstr.app/',
+	},
+	{
+		naddr: '9',
+		name: 'Nosta',
+		picture: 'https://nosta.me/images/apple-icon-120x120.png',
+		url: 'https://nosta.me/',
 	},
 ]
 
-export const getNpubKey = (key) => {
+export const getNpub = (key) => {
 	return nip19.npubEncode(key)
 }
 
@@ -70,7 +101,7 @@ const API = {
 		if (tab) {
 			console.log('tab', tab.id, 'setUrl', url)
 			tab.url = url
-			await updateTabDB(tab)
+			await updateTab(tab)
 		}
 	},
 	decodeBech32: function (tab, s) {
@@ -78,39 +109,72 @@ const API = {
 	},
 }
 
+const DEFAULT_PUBKEY = 'anon'
+
 const App = () => {
-	const [npub, setNpub] = useState('')
+	//  const [npub, setNpub] = useState('');
+	const [keys, setKeys] = useState()
+	const [currentPubkey, setCurrentPubkey] = useState()
+
+	const [pins, setPins] = useState([])
+	const [tabs, setTabs] = useState([])
+	const [currentTab, setCurrentTab] = useState(null)
+
+	const [trendingProfiles, setTrendingProfiles] = useState()
+
+	const inputSearchRef = useRef()
+
+	// FIXME move to a separate page
 	const [modalActive, setModalActive] = useState(false)
 	const [isOpenSearch, setIsOpenSearch] = useState(false)
-	const [keys, setKeys] = useState()
 	const [openKey, setOpenKey] = useState()
-	const [list, setList] = useState()
-	const [tabs, setTabs] = useState([])
-	const [trendingProfiles, setTrendingProfiles] = useState()
-	const inputSearchRef = useRef()
-	const [nostrTabs, setNostrTabs] = useState([])
-	const [otherTabs, setOtherTabs] = useState([])
-	const [openedTab, setOpenedTab] = useState()
 
-	const nostrAppsLinks = apps.map((app) => app.link)
+	const loadKeys = async () => {
+		const list = await keystore.listKeys()
 
-	const openTabsFromDB = async (list) => {
-		if (list) {
-			const orderedList = [...list].sort(
-				(prev, next) => next.order - prev.order,
+		if (list.currentAlias) {
+			setCurrentPubkey(list.currentAlias)
+			const keys = Object.keys(list).filter(
+				(key) => key !== 'currentAlias',
 			)
+			if (keys.length) {
+				setKeys(keys)
+			}
+		}
 
-			//orderedList.forEach(async (tab) => { await openTab(tab, /* hidden */true); });
+		return list.currentAlias
+	}
 
-			const otherTabsList = orderedList.filter(
-				(tab) => !nostrAppsLinks.includes(tab.url),
-			)
-			const nostrTabsList = orderedList.filter((tab) =>
-				nostrAppsLinks.includes(tab.url),
-			)
-			setOtherTabs([...otherTabsList])
-			setNostrTabs([...nostrTabsList])
-			setTabs([...orderedList])
+	const loadWorkspace = async (workspaceKey) => {
+		const dbTabs = await listTabs(workspaceKey)
+		const dbPins = await listPins(workspaceKey)
+
+		setTabs(dbTabs)
+		setPins(dbPins)
+	}
+
+	const bootstrap = async (pubkey) => {
+		console.log('new workspace, bootstrapping')
+		let pins = []
+		apps.forEach((app, ind) => {
+			const pin = {
+				id: '' + Math.random(),
+				url: app.url,
+				appNaddr: app.naddr,
+				title: app.name,
+				icon: app.picture,
+				order: ind,
+				pubkey: pubkey,
+			}
+			pins.push(pin)
+		})
+		await db.pins.bulkAdd(pins)
+	}
+
+	const ensureBootstrapped = async (workspaceKey) => {
+		if (!(await getFlag(workspaceKey, 'bootstrapped'))) {
+			await bootstrap(workspaceKey)
+			await setFlag(workspaceKey, 'bootstrapped', true)
 		}
 	}
 
@@ -121,7 +185,7 @@ const App = () => {
 			const tp = tpr.profiles.map((p) => {
 				try {
 					const pr = JSON.parse(p.profile.content)
-					pr.npub = getNpubKey(p.pubkey)
+					pr.npub = getNpub(p.pubkey)
 					return pr
 				} catch (e) {
 					console.log('failed to parse profile', e)
@@ -134,50 +198,12 @@ const App = () => {
 
 		async function onDeviceReady() {
 			console.log('device ready')
-			const list = await keystore.listKeys()
 
-			if (list.currentAlias) {
-				const currentKey = getNpubKey(list.currentAlias)
-				setNpub(currentKey)
-				setList(list)
-				const keys = Object.keys(list).filter(
-					(key) => key !== 'currentAlias',
-				)
+			const currentKey = await loadKeys()
 
-				if (keys.length) {
-					setKeys(keys)
-				}
-			}
-
-			const currentAlias = list.currentAlias
-				? list.currentAlias
-				: 'without publicKey'
-			const tabsList = await listTabs(currentAlias)
-			const isExistNostrLink = tabsList.some((tab) =>
-				nostrAppsLinks.includes(tab.app.link),
-			)
-
-			if (!isExistNostrLink) {
-				const tabs = []
-
-				apps.forEach((app, ind) => {
-					const tab = {
-						id: '' + Math.random(),
-						app,
-						url: app.link,
-						order: apps.length - ind,
-						publicKey: currentAlias,
-					}
-					tabs.push(tab)
-				})
-				await db.tabsList.bulkAdd(tabs)
-
-				const tabsList = await listTabs(currentAlias)
-				openTabsFromDB(tabsList)
-				return
-			}
-			openTabsFromDB(tabsList)
-
+			const workspaceKey = currentKey || DEFAULT_PUBKEY
+			await ensureBootstrapped(workspaceKey)
+			await loadWorkspace(workspaceKey)
 			await fetchTrendingProfiles()
 		}
 
@@ -186,67 +212,47 @@ const App = () => {
 	}, [])
 
 	const addKey = async () => {
-		const key = await keystore.addKey()
+		await keystore.addKey()
 
-		if (key) {
-			const listKeys = await keystore.listKeys()
+		// reload the list
+		const pubkey = await loadKeys()
 
-			if (!list && listKeys.currentAlias) {
-				const tabs = await db.tabsList
-					.where('publicKey')
-					.equals('without publicKey')
-					.toArray()
-				tabs.forEach(async (tab) => {
-					await db.tabsList.update(tab.id, {
-						publicKey: listKeys.currentAlias,
-					})
-				})
-			}
-
-			if (listKeys.currentAlias) {
-				const currentKey = getNpubKey(listKeys.currentAlias)
-				setList(listKeys)
-
-				if (currentKey !== npub) {
-					setNpub(currentKey)
-				}
-
-				const keys = Object.keys(listKeys).filter(
-					(key) => key !== 'currentAlias',
-				)
-
-				if (keys.length) {
-					setKeys(keys)
-				}
-
-				const tabsList = await listTabs(listKeys.currentAlias)
-				openTabsFromDB(tabsList)
-			}
+		// reassign everything from default to the new key
+		if (currentPubkey === DEFAULT_PUBKEY) {
+			await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey })
+			await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey })
 		}
+
+		// make sure this key has default apps pinned
+		await ensureBootstrapped(pubkey)
+
+		// load new key's tabs etc
+		await loadWorkspace(pubkey)
 	}
 
-	const openTab = async (tab, hidden) => {
+	const createTab = async (tab) => {
 		const params = {
 			url: tab.url,
-			hidden,
+			hidden: true,
 			API,
 			apiCtx: tab,
 			onLoadStop: async (event) => {
 				tab.url = event.url
-				await updateTabDB(tab)
+				await updateTab(tab)
 			},
 			onGetPubkey: (pubkey) => {
-				let npub = nip19.npubEncode(pubkey)
-				console.log('npub', npub)
-				setNpub(npub)
+				if (pubkey !== currentPubkey) {
+					let npub = nip19.npubEncode(pubkey)
+					console.log('npub', npub)
+					setCurrentPubkey(pubkey)
+					// FIXME bootstrap etc, just remove it and start onboarding?
+				}
 			},
 			onClick: (x, y) => {
 				console.log('click', x, y)
-				hide(tab)
+				//	tab.ref.hide();
+				//	hide(tab);
 				document.elementFromPoint(x, y).click()
-			},
-			onHide: () => {
-				setOpenedTab(null)
 			},
 			onMenu: async () => {
 				console.log('menu click tab', tab.id)
@@ -255,16 +261,7 @@ const App = () => {
 
 				// FIXME just for now a hack to close a tab
 				// close & remove tab
-				await deleteTabDB(tab.id)
-				tab.ref.close()
-				setOpenedTab(null)
-				setTabs((prev) => prev.filter((t) => t.id !== tab.id))
-				if (nostrAppsLinks.includes(tab.app.link)) {
-					setNostrTabs((prev) => prev.filter((t) => t.id !== tab.id))
-				}
-				if (!nostrAppsLinks.includes(tab.app.link)) {
-					setOtherTabs((prev) => prev.filter((t) => t.id !== tab.id))
-				}
+				close(tab)
 			},
 			onBlank: (url) => {
 				hide(tab)
@@ -276,67 +273,90 @@ const App = () => {
 		tab.ref = await browser.open(params)
 	}
 
+	const close = async (tab) => {
+		hide(tab)
+
+		await deleteTab(tab.id)
+		tab.ref.close()
+
+		setTabs((prev) => prev.filter((t) => t.id !== tab.id))
+	}
+
 	const hide = (tab) => {
-		tab.ref.hide()
-		setOpenedTab(null)
+		if (tab) {
+			tab.ref.hide()
+			setCurrentTab(tab)
+		}
+
+		document.getElementById('pins').classList.remove('d-none')
+		document.getElementById('pins').classList.add('d-flex')
+		document.getElementById('tab-menu').classList.remove('d-flex')
+		document.getElementById('tab-menu').classList.add('d-none')
+	}
+
+	const showTabMenu = () => {
+		document.getElementById('pins').classList.remove('d-flex')
+		document.getElementById('pins').classList.add('d-none')
+		document.getElementById('tab-menu').classList.remove('d-none')
+		document.getElementById('tab-menu').classList.add('d-flex')
 	}
 
 	const show = async (tab) => {
-		if (!tab.ref) await openTab(tab, /* hidden */ false)
-		else tab.ref.show()
-		setOpenedTab(tab.id)
+		showTabMenu()
+
+		return new Promise((ok) => {
+			setTimeout(async () => {
+				// schedule the open after task bar is changed
+				if (!tab.ref) await createTab(tab)
+
+				tab.ref.show()
+				setCurrentTab(tab)
+				ok()
+			}, 0)
+		})
 	}
 
 	const toggle = (tab) => {
-		console.log('toggle', tab.id, openedTab)
-		if (tab.id === openedTab) {
+		console.log('toggle', tab.id, currentTab)
+		if (currentTab != null && tab.id === currentTab.id) {
 			hide(tab)
 		} else {
 			show(tab)
 		}
 	}
 
-	const open = async (url, app, hidden) => {
-		const hiddenNostrTab = nostrTabs.find((tab) => tab.app.link === url)
-		if (hiddenNostrTab) {
-			show(hiddenNostrTab)
-			return
-		}
+	const open = async (url, pin) => {
+		console.log('open', url)
 
-		const hiddenOtherTab = otherTabs.find((tab) => tab.app.link === url)
+		// make sure it's visible and has proper height
+		showTabMenu()
 
-		if (hiddenOtherTab) {
-			show(hiddenOtherTab)
-			return
-		}
+		// schedule the open when tab menu is rendered
+		setTimeout(async () => {
+			const U = new URL(url)
+			const title = U.hostname
 
-		if (!app)
-			app = {
-				link: url,
-				title: new URL(url).hostname,
+			const tab = {
+				id: '' + Math.random(),
+				pubkey: currentPubkey,
+				title: pin ? pin.title : title,
+				icon: pin ? pin.icon : U.origin + '/favicon.ico',
+				url,
+				order: tabs.length + 1,
+				ref: null, // filled below
 			}
+			if (pin) tab.appNaddr = pin.appNaddr
+			console.log('open', url, JSON.stringify(pin), JSON.stringify(tab))
 
-		console.log('open', url, JSON.stringify(app))
-		const tab = {
-			id: '' + Math.random(),
-			app,
-			url,
-			order: tabs.length + 1,
-			ref: null, // filled below
-		}
+			await createTab(tab)
 
-		await openTab(tab)
-		setOpenedTab(tab.id)
-		setTabs((prev) => [tab, ...tabs])
+			await addTab(tab)
 
-		if (nostrAppsLinks.includes(tab.app?.link)) {
-			setNostrTabs(() => [tab, ...nostrTabs])
-		}
-		if (!nostrAppsLinks.includes(tab.app?.link)) {
-			setOtherTabs(() => [tab, ...otherTabs])
-		}
+			await show(tab)
 
-		await addTabToDB(tab, list)
+			setCurrentTab(tab)
+			setTabs((prev) => [tab, ...tabs])
+		}, 0)
 	}
 
 	const editBtnClick = (ev) => {
@@ -346,7 +366,7 @@ const App = () => {
 	}
 
 	async function copyKey() {
-		const text = getNpubKey(list[openKey].publicKey)
+		const text = getNpub(openKey)
 		// eslint-disable-next-line
 		cordova.plugins.clipboard.copy(text)
 	}
@@ -359,22 +379,9 @@ const App = () => {
 		const key = keys[ind]
 		const res = await keystore.selectKey({ publicKey: key })
 
-		if (res) {
-			if (res.currentAlias && res.currentAlias !== list.currentAlias) {
-				const currentKey = getNpubKey(res.currentAlias)
-				setNpub(currentKey)
-				setList(res)
-				const keys = Object.keys(res).filter(
-					(key) => key !== 'currentAlias',
-				)
-
-				if (keys.length) {
-					setKeys(keys)
-				}
-			}
-
-			const tabsList = await listTabs(res.currentAlias)
-			openTabsFromDB(tabsList)
+		if (res && res.currentAlias !== currentPubkey) {
+			const pubkey = await loadKeys()
+			await loadWorkspace(pubkey)
 		}
 	}
 
@@ -382,14 +389,7 @@ const App = () => {
 		const keysList = await keystore.editKey(keyInfoObj)
 
 		if (keysList) {
-			setList(keysList)
-			const keys = Object.keys(keysList).filter(
-				(key) => key !== 'currentAlias',
-			)
-
-			if (keys.length) {
-				setKeys(keys)
-			}
+			await loadWorkspace(currentPubkey)
 		}
 	}
 
@@ -402,11 +402,8 @@ const App = () => {
 		const url = new URL('/', inputSearchRef.current.value)
 
 		if (url) {
-			const title = url.hostname
-			const link = inputSearchRef.current.value + '/'
-			const img = inputSearchRef.current.value + '/' + '/favicon.ico'
-			const app = { title, img, link }
-			open(link, app)
+			const url = inputSearchRef.current.value
+			open(url)
 			closeModal()
 		}
 	}
@@ -419,6 +416,24 @@ const App = () => {
 	const onProfileClick = (npub) => {
 		console.log('show', npub)
 	}
+
+	const closeTab = () => {
+		console.log('closeTab')
+		close(currentTab)
+	}
+
+	const hideTab = () => {
+		console.log('hideTab')
+		hide(currentTab)
+	}
+
+	const showTabs = () => {}
+
+	const pinTab = () => {
+		// FIXME create pin and add
+	}
+
+	const npub = currentPubkey ? getNpub(currentPubkey) : ''
 
 	return (
 		<>
@@ -443,15 +458,13 @@ const App = () => {
 					isOpen={modalActive}
 					onClose={() => setModalActive(false)}
 				>
-					{list && (
-						<EditKey
-							keyProp={list[openKey]}
-							copyKey={copyKey}
-							showKey={showKey}
-							editKey={editKey}
-							setModalActive={setModalActive}
-						/>
-					)}
+					{/* <EditKey
+						keyProp={list[openKey]}
+						copyKey={copyKey}
+						showKey={showKey}
+						editKey={editKey}
+						setModalActive={setModalActive}
+					/> */}
 				</Modal>
 				<Modal isOpen={isOpenSearch} onClose={closeModal}>
 					<div className='d-flex flex-column'>
@@ -478,10 +491,14 @@ const App = () => {
 				</Modal>
 			</main>
 			<Footer
-				activeTab={openedTab}
-				nostrTabs={nostrTabs}
 				onToggleTab={toggle}
-				tabs={otherTabs}
+				tabs={tabs}
+				pins={pins}
+				onCloseTab={closeTab}
+				onHideTab={hideTab}
+				onOpenPin={open}
+				onPinTab={pinTab}
+				onShowTabs={showTabs}
 			/>
 		</>
 	)

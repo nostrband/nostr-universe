@@ -1,51 +1,88 @@
+/* 
+pins are known apps that are attached to the taskbar,
+when pin is clicked, a tab is created that has same appNaddr,
+when close is clicked, tab is destroyed,
+when pin is clicked for which a tab exists - tab is shown
+
+ */
+
 import Dexie from 'dexie';
 
 export const db = new Dexie('nostrUniverseDB');
+
 db.version(1).stores({
-  tabsList: 'id, publicKey',
+  tabs: 'id,pubkey,url,appNaddr,order,title,icon',
+  pins: 'id,pubkey,url,appNaddr,order,title,icon',
+  flags: 'id,pubkey,name,value',
 });
 
-export async function addTabToDB(tabItem, list) {
+export async function addTab(tab) {
   try {
-    const currentAlias = list ? list.currentAlias : 'without publicKey'
-    await db.tabsList.add({
-      id: tabItem.id,
-      app: tabItem.app,
-      url: tabItem.url,
-      publicKey: currentAlias,
-      order: tabItem.order
-    })
+    const keys = Object.keys(tab).filter(k => k != "ref");
+    const t = {};
+    for (const k of keys)
+      t[k] = tab[k];
+    await db.tabs.add(t)
   } catch (error) {
     console.log(`Add item to DB error: ${JSON.stringify(error)}`)
   }
 }
 
-export async function updateTabDB(tab) {
+export async function updateTab(tab) {
   try {
-    // get tab from DB by id
-    const [getOpenTab] = await db.tabsList.where('id').equals(tab.id).toArray();
-    // if tab exist, update url in DB
-    if (getOpenTab.url !== tab.url) {
-      await db.tabsList.update(tab.id, { url: tab.url });
-    }
+    await db.tabs.where('id').equals(tab.id).modify({url: tab.url});
   } catch (error) {
     console.log(`Update item in DB error: ${JSON.stringify(error)}`);
   }
 }
 
-export async function deleteTabDB(id) {
+export async function deleteTab(id) {
   try {
     // Delete tab in DB by ID
-    await db.tabsList.delete(id);
+    await db.tabs.delete(id);
   } catch (error) {
-    console.log(`Delete item in DB error: ${JSON.stringify(error)}`);
+    console.log(`Delete tab in DB error: ${JSON.stringify(error)}`);
   }
 }
 
 export async function listTabs(pubkey) {
   try {
-    return await db.tabsList.where('publicKey').equals(pubkey).toArray();
+    return await db.tabs.where('pubkey').equals(pubkey).toArray();
   } catch (error) {
     console.log(`List tabs error: ${JSON.stringify(error)}`);
+  }
+}
+
+export async function listPins(pubkey) {
+  try {
+    return await db.pins.where('pubkey').equals(pubkey).toArray();
+  } catch (error) {
+    console.log(`List tabs error: ${JSON.stringify(error)}`);
+  }
+}
+
+export async function getFlag(pubkey, name) {
+  try {
+    const id = pubkey+name;
+    const flags = await db.flags.where({id}).toArray();
+
+    // ensure
+    if (!flags.length)
+      await db.flags.add({id, pubkey, name, value: false});
+
+    return flags.length ? flags[0].value : false;
+  } catch (error) {
+    console.log(`Get flag error: ${error}`);
+  }
+}
+
+export async function setFlag(pubkey, name, value) {
+  try {
+    const id = pubkey+name;
+    const n = await db.flags.where({id}).modify({value});
+    if (!n)
+      await db.flags.add({id, pubkey, name, value});    
+  } catch (error) {
+    console.log(`Set flag error: ${error}`);
   }
 }
