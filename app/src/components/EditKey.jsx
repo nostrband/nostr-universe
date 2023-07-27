@@ -2,14 +2,14 @@ import { useRef } from 'react';
 import Button from 'react-bootstrap/Button';
 import { AiOutlineClose } from "react-icons/ai";
 import { MdOutlineDone } from 'react-icons/md';
-import { getNpubKey } from '../App';
+import { getNpub } from '../App';
 
 export const EditKey = ({ keyProp, copyKey, showKey, editKey, setModalActive }) => {
   const ref = useRef();
   const closeModal = () => {
     setModalActive(false)
   }
-  const key = getNpubKey(keyProp.publicKey);
+  const key = getNpub(keyProp.publicKey);
   const shortKey = key.substring(0, 10) + "..." + key.substring(59)
 
   return (<div className='d-flex flex-column'>
