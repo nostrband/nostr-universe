@@ -11,7 +11,7 @@ import { BsArrowRightCircle } from 'react-icons/bs'
 
 import { EditKey } from './components/EditKey'
 import { Input } from './components/Input'
-import { Modal } from './components/ModalWindow'
+import { Modal } from './components/UI/modal/Modal'
 import { IconButton } from './components/IconButton'
 import {
 	nostrIcon,
@@ -439,8 +439,11 @@ const App = () => {
 
 				{true && <AppsList apps={apps} onOpenApp={open} />}
 
-				<Modal activeModal={modalActive}>
-					{modalActive && (
+				<Modal
+					isOpen={modalActive}
+					onClose={() => setModalActive(false)}
+				>
+					{list && (
 						<EditKey
 							keyProp={list[openKey]}
 							copyKey={copyKey}
@@ -450,30 +453,28 @@ const App = () => {
 						/>
 					)}
 				</Modal>
-				<Modal activeModal={isOpenSearch}>
-					{isOpenSearch && (
-						<div className='d-flex flex-column'>
-							<div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
-								<AiOutlineClose
-									color='white'
-									size={30}
-									onClick={closeModal}
-								/>
-							</div>
-							<form
-								className='d-flex px-3 gap-3 align-items-center align-self-center '
-								onSubmit={submitSearchInput}
-							>
-								<Input ref={inputSearchRef} />
-								<BsArrowRightCircle
-									color='white'
-									size={30}
-									className='iconDropDown'
-									onClick={handleClickSearchBtn}
-								/>
-							</form>
+				<Modal isOpen={isOpenSearch} onClose={closeModal}>
+					<div className='d-flex flex-column'>
+						<div className='d-flex justify-content-end align-items-center p-3 mb-5 '>
+							<AiOutlineClose
+								color='white'
+								size={30}
+								onClick={closeModal}
+							/>
 						</div>
-					)}
+						<form
+							className='d-flex px-3 gap-3 align-items-center align-self-center '
+							onSubmit={submitSearchInput}
+						>
+							<Input ref={inputSearchRef} />
+							<BsArrowRightCircle
+								color='white'
+								size={30}
+								className='iconDropDown'
+								onClick={handleClickSearchBtn}
+							/>
+						</form>
+					</div>
 				</Modal>
 			</main>
 			<footer id='footer'>

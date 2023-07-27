@@ -77,14 +77,3 @@ body {
 	padding: 0;
 	color: white;
 }
-
-.modalContent {
-	transform: scale(0.5);
-	transition: 0.2s;
-	width: 100vw;
-	height: 100vh;
-}
-
-.modalContent.active {
-	transform: scale(1);
-}
