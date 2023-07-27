@@ -12,8 +12,7 @@ import { BsArrowRightCircle } from 'react-icons/bs'
 import { EditKey } from './components/EditKey'
 import { Input } from './components/Input'
 import { Modal } from './components/ModalWindow'
-import { Profile } from './components/Profile'
-import { IconBtn } from './components/iconBtn'
+import { IconButton } from './components/IconButton'
 import {
 	nostrIcon,
 	coracleIcon,
@@ -22,6 +21,8 @@ import {
 	snortIcon,
 } from './assets'
 import Header from './layout/Header'
+import { TrendingProfiles } from './components/trending-profiles/TrendingProfiles'
+import { AppsList } from './components/apps/AppsList'
 
 const apps = [
 	{ title: 'Nostr', img: nostrIcon, link: 'https://nostr.band/' },
@@ -431,38 +432,13 @@ const App = () => {
 			/>
 			<main>
 				<button onClick={() => db.delete()}>Delete DB</button>
-				{trendingProfiles && (
-					<div className='container-fluid p-1'>
-						<h3>Trending profiles</h3>
-						<div className='d-flex flex-row flex-nowrap overflow-auto'>
-							{trendingProfiles.map((p) => (
-								<Profile
-									key={p.npub}
-									profile={p}
-									onClick={onProfileClick}
-								/>
-							))}
-						</div>
-					</div>
-				)}
+				<TrendingProfiles
+					profiles={trendingProfiles}
+					onProfileClick={onProfileClick}
+				/>
 
-				{true && (
-					<div>
-						<h3 className='ps-3'>Apps</h3>
-						<section className='container d-flex align-items-start'>
-							<div className='contentWrapper d-flex gap-4'>
-								{apps.map((app) => (
-									<IconBtn
-										key={app.link}
-										data={app}
-										size='big'
-										onClick={() => open(app.link, app)}
-									/>
-								))}
-							</div>
-						</section>
-					</div>
-				)}
+				{true && <AppsList apps={apps} onOpenApp={open} />}
+
 				<Modal activeModal={modalActive}>
 					{modalActive && (
 						<EditKey
@@ -504,9 +480,9 @@ const App = () => {
 				<hr className='m-0' />
 				<div className='container d-flex align-items-center gap-2 p-1'>
 					<div className='contentWrapper d-flex'>
-						{otherTabs.map((tab) => (
-							<IconBtn
-								key={tab.app.title}
+						{otherTabs.map((tab, idx) => (
+							<IconButton
+								key={tab.app.title + idx}
 								data={tab.app}
 								size='small'
 								openedTab={openedTab === tab.id ? true : false}
@@ -520,16 +496,16 @@ const App = () => {
 								backgroundColor: '#706d6dd4',
 							}}
 						></div>
-						{nostrTabs.map((tab) => (
-							<IconBtn
-								key={tab.app.title}
+						{nostrTabs.map((tab, idx) => (
+							<IconButton
+								key={tab.app.title + idx}
 								data={tab.app}
 								size='small'
 								openedTab={openedTab === tab.id ? true : false}
 								onClick={() => toggle(tab)}
 							/>
 						))}
-						<IconBtn
+						<IconButton
 							key='addApp'
 							data={{ title: 'Add', img: nostrIcon }}
 							size='small'
