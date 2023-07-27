@@ -5,7 +5,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import './App.css';
 import { browser } from './browser';
 import { config } from './config';
-import { addTab, db, deleteTab, updateTab, listTabs, listPins, getFlag, setFlag } from './db';
+import { addTab, db, deleteTab, updateTab, listTabs, listPins, addPin, deletePin, getFlag, setFlag } from './db';
 import { keystore } from './keystore';
 
 import { AiOutlineClose, AiOutlineSearch } from "react-icons/ai";
@@ -298,6 +298,7 @@ const App = () => {
 	url,
 	order: tabs.length + 1,
 	ref: null, // filled below
+	pinned: !!pin,
       };
       if (pin)
 	tab.appNaddr = pin.appNaddr;
@@ -357,7 +358,7 @@ const App = () => {
 
     if (url) {
       const url = inputSearchRef.current.value;
-      open(link);
+      open(url);
       closeModal();
     }
   }
@@ -384,9 +385,33 @@ const App = () => {
   const showTabs = () => {
   }
 
-  const pinTab = () => {
+  const togglePinTab = () => {
+    if (currentTab.pinned) {
+      // unpin
+      const pin = pins.find(p => p.appNaddr == currentTab.appNaddr);
+      if (pin) {
+	setPins(prev => prev.filter(p => p.id != pin.id));
+	deletePin(pin.id);
 
-    // FIXME create pin and add
+	currentTab.pinned = false;
+      }
+    } else {
+      const app = apps.find(a => a.naddr == currentTab.appNaddr);
+      const pin = {
+        id: "" + Math.random(),
+        url: currentTab.url,
+	appNaddr: currentTab.appNaddr,
+	title: currentTab.title,
+	icon: currentTab.icon,
+        order: pins.length,
+        pubkey: currentPubkey,
+      };
+
+      setPins(prev => [...prev, pin]);
+      addPin(pin);
+
+      currentTab.pinned = true;
+    }
   }  
   
   const npub = currentPubkey ? getNpub(currentPubkey) : "";
@@ -475,7 +500,8 @@ const App = () => {
         </div>
 	<div id='tab-menu' className="container d-none justify-content-end gap-1">
 	  <div><Button variant="secondary" size="small" onClick={closeTab}>Close</Button></div>
-	  <div><Button variant="secondary" size="small" onClick={pinTab}>Pin</Button></div>
+	  <div><Button variant="secondary" size="small"
+		 onClick={togglePinTab}>{currentTab != null && currentTab.pinned ? "Unpin" : "Pin"}</Button></div>
 	  <div><Button variant="secondary" size="small" onClick={showTabs}>Tabs</Button></div>
 	  <div><Button variant="secondary" size="small" onClick={hideTab}>Hide</Button></div>
 	</div>

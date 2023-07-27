@@ -24,7 +24,7 @@ export async function addTab(tab) {
       t[k] = tab[k];
     await db.tabs.add(t)
   } catch (error) {
-    console.log(`Add item to DB error: ${JSON.stringify(error)}`)
+    console.log(`Add tab to DB error: ${JSON.stringify(error)}`)
   }
 }
 
@@ -32,7 +32,7 @@ export async function updateTab(tab) {
   try {
     await db.tabs.where('id').equals(tab.id).modify({url: tab.url});
   } catch (error) {
-    console.log(`Update item in DB error: ${JSON.stringify(error)}`);
+    console.log(`Update tab in DB error: ${JSON.stringify(error)}`);
   }
 }
 
@@ -42,6 +42,23 @@ export async function deleteTab(id) {
     await db.tabs.delete(id);
   } catch (error) {
     console.log(`Delete tab in DB error: ${JSON.stringify(error)}`);
+  }
+}
+
+export async function addPin(pin) {
+  try {
+    await db.tabs.add(pin)
+  } catch (error) {
+    console.log(`Add pin to DB error: ${JSON.stringify(error)}`)
+  }
+}
+
+export async function deletePin(id) {
+  try {
+    // Delete tab in DB by ID
+    await db.pins.delete(id);
+  } catch (error) {
+    console.log(`Delete pin in DB error: ${JSON.stringify(error)}`);
   }
 }
 
