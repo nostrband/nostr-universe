@@ -12,7 +12,6 @@ import { BsArrowRightCircle } from 'react-icons/bs'
 import { EditKey } from './components/EditKey'
 import { Input } from './components/Input'
 import { Modal } from './components/UI/modal/Modal'
-import { IconButton } from './components/IconButton'
 import {
 	nostrIcon,
 	coracleIcon,
@@ -23,6 +22,7 @@ import {
 import Header from './layout/Header'
 import { TrendingProfiles } from './components/trending-profiles/TrendingProfiles'
 import { AppsList } from './components/apps/AppsList'
+import { Footer } from './layout/Footer'
 
 const apps = [
 	{ title: 'Nostr', img: nostrIcon, link: 'https://nostr.band/' },
@@ -92,7 +92,7 @@ const App = () => {
 	const [otherTabs, setOtherTabs] = useState([])
 	const [openedTab, setOpenedTab] = useState()
 
-	const nostrAppsLinks = apps.map((app) => (app = app.link))
+	const nostrAppsLinks = apps.map((app) => app.link)
 
 	const openTabsFromDB = async (list) => {
 		if (list) {
@@ -258,12 +258,12 @@ const App = () => {
 				await deleteTabDB(tab.id)
 				tab.ref.close()
 				setOpenedTab(null)
-				setTabs((prev) => prev.filter((t) => t.id != tab.id))
+				setTabs((prev) => prev.filter((t) => t.id !== tab.id))
 				if (nostrAppsLinks.includes(tab.app.link)) {
-					setNostrTabs((prev) => prev.filter((t) => t.id != tab.id))
+					setNostrTabs((prev) => prev.filter((t) => t.id !== tab.id))
 				}
 				if (!nostrAppsLinks.includes(tab.app.link)) {
-					setOtherTabs((prev) => prev.filter((t) => t.id != tab.id))
+					setOtherTabs((prev) => prev.filter((t) => t.id !== tab.id))
 				}
 			},
 			onBlank: (url) => {
@@ -477,44 +477,12 @@ const App = () => {
 					</div>
 				</Modal>
 			</main>
-			<footer id='footer'>
-				<hr className='m-0' />
-				<div className='container d-flex align-items-center gap-2 p-1'>
-					<div className='contentWrapper d-flex'>
-						{otherTabs.map((tab, idx) => (
-							<IconButton
-								key={tab.app.title + idx}
-								data={tab.app}
-								size='small'
-								openedTab={openedTab === tab.id ? true : false}
-								onClick={() => toggle(tab)}
-							/>
-						))}
-						<div
-							style={{
-								width: '2px',
-								height: '50px',
-								backgroundColor: '#706d6dd4',
-							}}
-						></div>
-						{nostrTabs.map((tab, idx) => (
-							<IconButton
-								key={tab.app.title + idx}
-								data={tab.app}
-								size='small'
-								openedTab={openedTab === tab.id ? true : false}
-								onClick={() => toggle(tab)}
-							/>
-						))}
-						<IconButton
-							key='addApp'
-							data={{ title: 'Add', img: nostrIcon }}
-							size='small'
-							onClick={() => console.log('add app')}
-						/>
-					</div>
-				</div>
-			</footer>
+			<Footer
+				activeTab={openedTab}
+				nostrTabs={nostrTabs}
+				onToggleTab={toggle}
+				tabs={otherTabs}
+			/>
 		</>
 	)
 }
