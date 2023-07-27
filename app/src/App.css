@@ -1,100 +1,90 @@
-* {
-  box-sizing: border-box;
-}
-
 body {
-  background-color: #282c34;
-  color: white;
-  margin: 0;
+	background-color: #282c34;
+	color: white;
 }
 
-.wrapper {
-  text-align: center;
-  padding: 10px 15px;
-}
-
-.contentWrapper {
-  overflow: auto;
-  white-space: nowrap;
-}
-
-.active {
-  background: rgba(252, 252, 250, 0.406) !important;
-  border-radius: 6px !important;
-}
-
-.iconImgBig {
-  width: 72px;
-  height: 72px;
-  border-radius: 10px;
-}
-
-.iconImgSmall {
-  width: 38px;
-  height: 38px;
-  border-radius: 6px;
-}
-
-.iconBtn {
-  background: none;
-  padding: 2px 0;
-  margin: 0;
-  border: none;
-}
-
-.iconTitle {
-  margin-top: 2px;
-  padding: 0;
-  color: white;
-}
-
-::-webkit-scrollbar {
-   height: 0;
-   width: 4px;
-   scroll-behavior: smooth;
-}
-
-::-webkit-scrollbar-thumb {
-  border-radius: 0;
-  background: #706d6dd4; 
-}
-
-.modalContent {
-  transform: scale(0.5);
-  transition: 0.2s;
-  width:100vw;
-  height: 100vh;
-}
-
-.modalContent.active {
-  transform: scale(1);
-}
-
+/* Layout Grid styles */
 #root {
-  height: 100vh;
-
-  /* grid container settings */
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto;
-  grid-template-areas:
-    'header'
-    'main'
-    'footer';
+	height: 100vh;
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-rows: auto 1fr auto;
+	grid-template-areas:
+		'header'
+		'main'
+		'footer';
 }
 
 #root > header {
-  grid-area: header;
+	grid-area: header;
 }
 
 #root > main {
-  grid-area: main;
-  overflow: auto;
-  padding: 15px 5px 10px 5px;
+	grid-area: main;
+	overflow: auto;
+	padding: 15px 5px 10px 5px;
 }
 
 #root > footer {
-  grid-area: footer;
-  overflow: auto;
-  scrollbar-width: thin;
+	grid-area: footer;
+	overflow: auto;
+	scrollbar-width: thin;
+}
+
+/* Scroll bar styles */
+::-webkit-scrollbar {
+	height: 0;
+	width: 4px;
+	scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar-thumb {
+	border-radius: 0;
+	background: #706d6dd4;
+}
+
+.contentWrapper {
+	overflow: auto;
+	white-space: nowrap;
+}
+
+.active {
+	background: rgba(252, 252, 250, 0.406) !important;
+	border-radius: 6px !important;
+}
+
+.iconImgBig {
+	width: 72px;
+	height: 72px;
+	border-radius: 10px;
+}
+
+.iconImgSmall {
+	width: 38px;
+	height: 38px;
+	border-radius: 6px;
+}
+
+.iconBtn {
+	background: none;
+	padding: 2px 0;
+	margin: 0;
+	border: none;
+}
+
+.iconTitle {
+	margin-top: 2px;
+	padding: 0;
+	color: white;
+}
+
+.modalContent {
+	transform: scale(0.5);
+	transition: 0.2s;
+	width: 100vw;
+	height: 100vh;
+}
+
+.modalContent.active {
+	transform: scale(1);
 }

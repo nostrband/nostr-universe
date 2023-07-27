@@ -1,16 +1,13 @@
 import { nip19 } from 'nostr-tools'
 import { useEffect, useRef, useState } from 'react'
-import Button from 'react-bootstrap/Button'
-import Dropdown from 'react-bootstrap/Dropdown'
 import './App.css'
 import { browser } from './browser'
 import { config } from './config'
 import { addTabToDB, db, deleteTabDB, listTabs, updateTabDB } from './db'
 import { keystore } from './keystore'
 
-import { AiOutlineClose, AiOutlineSearch } from 'react-icons/ai'
-import { BiSolidPencil } from 'react-icons/bi'
-import { BsArrowRightCircle, BsFillPersonFill } from 'react-icons/bs'
+import { AiOutlineClose } from 'react-icons/ai'
+import { BsArrowRightCircle } from 'react-icons/bs'
 
 import { EditKey } from './components/EditKey'
 import { Input } from './components/Input'
@@ -24,6 +21,7 @@ import {
 	satelliteIcon,
 	snortIcon,
 } from './assets'
+import Header from './layout/Header'
 
 const apps = [
 	{ title: 'Nostr', img: nostrIcon, link: 'https://nostr.band/' },
@@ -348,6 +346,7 @@ const App = () => {
 
 	async function copyKey() {
 		const text = getNpubKey(list[openKey].publicKey)
+		// eslint-disable-next-line
 		cordova.plugins.clipboard.copy(text)
 	}
 
@@ -422,84 +421,14 @@ const App = () => {
 
 	return (
 		<>
-			<header id='header'>
-				<div className='container d-flex align-items-center justify-content-between'>
-					<BsFillPersonFill color='white' size={35} />
-					<Dropdown data-bs-theme='dark' drop='down-centered'>
-						<Dropdown.Toggle
-							id='dropdown-basic'
-							variant='secondary'
-						>
-							{npub
-								? npub.substring(0, 10) +
-								  '...' +
-								  npub.substring(59)
-								: 'Key is not chosen'}
-						</Dropdown.Toggle>
-
-						<Dropdown.Menu>
-							{keys &&
-								keys.length &&
-								keys
-									.map((key) => nip19.npubEncode(key))
-									.map((key, ind) => {
-										return (
-											<Dropdown.Item
-												key={key}
-												href={`#/${key + 1}`}
-												className='d-flex align-items-center gap-4'
-											>
-												<BsFillPersonFill
-													color='white'
-													size={35}
-												/>
-												<div
-													className='fs-3 text-white flex-grow-1'
-													onClick={() =>
-														selectKey(ind)
-													}
-												>
-													{key.substring(0, 10) +
-														'...' +
-														key.substring(59)}
-												</div>
-												<div
-													onClick={editBtnClick}
-													data-key={ind}
-												>
-													<BiSolidPencil
-														color='white'
-														size={26}
-														className=' pe-none '
-													/>
-												</div>
-											</Dropdown.Item>
-										)
-									})}
-							{keys && <Dropdown.Divider />}
-							<Dropdown.Item
-								href='#/action-15'
-								className=' d-flex justify-content-center  '
-							>
-								<Button
-									variant='secondary'
-									size='lg'
-									onClick={addKey}
-								>
-									+ Add keys
-								</Button>
-							</Dropdown.Item>
-						</Dropdown.Menu>
-					</Dropdown>
-
-					<AiOutlineSearch
-						color='white'
-						size={35}
-						onClick={() => setIsOpenSearch(true)}
-					/>
-				</div>
-				<hr className='m-0' />
-			</header>
+			<Header
+				npub={npub}
+				keys={keys}
+				onAddKey={addKey}
+				onEditKey={editBtnClick}
+				onOpenSearchModal={() => setIsOpenSearch(true)}
+				onSelectKey={selectKey}
+			/>
 			<main>
 				<button onClick={() => db.delete()}>Delete DB</button>
 				{trendingProfiles && (
