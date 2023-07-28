@@ -1,5 +1,7 @@
 export const IconBtn = (props) => {
-  const { title, icon } = props.data;
+  //  const { title, icon } = props.data;
+  const title = props.data?.title || props.data?.name;
+  const icon = props.data?.icon || props.data?.picture;
 
   const styleTitle = {
     small: { overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.8rem' },

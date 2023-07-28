@@ -2,6 +2,7 @@ import { nip19 } from 'nostr-tools';
 import { useEffect, useRef, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';
+//import Modal from 'react-bootstrap/Modal';
 import './App.css';
 import { browser } from './browser';
 import { config } from './config';
@@ -17,6 +18,7 @@ import { Input } from './components/Input';
 import { Modal } from './components/ModalWindow';
 import { Profile } from './components/Profile';
 import { IconBtn } from './components/iconBtn';
+import { PinApp } from './components/PinApp';
 
 import coracleIcon from './icons/coracle.png';
 import irisIcon from './icons/iris.png';
@@ -25,16 +27,16 @@ import satelliteIcon from './icons/satellite.png';
 import snortIcon from './icons/snort.png';
 
 const apps = [
-  { naddr: "10", name: 'NostrApp', picture: "https://nostrapp.link/logo.png", url: 'https://nostrapp.link/' },
-  { naddr: "1", name: 'Nostr', picture: nostrIcon, url: 'https://nostr.band/' },
-  { naddr: "2", name: 'Snort', picture: snortIcon, url: 'https://snort.social/' },
-  { naddr: "3", name: 'Iris', picture: irisIcon, url: 'https://iris.to/' },
-  { naddr: "4", name: 'Coracle', picture: coracleIcon, url: 'https://coracle.social/' },
-  { naddr: "5", name: 'Satellite', picture: satelliteIcon, url: 'https://satellite.earth/' },
-  { naddr: "6", name: 'Zapddit', picture: "https://zapddit.com/assets/icons/logo-without-text-zapddit.svg", url: 'https://zapddit.com/' },
-  { naddr: "7", name: 'Agora', picture: "https://agorasocial.app/images/favicon/120.png", url: 'https://agorasocial.app/' },
-  { naddr: "8", name: 'Pinstr', picture: "https://pinstr.app/favicon.ico", url: 'https://pinstr.app/' },
-  { naddr: "9", name: 'Nosta', picture: "https://nosta.me/images/apple-icon-120x120.png", url: 'https://nosta.me/' },
+  { naddr: "10", name: 'NostrApp', picture: "https://nostrapp.link/logo.png", url: 'https://nostrapp.link/', kinds: [0, 31990, 31989] },
+  { naddr: "1", name: 'Nostr', picture: nostrIcon, url: 'https://nostr.band/', kinds: [0, 1, 3, 30000, 30001, 30023, 9735, 1985] },
+  { naddr: "2", name: 'Snort', picture: snortIcon, url: 'https://snort.social/', kinds: [0, 1, 3, 4, 6, 7, 30000, 30001, 9735, 1984, 1985], handlers: {0: {url: "https://snort.social/p/<bech32>"}} },
+  { naddr: "3", name: 'Iris', picture: irisIcon, url: 'https://iris.to/', kinds: [0, 1, 3, 4, 6, 7, 30000, 30001, 9735, 1984, 1985] },
+  { naddr: "4", name: 'Coracle', picture: coracleIcon, url: 'https://coracle.social/', kinds: [0, 1, 3, 4, 6, 7, 30000, 30001, 9735, 1984, 1985] },
+  { naddr: "5", name: 'Satellite', picture: satelliteIcon, url: 'https://satellite.earth/', kinds: [0, 1, 3, 4, 6, 7, 30000, 30001, 9735, 1984, 1985] },
+  { naddr: "6", name: 'Zapddit', picture: "https://zapddit.com/assets/icons/logo-without-text-zapddit.svg", url: 'https://zapddit.com/', kinds: [0, 1, 3, 4, 6, 7, 30000, 30001, 9735, 1984, 1985] },
+  { naddr: "7", name: 'Agora', picture: "https://agorasocial.app/images/favicon/120.png", url: 'https://agorasocial.app/', kinds: [0, 1, 3, 4, 6, 7, 30000, 30001, 9735, 1984, 1985] },
+  { naddr: "8", name: 'Pinstr', picture: "https://pinstr.app/favicon.ico", url: 'https://pinstr.app/', kinds: [0, 1, 3, 4, 6, 7, 30000, 30001, 9735, 1984, 1985] },
+  { naddr: "9", name: 'Nosta', picture: "https://nosta.me/images/apple-icon-120x120.png", url: 'https://nosta.me/', kinds: [0, 1, 3, 30000, 30001 ], handlers: {0: {url: "https://nosta.me/<bech32>"}} },
 ];
 
 export const getNpub = (key) => {
@@ -64,6 +66,8 @@ const App = () => {
   const [pins, setPins] = useState([]);
   const [tabs, setTabs] = useState([]);
   const [currentTab, setCurrentTab] = useState(null)
+  const [lastTab, setLastTab] = useState(null)
+  const [prevTab, setPrevTab] = useState(null)
   
   const [trendingProfiles, setTrendingProfiles] = useState();
 
@@ -76,6 +80,9 @@ const App = () => {
   const [modalActive, setModalActive] = useState(false);
   const [isOpenSearch, setIsOpenSearch] = useState(false);
   const [openKey, setOpenKey] = useState();
+
+  const [pinModalActive, setPinModalActive] = useState(false);
+  const [pinApp, setPinApp] = useState(null);
   
   const loadKeys = async () => {
     const list = await keystore.listKeys();
@@ -92,10 +99,11 @@ const App = () => {
   }
 
   const loadWorkspace = async (workspaceKey) => {
-    const dbTabs = await listTabs(workspaceKey);
+//    const dbTabs = await listTabs(workspaceKey);
     const dbPins = await listPins(workspaceKey);
+    console.log("dbPins", JSON.stringify(dbPins));
 
-    setTabs(dbTabs);
+//    setTabs(dbTabs);
     setPins(dbPins);
   }
 
@@ -123,7 +131,7 @@ const App = () => {
       await setFlag(workspaceKey, 'bootstrapped', true);
     }
   }
-  
+
   useEffect(() => {
 
     async function fetchTrendingProfiles() {
@@ -133,6 +141,7 @@ const App = () => {
         try {
           const pr = JSON.parse(p.profile.content);
           pr.npub = getNpub(p.pubkey);
+	  pr.pubkey = p.pubkey;
           return pr;
         } catch (e) {
           console.log("failed to parse profile", e);
@@ -235,7 +244,8 @@ const App = () => {
   const hide = (tab) => {
     if (tab) {
       tab.ref.hide();
-      setCurrentTab(tab);
+      setLastTab(currentTab);
+      setCurrentTab(null);
     }
 
     document.getElementById('pins').classList.remove("d-none");
@@ -263,6 +273,8 @@ const App = () => {
 	  await createTab(tab);
 	
 	tab.ref.show();
+	if (lastTab && lastTab.id != tab.id)
+	  setPrevTab(lastTab);
 	setCurrentTab(tab);
 	ok();
       }, 0);
@@ -277,6 +289,14 @@ const App = () => {
       show(tab);
     }
   }
+  const openApp = async (url, app) => {
+    return open(url, {
+      appNaddr: app.naddr,
+      title: app.name,
+      icon: app.picture,
+    });
+    
+  }
 
   const open = async (url, pin) => {
     console.log("open", url);
@@ -284,6 +304,15 @@ const App = () => {
     // make sure it's visible and has proper height
     showTabMenu();
 
+    // check if an open tab for this app exists
+    if (pin) {
+      const tab = tabs.find(t => t?.appNaddr == pin.appNaddr);
+      if (tab) {
+	show(tab);
+	return;
+      }
+    }
+    
     // schedule the open when tab menu is rendered
     setTimeout(async () => {
       
@@ -298,7 +327,7 @@ const App = () => {
 	url,
 	order: tabs.length + 1,
 	ref: null, // filled below
-	pinned: !!pin,
+	pinned: pin && pin.id,
       };
       if (pin)
 	tab.appNaddr = pin.appNaddr;
@@ -310,6 +339,8 @@ const App = () => {
 
       await show(tab);
       
+      if (lastTab && lastTab.id != tab.id)
+	setPrevTab(lastTab);
       setCurrentTab(tab);
       setTabs((prev) => [tab, ...tabs]);
     }, 0);
@@ -368,27 +399,49 @@ const App = () => {
     handleClickSearchBtn();
   }
 
-  const onProfileClick = (npub) => {
-    console.log("show", npub);
+  const onProfileClick = (pubkey) => {
+    console.log("show", pubkey);
+
+    const nprofile = nip19.nprofileEncode({pubkey, relays:["wss://relay.nostr.band"]});
+    const pin = pins.find(p => p.perms && p.perms.find(k => k == 0) !== undefined);
+    console.log("pin", JSON.stringify(pin));
+    const app = apps.find(a => a.naddr == pin.appNaddr);
+    console.log("app", JSON.stringify(app));
+    const handler = app.handlers[0];
+    const url = handler.url.replace("<bech32>", nprofile);
+    
+    console.log("profile app", app, pin, url);
+
+    open(url, pin);
   }
 
   const closeTab = () => {
     console.log("closeTab");
-    close(currentTab);
+    if (currentTab)
+      close(currentTab);
   }
 
   const hideTab = () => {
     console.log("hideTab");
-    hide(currentTab);
+    if (currentTab)
+      hide(currentTab);
   }
 
   const showTabs = () => {
   }
 
+  const switchTabs = () => {
+    hideTab();
+    show(prevTab);
+  }
+  
   const togglePinTab = () => {
+    if (!currentTab)
+      return;
+
     if (currentTab.pinned) {
-      // unpin
-      const pin = pins.find(p => p.appNaddr == currentTab.appNaddr);
+	// unpin
+	const pin = pins.find(p => p.appNaddr == currentTab.appNaddr);
       if (pin) {
 	setPins(prev => prev.filter(p => p.id != pin.id));
 	deletePin(pin.id);
@@ -397,22 +450,40 @@ const App = () => {
       }
     } else {
       const app = apps.find(a => a.naddr == currentTab.appNaddr);
-      const pin = {
-        id: "" + Math.random(),
-        url: currentTab.url,
-	appNaddr: currentTab.appNaddr,
-	title: currentTab.title,
-	icon: currentTab.icon,
-        order: pins.length,
-        pubkey: currentPubkey,
-      };
-
-      setPins(prev => [...prev, pin]);
-      addPin(pin);
-
-      currentTab.pinned = true;
+      console.log("pin app", app);
+      setPinApp(app);
+      setPinModalActive(true);
+      currentTab.ref.hide();
     }
   }  
+
+  const savePin = (app, perms) => {
+
+    const pin = {
+      id: "" + Math.random(),
+      url: currentTab.url,
+      appNaddr: currentTab.appNaddr,
+      title: currentTab.title,
+      icon: currentTab.icon,
+      order: pins.length,
+      pubkey: currentPubkey,
+      perms,
+    };
+
+    console.log("perms", JSON.stringify(perms));
+
+    setPins(prev => [...prev, pin]);
+    addPin(pin);
+
+    currentTab.pinned = true;
+
+    currentTab.ref.show();
+  }
+
+  const hidePinModal = () => {
+    setPinModalActive(false);
+    currentTab.ref.show();
+  }
   
   const npub = currentPubkey ? getNpub(currentPubkey) : "";
   return (
@@ -449,7 +520,7 @@ const App = () => {
 	<hr className='m-0' />
       </header>
       <main>
-	<button onClick={() => db.delete()}>Delete DB</button>
+	{false && <button onClick={() => db.delete()}>Delete DB</button>}
 	{trendingProfiles && (
 	  <div className='container-fluid p-1'>
             <h3>Trending profiles</h3>
@@ -461,12 +532,12 @@ const App = () => {
 	  </div>
 	)}
 
-	{false && (
+	{true && (
 	  <div>
             <h3 className="ps-3">Apps</h3>
             <section className='container d-flex align-items-start'>
               <div className='contentWrapper d-flex gap-4'>
-		{apps.map((app) => <IconBtn key={app.url} data={app} size='big' onClick={() => open(app.url, app)} />)}
+		{apps.map((app) => <IconBtn key={app.url} data={app} size='big' onClick={() => openApp(app.url, app)} />)}
               </div>
             </section>
 	  </div>
@@ -478,7 +549,7 @@ const App = () => {
 	     showKey={showKey}
 	     editKey={editKey}
 	     setModalActive={setModalActive} />}
-	</Modal >
+	</Modal>
 	<Modal activeModal={isOpenSearch}>
 	  {isOpenSearch &&
 	   (<div className='d-flex flex-column'>
@@ -490,19 +561,31 @@ const App = () => {
                <BsArrowRightCircle color='white' size={30} className='iconDropDown' onClick={handleClickSearchBtn} />
 	     </form>
 	   </div>)}
-	</Modal >
+	</Modal>
+	<Modal activeModal={pinModalActive}>
+	  {pinModalActive && 
+	   <PinApp
+	     app={pinApp}
+	     close={hidePinModal}
+	     savePin={savePin}
+	   />
+	  }
+	</Modal>
       </main>
       <footer id='footer'>
 	<hr className='m-0' />
 	<div id='pins' className="container d-flex align-items-center gap-2 p-1">
 	  {pins.map((p) => <IconBtn key={p.name} data={p} size='small' onClick={() => open(p.url, p)} />)}
-	  {tabs.map((t) => <IconBtn key={t.id} data={t} size='small' onClick={() => toggle(t)} />)}
+	  {false && tabs.map((t) => <IconBtn key={t.id} data={t} size='small' onClick={() => toggle(t)} />)}
         </div>
 	<div id='tab-menu' className="container d-none justify-content-end gap-1">
 	  <div><Button variant="secondary" size="small" onClick={closeTab}>Close</Button></div>
-	  <div><Button variant="secondary" size="small"
-		 onClick={togglePinTab}>{currentTab != null && currentTab.pinned ? "Unpin" : "Pin"}</Button></div>
-	  <div><Button variant="secondary" size="small" onClick={showTabs}>Tabs</Button></div>
+	  {currentTab && currentTab.appNaddr && 
+	   <div><Button variant="secondary" size="small"
+		  onClick={togglePinTab}>{currentTab && currentTab.pinned ? "Unpin" : "Pin"}</Button></div>
+	  }
+	  {false && <div><Button variant="secondary" size="small" onClick={showTabs}>Tabs</Button></div>}
+	  {false && prevTab && <div><Button variant="secondary" size="small" onClick={switchTabs}>Switch</Button></div>}
 	  <div><Button variant="secondary" size="small" onClick={hideTab}>Hide</Button></div>
 	</div>
       </footer>

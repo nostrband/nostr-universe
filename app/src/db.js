@@ -47,7 +47,7 @@ export async function deleteTab(id) {
 
 export async function addPin(pin) {
   try {
-    await db.tabs.add(pin)
+    await db.pins.add(pin)
   } catch (error) {
     console.log(`Add pin to DB error: ${JSON.stringify(error)}`)
   }

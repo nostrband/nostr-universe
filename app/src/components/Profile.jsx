@@ -4,7 +4,7 @@ import { BsFillPersonFill } from "react-icons/bs";
 
 export const Profile = (props) => {
 
-  const { npub } = props.profile;
+  const { npub, pubkey } = props.profile;
 
   const crop = (s, n) => {
     if (s.length > n)
@@ -27,7 +27,7 @@ export const Profile = (props) => {
 	  <Card.Title style={{marginBottom: "3px"}}>{name}</Card.Title>
 	  <small>{crop(npub, 13)}</small>
 	  <Card.Text style={{marginBottom: "3px", overflowWrap: "break-word"}}>{about}</Card.Text>
-	  <Button onClick={() => props.onClick(npub)}>View</Button>
+	  <Button onClick={() => props.onClick(pubkey)}>View</Button>
 	</center>
       </Card.Body>
     </Card>
