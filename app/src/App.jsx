@@ -18,7 +18,6 @@ import { keystore } from './keystore'
 import { AiOutlineClose } from 'react-icons/ai'
 import { BsArrowRightCircle } from 'react-icons/bs'
 
-// import { EditKey } from './components/EditKey'
 import { Input } from './components/Input'
 import { Modal } from './components/UI/modal/Modal'
 import {
@@ -32,6 +31,7 @@ import Header from './layout/Header'
 import { TrendingProfiles } from './components/trending-profiles/TrendingProfiles'
 import { AppsList } from './components/apps/AppsList'
 import { Footer } from './layout/Footer'
+import { EditKey } from './components/EditKey'
 
 const apps = [
 	{
@@ -112,7 +112,6 @@ const API = {
 const DEFAULT_PUBKEY = 'anon'
 
 const App = () => {
-	//  const [npub, setNpub] = useState('');
 	const [keys, setKeys] = useState()
 	const [currentPubkey, setCurrentPubkey] = useState()
 
@@ -458,13 +457,13 @@ const App = () => {
 					isOpen={modalActive}
 					onClose={() => setModalActive(false)}
 				>
-					{/* <EditKey
-						keyProp={list[openKey]}
+					<EditKey
+						keyProp={{ publicKey: openKey }}
 						copyKey={copyKey}
 						showKey={showKey}
 						editKey={editKey}
 						setModalActive={setModalActive}
-					/> */}
+					/>
 				</Modal>
 				<Modal isOpen={isOpenSearch} onClose={closeModal}>
 					<div className='d-flex flex-column'>

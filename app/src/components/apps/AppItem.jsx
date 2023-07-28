@@ -5,7 +5,7 @@ export const AppItem = ({ app, onOpenApp }) => {
 	return (
 		<IconButton
 			key={app.link}
-			data={app}
+			data={{ ...app, title: app.name, img: app.picture }}
 			size='big'
 			onClick={() => onOpenApp(app.link, app)}
 		/>

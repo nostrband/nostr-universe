@@ -12,7 +12,7 @@ export const AppsList = ({ apps, onOpenApp }) => {
 							<AppItem
 								app={app}
 								onOpenApp={onOpenApp}
-								key={app.title + index}
+								key={app.name + index}
 							/>
 						)
 					})}
