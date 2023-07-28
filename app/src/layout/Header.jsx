@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { nip19 } from 'nostr-tools'
 import Dropdown from 'react-bootstrap/Dropdown'
 import { BsFillPersonFill } from 'react-icons/bs'
@@ -6,6 +6,7 @@ import { BiSolidPencil } from 'react-icons/bi'
 import Button from 'react-bootstrap/Button'
 import { AiOutlineSearch } from 'react-icons/ai'
 import { getShortenText } from '../utils/helpers/general'
+import { AppContext } from '../store/app-context'
 
 const getRenderedKeys = (keys) => {
 	if (!keys || keys.length === 0) {
@@ -14,15 +15,18 @@ const getRenderedKeys = (keys) => {
 	return keys.map((key) => nip19.npubEncode(key))
 }
 
-const Header = ({
-	keys = [],
-	npub,
-	onAddKey,
-	onSelectKey,
-	onEditKey,
-	onOpenSearchModal,
-}) => {
+export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
+	const contextData = useContext(AppContext)
+
+	const { npub, keys, onAddKey, onSelectKey, setOpenKey } = contextData || {}
+
 	const renderedKeys = getRenderedKeys(keys)
+
+	const editKeyHandler = (index) => {
+		onOpenEditKeyModal()
+		setOpenKey(keys[index])
+	}
+
 	return (
 		<header id='header'>
 			<div className='container d-flex align-items-center justify-content-between'>
@@ -47,7 +51,7 @@ const Header = ({
 									>
 										{getShortenText(key)}
 									</div>
-									<div onClick={onEditKey} data-key={index}>
+									<div onClick={() => editKeyHandler(index)}>
 										<BiSolidPencil
 											color='white'
 											size={26}
@@ -83,5 +87,3 @@ const Header = ({
 		</header>
 	)
 }
-
-export default Header

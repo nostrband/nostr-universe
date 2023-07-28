@@ -1,7 +1,10 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { AppItem } from './AppItem'
+import { AppContext } from '../../store/app-context'
 
-export const AppsList = ({ apps, onOpenApp }) => {
+export const AppsList = () => {
+	const contextData = useContext(AppContext)
+	const { apps, open: onOpenApp } = contextData || {}
 	return (
 		<div>
 			<h3 className='ps-3'>Apps</h3>

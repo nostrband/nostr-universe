@@ -1,8 +1,17 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { TrendingProfileItem } from './TrendingProfileItem'
+import { AppContext } from '../../store/app-context'
 
-export const TrendingProfiles = ({ profiles = [], onProfileClick }) => {
-	const renderedProfiles = profiles && profiles?.length ? profiles : []
+export const TrendingProfiles = () => {
+	const contextData = useContext(AppContext)
+	const { trendingProfiles = [] } = contextData || {}
+
+	const renderedProfiles =
+		trendingProfiles && trendingProfiles?.length ? trendingProfiles : []
+
+	const onProfileClick = (npub) => {
+		console.log('show', npub)
+	}
 
 	return (
 		<div className='container-fluid p-1'>

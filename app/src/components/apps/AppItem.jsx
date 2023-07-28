@@ -1,13 +1,13 @@
 import React from 'react'
-import { IconButton } from '../IconButton'
+import { IconButton } from '../UI/IconButton'
 
 export const AppItem = ({ app, onOpenApp }) => {
 	return (
 		<IconButton
-			key={app.link}
+			key={app.url}
 			data={{ ...app, title: app.name, img: app.picture }}
 			size='big'
-			onClick={() => onOpenApp(app.link, app)}
+			onClick={() => onOpenApp(app.url, app)}
 		/>
 	)
 }

@@ -1,17 +1,22 @@
-import React from 'react'
-import { IconButton } from '../components/IconButton'
-import Button from 'react-bootstrap/esm/Button'
+import React, { useContext } from 'react'
 
-export const Footer = ({
-	tabs,
-	pins,
-	onOpenPin,
-	onToggleTab,
-	onCloseTab,
-	onPinTab,
-	onShowTabs,
-	onHideTab,
-}) => {
+import Button from 'react-bootstrap/esm/Button'
+import { AppContext } from '../store/app-context'
+import { IconButton } from '../components/UI/IconButton'
+
+export const Footer = () => {
+	const contextData = useContext(AppContext)
+	const {
+		tabs,
+		onToggleTab,
+		onCloseTab,
+		onPinTab,
+		onHideTab,
+		onShowTabs,
+		pins,
+		open: onOpenPin,
+	} = contextData || {}
+
 	return (
 		<footer id='footer'>
 			<hr className='m-0' />
