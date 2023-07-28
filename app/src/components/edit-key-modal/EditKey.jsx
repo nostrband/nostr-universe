@@ -3,8 +3,8 @@ import Button from 'react-bootstrap/Button'
 import { AiOutlineClose } from 'react-icons/ai'
 import { MdOutlineDone } from 'react-icons/md'
 
-import { getShortenText } from '../../utils/helpers/general'
-import { AppContext, getNpub } from '../../store/app-context'
+import { getNpub, getShortenText } from '../../utils/helpers/general'
+import { AppContext } from '../../store/app-context'
 
 export const EditKey = ({ onCloseModal }) => {
 	const contextData = useContext(AppContext)
