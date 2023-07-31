@@ -1,0 +1,4 @@
+{
+	"extends": ["react-app"],
+	"ignorePatterns": ["browser.js", "keystore.js"]
+}
