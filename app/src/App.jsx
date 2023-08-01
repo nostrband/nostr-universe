@@ -32,7 +32,7 @@ const App = () => {
         onOpenEditKeyModal={toggleEditKeyModalVisibility}
       />
       <main>
-        <button onClick={() => db.delete()}>Delete DB</button>
+        {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
         <TrendingProfiles />
 
