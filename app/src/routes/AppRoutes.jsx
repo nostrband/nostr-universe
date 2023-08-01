@@ -1,10 +1,15 @@
 import { Box, styled, CircularProgress } from "@mui/material";
 import React, { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+
+import { AnimatePresence } from "framer-motion";
 
 const MainPage = lazy(() => import("../pages/Main.Page"));
+const ProfilePage = lazy(() => import("../pages/Profile.Page"));
 
 const AppRoutes = () => {
+  const location = useLocation();
+
   return (
     <Suspense
       fallback={
@@ -13,9 +18,12 @@ const AppRoutes = () => {
         </LoaderContainer>
       }
     >
-      <Routes>
-        <Route index path="/" element={<MainPage />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes key={location.pathname} location={location}>
+          <Route index path="/" element={<MainPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Routes>
+      </AnimatePresence>
     </Suspense>
   );
 };

@@ -10,3 +10,6 @@ export { ReactComponent as ServerIcon } from "./icons/header/server-icon.svg";
 export { ReactComponent as WalletIcon } from "./icons/header/wallet-icon.svg";
 export { ReactComponent as SearchIcon } from "./icons/header/search-icon.svg";
 export { ReactComponent as MeatballsIcon } from "./icons/header/meatballs-icon.svg";
+export { ReactComponent as CloseIcon } from "./icons/header/close-icon.svg";
+
+export { ReactComponent as SwitchIcon } from "./icons/profile/switch-horizontal-icon.svg";

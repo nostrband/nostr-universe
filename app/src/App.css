@@ -1,31 +1,3 @@
-/* Layout Grid styles */
-#root {
-  height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto;
-  grid-template-areas:
-    "header"
-    "main"
-    "footer";
-}
-
-#root > header {
-  grid-area: header;
-}
-
-#root > main {
-  grid-area: main;
-  overflow: auto;
-  padding: 15px 5px 10px 5px;
-}
-
-#root > footer {
-  grid-area: footer;
-  overflow: auto;
-  scrollbar-width: thin;
-}
-
 .contentWrapper {
   overflow: auto;
   white-space: nowrap;

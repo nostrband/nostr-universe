@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: "Outfit", sans-serif;
 }
 
 body {
@@ -12,6 +13,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #000000;
   color: #ffffff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 /* Scroll bar styles */

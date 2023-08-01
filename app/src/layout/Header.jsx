@@ -14,6 +14,7 @@ import {
   WalletIcon,
   defaultUserImage,
 } from "../assets";
+import { useNavigate } from "react-router-dom";
 
 const getRenderedKeys = (keys) => {
   if (!keys || keys.length === 0) {
@@ -24,6 +25,7 @@ const getRenderedKeys = (keys) => {
 
 export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
   const contextData = useContext(AppContext);
+  const navigate = useNavigate();
 
   const { npub, keys, onAddKey, onSelectKey, setOpenKey } = contextData || {};
 
@@ -34,10 +36,18 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
     setOpenKey(keys[index]);
   };
 
+  const navigateToProfilePage = () => {
+    navigate("/profile");
+  };
+
   return (
     <header id="header">
       <StyledContainer>
-        <StyledAvatar alt="Default User" src={defaultUserImage} />
+        <StyledAvatar
+          alt="Default User"
+          src={defaultUserImage}
+          onClick={navigateToProfilePage}
+        />
         <Dropdown data-bs-theme="dark" drop="down-centered">
           <Dropdown.Toggle id="dropdown-basic" variant="secondary">
             {npub ? getShortenText(npub) : "Key is not chosen"}
@@ -126,5 +136,6 @@ const StyledIconButton = styled(IconButton)(() => ({
 
 const StyledDivider = styled(Divider)(() => ({
   borderWidth: "1px",
-  borderColor: "grey",
+  borderColor: "#171717",
+  opacity: 1,
 }));
