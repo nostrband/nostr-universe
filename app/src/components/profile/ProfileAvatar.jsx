@@ -4,7 +4,7 @@ import { SwitchIcon, defaultUserImage } from "../../assets";
 
 export const ProfileAvatar = () => {
   return (
-    <Container>
+    <>
       <ProfileBanner></ProfileBanner>
       <AvatarContainer>
         <StyledBadge
@@ -27,29 +27,9 @@ export const ProfileAvatar = () => {
           Edit
         </Button>
       </AvatarContainer>
-      <ToolsContainer>
-        <h3>Tools</h3>
-        <div>
-            
-        </div>
-      </ToolsContainer>
-    </Container>
+    </>
   );
 };
-
-const Container = styled("div")(() => ({
-  display: "flex",
-  flexDirection: "column",
-  height: "100%",
-}));
-
-const ProfileBanner = styled("div")(() => ({
-  width: "100%",
-  borderRadius: "24px",
-  background:
-    "linear-gradient(45deg, rgba(238,59,255,1) 0%, rgba(121,9,95,1) 35%, rgba(117,0,255,1) 100%)",
-  flex: "1.2",
-}));
 
 const AvatarContainer = styled("div")(() => ({
   flex: "1",
@@ -92,10 +72,10 @@ const SwitchAccountButton = styled(IconButton)(() => ({
   },
 }));
 
-const ToolsContainer = styled("div")(() => ({
-  flex: "3",
-  background: "#111111",
+const ProfileBanner = styled("div")(() => ({
+  width: "100%",
   borderRadius: "24px",
-  marginTop: "21px",
-  padding: "1rem 1rem 1.5rem",
+  background:
+    "linear-gradient(45deg, rgba(238,59,255,1) 0%, rgba(121,9,95,1) 35%, rgba(117,0,255,1) 100%)",
+  flex: "1.2",
 }));

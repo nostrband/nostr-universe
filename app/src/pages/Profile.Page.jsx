@@ -3,7 +3,7 @@ import { Container, IconButton, styled } from "@mui/material";
 import { CloseIcon } from "../assets";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ProfileAvatar } from "../components/profile/ProfileAvatar";
+import { Profile } from "../components/profile/Profile";
 
 const ANIMATION_VARIANTS = {
   initial: { x: "-100%", opacity: 0 },
@@ -31,7 +31,7 @@ const ProfilePage = () => {
             <CloseIcon />
           </IconButton>
         </StyledHeader>
-        <ProfileAvatar />
+        <Profile />
       </StyledContainer>
     </motion.div>
   );
