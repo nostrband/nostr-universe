@@ -44,7 +44,7 @@ const StyledContainer = styled(Container)(() => ({
   display: "flex",
   flexDirection: "column",
   height: "90%",
-  "@media (orientation: landscape)": {
+  "@media (orientation: landscape) and (max-width: 600px)": {
     height: "150%",
   },
 }));

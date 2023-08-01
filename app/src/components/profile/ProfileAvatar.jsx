@@ -1,8 +1,8 @@
 import { Avatar, Badge, Button, IconButton, styled } from "@mui/material";
 import React from "react";
-import { SwitchIcon, defaultUserImage } from "../../assets";
+import { SwitchIcon } from "../../assets";
 
-export const ProfileAvatar = () => {
+export const ProfileAvatar = ({ username, profileImage }) => {
   return (
     <>
       <ProfileBanner></ProfileBanner>
@@ -16,13 +16,9 @@ export const ProfileAvatar = () => {
             </SwitchAccountButton>
           }
         >
-          <Avatar
-            src={defaultUserImage}
-            alt="Default user"
-            className="avatar"
-          />
+          <Avatar src={profileImage} alt={username} className="avatar" />
         </StyledBadge>
-        <h2 className="username">Omega-50</h2>
+        <h2 className="username">{username}</h2>
         <Button variant="contained" className="edit_button">
           Edit
         </Button>
