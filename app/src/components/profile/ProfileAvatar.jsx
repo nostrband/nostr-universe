@@ -1,12 +1,8 @@
-import { Avatar, Badge, Button, IconButton, styled } from "@mui/material";
 import React from "react";
+import { Avatar, Badge, Button, IconButton, styled } from "@mui/material";
 import { SwitchIcon } from "../../assets";
 
-export const ProfileAvatar = ({ username, profileImage }) => {
-  // @TODO accounts list on modal view for change account ogic
-  const changeAccountHandler = () => {
-    console.log("is working");
-  };
+export const ProfileAvatar = ({ username, profileImage, onChangeAccount }) => {
   return (
     <>
       <ProfileBanner />
@@ -21,7 +17,7 @@ export const ProfileAvatar = ({ username, profileImage }) => {
           }
           componentsProps={{
             badge: {
-              onClick: changeAccountHandler,
+              onClick: onChangeAccount,
             },
           }}
         >

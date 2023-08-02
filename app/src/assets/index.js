@@ -4,7 +4,9 @@ export { default as nostrIcon } from "./icons/nb.png";
 export { default as satelliteIcon } from "./icons/satellite.png";
 export { default as snortIcon } from "./icons/snort.png";
 
-export { default as defaultUserImage } from "./icons/default-user.png";
+export { default as defaultUserImage } from "./images/users/default-user.png";
+export { default as secondUserImage } from "./images/users/user-2.png";
+export { default as thirdUserImage } from "./images/users/user-3.png";
 
 export { ReactComponent as ServerIcon } from "./icons/header/server-icon.svg";
 export { ReactComponent as WalletIcon } from "./icons/header/wallet-icon.svg";
