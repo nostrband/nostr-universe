@@ -55,7 +55,7 @@ const MainPage = () => {
 };
 
 const Container = styled("div")`
-  height: 100%;
+  min-height: 100%;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;

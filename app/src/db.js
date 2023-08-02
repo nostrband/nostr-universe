@@ -10,7 +10,7 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('nostrUniverseDB');
 
-db.version(1).stores({
+db.version(2).stores({
   tabs: 'id,pubkey,url,appNaddr,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   flags: 'id,pubkey,name,value',

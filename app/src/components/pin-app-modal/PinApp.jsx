@@ -13,8 +13,8 @@ export const PinApp = ({ onClose }) => {
   const [perms, setPerms] = useState([]);
 
   useEffect(() => {
-    setKinds(app.kinds);
-    setPerms(app.kinds);
+    setKinds(app?.kinds || []);
+    setPerms(app?.kinds || []);
   }, [app]);
 
   const hidePinModal = () => {
@@ -37,7 +37,7 @@ export const PinApp = ({ onClose }) => {
   return (
     <div className="d-flex flex-column">
       <div className="d-flex justify-content-between align-items-center p-3">
-        <h2 className="m-0">Pin app: {app.name}</h2>
+        <h2 className="m-0">Pin app: {app?.name || "App Name"}</h2>
         <AiOutlineClose color="white" size={30} onClick={hidePinModal} />
       </div>
       <hr className="m-0" />

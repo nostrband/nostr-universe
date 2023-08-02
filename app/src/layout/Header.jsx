@@ -91,12 +91,16 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
         </Dropdown>
 
         <ActionsContainer>
-          <StyledIconButton>
-            <ServerIcon />
-          </StyledIconButton>
-          <StyledIconButton>
-            <WalletIcon />
-          </StyledIconButton>
+          {false && (
+            <>
+              <StyledIconButton>
+                <ServerIcon />
+              </StyledIconButton>
+              <StyledIconButton>
+                <WalletIcon />
+              </StyledIconButton>
+            </>
+          )}
           <StyledIconButton onClick={onOpenSearchModal}>
             <SearchIcon />
           </StyledIconButton>
