@@ -10,7 +10,7 @@ export const Footer = ({ onOpenPinModal }) => {
     tabs,
     onToggleTab,
     onCloseTab,
-    onPinTab,
+    // onPinTab,
     onHideTab,
     onShowTabs,
     pins,
@@ -53,7 +53,7 @@ export const Footer = ({ onOpenPinModal }) => {
             Close
           </Button>
         </div>
-        {currentTab && currentTab.appNaddr && (
+        {currentTab && currentTab?.appNaddr && (
           <div>
             <Button
               variant="secondary"
@@ -63,7 +63,7 @@ export const Footer = ({ onOpenPinModal }) => {
                 onOpenPinModal();
               }}
             >
-              {currentTab && currentTab.pinned ? "Unpin" : "Pin"}
+              {currentTab && currentTab?.pinned ? "Unpin" : "Pin"}
             </Button>
           </div>
         )}

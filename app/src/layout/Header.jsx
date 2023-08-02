@@ -80,7 +80,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
             })}
             {renderedKeys && <Dropdown.Divider />}
             <Dropdown.Item
-              href="#/action-15"
+              href="#"
               className=" d-flex justify-content-center  "
             >
               <Button variant="secondary" size="lg" onClick={onAddKey}>

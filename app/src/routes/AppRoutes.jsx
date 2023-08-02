@@ -20,7 +20,7 @@ const AppRoutes = () => {
     >
       <AnimatePresence mode="wait">
         <Routes key={location.pathname} location={location}>
-          <Route index path="/" element={<MainPage />} />
+          <Route index path="/*" element={<MainPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </AnimatePresence>

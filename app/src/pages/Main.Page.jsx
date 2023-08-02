@@ -16,9 +16,6 @@ const MainPage = () => {
   };
 
   const [isEditKeyModalVisible, setIsEditKeyModalVisible] = useState(false);
-  const toggleEditKeyModalVisibility = () => {
-    setIsEditKeyModalVisible((prevState) => !prevState);
-  };
 
   const [isPinModalVisible, setIsPinModalVisible] = useState(false);
   const togglePinModalVisibility = () => {
@@ -28,7 +25,7 @@ const MainPage = () => {
     <Container>
       <Header
         onOpenSearchModal={toggleSearchModalVisibility}
-        onOpenEditKeyModal={toggleEditKeyModalVisibility}
+        onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
       />
       <main>
         {false && <button onClick={() => db.delete()}>Delete DB</button>}
@@ -39,7 +36,7 @@ const MainPage = () => {
 
         <EditKeyModal
           isOpen={isEditKeyModalVisible}
-          onClose={toggleEditKeyModalVisibility}
+          onClose={() => setIsEditKeyModalVisible(false)}
         />
 
         <SearchModal
