@@ -107,7 +107,7 @@ async function fetchTrendingProfiles() {
 
   const tp = tpr.profiles.map((p) => {
     try {
-      const pr = p.profile?.content ? JSON.parse(p.profile.content) : {};
+      const pr = JSON.parse(p.profile.content);
       pr.npub = getNpub(p.pubkey);
       pr.pubkey = p.pubkey;
       return pr;
@@ -445,7 +445,6 @@ const AppContextProvider = ({ children }) => {
       const app = apps.find((a) => a.naddr == currentTab.appNaddr);
       console.log("pin app", app);
       setPinApp(app);
-      // setPinModalActive(true)
       currentTab.ref.hide();
     }
   };
