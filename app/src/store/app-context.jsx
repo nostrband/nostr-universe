@@ -430,7 +430,7 @@ const AppContextProvider = ({ children }) => {
     show(prevTab);
   };
 
-  const togglePinTab = () => {
+  const togglePinTab = (openPinAppModal) => {
     if (!currentTab) return;
 
     if (currentTab.pinned) {
@@ -445,6 +445,7 @@ const AppContextProvider = ({ children }) => {
       const app = apps.find((a) => a.naddr == currentTab.appNaddr);
       console.log("pin app", app);
       setPinApp(app);
+      openPinAppModal();
       currentTab.ref.hide();
     }
   };

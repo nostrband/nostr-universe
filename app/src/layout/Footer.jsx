@@ -59,10 +59,7 @@ export const Footer = ({ onOpenPinModal }) => {
               variant="secondary"
               size="small"
               onClick={() => {
-                onTogglePin();
-                if (currentTab.pinned) {
-                  onOpenPinModal();
-                }
+                onTogglePin(onOpenPinModal);
               }}
             >
               {currentTab && currentTab?.pinned ? "Unpin" : "Pin"}
