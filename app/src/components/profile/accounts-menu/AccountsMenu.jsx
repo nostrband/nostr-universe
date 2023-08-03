@@ -28,18 +28,20 @@ export const AccountsMenu = ({
   onClose,
   accounts = [],
   currentUsername = "",
+  onChangeAccount,
 }) => {
   const renderMenuContent = () => {
     if (accounts.length === 0) {
       return <AccountMenuItem username={"No accounts"} disabled centeredText />;
     }
-    return accounts.map((account) => {
+    return accounts.map((account, index) => {
       return (
         <AccountMenuItem
           key={account}
           profileImage={DUMMY_PROFILE_IMAGES[getRandomNumber()]}
           username={getShortenText(account)}
           isCurrentUser={account === currentUsername}
+          onClick={() => onChangeAccount(index)}
         />
       );
     });

@@ -4,16 +4,10 @@ import Dropdown from "react-bootstrap/Dropdown";
 import { BsFillPersonFill } from "react-icons/bs";
 import { BiSolidPencil } from "react-icons/bi";
 import Button from "react-bootstrap/Button";
-import { getShortenText } from "../utils/helpers/general";
+import { getProfileImage, getShortenText } from "../utils/helpers/general";
 import { AppContext } from "../store/app-context";
 import { Avatar, Container, Divider, IconButton, styled } from "@mui/material";
-import {
-  SearchIcon,
-  MeatballsIcon,
-  ServerIcon,
-  WalletIcon,
-  defaultUserImage,
-} from "../assets";
+import { SearchIcon, MeatballsIcon, ServerIcon, WalletIcon } from "../assets";
 import { useNavigate } from "react-router-dom";
 
 const getRenderedKeys = (keys) => {
@@ -27,10 +21,10 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
   const contextData = useContext(AppContext);
   const navigate = useNavigate();
 
-  const { npub, keys, profile, onAddKey, onSelectKey, setOpenKey } = contextData || {};
+  const { npub, keys, profile, onAddKey, onSelectKey, setOpenKey } =
+    contextData || {};
 
   const renderedKeys = getRenderedKeys(keys);
-  console.log("renderedKeys", renderedKeys);
 
   const editKeyHandler = (index) => {
     onOpenEditKeyModal();
@@ -46,50 +40,52 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
       <StyledContainer>
         <StyledAvatar
           alt="Default User"
-          src={(profile && profile.profile?.picture) || defaultUserImage}
+          src={getProfileImage(profile.profile)}
           onClick={navigateToProfilePage}
         />
-        <Dropdown data-bs-theme="dark" drop="down-centered">
-          <Dropdown.Toggle id="dropdown-basic" variant="secondary">
-            {npub ? getShortenText(npub) : "Key is not chosen"}
-          </Dropdown.Toggle>
+        {false && (
+          <Dropdown data-bs-theme="dark" drop="down-centered">
+            <Dropdown.Toggle id="dropdown-basic" variant="secondary">
+              {npub ? getShortenText(npub) : "Key is not chosen"}
+            </Dropdown.Toggle>
 
-          <Dropdown.Menu>
-            {renderedKeys.map((key, index) => {
-              return (
-                <Dropdown.Item
-                  key={key}
-                  href={`#/${key + 1}`}
-                  className="d-flex align-items-center gap-4"
-                >
-                  <BsFillPersonFill color="white" size={35} />
-                  <div
-                    className="fs-3 text-white flex-grow-1"
-                    onClick={() => onSelectKey(index)}
+            <Dropdown.Menu>
+              {renderedKeys.map((key, index) => {
+                return (
+                  <Dropdown.Item
+                    key={key}
+                    href={`#/${key + 1}`}
+                    className="d-flex align-items-center gap-4"
                   >
-                    {getShortenText(key)}
-                  </div>
-                  <div onClick={() => editKeyHandler(index)}>
-                    <BiSolidPencil
-                      color="white"
-                      size={26}
-                      className=" pe-none "
-                    />
-                  </div>
-                </Dropdown.Item>
-              );
-            })}
-            {renderedKeys && <Dropdown.Divider />}
-            <Dropdown.Item
-              href="#"
-              className=" d-flex justify-content-center  "
-            >
-              <Button variant="secondary" size="lg" onClick={onAddKey}>
-                + Add keys
-              </Button>
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
+                    <BsFillPersonFill color="white" size={35} />
+                    <div
+                      className="fs-3 text-white flex-grow-1"
+                      onClick={() => onSelectKey(index)}
+                    >
+                      {getShortenText(key)}
+                    </div>
+                    <div onClick={() => editKeyHandler(index)}>
+                      <BiSolidPencil
+                        color="white"
+                        size={26}
+                        className=" pe-none "
+                      />
+                    </div>
+                  </Dropdown.Item>
+                );
+              })}
+              {renderedKeys && <Dropdown.Divider />}
+              <Dropdown.Item
+                href="#"
+                className=" d-flex justify-content-center  "
+              >
+                <Button variant="secondary" size="lg" onClick={onAddKey}>
+                  + Add keys
+                </Button>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        )}
 
         <ActionsContainer>
           {false && (

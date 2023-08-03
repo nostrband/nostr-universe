@@ -2,11 +2,10 @@ import React, { useContext } from "react";
 import { styled } from "@mui/material";
 
 import { ProfileAvatar } from "./ProfileAvatar";
-import { defaultUserImage } from "../../assets";
 import { Tools } from "./tools/Tools";
 import { AppContext } from "../../store/app-context";
-import { getShortenText } from "../../utils/helpers/general";
-import { nip19 } from "nostr-tools";
+import { getProfileImage, getShortenText } from "../../utils/helpers/general";
+import { nip19 } from "@nostrband/nostr-tools";
 import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
 
@@ -19,16 +18,27 @@ const getEncodedKeys = (keys) => {
   return keys.map((key) => nip19.npubEncode(key));
 };
 
+const getRenderedUsername = (profile) => {
+  if (!profile || !profile?.profile) {
+    return "";
+  }
+  return (
+    profile.profile?.display_name ||
+    profile.profile?.name ||
+    getShortenText(profile.pubkey)
+  );
+};
+
 export const Profile = () => {
   const contextData = useContext(AppContext);
-  const { npub, keys, onSelectKey } = contextData || {};
+  const { npub, keys, onSelectKey, profile } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isChangeAccountModalOpen = Boolean(
     searchParams.get(MODAL_SEARCH_PARAM)
   );
 
-  const changeAccountHandler = () => {
+  const openChangeAccountModalHandler = () => {
     searchParams.set(MODAL_SEARCH_PARAM, true);
     setSearchParams(searchParams);
   };
@@ -38,7 +48,12 @@ export const Profile = () => {
     setSearchParams(searchParams);
   };
 
-  const currentUsername = npub ? getShortenText(npub) : "No chosen key";
+  const changeAccountHandler = (index) => {
+    onSelectKey(index);
+    closeModalHandler();
+  };
+
+  const currentUsername = getRenderedUsername(profile);
   const encodedKeys = getEncodedKeys(keys);
 
   return (
@@ -46,8 +61,8 @@ export const Profile = () => {
       <Container>
         <ProfileAvatar
           username={currentUsername}
-          profileImage={defaultUserImage}
-          onChangeAccount={changeAccountHandler}
+          profileImage={getProfileImage(profile.profile)}
+          onOpenChangeAccountModal={openChangeAccountModalHandler}
         />
         <Tools />
       </Container>
@@ -57,6 +72,7 @@ export const Profile = () => {
         onClose={closeModalHandler}
         accounts={encodedKeys}
         currentUsername={npub}
+        onChangeAccount={changeAccountHandler}
       />
     </>
   );
