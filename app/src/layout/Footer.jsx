@@ -38,7 +38,7 @@ export const Footer = ({ onOpenPinModal }) => {
             onClick={() => onOpenPin(p.url, p)}
           />
         ))}
-        {tabs.map((t) => (
+        {false && tabs.map((t) => (
           <IconButton
             key={t.id}
             data={{ ...t, img: t.icon }}

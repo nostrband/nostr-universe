@@ -1,4 +1,4 @@
-import { nip19 } from 'nostr-tools'
+import { nip19 } from '@nostrband/nostr-tools'
 
 export const getShortenText = (str) => {
 	const string = String(str)
