@@ -216,7 +216,7 @@ export function open(params) {
   const hidden = params.hidden ? "yes" : "no";
   const geticon = params.geticon ? "yes" : "no";
 
-  const options = `location=${loc},beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden},geticon=${geticon}`;
+  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden},geticon=${geticon}`;
   console.log("browser options", options);
 
   const ref = cordova.InAppBrowser.open(params.url, '_blank', options);
@@ -323,6 +323,14 @@ export function open(params) {
     console.log("blank", event.url);
     if (params.onBlank)
       await params.onBlank(event.url);
+  });
+
+  ref.addEventListener('beforeload', async (event, cb) => {
+    console.log("beforeload", JSON.stringify(event));
+    if (event.url.startsWith("lightning:"))
+      cordova.InAppBrowser.open(event.url, '_self');
+    else if (params.onBeforeLoad)
+      await params.onBeforeLoad(event.url);
   });
 
   // return to caller

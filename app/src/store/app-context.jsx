@@ -34,7 +34,8 @@ const KIND_APP = 31990;
 const readRelays = [
   nostrbandRelay,
   'wss://nos.lol',
-  'wss://relay.damus.io',
+  'wss://relay.nostr.bg',
+  'wss://nostr.mom',
 ];
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com']; // for broadcasting
 
