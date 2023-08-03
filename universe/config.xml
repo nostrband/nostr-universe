@@ -2,7 +2,7 @@
 <widget id="com.nostr.universe" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Nostr Universe</name>
     <description>Nostr Universe app</description>
-   <author email="artur.briugeman@gmail.com" href="https://nostr.band/">
+   <author email="artur@nostr.band" href="https://nostr.band/">
         Nostr.Band Team
     </author>
     <access origin="*" />
