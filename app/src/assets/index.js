@@ -15,6 +15,7 @@ export { ReactComponent as MeatballsIcon } from "./icons/header/meatballs-icon.s
 export { ReactComponent as CloseIcon } from "./icons/header/close-icon.svg";
 
 export { ReactComponent as SwitchIcon } from "./icons/profile/switch-horizontal-icon.svg";
+export { ReactComponent as CheckMarkIcon } from "./icons/profile/check-circle-icon.svg";
 
 // Tools Icons
 export { ReactComponent as SettingsIcon } from "./icons/tools/settings-icon.svg";

@@ -7,12 +7,12 @@ import { Tools } from "./tools/Tools";
 import { AppContext } from "../../store/app-context";
 import { getShortenText } from "../../utils/helpers/general";
 import { nip19 } from "nostr-tools";
-import { AccountsMenu } from "./AccountsMenu";
+import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
 
 const MODAL_SEARCH_PARAM = "change-account";
 
-const getRenderedKeys = (keys) => {
+const getEncodedKeys = (keys) => {
   if (!keys || keys.length === 0) {
     return [];
   }
@@ -21,7 +21,7 @@ const getRenderedKeys = (keys) => {
 
 export const Profile = () => {
   const contextData = useContext(AppContext);
-  const { npub, keys } = contextData || {};
+  const { npub, keys, onSelectKey } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isChangeAccountModalOpen = Boolean(
@@ -38,14 +38,14 @@ export const Profile = () => {
     setSearchParams(searchParams);
   };
 
-  const renderedUsername = npub ? getShortenText(npub) : "Key is not chosen";
-  const renderedKeys = getRenderedKeys(keys);
+  const currentUsername = npub ? getShortenText(npub) : "No chosen key";
+  const encodedKeys = getEncodedKeys(keys);
 
   return (
     <>
       <Container>
         <ProfileAvatar
-          username={renderedUsername}
+          username={currentUsername}
           profileImage={defaultUserImage}
           onChangeAccount={changeAccountHandler}
         />
@@ -55,7 +55,8 @@ export const Profile = () => {
       <AccountsMenu
         isOpen={isChangeAccountModalOpen}
         onClose={closeModalHandler}
-        accounts={renderedKeys}
+        accounts={encodedKeys}
+        currentUsername={npub}
       />
     </>
   );

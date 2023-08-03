@@ -30,6 +30,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
   const { npub, keys, onAddKey, onSelectKey, setOpenKey } = contextData || {};
 
   const renderedKeys = getRenderedKeys(keys);
+  console.log("renderedKeys", renderedKeys);
 
   const editKeyHandler = (index) => {
     onOpenEditKeyModal();
