@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { nip19 } from "nostr-tools";
+import { nip19 } from "@nostrband/nostr-tools";
 import Dropdown from "react-bootstrap/Dropdown";
 import { BsFillPersonFill } from "react-icons/bs";
 import { BiSolidPencil } from "react-icons/bi";
