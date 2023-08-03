@@ -338,6 +338,29 @@ async function fetchApps(ndk) {
   return apps;
 }
 
+async function fetchProfile(ndk, pubkey) {
+
+  const event = await ndk.fetchEvent({
+    authors: [pubkey],
+    kinds: [KIND_META],
+  }, NDKRelaySet.fromRelayUrls(readRelays, ndk));
+
+  if (!event)
+    return {};
+
+  const profile = {
+    id: event.id,
+    pubkey: event.pubkey,
+    kind: event.kind,
+    tags: event.tags,
+    created_at: event.created_at,
+    content: event.content,
+    profile: parseProfile(event.content),
+  };
+
+  return profile;
+}
+
 const API = {
   setUrl: async function (tab, url) {
     if (tab) {
@@ -356,6 +379,7 @@ const AppContext = React.createContext();
 const AppContextProvider = ({ children }) => {
   const [keys, setKeys] = useState();
   const [currentPubkey, setCurrentPubkey] = useState();
+  const [profile, setProfile] = useState({});
 
   const [ndk, setNdk] = useState(null);
   const [apps, setApps] = useState(defaultApps);
@@ -386,12 +410,16 @@ const AppContextProvider = ({ children }) => {
     return list.currentAlias;
   };
 
-  const loadWorkspace = async (workspaceKey) => {
+  const loadWorkspace = async (ndk, workspaceKey) => {
     // const dbTabs = await listTabs(workspaceKey)
+    console.log("workspaceKey", workspaceKey);
     const dbPins = await listPins(workspaceKey);
 
     // setTabs(dbTabs)
     setPins(dbPins);
+
+    if (workspaceKey.length == 64)
+      await fetchProfile(ndk, workspaceKey).then(setProfile);
   };
 
   const bootstrap = async (pubkey) => {
@@ -424,7 +452,6 @@ const AppContextProvider = ({ children }) => {
       console.log("device ready");
 
       const currentKey = await loadKeys();
-      const workspaceKey = currentKey || DEFAULT_PUBKEY;
 
       const ndk = new NDK({ explicitRelayUrls: writeRelays });
       setNdk(ndk);
@@ -434,8 +461,9 @@ const AppContextProvider = ({ children }) => {
       // need to get them first before bootstrapping
       await fetchApps(ndk).then(setApps);
 
+      const workspaceKey = currentKey || DEFAULT_PUBKEY;
       await ensureBootstrapped(workspaceKey);
-      await loadWorkspace(workspaceKey);
+      await loadWorkspace(ndk, workspaceKey);
 
       await fetchTrendingProfiles().then(setTrendingProfiles);
     }
@@ -460,7 +488,7 @@ const AppContextProvider = ({ children }) => {
     await ensureBootstrapped(pubkey);
 
     // load new key's tabs etc
-    await loadWorkspace(pubkey);
+    await loadWorkspace(ndk, pubkey);
   };
 
   const createTab = async (tab) => {
@@ -631,7 +659,7 @@ const AppContextProvider = ({ children }) => {
 
     if (res && res.currentAlias !== currentPubkey) {
       const pubkey = await loadKeys();
-      await loadWorkspace(pubkey);
+      await loadWorkspace(ndk, pubkey);
     }
   };
 
@@ -639,7 +667,7 @@ const AppContextProvider = ({ children }) => {
     const keysList = await keystore.editKey(keyInfoObj);
 
     if (keysList) {
-      await loadWorkspace(currentPubkey);
+      await loadWorkspace(ndk, currentPubkey);
     }
   };
 
@@ -713,6 +741,7 @@ const AppContextProvider = ({ children }) => {
       value={{
         npub,
         keys,
+	profile,
         open,
         onAddKey: addKey,
         onSelectKey: selectKey,

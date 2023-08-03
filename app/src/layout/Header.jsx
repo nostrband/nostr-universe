@@ -27,7 +27,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
   const contextData = useContext(AppContext);
   const navigate = useNavigate();
 
-  const { npub, keys, onAddKey, onSelectKey, setOpenKey } = contextData || {};
+  const { npub, keys, profile, onAddKey, onSelectKey, setOpenKey } = contextData || {};
 
   const renderedKeys = getRenderedKeys(keys);
 
@@ -45,7 +45,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
       <StyledContainer>
         <StyledAvatar
           alt="Default User"
-          src={defaultUserImage}
+          src={(profile && profile.profile?.picture) || defaultUserImage}
           onClick={navigateToProfilePage}
         />
         <Dropdown data-bs-theme="dark" drop="down-centered">
