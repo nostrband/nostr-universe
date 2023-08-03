@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { nip19 } from "nostr-tools";
+import { nip19 } from "@nostrband/nostr-tools";
 import Dropdown from "react-bootstrap/Dropdown";
 import { BsFillPersonFill } from "react-icons/bs";
 import { BiSolidPencil } from "react-icons/bi";
@@ -27,7 +27,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
   const contextData = useContext(AppContext);
   const navigate = useNavigate();
 
-  const { npub, keys, onAddKey, onSelectKey, setOpenKey } = contextData || {};
+  const { npub, keys, profile, onAddKey, onSelectKey, setOpenKey } = contextData || {};
 
   const renderedKeys = getRenderedKeys(keys);
   console.log("renderedKeys", renderedKeys);
@@ -46,7 +46,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
       <StyledContainer>
         <StyledAvatar
           alt="Default User"
-          src={defaultUserImage}
+          src={(profile && profile.profile?.picture) || defaultUserImage}
           onClick={navigateToProfilePage}
         />
         <Dropdown data-bs-theme="dark" drop="down-centered">

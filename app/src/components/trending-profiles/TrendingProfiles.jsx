@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { TrendingProfileItem } from "./TrendingProfileItem";
 import { AppContext } from "../../store/app-context";
-import { nip19 } from "nostr-tools";
+import { nip19 } from "@nostrband/nostr-tools";
 
 export const TrendingProfiles = () => {
   const contextData = useContext(AppContext);
