@@ -14,7 +14,7 @@ const ANIMATION_VARIANTS = {
 const ProfilePage = () => {
   const navigate = useNavigate();
 
-  const navigateBackToMain = () => navigate("/");
+  const navigateBackToMain = () => navigate("/", { replace: true });
   return (
     <motion.div
       initial="initial"
