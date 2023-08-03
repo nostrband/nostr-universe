@@ -31,7 +31,7 @@ const nostrbandRelayCounts = "wss://relay.nostr.band/all";
 const KIND_META = 0;
 const KIND_APP = 31990;
 
-const readRelays = [nostrbandRelay, "wss://nos.lol", "wss://relay.damus.io"];
+const readRelays = [nostrbandRelay, "wss://nos.lol", "wss://relay.nostr.bg", "wss://nostr.mom"];
 const writeRelays = [...readRelays, "wss://nostr.mutinywallet.com"]; // for broadcasting
 
 const defaultApps = [
