@@ -50,8 +50,6 @@ export const TrendingProfiles = () => {
     trendingProfiles.length > 0
   );
 
-  console.log(renderedProfiles);
-
   return (
     <StyledContainer>
       <h1>Trending profiles</h1>

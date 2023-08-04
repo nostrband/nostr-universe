@@ -20,11 +20,11 @@ export const TrendingProfileItem = (props) => {
     display_name,
     picture,
   } = props.profile || {};
-
   const isShowSkeleton = name === null;
+
   const renderedName = isShowSkeleton
-    ? crop(name || display_name || npub, 15)
-    : "";
+    ? ""
+    : crop(name || display_name || npub, 15);
 
   const pictureSource = picture || "";
   // it’s not in design
