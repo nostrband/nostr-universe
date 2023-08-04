@@ -1,34 +1,23 @@
 import React from "react";
 import { Modal } from "../../UI/modal/Modal";
-import { MenuList, styled } from "@mui/material";
-import {
-  defaultUserImage,
-  secondUserImage,
-  thirdUserImage,
-} from "../../../assets";
-import { getShortenText } from "../../../utils/helpers/general";
+import { Button, Divider, MenuItem, MenuList, styled } from "@mui/material";
+import { getNpub, getRenderedUsername } from "../../../utils/helpers/general";
 import { AccountMenuItem } from "./AccountMenuItem";
 
-const DUMMY_PROFILE_IMAGES = [
-  defaultUserImage,
-  secondUserImage,
-  thirdUserImage,
-];
-
-function getRandomNumber() {
-  const random = Math.random();
-  const scaled = random * 3;
-  const rounded = Math.floor(scaled);
-
-  return rounded;
-}
+const checkIsCurrentUser = (npub, account) => {
+  if (account && account?.pubkey) {
+    return npub === getNpub(account.pubkey);
+  }
+  return false;
+};
 
 export const AccountsMenu = ({
   isOpen,
   onClose,
   accounts = [],
-  currentUsername = "",
+  currentUserNpub = "",
   onChangeAccount,
+  onAddKey,
 }) => {
   const renderMenuContent = () => {
     if (accounts.length === 0) {
@@ -38,9 +27,9 @@ export const AccountsMenu = ({
       return (
         <AccountMenuItem
           key={account}
-          profileImage={DUMMY_PROFILE_IMAGES[getRandomNumber()]}
-          username={getShortenText(account)}
-          isCurrentUser={account === currentUsername}
+          profileImage={account.profile.picture}
+          username={getRenderedUsername(account)}
+          isCurrentUser={checkIsCurrentUser(currentUserNpub, account)}
           onClick={() => onChangeAccount(index)}
         />
       );
@@ -54,7 +43,20 @@ export const AccountsMenu = ({
       fullScreen={false}
       classes={{ paper: "paper" }}
     >
-      <MenuList className="menu">{renderMenuContent()}</MenuList>
+      <MenuList className="menu">
+        {renderMenuContent()}
+        <StyledDivider light sx={{ margin: 0 }} />
+        <AddKeyMenuItem disabled classes={{ disabled: "disabled" }}>
+          <Button
+            onClick={onAddKey}
+            variant="contained"
+            className="add_key_btn"
+            size="large"
+          >
+            + Add keys
+          </Button>
+        </AddKeyMenuItem>
+      </MenuList>
     </StyledModal>
   );
 };
@@ -70,4 +72,27 @@ const StyledModal = styled(Modal)(() => ({
       padding: "0",
     },
   },
+}));
+
+const AddKeyMenuItem = styled(MenuItem)(() => ({
+  "&.disabled": {
+    opacity: 1,
+    pointerEvents: "initial",
+  },
+  display: "flex",
+  justifyContent: "center",
+  padding: "1rem 0",
+  "& .add_key_btn": {
+    "&:hover, &:active, &": {
+      background: "black",
+    },
+    color: "white",
+    textTransform: "initial",
+    fontFamily: "Outfit",
+  },
+}));
+
+const StyledDivider = styled(Divider)(() => ({
+  margin: "0 !important",
+  borderColor: "white",
 }));
