@@ -223,9 +223,14 @@ export function open(params) {
   ref.executeScriptAsync = executeScriptAsync;
   ref.executeFuncAsync = executeFuncAsync;
 
+  ref.addEventListener('loadstart', async (event) => {
+    if (params.onLoadStart)
+      await params.onLoadStart(event);
+  });
+
   ref.addEventListener('loadstop', async (event) => {
-    if (params.onLoadStop)
-      await params.onLoadStop(event); // updateTabDB
+
+    // inject our scripts
 
     // main init to enable comms interface
     await ref.executeFuncAsync("initTab", initTab, params.API ? Object.keys(params.API) : []);
@@ -239,6 +244,10 @@ export function open(params) {
       // init nostr-zap
       await ref.executeFuncAsync("nostrZapConnect", nostrZapConnect);
     }
+
+    // after everything is done!
+    if (params.onLoadStop)
+      await params.onLoadStop(event);
   });
 
   // handle api requests

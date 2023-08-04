@@ -23,7 +23,7 @@ export const PinApp = ({ onClose }) => {
   };
 
   const done = () => {
-    onSavePin(app, perms);
+    onSavePin(perms);
     hidePinModal();
   };
 

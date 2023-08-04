@@ -8,7 +8,7 @@ import {
   deleteTab,
   getFlag,
   listPins,
-  // listTabs,
+  listTabs,
   setFlag,
   updateTab,
 } from "../db";
@@ -241,6 +241,7 @@ async function fetchApps(ndk) {
     },
     NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
   );
+  console.log("top apps", top?.ids.length);
 
   let events = null;
   if (top.ids.length) {
@@ -252,6 +253,7 @@ async function fetchApps(ndk) {
       NDKRelaySet.fromRelayUrls(readRelays, ndk)
     );
   } else {
+    console.log("top apps empty, fetching new ones");
     // load non-best apps from other relays just to avoid
     // completely breaking the UX due to our relay being down
     events = await ndk.fetchEvents(
@@ -406,6 +408,16 @@ async function loadKeys() {
   return [keys, list.currentAlias];
 }
 
+function createWorkspace(pubkey) {
+  return {
+    pubkey,
+    trendingProfiles: [],
+    tabs: [],
+    pins: [],
+    currentTab: null
+  };
+}
+
 const API = {
   setUrl: async function (tab, url) {
     if (tab) {
@@ -422,24 +434,24 @@ const API = {
 const AppContext = React.createContext();
 
 const AppContextProvider = ({ children }) => {
+
+  // keys & profiles
   const [keys, setKeys] = useState();
   const [currentPubkey, setCurrentPubkey] = useState();
   const [profile, setProfile] = useState({});
   const [profiles, setProfiles] = useState([]);
 
+  // global ndk client
   const [ndk, setNdk] = useState(null);
+
+  // global list of top apps from the network
   const [apps, setApps] = useState(defaultApps);
 
-  const [pins, setPins] = useState([]);
-  const [tabs, setTabs] = useState([]);
-  const [currentTab, setCurrentTab] = useState(null);
-  const [lastTab, setLastTab] = useState(null);
-  const [prevTab, setPrevTab] = useState(null);
+  // workspace
+  const [workspaces, setWorkspaces] = useState([]);
 
+  // modal states
   const [pinApp, setPinApp] = useState(null);
-  const [trendingProfiles, setTrendingProfiles] = useState();
-
-  // FIXME move to a separate page
   const [openKey, setOpenKey] = useState();
 
   const reloadProfiles = async (ndk, keys, currentPubkey) => {
@@ -457,17 +469,8 @@ const AppContextProvider = ({ children }) => {
     });
   }
 
-  const loadWorkspace = async (workspaceKey) => {
-    // const dbTabs = await listTabs(workspaceKey)
-    console.log("workspaceKey", workspaceKey);
-    const dbPins = await listPins(workspaceKey);
-
-    // setTabs(dbTabs)
-    setPins(dbPins);
-  };
-
   const bootstrap = async (pubkey) => {
-    console.log("new workspace, bootstrapping");
+    console.log("new workspace", pubkey, " bootstrapping");
     let pins = [];
     defaultApps.forEach((app, ind) => {
       const pin = {
@@ -491,6 +494,19 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
+  const loadWorkspace = async (workspace) => {
+    console.log("workspaceKey", workspace.pubkey);
+    workspace.pins = await listPins(workspace.pubkey);
+    workspace.tabs = await listTabs(workspace.pubkey);
+  };
+
+  const addWorkspace = async (pubkey) => {
+    await ensureBootstrapped(pubkey);
+    const workspace = createWorkspace(pubkey);
+    await loadWorkspace(workspace);
+    setWorkspaces(prev => [...prev, workspace]);
+  };
+
   useEffect(() => {
     async function onDeviceReady() {
       console.log("device ready", Date.now());
@@ -499,12 +515,18 @@ const AppContextProvider = ({ children }) => {
       setCurrentPubkey(currentPubkey);
       setKeys(keys);
 
-      const workspaceKey = currentPubkey || DEFAULT_PUBKEY;
-      await ensureBootstrapped(workspaceKey);
-      await loadWorkspace(workspaceKey);
+      // add existing workspaces from db
+      for (const pubkey of keys)
+	addWorkspace(pubkey);
 
-      // stuff below is async to not blocking the UI
-      fetchTrendingProfiles().then(setTrendingProfiles);
+      // init default one if db is empty
+      if (!currentPubkey)
+	addWorkspace(DEFAULT_PUBKEY);
+
+      // fetch trending stuff, set to all workspaces
+      fetchTrendingProfiles().then(profiles => {
+	setWorkspaces(prev => prev.map(w => { return {...w, trendingProfiles: profiles}; }));
+      });
 
       const ndk = new NDK({ explicitRelayUrls: allRelays });
       setNdk(ndk);
@@ -522,6 +544,11 @@ const AppContextProvider = ({ children }) => {
     else document.addEventListener("deviceready", onDeviceReady, false);
   }, []);
 
+  const updateWorkspace = (props, pubkey) => {
+    pubkey = pubkey || currentPubkey;
+    setWorkspaces(prev => prev.map(w => w.pubkey == pubkey ? {...w, ...props} : w));
+  };
+
   const addKey = async () => {
     await keystore.addKey();
 
@@ -530,29 +557,39 @@ const AppContextProvider = ({ children }) => {
     setCurrentPubkey(pubkey);
     setKeys(keys);
 
-    // reassign everything from default to the new key
+    // our first key?
     if (currentPubkey === DEFAULT_PUBKEY) {
+
+      // reassign everything from default to the new key
       await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey });
       await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey });
+
+      updateWorkspace({pubkey}, DEFAULT_PUBKEY);
+    } else {
+
+      // init new workspace
+      addWorkspace(pubkey);
     }
 
-    // make sure this key has default apps pinned
-    await ensureBootstrapped(pubkey);
-
-    // load new key's tabs etc
-    await loadWorkspace(pubkey);
-
+    // make sure we have info on this new profile
     reloadProfiles(ndk, keys, pubkey);
   };
 
-  const createTab = async (tab) => {
+  const createTabBrowser = async (tab) => {
     const params = {
       url: tab.url,
       hidden: true,
       API,
       apiCtx: tab,
+      onLoadStart: async (event) => {
+	console.log("loading", JSON.stringify(event));
+	tab.loading = true;
+	updateWorkspace({ currentTab: tab });
+      },
       onLoadStop: async (event) => {
         tab.url = event.url;
+        tab.loading = false;
+	updateWorkspace({ currentTab: tab });
         await updateTab(tab);
       },
       onGetPubkey: (pubkey) => {
@@ -594,14 +631,17 @@ const AppContextProvider = ({ children }) => {
     await deleteTab(tab.id);
     tab.ref.close();
 
-    setTabs((prev) => prev.filter((t) => t.id !== tab.id));
+    const ws = workspaces.find(w => w.pubkey == currentPubkey);
+    const tabs = ws.tabs.filter((t) => t.id !== tab.id);
+    console.log("was tabs", ws.tabs.length);
+    console.log("now tabs", tabs.length);
+    updateWorkspace({ currentTab: null, tabs });
   };
 
   const hide = (tab) => {
     if (tab) {
       tab.ref.hide();
-      setLastTab(currentTab);
-      setCurrentTab(null);
+      updateWorkspace({ currentTab: null });
     }
 
     document.getElementById("pins").classList.remove("d-none");
@@ -620,16 +660,13 @@ const AppContextProvider = ({ children }) => {
   const show = async (tab) => {
     showTabMenu();
 
-    console.log("is working");
-
     return new Promise((ok) => {
       setTimeout(async () => {
         // schedule the open after task bar is changed
-        if (!tab.ref) await createTab(tab);
+        if (!tab.ref) await createTabBrowser(tab);
 
-        tab.ref.show();
-        if (lastTab && lastTab.id != tab.id) setPrevTab(lastTab);
-        setCurrentTab(tab);
+        await tab.ref.show();
+	updateWorkspace({ currentTab: tab });
         ok();
       }, 0);
     });
@@ -643,59 +680,45 @@ const AppContextProvider = ({ children }) => {
     });
   };
 
-  const toggle = (tab) => {
-    console.log("toggle", tab.id, currentTab);
-    if (currentTab != null && tab.id === currentTab.id) {
-      hide(tab);
-    } else {
-      show(tab);
-    }
-  };
-
   const open = async (url, pin) => {
     console.log("open", url);
 
-    // make sure it's visible and has proper height
-    showTabMenu();
+    const ws = workspaces.find(w => w.pubkey == currentPubkey);
 
     // check if an open tab for this app exists
     if (pin) {
-      const tab = tabs.find((t) => t?.appNaddr === pin.appNaddr);
+      const tab = ws.tabs.find((t) => t?.appNaddr === pin.appNaddr);
       if (tab) {
         show(tab);
         return;
       }
     }
 
-    // schedule the open when tab menu is rendered
-    setTimeout(async () => {
-      const U = new URL(url);
-      const title = U.hostname;
+    const U = new URL(url);
+    const title = U.hostname;
 
-      const tab = {
-        id: "" + Math.random(),
-        pubkey: currentPubkey,
-        title: pin ? pin.title : title,
-        icon: pin ? pin.icon : U.origin + "/favicon.ico",
-        url,
-        order: tabs.length + 1,
-        ref: null, // filled below
-        pinned: pin && pin.id,
-      };
-      if (pin) tab.appNaddr = pin.appNaddr;
-      console.log("open", url, JSON.stringify(pin), JSON.stringify(tab));
+    const tab = {
+      id: "" + Math.random(),
+      pubkey: currentPubkey,
+      title: pin ? pin.title : title,
+      icon: pin ? pin.icon : U.origin + "/favicon.ico",
+      url,
+      order: ws.tabs.length + 1,
+      ref: null, // filled below
+      pinned: pin && pin.id,
+    };
+    if (pin) tab.appNaddr = pin.appNaddr;
+    console.log("open", url, JSON.stringify(pin), JSON.stringify(tab));
 
-      await createTab(tab);
+    // add to tab list
+    updateWorkspace({ tabs: [...ws.tabs, tab] });
 
-      await addTab(tab);
+    // add to db
+    await addTab(tab);
 
-      await show(tab);
-
-      if (lastTab && lastTab.id !== tab.id) setPrevTab(lastTab);
-      setCurrentTab(tab);
-      setTabs((prev) => [tab, ...tabs]);
-    }, 0);
-  };
+    // it creates the tab and sets as current
+    await show(tab);
+  }
 
   async function copyKey() {
     const text = getNpub(openKey);
@@ -705,7 +728,7 @@ const AppContextProvider = ({ children }) => {
 
   const showKey = async () => {
     await keystore.showKey({ publicKey: openKey });
-  };
+  }
 
   const selectKey = async (ind) => {
     const key = keys[ind];
@@ -717,8 +740,6 @@ const AppContextProvider = ({ children }) => {
       setCurrentPubkey(pubkey);
       setKeys(keys);
 
-      await loadWorkspace(pubkey);
-
       reloadProfiles(ndk, keys, pubkey);
     }
   };
@@ -727,71 +748,78 @@ const AppContextProvider = ({ children }) => {
     const keysList = await keystore.editKey(keyInfoObj);
     // update some key infos? idk
 
-    await loadWorkspace(currentPubkey);
     reloadProfiles(ndk, keys, currentPubkey);
   };
 
   const closeTab = () => {
     console.log("closeTab");
-    if (currentTab) close(currentTab);
+    const tab = workspaces.find(w => w.pubkey == currentPubkey).currentTab;
+    if (tab) close(tab);
   };
 
   const hideTab = () => {
     console.log("hideTab");
-    if (currentTab) hide(currentTab);
+    const tab = workspaces.find(w => w.pubkey == currentPubkey).currentTab;
+    if (tab) hide(tab);
   };
 
   const showTabs = () => {};
 
-  const switchTabs = () => {
-    hideTab();
-    show(prevTab);
-  };
-
   const togglePinTab = (openPinAppModal) => {
+
+    const ws = workspaces.find(w => w.pubkey == currentPubkey);
+    const currentTab = ws.currentTab;
     if (!currentTab) return;
 
     if (currentTab.pinned) {
       // unpin
-      const pin = pins.find((p) => p.appNaddr == currentTab.appNaddr);
+      const pin = ws.pins.find((p) => p.appNaddr == currentTab.appNaddr);
       if (pin) {
-        setPins((prev) => prev.filter((p) => p.id != pin.id));
+	updateWorkspace({
+	  pins: ws.pins.filter((p) => p.id != pin.id),
+	  currentTab: {...currentTab, pinned: false},
+	});
         deletePin(pin.id);
-        currentTab.pinned = false;
       }
     } else {
       const app = apps.find((a) => a.naddr == currentTab.appNaddr);
       console.log("pin app", app);
-      setPinApp(app);
-      openPinAppModal();
-      currentTab.ref.hide();
+      if (app) {
+	setPinApp(app);
+	openPinAppModal();
+	currentTab.ref.hide();
+      } else {
+	savePin([]);
+      }
     }
   };
 
-  const savePin = (app, perms) => {
+  const savePin = (perms) => {
+    const ws = workspaces.find(w => w.pubkey == currentPubkey);
+    const currentTab = ws.currentTab;
+    if (!currentTab) return;
+
     const pin = {
       id: "" + Math.random(),
       url: currentTab.url,
       appNaddr: currentTab.appNaddr,
       title: currentTab.title,
       icon: currentTab.icon,
-      order: pins.length,
+      order: ws.pins.length,
       pubkey: currentPubkey,
       perms,
     };
 
     console.log("perms", JSON.stringify(perms));
 
-    setPins((prev) => [...prev, pin]);
+    updateWorkspace({
+      pins: [...ws.pins, pin],
+      currentTab: {...currentTab, pinned: true},
+    });
+
     addPin(pin);
 
-    currentTab.pinned = true;
-
     currentTab.ref.show();
-  };
-
-  const pinTab = () => {
-    // FIXME create pin and add
   };
 
   const npub = currentPubkey ? getNpub(currentPubkey) : "";
@@ -800,22 +828,19 @@ const AppContextProvider = ({ children }) => {
     <AppContext.Provider
       value={{
         npub,
+	currentPubkey,
         keys,
         profile,
+	profiles,
+        apps,
         open,
         onAddKey: addKey,
         onSelectKey: selectKey,
-        trendingProfiles,
-        apps,
         onOpenApp: openApp,
-        tabs,
-        onToggleTab: toggle,
+        onOpenTab: show,
         onCloseTab: closeTab,
         onHideTab: hideTab,
-        onPinTab: pinTab,
         onShowTabs: showTabs,
-        onSwitchTabs: switchTabs,
-        pins,
         setOpenKey,
         onCopyKey: copyKey,
         onShowKey: showKey,
@@ -824,8 +849,7 @@ const AppContextProvider = ({ children }) => {
         pinApp,
         onSavePin: savePin,
         onTogglePin: togglePinTab,
-        currentTab,
-        prevTab,
+	workspaces,
       }}
     >
       {children}
