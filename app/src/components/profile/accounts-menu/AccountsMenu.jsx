@@ -27,8 +27,8 @@ export const AccountsMenu = ({
       return (
         <AccountMenuItem
           key={account}
-          profileImage={account.profile.picture}
-          username={getRenderedUsername(account)}
+          profileImage={account.profile?.picture}
+          username={getRenderedUsername(account, account.pubkey)}
           isCurrentUser={checkIsCurrentUser(currentUserNpub, account)}
           onClick={() => onChangeAccount(index)}
         />

@@ -43,7 +43,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
           src={getProfileImage(profile?.profile)}
           onClick={navigateToProfilePage}
         />
-        {false && (
+        {(
           <Dropdown data-bs-theme="dark" drop="down-centered">
             <Dropdown.Toggle id="dropdown-basic" variant="secondary">
               {npub ? getShortenText(npub) : "Key is not chosen"}

@@ -16,10 +16,10 @@ export const getProfileImage = (profile) => {
   return "";
 };
 
-export const getRenderedUsername = (profile, npub) => {
+export const getRenderedUsername = (profile, pubkey) => {
   return (
     profile?.profile?.display_name ||
     profile?.profile?.name ||
-    getShortenText(npub)
+    getShortenText(getNpub(pubkey))
   );
 };

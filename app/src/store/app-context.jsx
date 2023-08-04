@@ -414,13 +414,14 @@ async function loadKeys() {
   return [keys, list.currentAlias];
 }
 
-function createWorkspace(pubkey) {
+function createWorkspace(pubkey, props = {}) {
   return {
     pubkey,
     trendingProfiles: [],
     tabs: [],
     pins: [],
     currentTab: null,
+    ...props
   };
 }
 
@@ -506,11 +507,11 @@ const AppContextProvider = ({ children }) => {
     workspace.tabs = await listTabs(workspace.pubkey);
   };
 
-  const addWorkspace = async (pubkey) => {
+  const addWorkspace = async (pubkey, props) => {
     await ensureBootstrapped(pubkey);
-    const workspace = createWorkspace(pubkey);
+    const workspace = createWorkspace(pubkey, props);
     await loadWorkspace(workspace);
-    setWorkspaces((prev) => [...prev, workspace]);
+    setWorkspaces(prev => [...prev, workspace]);
   };
 
   useEffect(() => {
@@ -525,7 +526,10 @@ const AppContextProvider = ({ children }) => {
       for (const pubkey of keys) addWorkspace(pubkey);
 
       // init default one if db is empty
-      if (!currentPubkey) addWorkspace(DEFAULT_PUBKEY);
+      if (!currentPubkey) {
+	addWorkspace(DEFAULT_PUBKEY);
+	setCurrentPubkey(DEFAULT_PUBKEY);
+      }
 
       // fetch trending stuff, set to all workspaces
       fetchTrendingProfiles().then((profiles) => {
@@ -575,8 +579,12 @@ const AppContextProvider = ({ children }) => {
 
       updateWorkspace({ pubkey }, DEFAULT_PUBKEY);
     } else {
+
+      // copy trending stuff
+      const tp = workspaces.find(w => w.pubkey == currentPubkey).trendingProfiles;
+
       // init new workspace
-      addWorkspace(pubkey);
+      addWorkspace(pubkey, {trendingProfiles: tp});
     }
 
     // make sure we have info on this new profile
@@ -725,14 +733,14 @@ const AppContextProvider = ({ children }) => {
     await addTab(tab);
 
     // it creates the tab and sets as current
-    await show(tab);
+    show(tab);
   };
 
   async function copyKey() {
     const text = getNpub(openKey);
     // eslint-disable-next-line
     cordova.plugins.clipboard.copy(text);
-  }
+  };
 
   const showKey = async () => {
     await keystore.showKey({ publicKey: openKey });
@@ -829,12 +837,9 @@ const AppContextProvider = ({ children }) => {
     currentTab.ref.show();
   };
 
-  const npub = currentPubkey ? getNpub(currentPubkey) : "";
-
   return (
     <AppContext.Provider
       value={{
-        npub,
         currentPubkey,
         keys,
         profile,

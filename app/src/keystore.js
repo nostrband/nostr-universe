@@ -2,7 +2,7 @@ import { config } from './config';
 
 const dummy = {
   listKeys: async function () {
-    return {currentAlias: "3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd", "3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd": {publicKey: "3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd", name: "main"}};
+    return {currentAlias: "3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd", "3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd": {publicKey: "3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd", name: "main"},"3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bd1": {publicKey: "3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bd1", name: "main1"}};
   },
 
   addKey: async function () {
