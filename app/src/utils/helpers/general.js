@@ -15,3 +15,11 @@ export const getProfileImage = (profile) => {
   }
   return "";
 };
+
+export const getRenderedUsername = (profile, npub) => {
+  return (
+    profile?.profile?.display_name ||
+    profile?.profile?.name ||
+    getShortenText(npub)
+  );
+};

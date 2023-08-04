@@ -47,6 +47,7 @@ const StyledMenuItem = styled(MenuItem)(() => ({
     height: "40px",
     img: {
       objectFit: "contain",
+      borderRadius: "50%",
     },
   },
   "& .username": {

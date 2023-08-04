@@ -21,68 +21,81 @@ export const Footer = ({ onOpenPinModal }) => {
     onSwitchTabs,
   } = contextData || {};
 
-  const ws = workspaces.find(w => w.pubkey == currentPubkey);
+  const ws = workspaces.find((w) => w.pubkey == currentPubkey);
 
   return (
     <footer id="footer">
-    <hr className="m-0" />
-    <div id="pins" className="container d-flex align-items-center gap-2 p-1">
-    {ws && ws.pins.map((p) => (
-      <IconButton
-      key={Math.random()}
-            data={{ ...p, img: p.icon }}
-            size="small"
-            onClick={() => onOpenPin(p.url, p)}
-          />
-        ))}
-        {ws && ws.tabs.map((t) => (
-          <IconButton
-            key={t.id}
-            data={{ ...t, img: t.icon }}
-            size="small"
-            onClick={() => onOpenTab(t)}
-          />
-        ))}
+      <hr className="m-0" />
+      <div id="pins" className="container d-flex align-items-center gap-2 p-1">
+        {ws &&
+          ws.pins.map((p) => (
+            <IconButton
+              key={Math.random()}
+              data={{ ...p, img: p.icon }}
+              size="small"
+              onClick={() => onOpenPin(p.url, p)}
+            />
+          ))}
+        {ws &&
+          ws.tabs.map((t) => (
+            <IconButton
+              key={t.id}
+              data={{ ...t, img: t.icon }}
+              size="small"
+              onClick={() => onOpenTab(t)}
+            />
+          ))}
       </div>
-      {ws &&
-       <div id="tab-menu" className="container d-none justify-content-end gap-1">
-         <div className="me-3">
-	   {ws.currentTab && ws.currentTab.loading && ("Loading...")}
-         </div>
-         <div>
-           <Button variant="secondary" size="small" onClick={onCloseTab}
-	     disabled={!ws.currentTab}>
-             Close
-           </Button>
-         </div>
-         {ws.currentTab && ws.currentTab?.appNaddr && (
-           <div>
-             <Button
-               variant="secondary"
-               size="small"
-               onClick={() => {
-                 onTogglePin(onOpenPinModal);
-               }}
-             >
-               {ws.currentTab && ws.currentTab?.pinned ? "Unpin" : "Pin"}
-             </Button>
-           </div>
-         )}
-         {false && (
-           <div>
-             <Button variant="secondary" size="small" onClick={onShowTabs}>
-               Tabs
-             </Button>
-           </div>
-         )}
-         <div>
-           <Button variant="secondary" size="small" onClick={onHideTab}
-	     disabled={!ws.currentTab}>
-             Hide
-           </Button>
-         </div>
-       </div>
-      }
+      {ws && (
+        <div
+          id="tab-menu"
+          className="container d-none justify-content-end gap-1"
+        >
+          <div className="me-3">
+            {ws.currentTab && ws.currentTab.loading && "Loading..."}
+          </div>
+          <div>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={onCloseTab}
+              disabled={!ws.currentTab}
+            >
+              Close
+            </Button>
+          </div>
+          {ws.currentTab && ws.currentTab?.appNaddr && (
+            <div>
+              <Button
+                variant="secondary"
+                size="small"
+                onClick={() => {
+                  onTogglePin(onOpenPinModal);
+                }}
+              >
+                {ws.currentTab && ws.currentTab?.pinned ? "Unpin" : "Pin"}
+              </Button>
+            </div>
+          )}
+          {false && (
+            <div>
+              <Button variant="secondary" size="small" onClick={onShowTabs}>
+                Tabs
+              </Button>
+            </div>
+          )}
+          <div>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={onHideTab}
+              disabled={!ws.currentTab}
+            >
+              Hide
+            </Button>
+          </div>
+        </div>
+      )}
     </footer>
   );
 };
