@@ -18,14 +18,11 @@ const getEncodedKeys = (keys) => {
   return keys.map((key) => nip19.npubEncode(key));
 };
 
-const getRenderedUsername = (profile) => {
-  if (!profile || !profile?.profile) {
-    return "";
-  }
+const getRenderedUsername = (profile, npub) => {
   return (
-    profile.profile?.display_name ||
-    profile.profile?.name ||
-    getShortenText(profile.pubkey)
+    profile?.profile?.display_name ||
+    profile?.profile?.name ||
+    getShortenText(npub)
   );
 };
 
@@ -53,7 +50,7 @@ export const Profile = () => {
     closeModalHandler();
   };
 
-  const currentUsername = getRenderedUsername(profile);
+  const currentUsername = getRenderedUsername(profile, npub);
   const encodedKeys = getEncodedKeys(keys);
 
   return (
@@ -61,7 +58,7 @@ export const Profile = () => {
       <Container>
         <ProfileAvatar
           username={currentUsername}
-          profileImage={getProfileImage(profile.profile)}
+          profileImage={getProfileImage(profile?.profile)}
           onOpenChangeAccountModal={openChangeAccountModalHandler}
         />
         <Tools />

@@ -31,8 +31,9 @@ const nostrbandRelayCounts = "wss://relay.nostr.band/all";
 const KIND_META = 0;
 const KIND_APP = 31990;
 
-const readRelays = [nostrbandRelay, "wss://nos.lol", "wss://relay.nostr.bg", "wss://nostr.mom"];
+const readRelays = [nostrbandRelay, "wss://relay.damus.io", "wss://nos.lol", "wss://relay.nostr.bg", "wss://nostr.mom"];
 const writeRelays = [...readRelays, "wss://nostr.mutinywallet.com"]; // for broadcasting
+const allRelays = [nostrbandRelayCounts, ...writeRelays];
 
 const defaultApps = [
   {
@@ -366,28 +367,43 @@ async function fetchApps(ndk) {
   return apps;
 }
 
-async function fetchProfile(ndk, pubkey) {
-  const event = await ndk.fetchEvent(
+async function subscribeProfiles(ndk, pubkeys, cb) {
+  const sub = await ndk.subscribe(
     {
-      authors: [pubkey],
+      authors: [...pubkeys],
       kinds: [KIND_META],
     },
-    NDKRelaySet.fromRelayUrls(readRelays, ndk)
+    {
+      // FIXME not great for privacy
+      // use of the same subId allows us to avoid sending
+      // close to cancel the last sub
+      subId: "profiles",
+    },
+    NDKRelaySet.fromRelayUrls(readRelays, ndk),
+    /* autoStart */false
   );
 
-  if (!event) return {};
+  sub.on("event", (event) => {
+    const profile = {
+      id: event.id,
+      pubkey: event.pubkey,
+      kind: event.kind,
+      tags: event.tags,
+      created_at: event.created_at,
+      content: event.content,
+      profile: parseProfile(event.content),
+    };
+    console.log("got profile", profile);
+    cb(profile);
+  });
 
-  const profile = {
-    id: event.id,
-    pubkey: event.pubkey,
-    kind: event.kind,
-    tags: event.tags,
-    created_at: event.created_at,
-    content: event.content,
-    profile: parseProfile(event.content),
-  };
+  sub.start();
+}
 
-  return profile;
+async function loadKeys() {
+  const list = await keystore.listKeys();
+  const keys = Object.keys(list).filter((key) => key !== "currentAlias");
+  return [keys, list.currentAlias];
 }
 
 const API = {
@@ -409,6 +425,7 @@ const AppContextProvider = ({ children }) => {
   const [keys, setKeys] = useState();
   const [currentPubkey, setCurrentPubkey] = useState();
   const [profile, setProfile] = useState({});
+  const [profiles, setProfiles] = useState([]);
 
   const [ndk, setNdk] = useState(null);
   const [apps, setApps] = useState(defaultApps);
@@ -425,30 +442,28 @@ const AppContextProvider = ({ children }) => {
   // FIXME move to a separate page
   const [openKey, setOpenKey] = useState();
 
-  const loadKeys = async () => {
-    const list = await keystore.listKeys();
+  const reloadProfiles = async (ndk, keys, currentPubkey) => {
+    setProfile(null); // FIXME loading
+    setProfiles([]); // FIXME loading
+    if (!keys || !keys.length)
+      return;
 
-    if (list.currentAlias) {
-      setCurrentPubkey(list.currentAlias);
-      const keys = Object.keys(list).filter((key) => key !== "currentAlias");
-      if (keys.length) {
-        setKeys(keys);
-      }
-    }
+    subscribeProfiles(ndk, keys, profile => {
+      console.log("profile update", profile);
+      if (profile.pubkey == currentPubkey)
+	setProfile(profile);
+      if (keys.find(k => profile.pubkey))
+	setProfiles(prev =>  [profile, ...prev.filter(p => p.pubkey != profile.pubkey)]);
+    });
+  }
 
-    return list.currentAlias;
-  };
-
-  const loadWorkspace = async (ndk, workspaceKey) => {
+  const loadWorkspace = async (workspaceKey) => {
     // const dbTabs = await listTabs(workspaceKey)
     console.log("workspaceKey", workspaceKey);
     const dbPins = await listPins(workspaceKey);
 
     // setTabs(dbTabs)
     setPins(dbPins);
-
-    if (workspaceKey.length === 64)
-      await fetchProfile(ndk, workspaceKey).then(setProfile);
   };
 
   const bootstrap = async (pubkey) => {
@@ -478,23 +493,29 @@ const AppContextProvider = ({ children }) => {
 
   useEffect(() => {
     async function onDeviceReady() {
-      console.log("device ready");
+      console.log("device ready", Date.now());
 
-      const currentKey = await loadKeys();
+      const [keys, currentPubkey] = await loadKeys();
+      setCurrentPubkey(currentPubkey);
+      setKeys(keys);
 
-      const ndk = new NDK({ explicitRelayUrls: writeRelays });
+      const workspaceKey = currentPubkey || DEFAULT_PUBKEY;
+      await ensureBootstrapped(workspaceKey);
+      await loadWorkspace(workspaceKey);
+
+      // stuff below is async to not blocking the UI
+      fetchTrendingProfiles().then(setTrendingProfiles);
+
+      const ndk = new NDK({ explicitRelayUrls: allRelays });
       setNdk(ndk);
 
-      await ndk.connect();
+      ndk.connect(/* timeoutMs */1000, /* minConns */3).then(_ => {
+	console.log("ndk connected", Date.now());
 
-      // need to get them first before bootstrapping
-      await fetchApps(ndk).then(setApps);
+	fetchApps(ndk).then(setApps);
 
-      const workspaceKey = currentKey || DEFAULT_PUBKEY;
-      await ensureBootstrapped(workspaceKey);
-      await loadWorkspace(ndk, workspaceKey);
-
-      await fetchTrendingProfiles().then(setTrendingProfiles);
+	reloadProfiles(ndk, keys, currentPubkey);
+      });
     }
 
     if (config.DEBUG) onDeviceReady();
@@ -505,7 +526,9 @@ const AppContextProvider = ({ children }) => {
     await keystore.addKey();
 
     // reload the list
-    const pubkey = await loadKeys();
+    const [keys, pubkey] = await loadKeys();
+    setCurrentPubkey(pubkey);
+    setKeys(keys);
 
     // reassign everything from default to the new key
     if (currentPubkey === DEFAULT_PUBKEY) {
@@ -517,7 +540,9 @@ const AppContextProvider = ({ children }) => {
     await ensureBootstrapped(pubkey);
 
     // load new key's tabs etc
-    await loadWorkspace(ndk, pubkey);
+    await loadWorkspace(pubkey);
+
+    reloadProfiles(ndk, keys, pubkey);
   };
 
   const createTab = async (tab) => {
@@ -688,17 +713,22 @@ const AppContextProvider = ({ children }) => {
     const res = await keystore.selectKey({ publicKey: key });
 
     if (res && res.currentAlias !== currentPubkey) {
-      const pubkey = await loadKeys();
-      await loadWorkspace(ndk, pubkey);
+      const [keys, pubkey] = await loadKeys();
+      setCurrentPubkey(pubkey);
+      setKeys(keys);
+
+      await loadWorkspace(pubkey);
+
+      reloadProfiles(ndk, keys, pubkey);
     }
   };
 
   const editKey = async (keyInfoObj) => {
     const keysList = await keystore.editKey(keyInfoObj);
+    // update some key infos? idk
 
-    if (keysList) {
-      await loadWorkspace(ndk, currentPubkey);
-    }
+    await loadWorkspace(currentPubkey);
+    reloadProfiles(ndk, keys, currentPubkey);
   };
 
   const closeTab = () => {

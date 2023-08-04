@@ -40,7 +40,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
       <StyledContainer>
         <StyledAvatar
           alt="Default User"
-          src={getProfileImage(profile.profile)}
+          src={getProfileImage(profile?.profile)}
           onClick={navigateToProfilePage}
         />
         {false && (
