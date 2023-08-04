@@ -42,7 +42,7 @@ export const Profile = () => {
 
   const closeModalHandler = () => {
     searchParams.delete(MODAL_SEARCH_PARAM);
-    setSearchParams(searchParams);
+    setSearchParams(searchParams, { replace: true });
   };
 
   const changeAccountHandler = (index) => {
