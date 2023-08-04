@@ -13,7 +13,11 @@ export const AppsList = () => {
         <div className="contentWrapper d-flex gap-4">
           {apps.map((app, index) => {
             return (
-              <AppItem app={app} onOpenApp={onOpenApp} key={app.name + index} />
+              <AppItem
+                app={app}
+                onOpenApp={onOpenApp}
+                key={app.name + "" + index}
+              />
             );
           })}
         </div>
