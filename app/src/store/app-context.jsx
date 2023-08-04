@@ -408,13 +408,14 @@ async function loadKeys() {
   return [keys, list.currentAlias];
 }
 
-function createWorkspace(pubkey) {
+function createWorkspace(pubkey, props = {}) {
   return {
     pubkey,
     trendingProfiles: [],
     tabs: [],
     pins: [],
-    currentTab: null
+    currentTab: null,
+    ...props
   };
 }
 
@@ -500,10 +501,11 @@ const AppContextProvider = ({ children }) => {
     workspace.tabs = await listTabs(workspace.pubkey);
   };
 
-  const addWorkspace = async (pubkey) => {
+  const addWorkspace = async (pubkey, props) => {
     await ensureBootstrapped(pubkey);
-    const workspace = createWorkspace(pubkey);
+    const workspace = createWorkspace(pubkey, props);
     await loadWorkspace(workspace);
+    console.log("workspace", JSON.stringify(workspace));
     setWorkspaces(prev => [...prev, workspace]);
   };
 
@@ -520,8 +522,10 @@ const AppContextProvider = ({ children }) => {
 	addWorkspace(pubkey);
 
       // init default one if db is empty
-      if (!currentPubkey)
+      if (!currentPubkey) {
 	addWorkspace(DEFAULT_PUBKEY);
+	setCurrentPubkey(DEFAULT_PUBKEY);
+      }
 
       // fetch trending stuff, set to all workspaces
       fetchTrendingProfiles().then(profiles => {
@@ -567,8 +571,11 @@ const AppContextProvider = ({ children }) => {
       updateWorkspace({pubkey}, DEFAULT_PUBKEY);
     } else {
 
+      // copy trending stuff
+      const tp = workspaces.find(w => w.pubkey == currentPubkey).trendingProfiles;
+
       // init new workspace
-      addWorkspace(pubkey);
+      addWorkspace(pubkey, {trendingProfiles: tp});
     }
 
     // make sure we have info on this new profile
@@ -717,7 +724,7 @@ const AppContextProvider = ({ children }) => {
     await addTab(tab);
 
     // it creates the tab and sets as current
-    await show(tab);
+//    setTimeout(_ => show(tab), 0);
   }
 
   async function copyKey() {
@@ -822,7 +829,7 @@ const AppContextProvider = ({ children }) => {
     currentTab.ref.show();
   };
 
-  const npub = currentPubkey ? getNpub(currentPubkey) : "";
+  const npub = currentPubkey && currentPubkey != DEFAULT_PUBKEY ? getNpub(currentPubkey) : "";
 
   return (
     <AppContext.Provider
