@@ -733,7 +733,7 @@ const AppContextProvider = ({ children }) => {
     await addTab(tab);
 
     // it creates the tab and sets as current
-//    setTimeout(_ => show(tab), 0);
+    show(tab);
   };
 
   async function copyKey() {
@@ -837,12 +837,9 @@ const AppContextProvider = ({ children }) => {
     currentTab.ref.show();
   };
 
-  const npub = currentPubkey && currentPubkey != DEFAULT_PUBKEY ? getNpub(currentPubkey) : "";
-
   return (
     <AppContext.Provider
       value={{
-        npub,
         currentPubkey,
         keys,
         profile,

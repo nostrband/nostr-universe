@@ -7,6 +7,7 @@ import { AppContext } from "../../store/app-context";
 import {
   getProfileImage,
   getRenderedUsername,
+  getNpub
 } from "../../utils/helpers/general";
 import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
@@ -15,7 +16,7 @@ const MODAL_SEARCH_PARAM = "change-account";
 
 export const Profile = () => {
   const contextData = useContext(AppContext);
-  const { npub, onSelectKey, profile, profiles, onAddKey } = contextData || {};
+  const { currentPubkey, onSelectKey, profile, keys, profiles, onAddKey } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isChangeAccountModalOpen = Boolean(
@@ -37,7 +38,9 @@ export const Profile = () => {
     closeModalHandler();
   };
 
-  const currentUsername = getRenderedUsername(profile, npub);
+  const currentUsername = getRenderedUsername(profile, currentPubkey);
+
+  const accounts = keys.map(k => { return {pubkey: k, ...profiles?.find(p => p.pubkey === k)} });
 
   return (
     <>
@@ -53,8 +56,8 @@ export const Profile = () => {
       <AccountsMenu
         isOpen={isChangeAccountModalOpen}
         onClose={closeModalHandler}
-        accounts={profiles}
-        currentUserNpub={npub}
+        accounts={accounts}
+        currentUserNpub={getNpub(currentPubkey)}
         onChangeAccount={changeAccountHandler}
         onAddKey={onAddKey}
       />
