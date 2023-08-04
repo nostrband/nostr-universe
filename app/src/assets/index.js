@@ -22,3 +22,5 @@ export { ReactComponent as SettingsIcon } from "./icons/tools/settings-icon.svg"
 export { ReactComponent as SafeIcon } from "./icons/tools/safe-icon.svg";
 export { ReactComponent as ContactsIcon } from "./icons/tools/contacts-icon.svg";
 export { ReactComponent as WalletToolIcon } from "./icons/tools/wallet-icon.svg";
+
+export { ReactComponent as PlusIcon } from "./icons/plus-icon.svg";
