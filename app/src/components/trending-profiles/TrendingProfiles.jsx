@@ -5,10 +5,10 @@ import { nip19 } from "@nostrband/nostr-tools";
 
 export const TrendingProfiles = () => {
   const contextData = useContext(AppContext);
-  const { trendingProfiles = [], apps, pins, open } = contextData || {};
+  const { workspaces, currentPubkey, apps, open } = contextData || {};
 
-  const renderedProfiles =
-    trendingProfiles && trendingProfiles?.length ? trendingProfiles : [];
+  const ws = workspaces.find(w => w.pubkey == currentPubkey);
+  const renderedProfiles = ws?.trendingProfiles || [];
 
   const onProfileClick = (pubkey) => {
     console.log("show", pubkey);
@@ -17,7 +17,7 @@ export const TrendingProfiles = () => {
       pubkey,
       relays: ["wss://relay.nostr.band"],
     });
-    const pin = pins.find(
+    const pin = ws.pins.find(
       (p) => p.perms && p.perms.find((k) => k == 0) !== undefined
     );
     console.log("pin", JSON.stringify(pin));
