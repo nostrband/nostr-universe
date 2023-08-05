@@ -7,7 +7,7 @@ import { AppContext } from "../../store/app-context";
 
 export const PinApp = ({ onClose }) => {
   const contextData = useContext(AppContext);
-  const { pinApp: app, onSavePin, currentTab } = contextData || {};
+  const { pinApp: app, onSavePin } = contextData || {};
 
   const [kinds, setKinds] = useState([]);
   const [perms, setPerms] = useState([]);
@@ -18,7 +18,6 @@ export const PinApp = ({ onClose }) => {
   }, [app]);
 
   const hidePinModal = () => {
-    currentTab.ref.show();
     onClose();
   };
 

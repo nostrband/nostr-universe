@@ -21,7 +21,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
   const contextData = useContext(AppContext);
   const navigate = useNavigate();
 
-  const { npub, keys, profile, onAddKey, onSelectKey, setOpenKey } =
+  const { currentPubkey, keys, profile, onAddKey, onSelectKey, setOpenKey } =
     contextData || {};
 
   const renderedKeys = getRenderedKeys(keys);
@@ -46,7 +46,8 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
         {(
           <Dropdown data-bs-theme="dark" drop="down-centered">
             <Dropdown.Toggle id="dropdown-basic" variant="secondary">
-              {npub ? getShortenText(npub) : "Key is not chosen"}
+              {currentPubkey && currentPubkey.length == 64
+	      ? getShortenText(nip19.npubEncode(currentPubkey)) : "Key is not chosen"}
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
