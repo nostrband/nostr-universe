@@ -28,23 +28,23 @@ export const Footer = ({ onOpenPinModal }) => {
       <hr className="m-0" />
       <div id="pins" className="container d-flex align-items-center gap-2 p-1">
         {ws &&
-          ws.pins.map((p) => (
-            <IconButton
-              key={Math.random()}
-              data={{ ...p, img: p.icon }}
-              size="small"
-              onClick={() => onOpenPin(p.url, p)}
-            />
-          ))}
+         ws.pins.map((p) => (
+           <IconButton
+             key={Math.random()}
+             data={{ ...p, img: p.icon }}
+             size="small"
+             onClick={() => onOpenPin(p.url, p)}
+           />
+        ))}
         {ws &&
-          ws.tabs.map((t) => (
-            <IconButton
-              key={t.id}
-              data={{ ...t, img: t.icon }}
-              size="small"
-              onClick={() => onOpenTab(t)}
-            />
-          ))}
+         ws.tabs.filter((t) => !t.appNaddr || !ws.pins.find((p) => p.appNaddr == t.appNaddr)).map((t) => (
+           <IconButton
+             key={t.id}
+             data={{ ...t, img: t.icon }}
+             size="small"
+             onClick={() => onOpenTab(t)}
+           />
+        ))}
       </div>
       {ws && (
         <div

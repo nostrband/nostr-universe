@@ -592,6 +592,11 @@ const AppContextProvider = ({ children }) => {
   };
 
   const createTabBrowser = async (tab) => {
+
+    // set as loading
+    tab.loading = true;
+    updateWorkspace({ currentTab: tab });
+
     const params = {
       url: tab.url,
       hidden: true,
@@ -599,8 +604,6 @@ const AppContextProvider = ({ children }) => {
       apiCtx: tab,
       onLoadStart: async (event) => {
         console.log("loading", JSON.stringify(event));
-        tab.loading = true;
-        updateWorkspace({ currentTab: tab });
       },
       onLoadStop: async (event) => {
         tab.url = event.url;
