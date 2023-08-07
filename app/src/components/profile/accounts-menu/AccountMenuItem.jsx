@@ -13,11 +13,9 @@ export const AccountMenuItem = ({
 }) => {
   return (
     <StyledMenuItem disabled={disabled} onClick={onClick} {...restProps}>
-      {profileImage && (
-        <ListItemIcon className="profile_image">
-          <img src={profileImage} alt={username} />
-        </ListItemIcon>
-      )}
+      <ListItemIcon className="profile_image">
+        {profileImage && <img src={profileImage} alt={username} />}
+      </ListItemIcon>
       <ListItemText className={`username ${centeredText ? "centered" : ""}`}>
         {username}
       </ListItemText>
