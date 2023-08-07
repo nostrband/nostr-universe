@@ -1,8 +1,16 @@
 import React from "react";
 import { Modal } from "../../UI/modal/Modal";
-import { Button, Divider, MenuItem, MenuList, styled } from "@mui/material";
+import {
+  Divider,
+  IconButton,
+  MenuItem,
+  MenuList,
+  Typography,
+  styled,
+} from "@mui/material";
 import { getNpub, getRenderedUsername } from "../../../utils/helpers/general";
 import { AccountMenuItem } from "./AccountMenuItem";
+import { PlusIcon, defaultUserImage } from "../../../assets";
 
 const checkIsCurrentUser = (npub, account) => {
   if (account && account?.pubkey) {
@@ -26,8 +34,8 @@ export const AccountsMenu = ({
     return accounts.map((account, index) => {
       return (
         <AccountMenuItem
-          key={account}
-          profileImage={account.profile?.picture}
+          key={index}
+          profileImage={account.profile?.picture || defaultUserImage}
           username={getRenderedUsername(account, account.pubkey)}
           isCurrentUser={checkIsCurrentUser(currentUserNpub, account)}
           onClick={() => onChangeAccount(index)}
@@ -47,14 +55,10 @@ export const AccountsMenu = ({
         {renderMenuContent()}
         <StyledDivider light sx={{ margin: 0 }} />
         <AddKeyMenuItem disabled classes={{ disabled: "disabled" }}>
-          <Button
-            onClick={onAddKey}
-            variant="contained"
-            className="add_key_btn"
-            size="large"
-          >
-            + Add keys
-          </Button>
+          <StyledIconButton onClick={onAddKey}>
+            <PlusIcon />
+          </StyledIconButton>
+          <Typography className="add_key_label">Add keys</Typography>
         </AddKeyMenuItem>
       </MenuList>
     </StyledModal>
@@ -74,6 +78,18 @@ const StyledModal = styled(Modal)(() => ({
   },
 }));
 
+const StyledIconButton = styled(IconButton)(() => ({
+  "&, &:hover, &:active": {
+    background: "#CF82FF",
+  },
+  "&.disabled": {
+    background: "#cf82ffc8",
+  },
+  "& svg, & path": {
+    fill: "#fff",
+  },
+}));
+
 const AddKeyMenuItem = styled(MenuItem)(() => ({
   "&.disabled": {
     opacity: 1,
@@ -82,13 +98,9 @@ const AddKeyMenuItem = styled(MenuItem)(() => ({
   display: "flex",
   justifyContent: "center",
   padding: "1rem 0",
-  "& .add_key_btn": {
-    "&:hover, &:active, &": {
-      background: "black",
-    },
-    color: "white",
-    textTransform: "initial",
+  "& .add_key_label": {
     fontFamily: "Outfit",
+    marginLeft: "0.5rem",
   },
 }));
 
