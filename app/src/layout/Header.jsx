@@ -43,11 +43,12 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
           src={getProfileImage(profile?.profile)}
           onClick={navigateToProfilePage}
         />
-        {(
+        {/* {false && (
           <Dropdown data-bs-theme="dark" drop="down-centered">
             <Dropdown.Toggle id="dropdown-basic" variant="secondary">
-              {currentPubkey && currentPubkey.length == 64
-	      ? getShortenText(nip19.npubEncode(currentPubkey)) : "Key is not chosen"}
+              {currentPubkey && currentPubkey.length === 64
+                ? getShortenText(nip19.npubEncode(currentPubkey))
+                : "Key is not chosen"}
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
@@ -86,7 +87,7 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal }) => {
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
-        )}
+        )} */}
 
         <ActionsContainer>
           {false && (
