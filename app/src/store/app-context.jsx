@@ -421,7 +421,7 @@ function createWorkspace(pubkey, props = {}) {
     tabs: [],
     pins: [],
     currentTab: null,
-    ...props
+    ...props,
   };
 }
 
@@ -511,7 +511,7 @@ const AppContextProvider = ({ children }) => {
     await ensureBootstrapped(pubkey);
     const workspace = createWorkspace(pubkey, props);
     await loadWorkspace(workspace);
-    setWorkspaces(prev => [...prev, workspace]);
+    setWorkspaces((prev) => [...prev, workspace]);
   };
 
   useEffect(() => {
@@ -527,8 +527,8 @@ const AppContextProvider = ({ children }) => {
 
       // init default one if db is empty
       if (!currentPubkey) {
-	addWorkspace(DEFAULT_PUBKEY);
-	setCurrentPubkey(DEFAULT_PUBKEY);
+        addWorkspace(DEFAULT_PUBKEY);
+        setCurrentPubkey(DEFAULT_PUBKEY);
       }
 
       // fetch trending stuff, set to all workspaces
@@ -579,12 +579,13 @@ const AppContextProvider = ({ children }) => {
 
       updateWorkspace({ pubkey }, DEFAULT_PUBKEY);
     } else {
-
       // copy trending stuff
-      const tp = workspaces.find(w => w.pubkey == currentPubkey).trendingProfiles;
+      const tp = workspaces.find(
+        (w) => w.pubkey == currentPubkey
+      ).trendingProfiles;
 
       // init new workspace
-      addWorkspace(pubkey, {trendingProfiles: tp});
+      addWorkspace(pubkey, { trendingProfiles: tp });
     }
 
     // make sure we have info on this new profile
@@ -592,7 +593,6 @@ const AppContextProvider = ({ children }) => {
   };
 
   const createTabBrowser = async (tab) => {
-
     // set as loading
     tab.loading = true;
     updateWorkspace({ currentTab: tab });
@@ -743,7 +743,7 @@ const AppContextProvider = ({ children }) => {
     const text = getNpub(openKey);
     // eslint-disable-next-line
     cordova.plugins.clipboard.copy(text);
-  };
+  }
 
   const showKey = async () => {
     await keystore.showKey({ publicKey: openKey });
@@ -840,6 +840,8 @@ const AppContextProvider = ({ children }) => {
     currentTab.ref.show();
   };
 
+  const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
+
   return (
     <AppContext.Provider
       value={{
@@ -865,6 +867,7 @@ const AppContextProvider = ({ children }) => {
         onSavePin: savePin,
         onTogglePin: togglePinTab,
         workspaces,
+        currentWorkspace,
       }}
     >
       {children}
