@@ -2,3 +2,6 @@
 .idea
 universe/www/assets/
 *~
+
+/app/node_modules
+node_modules

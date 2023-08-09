@@ -18,7 +18,7 @@
     "cordova-plugin-device": "2.1.0",
     "cordova-plugin-inappbrowser": "github:nostrband/cordova-plugin-inappbrowser",
     "cordova-plugin-statusbar": "^3.0.0",
-    "nostr-cordova-plugin-secure-key": "github:nostrband/nostr-keystore-cordova-plugin#develop"
+    "nostr-cordova-plugin-secure-key": "github:nostrband/nostr-keystore-cordova-plugin"
   },
   "cordova": {
     "platforms": [

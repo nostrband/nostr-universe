@@ -1,0 +1,23 @@
+{
+  "name": "nostr-universe",
+  "version": "1.0.0",
+  "description": "To build apk or start locally:",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare-commit": "cd app && npm run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nostrband/nostr-universe.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nostrband/nostr-universe/issues"
+  },
+  "homepage": "https://github.com/nostrband/nostr-universe#readme",
+  "devDependencies": {
+    "husky": "^8.0.3"
+  }
+}
