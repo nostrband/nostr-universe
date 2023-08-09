@@ -6,6 +6,7 @@ import { AppsList } from "../components/apps/AppsList";
 import { EditKeyModal } from "../components/edit-key-modal/EditKeyModal";
 import { SearchModal } from "../components/search-modal/SearchModal";
 import { PinAppModal } from "../components/pin-app-modal/PinAppModal";
+import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
 
@@ -21,6 +22,12 @@ const MainPage = () => {
   const togglePinModalVisibility = () => {
     setIsPinModalVisible((prevState) => !prevState);
   };
+
+  const [openAddr, setOpenAddr] = useState("");
+  const onOpenEvent = () => {
+    setOpenAddr("");
+  };
+  
   return (
     <Container>
       <Header
@@ -30,7 +37,7 @@ const MainPage = () => {
       <main>
         {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
-        <TrendingProfiles />
+        <TrendingProfiles onOpenProfile={setOpenAddr} />
 
         {true && <AppsList />}
 
@@ -48,7 +55,15 @@ const MainPage = () => {
           isOpen={isPinModalVisible}
           onClose={togglePinModalVisibility}
         />
+
+        <EventAppsModal
+          isOpen={openAddr != ""}
+          onClose={() => setOpenAddr("")}
+	  addr={openAddr}
+	  onSelect={onOpenEvent}
+        />
       </main>
+
       <Footer onOpenPinModal={togglePinModalVisibility} />
     </Container>
   );
