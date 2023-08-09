@@ -20,26 +20,11 @@ import {
   snortIcon,
 } from "../assets";
 import { nip19 } from "@nostrband/nostr-tools";
-import NDK, { NDKRelaySet } from "@nostrband/ndk";
 import { config } from "../config";
+import { connect, fetchApps, subscribeProfiles, fetchAppsForEvent } from "../nostr";
 import { browser } from "../browser";
+import { allRelays } from "../nostr"
 import { getNpub } from "../utils/helpers/general";
-
-const nostrbandRelay = "wss://relay.nostr.band/";
-const nostrbandRelayCounts = "wss://relay.nostr.band/all";
-
-const KIND_META = 0;
-const KIND_APP = 31990;
-
-const readRelays = [
-  nostrbandRelay,
-  "wss://relay.damus.io",
-  "wss://nos.lol",
-  "wss://relay.nostr.bg",
-  "wss://nostr.mom",
-];
-const writeRelays = [...readRelays, "wss://nostr.mutinywallet.com"]; // for broadcasting
-const allRelays = [nostrbandRelayCounts, ...writeRelays];
 
 const defaultApps = [
   {
@@ -224,188 +209,10 @@ async function fetchTrendingProfiles() {
       return undefined;
     }
   });
+  console.log("tp", tp);
 
   if (tp.length > 10) tp.length = 10;
   return tp;
-}
-
-function parseProfile(c) {
-  try {
-    return JSON.parse(c);
-  } catch (e) {
-    console.error("Bad profile json: ", c, e);
-    return {};
-  }
-}
-
-async function fetchApps(ndk) {
-  // try to fetch best apps list from our relay
-  const top = await ndk.fetchTop(
-    {
-      kinds: [KIND_APP],
-      limit: 50,
-    },
-    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
-  );
-  console.log("top apps", top?.ids.length);
-
-  let events = null;
-  if (top.ids.length) {
-    // fetch the app events themselves from the list
-    events = await ndk.fetchEvents(
-      {
-        ids: top.ids,
-      },
-      NDKRelaySet.fromRelayUrls(readRelays, ndk)
-    );
-  } else {
-    console.log("top apps empty, fetching new ones");
-    // load non-best apps from other relays just to avoid
-    // completely breaking the UX due to our relay being down
-    events = await ndk.fetchEvents(
-      {
-        kinds: [KIND_APP],
-        limit: 50,
-      },
-      NDKRelaySet.fromRelayUrls(readRelays, ndk)
-    );
-  }
-  events = [...events.values()];
-
-  // load authors of the apps, we need them both for the app
-  // info and for apps that inherit the author's profile info
-  let profiles = await ndk.fetchEvents(
-    {
-      authors: events.map((e) => e.pubkey),
-      kinds: [KIND_META],
-    },
-    NDKRelaySet.fromRelayUrls(readRelays, ndk)
-  );
-  profiles = [...profiles.values()];
-
-  const getTag = (e, name) => {
-    for (const t of e.tags) {
-      if (t.length >= 1 && t[0] === name) return t.length > 1 ? t[1] : "";
-    }
-    return "";
-  };
-
-  const findHandlerUrl = (e, k) => {
-    for (const t of e.tags) {
-      if (t[0] !== "web" || t.length < 3) continue;
-
-      if (k === KIND_META && (t[2] === "npub" || t[2] === "nprofile")) {
-        return [t[1], t[2]];
-      }
-
-      if (k >= 30000 && k < 40000 && t[2] === "naddr") {
-        return [t[1], t[2]];
-      }
-
-      return [t[1], t[2]];
-    }
-
-    return null;
-  };
-
-  // assign order to the apps, sort by top or by published date
-  if (top)
-    top.ids.forEach((id, i) => {
-      const e = events.find((e) => e.id == id);
-      if (e) e.order = top.ids.length - i;
-    });
-  else events.forEach((e, i) => (e.order = getTag(e, "published_at")));
-
-  // sort events by order desc
-  events.sort((a, b) => b.order - a.order);
-
-  // convert to a convenient app object
-  const apps = [];
-  events.map((e) => {
-    // app author
-    const author = profiles.find((p) => p.pubkey == e.pubkey);
-
-    // app profile - it's own, or inherited from the author
-    const profile = e.content
-      ? parseProfile(e.content)
-      : parseProfile(author ? author.content : "");
-
-    // app's handled kinds and per-kind handler urls for the 'web' platform,
-    // we don't add a kind that doesn't have a proper handler
-    const kinds = [];
-    const handlers = {};
-    e.tags.forEach((t) => {
-      let k = 0;
-      if (t.length < 2 || t[0] != "k") return;
-
-      try {
-        k = parseInt(t[1]);
-      } catch (e) {
-        return;
-      }
-
-      const url_type = findHandlerUrl(e, k);
-      if (!url_type) return;
-
-      kinds.push(k);
-      handlers[k] = {
-        url: url_type[0],
-        type: url_type[1],
-      };
-    });
-
-    const app = {
-      naddr: nip19.naddrEncode({
-        pubkey: e.pubkey,
-        kind: e.kind,
-        identifier: getTag(e, "d"),
-      }),
-      name: profile ? profile.display_name || profile.name : "<Noname app>",
-      url: (profile && profile.website) || "",
-      picture: (profile && profile.picture) || "",
-      about: (profile && profile.about) || "",
-      author,
-      kinds,
-      handlers,
-    };
-
-    apps.push(app);
-  });
-
-  return apps;
-}
-
-async function subscribeProfiles(ndk, pubkeys, cb) {
-  const sub = await ndk.subscribe(
-    {
-      authors: [...pubkeys],
-      kinds: [KIND_META],
-    },
-    {
-      // FIXME not great for privacy
-      // use of the same subId allows us to avoid sending
-      // close to cancel the last sub
-      subId: "profiles",
-    },
-    NDKRelaySet.fromRelayUrls(readRelays, ndk),
-    /* autoStart */ false
-  );
-
-  sub.on("event", (event) => {
-    const profile = {
-      id: event.id,
-      pubkey: event.pubkey,
-      kind: event.kind,
-      tags: event.tags,
-      created_at: event.created_at,
-      content: event.content,
-      profile: parseProfile(event.content),
-    };
-    console.log("got profile", profile);
-    cb(profile);
-  });
-
-  sub.start();
 }
 
 async function loadKeys() {
@@ -447,9 +254,6 @@ const AppContextProvider = ({ children }) => {
   const [profile, setProfile] = useState({});
   const [profiles, setProfiles] = useState([]);
 
-  // global ndk client
-  const [ndk, setNdk] = useState(null);
-
   // global list of top apps from the network
   const [apps, setApps] = useState(defaultApps);
 
@@ -460,12 +264,14 @@ const AppContextProvider = ({ children }) => {
   const [pinApp, setPinApp] = useState(null);
   const [openKey, setOpenKey] = useState();
 
-  const reloadProfiles = async (ndk, keys, currentPubkey) => {
+  const [openEventAddr, setOpenEventAddr] = useState("");
+  
+  const reloadProfiles = async (keys, currentPubkey) => {
     setProfile(null); // FIXME loading
     setProfiles([]); // FIXME loading
     if (!keys || !keys.length) return;
 
-    subscribeProfiles(ndk, keys, (profile) => {
+    subscribeProfiles(keys, (profile) => {
       console.log("profile update", profile);
       if (profile.pubkey == currentPubkey) setProfile(profile);
       if (keys.find((k) => profile.pubkey))
@@ -532,7 +338,7 @@ const AppContextProvider = ({ children }) => {
       }
 
       // fetch trending stuff, set to all workspaces
-      fetchTrendingProfiles().then((profiles) => {
+      await fetchTrendingProfiles().then((profiles) => {
         setWorkspaces((prev) =>
           prev.map((w) => {
             return { ...w, trendingProfiles: profiles };
@@ -540,15 +346,12 @@ const AppContextProvider = ({ children }) => {
         );
       });
 
-      const ndk = new NDK({ explicitRelayUrls: allRelays });
-      setNdk(ndk);
-
-      ndk.connect(/* timeoutMs */ 1000, /* minConns */ 3).then((_) => {
+      connect().then((_) => {
         console.log("ndk connected", Date.now());
 
-        fetchApps(ndk).then(setApps);
+        fetchApps().then(setApps);
 
-        reloadProfiles(ndk, keys, currentPubkey);
+        reloadProfiles(keys, currentPubkey);
       });
     }
 
@@ -588,7 +391,7 @@ const AppContextProvider = ({ children }) => {
     }
 
     // make sure we have info on this new profile
-    reloadProfiles(ndk, keys, pubkey);
+    reloadProfiles(keys, pubkey);
   };
 
   const createTabBrowser = async (tab) => {
@@ -692,22 +495,29 @@ const AppContextProvider = ({ children }) => {
   };
 
   const openApp = async (url, app) => {
+
+    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
+    const pin = ws.pins.find((p) => p.appNaddr == app.naddr);
+    
     return open(url, {
+      id: pin?.id,
       appNaddr: app.naddr,
       title: app.name,
       icon: app.picture,
+    }, {
+      newTab: true,
     });
   };
 
-  const open = async (url, pin) => {
-    console.log("open", url);
+  const open = async (url, pin, opts = {}) => {
+    console.log("open", url, "pin", pin);
 
     const ws = workspaces.find((w) => w.pubkey == currentPubkey);
 
     // check if an open tab for this app exists
     if (pin) {
       const tab = ws.tabs.find((t) => t?.appNaddr === pin.appNaddr);
-      if (tab) {
+      if (tab && (!opts.newTab || tab.url === url)) {
         show(tab);
         return;
       }
@@ -759,7 +569,7 @@ const AppContextProvider = ({ children }) => {
       setCurrentPubkey(pubkey);
       setKeys(keys);
 
-      reloadProfiles(ndk, keys, pubkey);
+      reloadProfiles(keys, pubkey);
     }
   };
 
@@ -767,7 +577,7 @@ const AppContextProvider = ({ children }) => {
     const keysList = await keystore.editKey(keyInfoObj);
     // update some key infos? idk
 
-    reloadProfiles(ndk, keys, currentPubkey);
+    reloadProfiles(keys, currentPubkey);
   };
 
   const closeTab = () => {
@@ -864,6 +674,7 @@ const AppContextProvider = ({ children }) => {
         pinApp,
         onSavePin: savePin,
         onTogglePin: togglePinTab,
+	onOpenEvent: setOpenEventAddr,
         workspaces,
       }}
     >

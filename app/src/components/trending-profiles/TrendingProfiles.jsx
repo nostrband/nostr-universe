@@ -3,10 +3,11 @@ import { TrendingProfileItem } from "./TrendingProfileItem";
 import { AppContext } from "../../store/app-context";
 import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
+import { nostrbandRelay, fetchAppsForEvent } from '../../nostr'
 
 function createDuplicateList() {
   return Array.from({ length: 10 }, () => {
-    return { name: null, picture: null };
+    return { pubkey: "", name: null, picture: null };
   });
 }
 
@@ -17,46 +18,36 @@ const getRenderedProfiles = (profiles, isLoading) => {
   return profiles;
 };
 
-export const TrendingProfiles = () => {
+export const TrendingProfiles = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
-  const { workspaces, currentPubkey, apps, open } = contextData || {};
+  const { workspaces, currentPubkey, onOpenEvent } = contextData || {};
 
   const ws = workspaces.find((w) => w.pubkey === currentPubkey);
   const trendingProfiles = ws?.trendingProfiles || [];
 
-  const onProfileClick = (pubkey) => {
+  const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);
 
     const nprofile = nip19.nprofileEncode({
       pubkey,
-      relays: ["wss://relay.nostr.band"],
+      relays: [nostrbandRelay],
     });
-    const pin = ws.pins.find(
-      (p) => p.perms && p.perms.find((k) => k === 0) !== undefined
-    );
-    console.log("pin", JSON.stringify(pin));
-    const app = apps.find((a) => a.naddr === pin.appNaddr);
-    console.log("app", JSON.stringify(app));
-    const handler = app.handlers[0];
-    const url = handler.url.replace("<bech32>", nprofile);
 
-    console.log("profile app", app, pin, url);
-
-    open(url, pin);
+    onOpenProfile(nprofile);
   };
 
   const renderedProfiles = getRenderedProfiles(
     trendingProfiles,
     trendingProfiles.length > 0
   );
-
+  
   return (
     <StyledContainer>
       <h1>Trending profiles</h1>
       <TrendingProfilesContainer>
-        {renderedProfiles.map((p) => (
+        {trendingProfiles.length > 0 && renderedProfiles.map((p) => (
           <TrendingProfileItem
-            key={p.npub}
+            key={p.pubkey}
             profile={p}
             onClick={onProfileClick}
           />
