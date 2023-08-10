@@ -17,16 +17,27 @@ const getRenderedKeys = (keys) => {
   return keys.map((key) => nip19.npubEncode(key));
 };
 
-export const Header = ({ onOpenSearchModal, onOpenEditKeyModal, onOpenTabMenuModal }) => {
+export const Header = ({
+  onOpenSearchModal,
+  onOpenEditKeyModal,
+  onOpenTabMenuModal,
+}) => {
   const contextData = useContext(AppContext);
   const navigate = useNavigate();
 
-  const { currentPubkey, workspaces, keys, profile, onAddKey, onSelectKey, setOpenKey } =
-    contextData || {};
+  const {
+    currentPubkey,
+    workspaces,
+    keys,
+    profile,
+    onAddKey,
+    onSelectKey,
+    setOpenKey,
+  } = contextData || {};
 
   const ws = workspaces.find((w) => w.pubkey === currentPubkey);
-  const currentTab = ws?.currentTab;  
-  
+  const currentTab = ws?.currentTab;
+
   const renderedKeys = getRenderedKeys(keys);
 
   const editKeyHandler = (index) => {
@@ -49,8 +60,9 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal, onOpenTabMenuMod
         {false && (
           <Dropdown data-bs-theme="dark" drop="down-centered">
             <Dropdown.Toggle id="dropdown-basic" variant="secondary">
-              {currentPubkey && currentPubkey.length == 64
-	      ? getShortenText(nip19.npubEncode(currentPubkey)) : "Key is not chosen"}
+              {currentPubkey && currentPubkey.length === 64
+                ? getShortenText(nip19.npubEncode(currentPubkey))
+                : "Key is not chosen"}
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
@@ -90,7 +102,6 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal, onOpenTabMenuMod
             </Dropdown.Menu>
           </Dropdown>
         )}
-
         <ActionsContainer>
           {false && (
             <>
@@ -106,10 +117,10 @@ export const Header = ({ onOpenSearchModal, onOpenEditKeyModal, onOpenTabMenuMod
             <SearchIcon />
           </StyledIconButton>
           {currentTab && (
-	    <StyledIconButton onClick={onOpenTabMenuModal}>
+            <StyledIconButton onClick={onOpenTabMenuModal}>
               <MeatballsIcon />
             </StyledIconButton>
-	  )}
+          )}
         </ActionsContainer>
       </StyledContainer>
       <StyledDivider />
