@@ -259,6 +259,7 @@ const AppContextProvider = ({ children }) => {
   const [openKey, setOpenKey] = useState();
 
   const [openEventAddr, setOpenEventAddr] = useState("");
+  const [contextInput, setContextInput] = useState("");
 
   const API = {
     setUrl: async function (tab, url) {
@@ -269,10 +270,10 @@ const AppContextProvider = ({ children }) => {
         await updateTab(tab);
       }
     },
-    showEventMenu: async function (tab, id) {
+    showContextMenu: async function (tab, id) {
       if (tab) {
-	console.log("tab", tab.id, "event menu", id);
-	// FIXME implement
+	console.log("event menu", id);
+	setContextInput(id);
       }
     },
     decodeBech32: function (tab, s) {
@@ -730,7 +731,9 @@ const AppContextProvider = ({ children }) => {
         workspaces,
         currentWorkspace,
         onModalOpen,
-        onModalClose
+        onModalClose,
+	contextInput,
+	setContextInput
       }}
     >
       {children}

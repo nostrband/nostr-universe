@@ -36,7 +36,7 @@ const initTab = () => {
     //    for (const name of apiMethods)
     //      window.nostrCordovaPlugin[name] = _gen(name);
     window.nostrCordovaPlugin.setUrl = _gen("setUrl");
-    window.nostrCordovaPlugin.showEventMenu = _gen("showEventMenu");
+    window.nostrCordovaPlugin.showContextMenu = _gen("showContextMenu");
     window.nostrCordovaPlugin.decodeBech32 = _gen("decodeBech32");
   };
 
@@ -143,7 +143,7 @@ const nostrMenuConnect = () => {
 
     console.log("menu for event", bech32);
 
-    window.nostrCordovaPlugin.showEventMenu(bech32);
+    window.nostrCordovaPlugin.showContextMenu(bech32);
 
 //    const d = document.createElement("div");
 //    d.setAttribute("data-npub", bech32);

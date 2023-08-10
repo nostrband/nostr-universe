@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
 import { db } from "../db";
@@ -8,6 +8,7 @@ import { SearchModal } from "../components/search-modal/SearchModal";
 import { PinAppModal } from "../components/pin-app-modal/PinAppModal";
 import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
 import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
+import { ContextMenuModal } from "../components/context-menu-modal/ContextMenuModal";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
 import { AppContext } from "../store/app-context";
@@ -16,7 +17,7 @@ import { stringToBech32 } from "../nostr"
 const MainPage = () => {
 
   const contextData = useContext(AppContext);
-  const { open } = contextData || {};
+  const { open, contextInput, setContextInput } = contextData || {};
 
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const toggleSearchModalVisibility = () => {
@@ -94,6 +95,13 @@ const MainPage = () => {
 	  isOpen={showTabMenu}
 	  onClose={() => setShowTabMenu(false)}
 	  onOpenWith={(id) => { setShowTabMenu(false); setTimeout(() => setOpenAddr(id), 0) }}
+	/>
+
+	<ContextMenuModal
+	  isOpen={!!contextInput}
+	  onClose={() => setContextInput("")}
+	  input={contextInput}
+	  onOpenWith={(id) => { setContextInput(""); setTimeout(() => setOpenAddr(id), 0) }}
 	/>
       </main>
 
