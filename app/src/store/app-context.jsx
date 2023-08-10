@@ -263,6 +263,12 @@ const AppContextProvider = ({ children }) => {
 	await updateTab(tab);
       }
     },
+    showEventMenu: async function (tab, id) {
+      if (tab) {
+	console.log("tab", tab.id, "event menu", id);
+	// FIXME implement
+      }
+    },
     decodeBech32: function (tab, s) {
       return nip19.decode(s);
     },
