@@ -23,3 +23,22 @@ export const getRenderedUsername = (profile, pubkey) => {
     (pubkey.length == 64 ? getShortenText(getNpub(pubkey)) : "Guest")
   );
 };
+
+export const renderDefaultAppIcon = (title) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+
+  const ctx = canvas.getContext("2d");
+
+  // background
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // text
+  ctx.font = "bold 92px Outfit";
+  ctx.fillStyle = "purple";
+  ctx.fillText(title.substring(0, 1).toUpperCase(), 32, 95);
+  const dataURL = canvas.toDataURL();
+  return dataURL;
+}

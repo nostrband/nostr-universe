@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { AiOutlineClose } from 'react-icons/ai'
 import { fetchAppsForEvent } from "../../nostr";
 import { AppContext } from "../../store/app-context";
+import { EventApp } from "./EventApp";
 
 export const EventApps = ({ addr, onClose, onSelect }) => {
 
@@ -65,20 +66,7 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
 	<div className="d-flex flex-column p-3 justify-content-start align-items-start">
 	  {!apps.length && ("Loading...")}
 	  {apps.map((app) => (
-	    <div key={app.naddr} className="d-flex p-2 justify-content-start align-items-center"
-	      style={{cursor:"pointer"}} onClick={() => onOpen(app.url, app)}>
-	      <button className="iconBtn">
-		<img
-		  src={app.picture}
-		  alt={app.name}
-		  className="iconImgBig"
-		/>
-	      </button>
-	      <div className="ms-3">
-		<h5>{app.name}</h5>
-		<div style={{maxHeight: "1.3em", overflow: "hidden", textOverflow: "ellipsis"}}>{app.about}</div>
-	      </div>
-	    </div>
+	    <EventApp key={app.naddr} onOpen={onOpen} app={app} />
 	  ))}
 	</div>
       </div>
