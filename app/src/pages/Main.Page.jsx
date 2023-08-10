@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
 import { db } from "../db";
@@ -10,8 +10,14 @@ import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
 import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
+import { AppContext } from "../store/app-context";
+import { stringToBech32 } from "../nostr"
 
 const MainPage = () => {
+
+  const contextData = useContext(AppContext);
+  const { open } = contextData || {};
+
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const toggleSearchModalVisibility = () => {
     setIsSearchModalVisible((prevState) => !prevState);
@@ -30,6 +36,22 @@ const MainPage = () => {
   };
   
   const [showTabMenu, setShowTabMenu] = useState(false);
+
+  const onSearch = (str) => {
+    const b32 = stringToBech32(str);
+    if (b32) {
+      setOpenAddr(b32);
+      return true;
+    }
+
+    const url = new URL('/', str)
+    if (url) {
+      open(str);
+      return true;
+    }
+
+    return false;
+  };
   
   return (
     <Container>
@@ -52,6 +74,7 @@ const MainPage = () => {
 
 	<SearchModal
 	  isOpen={isSearchModalVisible}
+	  onSearch={onSearch}
 	  onClose={toggleSearchModalVisibility}
 	/>
 
@@ -77,7 +100,7 @@ const MainPage = () => {
       <Footer onOpenPinModal={togglePinModalVisibility} />
     </Container>
   );
-    };
+};
 
 const Container = styled("div")`
   min-height: 100%;

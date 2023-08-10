@@ -26,6 +26,7 @@ import {
   fetchApps,
   subscribeProfiles,
   fetchAppsForEvent,
+  stringToBech32,
 } from "../nostr";
 import { browser } from "../browser";
 import { allRelays } from "../nostr";
@@ -700,7 +701,7 @@ const AppContextProvider = ({ children }) => {
       lastCurrentTab: null,
     });
   };
-
+  
   return (
     <AppContext.Provider
       value={{
@@ -729,7 +730,7 @@ const AppContextProvider = ({ children }) => {
         workspaces,
         currentWorkspace,
         onModalOpen,
-        onModalClose,
+        onModalClose
       }}
     >
       {children}
