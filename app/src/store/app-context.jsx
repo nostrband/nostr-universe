@@ -21,9 +21,14 @@ import {
 } from "../assets";
 import { nip19 } from "@nostrband/nostr-tools";
 import { config } from "../config";
-import { connect, fetchApps, subscribeProfiles, fetchAppsForEvent } from "../nostr";
+import {
+  connect,
+  fetchApps,
+  subscribeProfiles,
+  fetchAppsForEvent,
+} from "../nostr";
 import { browser } from "../browser";
-import { allRelays } from "../nostr"
+import { allRelays } from "../nostr";
 import { getNpub } from "../utils/helpers/general";
 
 const defaultApps = [
@@ -229,7 +234,7 @@ function createWorkspace(pubkey, props = {}) {
     pins: [],
     currentTab: null,
     lastCurrentTab: null,
-    ...props
+    ...props,
   };
 }
 
@@ -257,17 +262,17 @@ const AppContextProvider = ({ children }) => {
   const API = {
     setUrl: async function (tab, url) {
       if (tab) {
-	console.log("tab", tab.id, "setUrl", url);
-	tab.url = url;
-	updateWorkspace({ currentTab: {...tab}});
-	await updateTab(tab);
+        console.log("tab", tab.id, "setUrl", url);
+        tab.url = url;
+        updateWorkspace({ currentTab: { ...tab } });
+        await updateTab(tab);
       }
     },
     decodeBech32: function (tab, s) {
       return nip19.decode(s);
     },
   };
-  
+
   const reloadProfiles = async (keys, currentPubkey) => {
     setProfile(null); // FIXME loading
     setProfiles([]); // FIXME loading
@@ -319,7 +324,7 @@ const AppContextProvider = ({ children }) => {
     await ensureBootstrapped(pubkey);
     const workspace = createWorkspace(pubkey, props);
     await loadWorkspace(workspace);
-    setWorkspaces(prev => [...prev, workspace]);
+    setWorkspaces((prev) => [...prev, workspace]);
   };
 
   useEffect(() => {
@@ -335,8 +340,8 @@ const AppContextProvider = ({ children }) => {
 
       // init default one if db is empty
       if (!currentPubkey) {
-	addWorkspace(DEFAULT_PUBKEY);
-	setCurrentPubkey(DEFAULT_PUBKEY);
+        addWorkspace(DEFAULT_PUBKEY);
+        setCurrentPubkey(DEFAULT_PUBKEY);
       }
 
       // fetch trending stuff, set to all workspaces
@@ -384,12 +389,13 @@ const AppContextProvider = ({ children }) => {
 
       updateWorkspace({ pubkey }, DEFAULT_PUBKEY);
     } else {
-
       // copy trending stuff
-      const tp = workspaces.find(w => w.pubkey == currentPubkey).trendingProfiles;
+      const tp = workspaces.find(
+        (w) => w.pubkey == currentPubkey
+      ).trendingProfiles;
 
       // init new workspace
-      addWorkspace(pubkey, {trendingProfiles: tp});
+      addWorkspace(pubkey, { trendingProfiles: tp });
     }
 
     // make sure we have info on this new profile
@@ -397,9 +403,8 @@ const AppContextProvider = ({ children }) => {
   };
 
   const createTabBrowser = async (tab) => {
-
     // set as loading
-    updateWorkspace({ currentTab: {...tab, loading: true}});
+    updateWorkspace({ currentTab: { ...tab, loading: true } });
 
     const params = {
       url: tab.url,
@@ -412,8 +417,8 @@ const AppContextProvider = ({ children }) => {
       onLoadStop: async (event) => {
         tab.url = event.url;
         tab.loading = false;
-	console.log("tab url", tab.url);
-        updateWorkspace({ currentTab: {...tab}});
+        console.log("tab url", tab.url);
+        updateWorkspace({ currentTab: { ...tab } });
         await updateTab(tab);
       },
       onGetPubkey: (pubkey) => {
@@ -427,14 +432,12 @@ const AppContextProvider = ({ children }) => {
       onClick: (x, y) => {
         console.log("click", x, y);
         let e = document.elementFromPoint(x, y);
-	// SVG doesn't have 'click'
-	while (e && !e.click)
-	  e = e.parentNode;
-	console.log("click on ", e);
-	if (e)
-	  e.click();
-	// can't hide the tab here,
-	// otherwise click actions won't know which tab was active
+        // SVG doesn't have 'click'
+        while (e && !e.click) e = e.parentNode;
+        console.log("click on ", e);
+        if (e) e.click();
+        // can't hide the tab here,
+        // otherwise click actions won't know which tab was active
       },
       onMenu: async () => {
         console.log("menu click tab", tab.id);
@@ -474,15 +477,15 @@ const AppContextProvider = ({ children }) => {
       updateWorkspace({ currentTab: null });
     }
 
-    document.getElementById("pins").classList.remove("d-none");
-    document.getElementById("pins").classList.add("d-flex");
+    document.getElementById("pins").style.display = "block";
+    // document.getElementById("pins").classList.add("d-flex");
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
   };
 
   const showTabMenu = () => {
-    document.getElementById("pins").classList.remove("d-flex");
-    document.getElementById("pins").classList.add("d-none");
+    document.getElementById("pins").style.display = "none";
+    // document.getElementById("pins").classList.add("d-none");
     document.getElementById("tab-menu").classList.remove("d-none");
     document.getElementById("tab-menu").classList.add("d-flex");
   };
@@ -496,25 +499,28 @@ const AppContextProvider = ({ children }) => {
         if (!tab.ref) await createTabBrowser(tab);
 
         await tab.ref.show();
-        updateWorkspace({ currentTab: {...tab} });
+        updateWorkspace({ currentTab: { ...tab } });
         ok();
       }, 0);
     });
   };
 
   const openApp = async (url, app) => {
-
     const ws = workspaces.find((w) => w.pubkey == currentPubkey);
     const pin = ws.pins.find((p) => p.appNaddr == app.naddr);
-    
-    return open(url, {
-      id: pin?.id,
-      appNaddr: app.naddr,
-      title: app.name,
-      icon: app.picture,
-    }, {
-      newTab: true,
-    });
+
+    return open(
+      url,
+      {
+        id: pin?.id,
+        appNaddr: app.naddr,
+        title: app.name,
+        icon: app.picture,
+      },
+      {
+        newTab: true,
+      }
+    );
   };
 
   const open = async (url, pin, opts = {}) => {
@@ -550,7 +556,7 @@ const AppContextProvider = ({ children }) => {
     // add to tab list
     updateWorkspace({
       tabs: [...ws.tabs, tab],
-      lastCurrentTab: null // make sure previous active tab doesn't reopen on modal close
+      lastCurrentTab: null, // make sure previous active tab doesn't reopen on modal close
     });
 
     // add to db
@@ -564,7 +570,7 @@ const AppContextProvider = ({ children }) => {
     const text = getNpub(openKey);
     // eslint-disable-next-line
     cordova.plugins.clipboard.copy(text);
-  };
+  }
 
   const showKey = async () => {
     await keystore.showKey({ publicKey: openKey });
@@ -661,6 +667,8 @@ const AppContextProvider = ({ children }) => {
     currentTab.ref.show();
   };
 
+  const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
+
   const onModalOpen = () => {
     const ws = workspaces.find((w) => w.pubkey == currentPubkey);
     const currentTab = ws.currentTab;
@@ -684,9 +692,9 @@ const AppContextProvider = ({ children }) => {
 
     updateWorkspace({
       lastCurrentTab: null,
-    });    
+    });
   };
-  
+
   return (
     <AppContext.Provider
       value={{
@@ -711,10 +719,11 @@ const AppContextProvider = ({ children }) => {
         pinApp,
         onSavePin: savePin,
         onTogglePin: togglePinTab,
-	onOpenEvent: setOpenEventAddr,
+        onOpenEvent: setOpenEventAddr,
         workspaces,
-	onModalOpen,
-	onModalClose
+        currentWorkspace,
+        onModalOpen,
+        onModalClose,
       }}
     >
       {children}
