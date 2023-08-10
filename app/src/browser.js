@@ -168,11 +168,11 @@ const nostrMenuConnect = () => {
     console.log("longtouch", t);
     try {
       return await menuByAttr(t, "href")
-        || await menuByAttr(t, "id")
-        || await menuByAttr(t, "data-npub")
-        || await menuByAttr(t, "data-id")
-        || await menuByAttr(t, "data-note-id")
-        ;
+          || await menuByAttr(t, "id")
+          || await menuByAttr(t, "data-npub")
+          || await menuByAttr(t, "data-id")
+          || await menuByAttr(t, "data-note-id")
+      ;
     } catch (e) {
       console.log("menu failed", t);
     }

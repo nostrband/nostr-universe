@@ -625,30 +625,41 @@ export async function subscribeProfiles(pubkeys, cb) {
   sub.start();
 }
 
-export function stringToBech32(s) {
+export function stringToBech32(s, hex = false) {
 
-  const parse = (p) => {
-    const r = new RegExp(p + '[a-z0-9]+');
-    const a = r.exec(s);
-    if (a === null) return '';
+  const BECH32_REGEX =
+    /[a-z]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g;
+    
+  const array = [...s.matchAll(BECH32_REGEX)].map(a => a[0]);
 
+  let bech32 = "";
+  for (let b32 of array) {
     try {
-      const { type, data } = nip19.decode(a[0]);
-      if (type + '1' === p) return a[0];
+      const { type, data } = nip19.decode(b32);
+      //      console.log("b32", b32, "type", type, "data", data);
+      switch (type) {
+        case "npub":
+        case "nprofile":
+        case "note":
+        case "nevent":
+        case "naddr":
+          bech32 = b32;
+          break;
+      }
     } catch (e) {
-      return '';
+      console.log("bad b32", b32, "e", e);
     }
-  };
-  
-  const id = parse('npub1')
-	  || parse('note1')
-	  || parse('nevent1') 
-	  || parse('nprofile1') 
-	  || parse('naddr1') 
-  // FIXME check if it's hex
-	  || (s.length === 64 ? s : '')
-  ;
-  return id;
+
+    if (bech32)
+      return bech32;
+  }
+
+  if (hex) {
+    if (s.length == 64 && s.match(/0-9A-Fa-f]{64}/g))
+      return s;
+  }
+
+  return "";
 }
 
 export function connect() {
