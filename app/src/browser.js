@@ -36,6 +36,7 @@ const initTab = () => {
     //    for (const name of apiMethods)
     //      window.nostrCordovaPlugin[name] = _gen(name);
     window.nostrCordovaPlugin.setUrl = _gen("setUrl");
+    window.nostrCordovaPlugin.showEventMenu = _gen("showEventMenu");
     window.nostrCordovaPlugin.decodeBech32 = _gen("decodeBech32");
   };
 
@@ -59,32 +60,56 @@ const initTab = () => {
 }
 
 // executed in the tab
-const nostrZapConnect = () => {
+const nostrMenuConnect = () => {
 
   let onlongtouch = null;
   let timer = null;
   let touchduration = 1300; // length of time we want the user to touch before we do something
   let touchX = 0;
   let touchY = 0;
+  let curX = 0;
+  let curY = 0;
 
-  const touchstart = (e) => {
-    // Error: unable to preventdefault inside passive event listener due to target being treated as passive
-    // e.preventDefault();
+  const isLongTouch = () => {
+    return Math.abs (curX - touchX) < 20
+	&& Math.abs (curY - touchY) < 20;
+  }
+
+  const touchStart = (e) => {
+    try {
+      // Error: unable to preventdefault inside passive event listener due to target being treated as passive
+      e.preventDefault();
+    } catch (e) {}
+
+    const touch = e.touches?.item(0) || e;
     if (!timer) {
-      touchX = e.touches.item(0).screenX;
-      touchY = e.touches.item(0).screenY;
-      timer = setTimeout(() => onlongtouch(e), touchduration);
+      touchX = touch.screenX;
+      touchY = touch.screenY;
+
+      timer = setTimeout(() => {
+	timer = null;
+	if (isLongTouch())
+	  onLongTouch(e);
+      }, touchduration);
     }
   }
 
-  const touchend = () => {
+  const touchMove = (e) => {
+    const touch = e.touches?.item(0) || e;
+    curX = touch.screenX;
+    curY = touch.screenY;
+    if (timer && !isLongTouch())
+      touchEnd();
+  }
+
+  const touchEnd = () => {
     if (timer) {
       clearTimeout(timer);
       timer = null;
     }
   }
 
-  const zap = async (value) => {
+  const menu = async (value) => {
     // limit prefixes to small ascii chars
     const BECH32_REGEX =
       /[a-z]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g
@@ -98,6 +123,10 @@ const nostrZapConnect = () => {
         console.log("b32", b32, "type", type, "data", data);
         switch (type) {
           case "npub":
+          case "nprofile":
+          case "note":
+          case "nevent":
+          case "naddr":
             bech32 = b32;
             break;
         }
@@ -112,50 +141,50 @@ const nostrZapConnect = () => {
     if (!bech32)
       return false;
 
-    console.log("zapping", bech32);
-    const d = document.createElement("div");
-    d.setAttribute("data-npub", bech32);
-    window.nostrZap.initTarget(d);
-    d.click();
-    d.remove();
+    console.log("menu for event", bech32);
+
+    window.nostrCordovaPlugin.showEventMenu(bech32);
+
+//    const d = document.createElement("div");
+//    d.setAttribute("data-npub", bech32);
+//    window.nostrZap.initTarget(d);
+//    d.click();
+//    d.remove();
 
     return true;
   }
 
-  const zapByAttr = async (e, attrName) => {
-    const value = e.target.getAttribute(attrName);
+  const menuByAttr = async (e, attrName) => {
+    const value = e.getAttribute(attrName);
     console.log("attr", attrName, "value", value);
     if (!value)
       return false;
 
-    return zap(value);
+    return menu(value);
   }
 
-  onlongtouch = async (e) => {
-    timer = null;
-    if (Math.abs (e.touches.item(0).screenX - touchX) > 20
-	|| Math.abs (e.touches.item(0).screenY - touchY) > 20)
-      return;
-
-    console.log("longtouch", e.target);
+  onLongTouch = async (e) => {
+    const t = e.target;
+    console.log("longtouch", t);
     try {
-      return await zapByAttr(e, "href")
-        || await zapByAttr(e, "id")
-        || await zapByAttr(e, "data-npub")
-        || await zapByAttr(e, "data-id")
-        || await zapByAttr(e, "data-note-id")
-        || await zap(document.location.href)
+      return await menuByAttr(t, "href")
+        || await menuByAttr(t, "id")
+        || await menuByAttr(t, "data-npub")
+        || await menuByAttr(t, "data-id")
+        || await menuByAttr(t, "data-note-id")
         ;
     } catch (e) {
-      console.log("zap failed", e);
+      console.log("menu failed", t);
     }
   };
 
   // assume content is already loaded
-  window.addEventListener("touchstart", touchstart, false);
-  window.addEventListener("touchend", touchend, false);
-  window.addEventListener("mousedown", touchstart, false);
-  window.addEventListener("mouseup", touchend, false);
+  window.addEventListener("touchstart", touchStart, false);
+  window.addEventListener("touchmove", touchMove, false);
+  window.addEventListener("touchend", touchEnd, false);
+  window.addEventListener("mousedown", touchStart, false);
+  window.addEventListener("mousemove", touchMove, false);
+  window.addEventListener("mouseup", touchEnd, false);
 };
 
 // get local file by path as string, async
@@ -237,12 +266,12 @@ export function open(params) {
 
     if (!params.menu) {
       // nostr-zap
-      const asset = await getAsset("js/nostr-zap.js");
-      console.log("nostr-zap asset", asset.length);
-      await ref.executeScriptAsync(asset, "nostr-zap");
+      //const asset = await getAsset("js/nostr-zap.js");
+      //console.log("nostr-zap asset", asset.length);
+      // await ref.executeScriptAsync(asset, "nostr-zap");
 
-      // init nostr-zap
-      await ref.executeFuncAsync("nostrZapConnect", nostrZapConnect);
+      // init context menu
+      await ref.executeFuncAsync("nostrMenuConnect", nostrMenuConnect);
     }
 
     // after everything is done!
