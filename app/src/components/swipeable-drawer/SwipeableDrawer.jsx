@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -7,19 +7,36 @@ import { Divider, SwipeableDrawer as MuiSwipeableDrawer } from "@mui/material";
 
 import { PinsList } from "../pins/PinsList";
 
-const drawerBleeding = "10.5%";
-
-export const SwipeableDrawer = (props) => {
-  const { window } = props;
+export const SwipeableDrawer = () => {
   const [open, setOpen] = useState(false);
+  const [drawerBleeding, setDrawerBleedingHeight] = useState(10.5);
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
 
-  // Temporary solution
+  useEffect(() => {
+    if (!window) return;
+
+    const handleResize = () => {
+      if (window.innerHeight < 600) {
+        return setDrawerBleedingHeight(16.5);
+      }
+      if (window.innerHeight < 730) {
+        return setDrawerBleedingHeight(13.5);
+      }
+      setDrawerBleedingHeight(10.5);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   const container =
-    window !== undefined ? () => window().document.body : undefined;
+    window !== undefined ? () => window.document.body : undefined;
 
   return (
     <>
@@ -32,7 +49,7 @@ export const SwipeableDrawer = (props) => {
         open={open}
         onClose={toggleDrawer(false)}
         onOpen={toggleDrawer(true)}
-        swipeAreaWidth={drawerBleeding}
+        swipeAreaWidth={`${drawerBleeding}%`}
         disableSwipeToOpen={false}
         ModalProps={{
           keepMounted: true,
@@ -40,9 +57,9 @@ export const SwipeableDrawer = (props) => {
         transitionDuration={200}
         hysteresis={0.7}
       >
-        <VisibleContent>
+        <VisibleContent bleedingheight={drawerBleeding}>
           <Puller onClick={toggleDrawer} />
-          <PinsList />
+          <PinsList drawerBleeding={drawerBleeding} />
         </VisibleContent>
         {false && <StyledDivider />}
         <ExpandedContent>
@@ -59,23 +76,25 @@ const StyledDivider = styled(Divider)(() => ({
   borderWidth: "1px",
 }));
 
-const StyledSwipeableDrawer = styled(MuiSwipeableDrawer)(() => ({
-  "& .paper": {
-    height: `calc(90% - ${drawerBleeding})`,
-    overflow: "visible",
-  },
-}));
+const StyledSwipeableDrawer = styled(MuiSwipeableDrawer)(
+  ({ swipeAreaWidth }) => ({
+    "& .paper": {
+      height: `calc(90% - ${swipeAreaWidth})`,
+      overflow: "visible",
+    },
+  })
+);
 
-const VisibleContent = styled(Box)(() => ({
+const VisibleContent = styled(Box)(({ bleedingheight }) => ({
   position: "absolute",
-  top: `-${parseInt(drawerBleeding) + 3}%`,
+  top: `-${bleedingheight + 3}%`,
   borderTopLeftRadius: "2rem",
   borderTopRightRadius: "2rem",
   visibility: "visible",
   right: 0,
   left: 0,
   background: "red",
-  height: `calc(${parseInt(drawerBleeding) + 3}% + 1px)`,
+  height: `calc(${bleedingheight + 3}% + 1px)`,
   boxShadow: "0px -4px 8px 0px #00000033",
   paddingTop: "1rem",
 }));

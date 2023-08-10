@@ -3,15 +3,13 @@ import { AppContext } from "../../store/app-context";
 import { styled } from "@mui/material";
 import { PinItem } from "./PinItem";
 
-const drawerBleeding = "10.5%";
-
-export const PinsList = () => {
+export const PinsList = ({ drawerBleeding }) => {
   const contextData = useContext(AppContext);
   const { currentWorkspace } = contextData || {};
   const { pins = [] } = currentWorkspace || {};
 
   return (
-    <StyledContainer length={pins.length}>
+    <StyledContainer length={pins.length} bleeddingheight={drawerBleeding}>
       {pins.map((pin) => {
         return <PinItem {...pin} />;
       })}
@@ -19,7 +17,7 @@ export const PinsList = () => {
   );
 };
 
-const StyledContainer = styled("div")(({ length }) => ({
+const StyledContainer = styled("div")(({ length, bleeddingheight }) => ({
   display: "flex",
   flexDirection: "row",
   flexWrap: "wrap",
@@ -28,7 +26,7 @@ const StyledContainer = styled("div")(({ length }) => ({
   padding: "0 1rem 1rem",
   gap: "1rem",
   overflowY: "hidden",
-  height: `calc(100% - ${drawerBleeding})`,
+  height: `calc(100% - ${bleeddingheight}%)`,
   "& > .item": {
     width: `calc(100% / ${length} - 10px)`,
     backgroundColor: "white",
