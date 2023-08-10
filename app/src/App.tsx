@@ -8,8 +8,14 @@ const user: User = {
   isActive: true
 }
 
-export const App = () => {
-  const isActiveUser: boolean = user.isActive
+const arr = [user, user, user]
 
-  return <>{isActiveUser && user.name}</>
+export const App = () => {
+  // const isActiveUser: boolean = user.isActive
+
+  const fn = (a: User[]) => {
+    return a
+  }
+
+  return <>{fn(arr)}</>
 }
