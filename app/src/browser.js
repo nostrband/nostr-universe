@@ -76,10 +76,8 @@ const nostrMenuConnect = () => {
   }
 
   const touchStart = (e) => {
-    try {
-      // Error: unable to preventdefault inside passive event listener due to target being treated as passive
-      e.preventDefault();
-    } catch (e) {}
+    // Error: unable to preventdefault inside passive event listener due to target being treated as passive
+    //  e.preventDefault();
 
     const touch = e.touches?.item(0) || e;
     if (!timer) {

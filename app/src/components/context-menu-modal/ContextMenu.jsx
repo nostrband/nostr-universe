@@ -15,8 +15,10 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
   const [id, setId] = useState("");
   const [event, setEvent] = useState(null);
   const [tools, setTools] = useState([]);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
+    setEnabled(false);
 
     const load = async () => {
 
@@ -29,12 +31,27 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	console.log("id", id, "event", event);
 	setEvent(event);
 
+	const onAction = (action) => {
+	  console.log("context action", action, "id", id);
+	  switch (action) {
+	    case "open-with":
+	      onOpenWith(id, event);
+	      break;
+	  }
+	}
+
+	const onClick = (action) => {
+	  console.log("first-click skip action", action);
+	  setEnabled(true);
+	  setTools((prev) => prev.map((t) => { return {...t, onClick: onAction}}));
+	}
+
 	const tools = [
 	  {
 	    title: "Open with",
 	    id: "open-with",
 	    Icon: () => (<div></div>),
-	    onClick: () => onOpenWith(id),
+	    onClick,
 	  },
 	];
 
@@ -43,7 +60,7 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	    title: "Zap",
 	    id: "zap",
 	    Icon: () => (<div></div>),
-	    onClick: () => console.log("zap", id),
+	    onClick,
 	  });
 	}
 
