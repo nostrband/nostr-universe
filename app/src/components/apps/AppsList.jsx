@@ -7,7 +7,7 @@ export const AppsList = () => {
   const { apps, onOpenApp } = contextData || {};
 
   return (
-    <div>
+    <div className="mt-4">
       <h3 className="ps-3">Apps</h3>
       <section className="container d-flex align-items-start">
         <div className="contentWrapper d-flex gap-4">

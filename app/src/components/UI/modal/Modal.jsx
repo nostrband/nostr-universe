@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Dialog, Slide } from "@mui/material";
+import { AppContext } from "../../../store/app-context";
 
 const ModalContent = (props) => {
   return <div>{props.children}</div>;
@@ -18,6 +19,20 @@ export const Modal = ({
   direction = "right",
   ...props
 }) => {
+
+  const [open, setOpen] = useState(false);
+  
+  const contextData = useContext(AppContext);
+  const { onModalOpen, onModalClose } = contextData || {};
+
+  useEffect(() => {
+    if (!open && isOpen)
+      onModalOpen();
+    if (open && !isOpen)
+      onModalClose();
+    setOpen(isOpen);
+  }, [isOpen]);
+  
   return (
     <Dialog
       fullScreen={fullScreen}

@@ -266,8 +266,6 @@ export function open(params) {
       case "signEvent":
         target = window.nostr;
         break;
-	//      case "setUrl":
-	//      case "decodeBech32":
       default:
 	if (method in params.API) {
           target = params.API;

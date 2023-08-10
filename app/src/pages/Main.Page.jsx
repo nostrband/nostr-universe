@@ -6,6 +6,8 @@ import { AppsList } from "../components/apps/AppsList";
 import { EditKeyModal } from "../components/edit-key-modal/EditKeyModal";
 import { SearchModal } from "../components/search-modal/SearchModal";
 import { PinAppModal } from "../components/pin-app-modal/PinAppModal";
+import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
+import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
 
@@ -21,38 +23,61 @@ const MainPage = () => {
   const togglePinModalVisibility = () => {
     setIsPinModalVisible((prevState) => !prevState);
   };
+
+  const [openAddr, setOpenAddr] = useState("");
+  const onOpenEvent = () => {
+    setOpenAddr("");
+  };
+  
+  const [showTabMenu, setShowTabMenu] = useState(false);
+  
   return (
     <Container>
       <Header
-        onOpenSearchModal={toggleSearchModalVisibility}
-        onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
+	onOpenSearchModal={toggleSearchModalVisibility}
+	onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
+	onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main>
-        {false && <button onClick={() => db.delete()}>Delete DB</button>}
+	{false && <button onClick={() => db.delete()}>Delete DB</button>}
 
-        <TrendingProfiles />
+	<TrendingProfiles onOpenProfile={setOpenAddr} />
 
-        {true && <AppsList />}
+	{true && <AppsList />}
 
-        <EditKeyModal
-          isOpen={isEditKeyModalVisible}
-          onClose={() => setIsEditKeyModalVisible(false)}
-        />
+	<EditKeyModal
+	  isOpen={isEditKeyModalVisible}
+	  onClose={() => setIsEditKeyModalVisible(false)}
+	/>
 
-        <SearchModal
-          isOpen={isSearchModalVisible}
-          onClose={toggleSearchModalVisibility}
-        />
+	<SearchModal
+	  isOpen={isSearchModalVisible}
+	  onClose={toggleSearchModalVisibility}
+	/>
 
-        <PinAppModal
-          isOpen={isPinModalVisible}
-          onClose={togglePinModalVisibility}
-        />
+	<PinAppModal
+	  isOpen={isPinModalVisible}
+	  onClose={togglePinModalVisibility}
+	/>
+
+	<EventAppsModal
+	  isOpen={openAddr != ""}
+	  onClose={() => setOpenAddr("")}
+	  addr={openAddr}
+	  onSelect={onOpenEvent}
+	/>
+
+	<TabMenuModal
+	  isOpen={showTabMenu}
+	  onClose={() => setShowTabMenu(false)}
+	  onOpenWith={(id) => { setShowTabMenu(false); setTimeout(() => setOpenAddr(id), 0) }}
+	/>
       </main>
+
       <Footer onOpenPinModal={togglePinModalVisibility} />
     </Container>
   );
-};
+    };
 
 const Container = styled("div")`
   min-height: 100%;

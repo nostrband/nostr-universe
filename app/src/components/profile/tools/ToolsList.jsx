@@ -31,10 +31,10 @@ const DUMMY_TOOLS = [
   },
 ];
 
-export const ToolsList = () => {
+export const ToolsList = ({tools}) => {
   return (
     <StyledList>
-      {DUMMY_TOOLS.map((tool) => (
+      {(tools || DUMMY_TOOLS).map((tool) => (
         <ToolItem {...tool} key={tool.id} />
       ))}
     </StyledList>
