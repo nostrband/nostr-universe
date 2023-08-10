@@ -228,22 +228,10 @@ function createWorkspace(pubkey, props = {}) {
     tabs: [],
     pins: [],
     currentTab: null,
+    lastCurrentTab: null,
     ...props
   };
 }
-
-const API = {
-  setUrl: async function (tab, url) {
-    if (tab) {
-      console.log("tab", tab.id, "setUrl", url);
-      tab.url = url;
-      await updateTab(tab);
-    }
-  },
-  decodeBech32: function (tab, s) {
-    return nip19.decode(s);
-  },
-};
 
 const AppContext = React.createContext();
 
@@ -265,6 +253,20 @@ const AppContextProvider = ({ children }) => {
   const [openKey, setOpenKey] = useState();
 
   const [openEventAddr, setOpenEventAddr] = useState("");
+
+  const API = {
+    setUrl: async function (tab, url) {
+      if (tab) {
+	console.log("tab", tab.id, "setUrl", url);
+	tab.url = url;
+	updateWorkspace({ currentTab: {...tab}});
+	await updateTab(tab);
+      }
+    },
+    decodeBech32: function (tab, s) {
+      return nip19.decode(s);
+    },
+  };
   
   const reloadProfiles = async (keys, currentPubkey) => {
     setProfile(null); // FIXME loading
@@ -397,8 +399,7 @@ const AppContextProvider = ({ children }) => {
   const createTabBrowser = async (tab) => {
 
     // set as loading
-    tab.loading = true;
-    updateWorkspace({ currentTab: tab });
+    updateWorkspace({ currentTab: {...tab, loading: true}});
 
     const params = {
       url: tab.url,
@@ -411,7 +412,8 @@ const AppContextProvider = ({ children }) => {
       onLoadStop: async (event) => {
         tab.url = event.url;
         tab.loading = false;
-        updateWorkspace({ currentTab: tab });
+	console.log("tab url", tab.url);
+        updateWorkspace({ currentTab: {...tab}});
         await updateTab(tab);
       },
       onGetPubkey: (pubkey) => {
@@ -424,9 +426,15 @@ const AppContextProvider = ({ children }) => {
       },
       onClick: (x, y) => {
         console.log("click", x, y);
-        //	tab.ref.hide();
-        //	hide(tab);
-        document.elementFromPoint(x, y).click();
+        let e = document.elementFromPoint(x, y);
+	// SVG doesn't have 'click'
+	while (e && !e.click)
+	  e = e.parentNode;
+	console.log("click on ", e);
+	if (e)
+	  e.click();
+	// can't hide the tab here,
+	// otherwise click actions won't know which tab was active
       },
       onMenu: async () => {
         console.log("menu click tab", tab.id);
@@ -488,7 +496,7 @@ const AppContextProvider = ({ children }) => {
         if (!tab.ref) await createTabBrowser(tab);
 
         await tab.ref.show();
-        updateWorkspace({ currentTab: tab });
+        updateWorkspace({ currentTab: {...tab} });
         ok();
       }, 0);
     });
@@ -540,7 +548,10 @@ const AppContextProvider = ({ children }) => {
     console.log("open", url, JSON.stringify(pin), JSON.stringify(tab));
 
     // add to tab list
-    updateWorkspace({ tabs: [...ws.tabs, tab] });
+    updateWorkspace({
+      tabs: [...ws.tabs, tab],
+      lastCurrentTab: null // make sure previous active tab doesn't reopen on modal close
+    });
 
     // add to db
     await addTab(tab);
@@ -650,6 +661,32 @@ const AppContextProvider = ({ children }) => {
     currentTab.ref.show();
   };
 
+  const onModalOpen = () => {
+    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
+    const currentTab = ws.currentTab;
+    console.log("onModalOpen", currentTab);
+    if (!currentTab) return;
+
+    hide(currentTab);
+
+    updateWorkspace({
+      lastCurrentTab: currentTab,
+    });
+  };
+
+  const onModalClose = () => {
+    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
+    const lastCurrentTab = ws.lastCurrentTab;
+    console.log("onModalClose", lastCurrentTab);
+    if (!lastCurrentTab) return;
+
+    show(lastCurrentTab);
+
+    updateWorkspace({
+      lastCurrentTab: null,
+    });    
+  };
+  
   return (
     <AppContext.Provider
       value={{
@@ -676,6 +713,8 @@ const AppContextProvider = ({ children }) => {
         onTogglePin: togglePinTab,
 	onOpenEvent: setOpenEventAddr,
         workspaces,
+	onModalOpen,
+	onModalClose
       }}
     >
       {children}

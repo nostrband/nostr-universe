@@ -57,7 +57,7 @@ export const Profile = () => {
         isOpen={isChangeAccountModalOpen}
         onClose={closeModalHandler}
         accounts={accounts}
-        currentUserNpub={getNpub(currentPubkey)}
+        currentUserNpub={currentPubkey.length == 64 ? getNpub(currentPubkey) : ""}
         onChangeAccount={changeAccountHandler}
         onAddKey={onAddKey}
       />
