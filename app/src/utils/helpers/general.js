@@ -20,6 +20,6 @@ export const getRenderedUsername = (profile, pubkey) => {
   return (
     profile?.profile?.display_name ||
     profile?.profile?.name ||
-    getShortenText(getNpub(pubkey))
+    (pubkey.length == 64 ? getShortenText(getNpub(pubkey)) : "Guest")
   );
 };

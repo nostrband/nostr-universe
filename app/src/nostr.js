@@ -297,7 +297,7 @@ async function fetchEventByAddr(ndk, addr) {
     filter.authors = [addr.pubkey];
     filter.kinds = [addr.kind];
   }
-  // console.log("loading event by filter", filter);
+  console.log("loading event by filter", JSON.stringify(filter));
 
   const reqs = [fetchEventsRead(ndk, filter)];
   if (addr.hex) {
@@ -553,7 +553,7 @@ export async function fetchAppsForEvent(id, event) {
   // if kind unknown need to fetch event from network 
   if (addr.kind === undefined) {
     if (!event)
-      event = await ndk.fetchEvent(addr);
+      event = await fetchEventByAddr(ndk, addr);
 
     if (!event)
       throw new Error("Failed to fetch target event");
@@ -581,6 +581,15 @@ export async function fetchAppsForEvent(id, event) {
   }
   
   return info;
+}
+
+export async function fetchEventByBech32(b32) {
+  const addr = parseAddr(b32);
+  console.log("b32", b32, "addr", JSON.stringify(addr));
+  if (!addr)
+    throw new Error("Bad address");
+
+  return await fetchEventByAddr(ndk, addr);
 }
 
 export async function subscribeProfiles(pubkeys, cb) {
@@ -616,8 +625,34 @@ export async function subscribeProfiles(pubkeys, cb) {
   sub.start();
 }
 
-export function connect() {
+export function stringToBech32(s) {
 
+  const parse = (p) => {
+    const r = new RegExp(p + '[a-z0-9]+');
+    const a = r.exec(s);
+    if (a === null) return '';
+
+    try {
+      const { type, data } = nip19.decode(a[0]);
+      if (type + '1' === p) return a[0];
+    } catch (e) {
+      return '';
+    }
+  };
+  
+  const id = parse('npub1')
+	  || parse('note1')
+	  || parse('nevent1') 
+	  || parse('nprofile1') 
+	  || parse('naddr1') 
+  // FIXME check if it's hex
+	  || (s.length === 64 ? s : '')
+  ;
+  return id;
+}
+
+export function connect() {
+  
   ndk = new NDK({ explicitRelayUrls: allRelays });
 
   return ndk.connect(/* timeoutMs */ 1000, /* minConns */ 3);
