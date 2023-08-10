@@ -5,13 +5,19 @@ import { PinItem } from "./PinItem";
 
 export const PinsList = ({ drawerBleeding }) => {
   const contextData = useContext(AppContext);
-  const { currentWorkspace } = contextData || {};
+  const { currentWorkspace, open: onOpenPin } = contextData || {};
   const { pins = [] } = currentWorkspace || {};
 
   return (
     <StyledContainer length={pins.length} bleeddingheight={drawerBleeding}>
       {pins.map((pin) => {
-        return <PinItem {...pin} />;
+        return (
+          <PinItem
+            image={pin.icon}
+            {...pin}
+            onClick={() => onOpenPin(pin.url, pin)}
+          />
+        );
       })}
     </StyledContainer>
   );
@@ -24,12 +30,11 @@ const StyledContainer = styled("div")(({ length, bleeddingheight }) => ({
   justifyContent: "space-between",
   alignItems: "flex-start",
   padding: "0 1rem 1rem",
-  gap: "1rem",
+  rowGap: "2rem",
   overflowY: "hidden",
   height: `calc(100% - ${bleeddingheight}%)`,
   "& > .item": {
     width: `calc(100% / ${length} - 10px)`,
-    backgroundColor: "white",
     minWidth: "56px",
     minHeight: "56px",
   },

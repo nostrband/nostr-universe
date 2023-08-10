@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -6,10 +6,20 @@ import Skeleton from "@mui/material/Skeleton";
 import { Divider, SwipeableDrawer as MuiSwipeableDrawer } from "@mui/material";
 
 import { PinsList } from "../pins/PinsList";
+import { AppContext } from "../../store/app-context";
+import { PinItem } from "../pins/PinItem";
 
 export const SwipeableDrawer = () => {
   const [open, setOpen] = useState(false);
   const [drawerBleeding, setDrawerBleedingHeight] = useState(10.5);
+
+  const contextData = useContext(AppContext);
+  const { currentWorkspace, open: onOpenPin, onOpenTab } = contextData || {};
+  const { pins = [], tabs = [] } = currentWorkspace || {};
+
+  const renderedTabs = tabs.filter(
+    (t) => !t.appNaddr || !pins.find((p) => p.appNaddr === t.appNaddr)
+  );
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
@@ -29,7 +39,7 @@ export const SwipeableDrawer = () => {
     };
 
     window.addEventListener("resize", handleResize);
-
+    handleResize();
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -39,36 +49,79 @@ export const SwipeableDrawer = () => {
     window !== undefined ? () => window.document.body : undefined;
 
   return (
-    <>
-      <StyledSwipeableDrawer
-        container={container}
-        anchor="bottom"
-        PaperProps={{
-          className: "paper",
-        }}
-        open={open}
-        onClose={toggleDrawer(false)}
-        onOpen={toggleDrawer(true)}
-        swipeAreaWidth={`${drawerBleeding}%`}
-        disableSwipeToOpen={false}
-        ModalProps={{
-          keepMounted: true,
-        }}
-        transitionDuration={200}
-        hysteresis={0.7}
-      >
-        <VisibleContent bleedingheight={drawerBleeding}>
-          <Puller onClick={toggleDrawer} />
-          <PinsList drawerBleeding={drawerBleeding} />
-        </VisibleContent>
-        {false && <StyledDivider />}
-        <ExpandedContent>
-          <Skeleton variant="rectangular" height="100%" />
-        </ExpandedContent>
-      </StyledSwipeableDrawer>
-    </>
+    <StyledSwipeableDrawer
+      container={container}
+      anchor="bottom"
+      PaperProps={{
+        className: "paper",
+      }}
+      open={open}
+      onClose={toggleDrawer(false)}
+      onOpen={toggleDrawer(true)}
+      swipeAreaWidth={`${drawerBleeding}%`}
+      disableSwipeToOpen={false}
+      allowSwipeInChildren
+      ModalProps={{
+        keepMounted: true,
+      }}
+      transitionDuration={200}
+      hysteresis={0.7}
+      id="pins"
+      SwipeAreaProps={{
+        
+      }}
+    >
+      <VisibleContent bleedingheight={drawerBleeding}>
+        <Puller onClick={toggleDrawer} />
+        <PinsList drawerBleeding={drawerBleeding} />
+      </VisibleContent>
+      {false && <StyledDivider />}
+      <ExpandedContent>
+        {/* Show this when items are loading */}
+        {false && <Skeleton variant="rectangular" height="100%" />}
+        <TabsContainer length={[...pins, ...renderedTabs].length}>
+          {pins.map((pin) => {
+            return (
+              <PinItem
+                image={pin.icon}
+                {...pin}
+                onClick={() => onOpenPin(pin.url, pin)}
+                withTitle
+              />
+            );
+          })}
+          {renderedTabs.map((tab) => {
+            return (
+              <PinItem
+                image={tab.icon}
+                {...tab}
+                onClick={() => onOpenTab(tab)}
+                withTitle
+              />
+            );
+          })}
+        </TabsContainer>
+      </ExpandedContent>
+    </StyledSwipeableDrawer>
   );
 };
+
+const TabsContainer = styled("div")(({ length }) => ({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "wrap",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  padding: "0 1rem 1rem",
+  columnGap: "0.75rem",
+  rowGap: "1rem",
+  overflowY: "hidden",
+  "& > .item": {
+    width: `calc(100% / ${length})`,
+    minWidth: "56px",
+    minHeight: "56px",
+  },
+}));
 
 const StyledDivider = styled(Divider)(() => ({
   opacity: 1,
@@ -93,7 +146,7 @@ const VisibleContent = styled(Box)(({ bleedingheight }) => ({
   visibility: "visible",
   right: 0,
   left: 0,
-  background: "red",
+  background: "#111111",
   height: `calc(${bleedingheight + 3}% + 1px)`,
   boxShadow: "0px -4px 8px 0px #00000033",
   paddingTop: "1rem",
@@ -102,7 +155,7 @@ const VisibleContent = styled(Box)(({ bleedingheight }) => ({
 const ExpandedContent = styled(Box)(() => ({
   padding: "0 2px 2px",
   overflow: "auto",
-  background: "red",
+  background: "#111111",
   height: `100%`,
 }));
 

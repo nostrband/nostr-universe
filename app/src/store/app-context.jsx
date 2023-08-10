@@ -663,15 +663,15 @@ const AppContextProvider = ({ children }) => {
       updateWorkspace({ currentTab: null });
     }
 
-    document.getElementById("pins").classList.remove("d-none");
-    document.getElementById("pins").classList.add("d-flex");
+    document.getElementById("pins").style.display = "block";
+    // document.getElementById("pins").classList.add("d-flex");
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
   };
 
   const showTabMenu = () => {
-    document.getElementById("pins").classList.remove("d-flex");
-    document.getElementById("pins").classList.add("d-none");
+    document.getElementById("pins").style.display = "none";
+    // document.getElementById("pins").classList.add("d-none");
     document.getElementById("tab-menu").classList.remove("d-none");
     document.getElementById("tab-menu").classList.add("d-flex");
   };
