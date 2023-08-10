@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
 import { AiOutlineClose } from 'react-icons/ai'
 import { fetchEventByBech32, stringToBech32 } from "../../nostr";
-//import { AppContext } from "../../store/app-context";
 import { Tools } from "../profile/tools/Tools";
 
 export const ContextMenu = ({ input, onClose, onOpenWith }) => {
-
-//  const contextData = useContext(AppContext);
-//  const { workspaces, currentPubkey, apps } = contextData || {};
-
-//  const ws = workspaces.find((w) => w.pubkey === currentPubkey);
-//  const tab = ws.lastCurrentTab;
   
   const [id, setId] = useState("");
   const [event, setEvent] = useState(null);
@@ -18,7 +11,6 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    setEnabled(false);
 
     const load = async () => {
 
@@ -33,6 +25,9 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 
 	const onAction = (action) => {
 	  console.log("context action", action, "id", id);
+	  if (!id)
+	    return;
+
 	  switch (action) {
 	    case "open-with":
 	      onOpenWith(id, event);
@@ -40,18 +35,12 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	  }
 	}
 
-	const onClick = (action) => {
-	  console.log("first-click skip action", action);
-	  setEnabled(true);
-	  setTools((prev) => prev.map((t) => { return {...t, onClick: onAction}}));
-	}
-
 	const tools = [
 	  {
 	    title: "Open with",
 	    id: "open-with",
 	    Icon: () => (<div></div>),
-	    onClick,
+	    onClick: onAction,
 	  },
 	];
 
@@ -60,7 +49,7 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	    title: "Zap",
 	    id: "zap",
 	    Icon: () => (<div></div>),
-	    onClick,
+	    onClick: onAction,
 	  });
 	}
 
@@ -74,7 +63,7 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
       setId("");
 
   }, [input]);
-  
+
   return (
     <div className="d-flex flex-column">
       <div className="d-flex justify-content-between align-items-center p-3">

@@ -8,7 +8,7 @@ import React from "react";
 
 export const ToolItem = ({ id, onClick, Icon, title }) => {
   return (
-    <StyledListItem onClick={() => onClick(id)}>
+    <StyledListItem onClick={() => onClick && onClick(id)}>
       <ListItemIcon className="list-item_icon">
         <Icon />
       </ListItemIcon>
