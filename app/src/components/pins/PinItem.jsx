@@ -65,5 +65,6 @@ const AvatarContainer = styled("div")(({ background }) => ({
     border: "4px solid rgba(255, 255, 255, 0.1)",
     fontFamily: "Outfit",
     fontWeight: 600,
+    borderRadius: "1rem",
   },
 }));

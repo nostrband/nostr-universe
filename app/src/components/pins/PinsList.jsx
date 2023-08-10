@@ -26,12 +26,14 @@ export const PinsList = ({ drawerBleeding }) => {
 const StyledContainer = styled("div")(({ length, bleeddingheight }) => ({
   display: "flex",
   flexDirection: "row",
-  flexWrap: "wrap",
   justifyContent: "space-between",
   alignItems: "flex-start",
-  padding: "0 1rem 1rem",
+  padding: "0 0 1rem",
+  margin: "0 1rem",
   rowGap: "2rem",
+  columnGap: "0.5rem",
   overflowY: "hidden",
+  overflowX: "auto",
   height: `calc(100% - ${bleeddingheight}%)`,
   "& > .item": {
     width: `calc(100% / ${length} - 10px)`,

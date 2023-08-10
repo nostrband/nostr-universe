@@ -9,9 +9,21 @@ import { PinsList } from "../pins/PinsList";
 import { AppContext } from "../../store/app-context";
 import { PinItem } from "../pins/PinItem";
 
+const getInitialBleedingHeight = (windowInstance) => {
+  if (windowInstance.innerHeight < 730) {
+    return 13.5;
+  }
+  if (windowInstance.innerHeight < 600) {
+    return 16.5;
+  }
+  return 10.5;
+};
+
 export const SwipeableDrawer = () => {
   const [open, setOpen] = useState(false);
-  const [drawerBleeding, setDrawerBleedingHeight] = useState(10.5);
+  const [drawerBleeding, setDrawerBleedingHeight] = useState(
+    window ? getInitialBleedingHeight(window) : 10.5
+  );
 
   const contextData = useContext(AppContext);
   const { currentWorkspace, open: onOpenPin, onOpenTab } = contextData || {};
@@ -29,17 +41,16 @@ export const SwipeableDrawer = () => {
     if (!window) return;
 
     const handleResize = () => {
-      if (window.innerHeight < 600) {
-        return setDrawerBleedingHeight(16.5);
-      }
       if (window.innerHeight < 730) {
         return setDrawerBleedingHeight(13.5);
+      }
+      if (window.innerHeight < 600) {
+        return setDrawerBleedingHeight(16.5);
       }
       setDrawerBleedingHeight(10.5);
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize();
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -67,13 +78,13 @@ export const SwipeableDrawer = () => {
       transitionDuration={200}
       hysteresis={0.7}
       id="pins"
-      SwipeAreaProps={{
-        
+      SlideProps={{
+        draggable: false,
       }}
     >
-      <VisibleContent bleedingheight={drawerBleeding}>
+      <VisibleContent bleedingheight={drawerBleeding} open={open}>
         <Puller onClick={toggleDrawer} />
-        <PinsList drawerBleeding={drawerBleeding} />
+        {!open && <PinsList drawerBleeding={drawerBleeding} />}
       </VisibleContent>
       {false && <StyledDivider />}
       <ExpandedContent>
@@ -112,7 +123,7 @@ const TabsContainer = styled("div")(({ length }) => ({
   flexWrap: "wrap",
   justifyContent: "space-between",
   alignItems: "flex-start",
-  padding: "0 1rem 1rem",
+  padding: "1rem 1rem",
   columnGap: "0.75rem",
   rowGap: "1rem",
   overflowY: "hidden",
@@ -138,16 +149,16 @@ const StyledSwipeableDrawer = styled(MuiSwipeableDrawer)(
   })
 );
 
-const VisibleContent = styled(Box)(({ bleedingheight }) => ({
+const VisibleContent = styled(Box)(({ bleedingheight, open }) => ({
   position: "absolute",
-  top: `-${bleedingheight + 3}%`,
+  top: open ? "-1rem" : `-${bleedingheight + 3}%`,
   borderTopLeftRadius: "2rem",
   borderTopRightRadius: "2rem",
   visibility: "visible",
   right: 0,
   left: 0,
   background: "#111111",
-  height: `calc(${bleedingheight + 3}% + 1px)`,
+  height: open ? "auto" : `calc(${bleedingheight + 3}% + 1px)`,
   boxShadow: "0px -4px 8px 0px #00000033",
   paddingTop: "1rem",
 }));
