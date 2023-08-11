@@ -21,3 +21,6 @@ export { ReactComponent as ContactsIcon } from "./icons/tools/contacts-icon.svg"
 export { ReactComponent as WalletToolIcon } from "./icons/tools/wallet-icon.svg";
 
 export { ReactComponent as PlusIcon } from "./icons/plus-icon.svg";
+
+export { default as openWithIcon } from "./icons/open-with.svg";
+export { default as zapIcon } from "./icons/zap.svg";

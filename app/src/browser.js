@@ -3,6 +3,8 @@ let API = {};
 
 const setAPI = (a) => API = a;
 
+const refs = {};
+
 const initTab = () => {
   // this code will be executed in the opened tab,
   // should only refer to local vars bcs it will be
@@ -236,6 +238,11 @@ async function executeFuncAsync(name, fn, ...args) {
 // returns ref to the browser window
 export function open(params) {
 
+  if (params.id in refs) {
+    console.log("browser ", id, "already opened");
+    return;
+  }
+
   const header = document.getElementById('header');
   const topOffset = header.offsetHeight + header.offsetTop;
   const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)));
@@ -370,10 +377,28 @@ export function open(params) {
       cordova.InAppBrowser.open(event.url, '_self');
     else if (API.onBeforeLoad)
       await API.onBeforeLoad(params.apiCtx, event.url);
+    else // FIXME new domain?
+      cb(event.url);
   });
 
-  // return to caller
-  return ref;
+  refs[params.id] = ref;
+}
+
+const show = async (id) => {
+  refs[id]?.show();
+}
+
+const hide = async (id) => {
+  refs[id]?.hide();
+}
+
+const close = async (id) => {
+  if (!(id in refs))
+    return;
+
+  const ref = refs[id];
+  ref.close();
+  delete refs[id];
 }
 
 const generateMenu = () => {
@@ -416,6 +441,9 @@ export async function showMenu(ref) {
 
 export const browser = {
   open,
+  show,
+  close,
+  hide,
   setAPI,
   showMenu
 }
