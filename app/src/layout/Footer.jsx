@@ -7,40 +7,38 @@ import { SwipeableDrawer } from "../components/swipeable-drawer/SwipeableDrawer"
 export const Footer = ({ onOpenPinModal }) => {
   const contextData = useContext(AppContext);
   const {
-    workspaces,
-    currentPubkey,
+    currentWorkspace,
+    currentTab,
     onCloseTab,
     onHideTab,
     onShowTabs,
     onTogglePin,
   } = contextData || {};
 
-  const ws = workspaces.find((w) => w.pubkey === currentPubkey);
-
   return (
     <footer id="footer">
       <SwipeableDrawer />
       <>
-        {ws && (
+        {currentWorkspace && (
           <div
             id="tab-menu"
             className="container d-none justify-content-end gap-1"
             style={{ position: "relative", zIndex: 1200 }}
           >
             <div className="me-3">
-              {ws.currentTab && ws.currentTab.loading && "Loading..."}
+              {currentTab && currentTab.loading && "Loading..."}
             </div>
             <div>
               <Button
                 variant="secondary"
                 size="small"
                 onClick={onCloseTab}
-                disabled={!ws.currentTab}
+                disabled={!currentTab}
               >
                 Close
               </Button>
             </div>
-            {ws.currentTab && ws.currentTab?.appNaddr && (
+            {currentTab && currentTab?.appNaddr && (
               <div>
                 <Button
                   variant="secondary"
@@ -49,7 +47,7 @@ export const Footer = ({ onOpenPinModal }) => {
                     onTogglePin(onOpenPinModal);
                   }}
                 >
-                  {ws.currentTab && ws.currentTab?.pinned ? "Unpin" : "Pin"}
+                  {currentTab && currentTab?.pinned ? "Unpin" : "Pin"}
                 </Button>
               </div>
             )}
@@ -65,7 +63,7 @@ export const Footer = ({ onOpenPinModal }) => {
                 variant="secondary"
                 size="small"
                 onClick={onHideTab}
-                disabled={!ws.currentTab}
+                disabled={!currentTab}
               >
                 Hide
               </Button>

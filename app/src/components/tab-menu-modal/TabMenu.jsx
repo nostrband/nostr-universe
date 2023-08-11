@@ -7,10 +7,9 @@ import { Tools } from "../profile/tools/Tools";
 export const TabMenu = ({ onClose, onOpenWith }) => {
 
   const contextData = useContext(AppContext);
-  const { workspaces, currentPubkey, apps } = contextData || {};
+  const { currentWorkspace, apps } = contextData || {};
 
-  const ws = workspaces.find((w) => w.pubkey === currentPubkey);
-  const tab = ws.lastCurrentTab;
+  const tab = currentWorkspace?.lastCurrentTab;
   
   const [url, setUrl] = useState("");
   const [app, setApp] = useState(null);

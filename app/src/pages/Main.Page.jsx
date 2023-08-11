@@ -47,7 +47,8 @@ const MainPage = () => {
 
     const url = new URL('/', str)
     if (url) {
-      open(str);
+      // need async launch to let the search modal close itself
+      setTimeout(() => open(str), 0);
       return true;
     }
 

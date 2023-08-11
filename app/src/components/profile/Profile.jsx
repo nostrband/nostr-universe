@@ -7,7 +7,8 @@ import { AppContext } from "../../store/app-context";
 import {
   getProfileImage,
   getRenderedUsername,
-  getNpub
+  getNpub,
+  isGuest
 } from "../../utils/helpers/general";
 import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
@@ -49,6 +50,8 @@ export const Profile = () => {
           username={currentUsername}
           profileImage={getProfileImage(profile?.profile)}
           onOpenChangeAccountModal={openChangeAccountModalHandler}
+	  onAddKey={onAddKey}
+	  isGuest={isGuest(currentPubkey)}
         />
         <Tools />
       </Container>
@@ -57,7 +60,7 @@ export const Profile = () => {
         isOpen={isChangeAccountModalOpen}
         onClose={closeModalHandler}
         accounts={accounts}
-        currentUserNpub={currentPubkey.length == 64 ? getNpub(currentPubkey) : ""}
+        currentUserNpub={isGuest(currentPubkey) ? "" : getNpub(currentPubkey)}
         onChangeAccount={changeAccountHandler}
         onAddKey={onAddKey}
       />

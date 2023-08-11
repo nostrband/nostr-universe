@@ -1,4 +1,8 @@
 
+let API = {};
+
+const setAPI = (a) => API = a;
+
 const initTab = () => {
   // this code will be executed in the opened tab,
   // should only refer to local vars bcs it will be
@@ -251,8 +255,8 @@ export function open(params) {
   ref.executeFuncAsync = executeFuncAsync;
 
   ref.addEventListener('loadstart', async (event) => {
-    if (params.onLoadStart)
-      await params.onLoadStart(event);
+    if (API.onLoadStart)
+      await API.onLoadStart(params.apiCtx, event);
   });
 
   ref.addEventListener('loadstop', async (event) => {
@@ -260,7 +264,7 @@ export function open(params) {
     // inject our scripts
 
     // main init to enable comms interface
-    await ref.executeFuncAsync("initTab", initTab, params.API ? Object.keys(params.API) : []);
+    await ref.executeFuncAsync("initTab", initTab, API ? Object.keys(API) : []);
 
     if (!params.menu) {
       // nostr-zap
@@ -273,8 +277,8 @@ export function open(params) {
     }
 
     // after everything is done!
-    if (params.onLoadStop)
-      await params.onLoadStop(event);
+    if (API.onLoadStop)
+      await API.onLoadStop(params.apiCtx, event);
   });
 
   // handle api requests
@@ -294,12 +298,13 @@ export function open(params) {
         target = window.nostr;
         break;
       default:
-	if (method in params.API) {
-          target = params.API;
-          targetArgs = [params.apiCtx, ...targetArgs];
-	}
+	if (method in API)
+          target = API;
     }
 
+    if (params.apiCtx !== undefined)
+      targetArgs = [params.apiCtx, ...targetArgs];
+    
     let err = null;
     let reply = null;
     if (target) {
@@ -310,8 +315,8 @@ export function open(params) {
       }
 
       // FIXME remove later when we switch to onboarding
-      if (method === 'getPublicKey' && params.onGetPubkey) {
-        await params.onGetPubkey(reply);
+      if (method === 'getPublicKey' && API.onGetPubkey) {
+        await API.onGetPubkey(params.apiCtx, reply);
       }
     } else {
       err = `Unknown method ${method}`;
@@ -333,14 +338,14 @@ export function open(params) {
 
   // tab menu, for now just closes the tab
   ref.addEventListener('menu', async () => {
-    if (params.onMenu)
-      await params.onMenu();
+    if (API.onMenu)
+      await API.onMenu(params.apiCtx);
   });
 
   // tab is hidden
   ref.addEventListener('hide', async () => {
-    if (params.onHide)
-      await params.onHide();
+    if (API.onHide)
+      await API.onHide(params.apiCtx);
   });
 
   // handle clicks outside the inappbrowser to
@@ -349,22 +354,22 @@ export function open(params) {
     const x = event.x / window.devicePixelRatio;
     const y = event.y / window.devicePixelRatio;
     console.log("browser click", event.x, event.y, " => ", x, y);
-    if (params.onClick)
-      await params.onClick(x, y);
+    if (API.onClick)
+      await API.onClick(params.apiCtx, x, y);
   });
 
   ref.addEventListener('blank', async (event) => {
     console.log("blank", event.url);
-    if (params.onBlank)
-      await params.onBlank(event.url);
+    if (API.onBlank)
+      await API.onBlank(params.apiCtx, event.url);
   });
 
   ref.addEventListener('beforeload', async (event, cb) => {
     console.log("beforeload", JSON.stringify(event));
     if (event.url.startsWith("lightning:"))
       cordova.InAppBrowser.open(event.url, '_self');
-    else if (params.onBeforeLoad)
-      await params.onBeforeLoad(event.url);
+    else if (API.onBeforeLoad)
+      await API.onBeforeLoad(params.apiCtx, event.url);
   });
 
   // return to caller
@@ -411,5 +416,6 @@ export async function showMenu(ref) {
 
 export const browser = {
   open,
+  setAPI,
   showMenu
 }

@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { keystore } from "../keystore";
 import {
-  addPin,
-  addTab,
   db,
-  deletePin,
-  deleteTab,
-  getFlag,
-  listPins,
-  listTabs,
-  setFlag,
-  updateTab,
+  dbi
 } from "../db";
 import {
   coracleIcon,
@@ -233,8 +225,8 @@ function createWorkspace(pubkey, props = {}) {
     trendingProfiles: [],
     tabs: [],
     pins: [],
-    currentTab: null,
-    lastCurrentTab: null,
+    currentTabId: "",
+    lastCurrentTabId: "",
     ...props,
   };
 }
@@ -261,31 +253,12 @@ const AppContextProvider = ({ children }) => {
   const [openEventAddr, setOpenEventAddr] = useState("");
   const [contextInput, setContextInput] = useState("");
 
-  const API = {
-    setUrl: async function (tab, url) {
-      if (tab) {
-        console.log("tab", tab.id, "setUrl", url);
-        tab.url = url;
-        updateWorkspace({ currentTab: { ...tab } });
-        await updateTab(tab);
-      }
-    },
-    showContextMenu: async function (tab, id) {
-      if (tab) {
-	console.log("event menu", id);
-	setContextInput(id);
-      }
-    },
-    decodeBech32: function (tab, s) {
-      return nip19.decode(s);
-    },
-  };
-
+  // helpers for initial loading w/ useEffect
   const reloadProfiles = async (keys, currentPubkey) => {
     setProfile(null); // FIXME loading
     setProfiles([]); // FIXME loading
     if (!keys || !keys.length) return;
-
+    
     subscribeProfiles(keys, (profile) => {
       console.log("profile update", profile);
       if (profile.pubkey == currentPubkey) setProfile(profile);
@@ -316,16 +289,17 @@ const AppContextProvider = ({ children }) => {
   };
 
   const ensureBootstrapped = async (workspaceKey) => {
-    if (!(await getFlag(workspaceKey, "bootstrapped"))) {
+    if (!(await dbi.getFlag(workspaceKey, "bootstrapped"))) {
       await bootstrap(workspaceKey);
-      await setFlag(workspaceKey, "bootstrapped", true);
+      await dbi.setFlag(workspaceKey, "bootstrapped", true);
     }
   };
 
   const loadWorkspace = async (workspace) => {
     console.log("workspaceKey", workspace.pubkey);
-    workspace.pins = await listPins(workspace.pubkey);
-    workspace.tabs = await listTabs(workspace.pubkey);
+    workspace.pins = await dbi.listPins(workspace.pubkey);
+    workspace.tabs = await dbi.listTabs(workspace.pubkey);
+    console.log("load pins", workspace.pins.length, "tabs", workspace.tabs.length);
   };
 
   const addWorkspace = async (pubkey, props) => {
@@ -374,13 +348,81 @@ const AppContextProvider = ({ children }) => {
     else document.addEventListener("deviceready", onDeviceReady, false);
   }, []);
 
-  const updateWorkspace = (props, pubkey) => {
+
+  const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
+  const currentTab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace.currentTabId);
+  const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
+
+  const updateWorkspace = (cbProps, pubkey) => {
     pubkey = pubkey || currentPubkey;
     setWorkspaces((prev) =>
-      prev.map((w) => (w.pubkey == pubkey ? { ...w, ...props } : w))
+      prev.map((w) => (w.pubkey === pubkey
+		     ? { ...w, ...(typeof cbProps === "function" ? cbProps(w) : cbProps) }
+		     : w))
     );
   };
 
+  const updateTab = (cbProps, tabId) => {
+    tabId = tabId || currentTab?.id;
+    updateWorkspace((ws) => { return {
+      tabs: ws.tabs.map(
+	(t) => (t.id === tabId
+	      ? { ...t, ...(typeof cbProps === "function" ? cbProps(t) : cbProps) }
+	      : t)
+      )
+    }});
+  };
+  
+  const API = {
+    setUrl: async function (tabId, url) {
+      console.log("tab", tabId, "setUrl", url);
+      updateTab({ url }, tabId);
+      const tab = getTab(tabId);
+      if (tab)
+	await dbi.updateTab(tab);
+    },
+    showContextMenu: async function (tabId, id) {
+      console.log("event menu", id);
+      setContextInput(id);
+    },
+    decodeBech32: function (tabId, s) {
+      return nip19.decode(s);
+    },
+    onLoadStart: async (tabId, event) => {
+      console.log("loading", JSON.stringify(event));
+    },
+    onLoadStop: async (tabId, event) => {
+      console.log("loaded", event.url);
+      updateTab({ url: event.url, loading: false }, tabId);
+      const tab = getTab(tabId);
+      if (tab)
+	await dbi.updateTab(tab);
+    },
+    onGetPubkey: (tabId, pubkey) => {
+      if (pubkey !== currentPubkey) {
+        setCurrentPubkey(pubkey);
+        // FIXME bootstrap etc, just remove it and start onboarding?
+      }
+    },
+    onClick: (tabId, x, y) => {
+      console.log("click", x, y);
+      let e = document.elementFromPoint(x, y);
+      // SVG doesn't have 'click'
+      while (e && !e.click) e = e.parentNode;
+      console.log("click on ", e);
+      if (e) e.click();
+    },
+    onBlank: (tabId, url) => {
+      const tab = getTab(tabId);
+      if (tab)
+	hide(tab);
+      open(url);
+    },
+  };
+
+  // update on every rerender to capture new callbacks
+  browser.setAPI(API);
+  
   const addKey = async () => {
     await keystore.addKey();
 
@@ -397,7 +439,7 @@ const AppContextProvider = ({ children }) => {
 
       updateWorkspace({ pubkey }, DEFAULT_PUBKEY);
     } else {
-      // copy trending stuff
+      // copy trending stuffbottom
       const tp = workspaces.find(
         (w) => w.pubkey == currentPubkey
       ).trendingProfiles;
@@ -411,78 +453,38 @@ const AppContextProvider = ({ children }) => {
   };
 
   const createTabBrowser = async (tab) => {
-    // set as loading
-    updateWorkspace({ currentTab: { ...tab, loading: true } });
+
+    updateTab({ loading: true }, tab.id);
+    updateWorkspace({ currentTabId: tab.id});
 
     const params = {
       url: tab.url,
       hidden: true,
-      API,
-      apiCtx: tab,
-      onLoadStart: async (event) => {
-        console.log("loading", JSON.stringify(event));
-      },
-      onLoadStop: async (event) => {
-        tab.url = event.url;
-        tab.loading = false;
-        console.log("tab url", tab.url);
-        updateWorkspace({ currentTab: { ...tab } });
-        await updateTab(tab);
-      },
-      onGetPubkey: (pubkey) => {
-        if (pubkey !== currentPubkey) {
-          let npub = nip19.npubEncode(pubkey);
-          console.log("npub", npub);
-          setCurrentPubkey(pubkey);
-          // FIXME bootstrap etc, just remove it and start onboarding?
-        }
-      },
-      onClick: (x, y) => {
-        console.log("click", x, y);
-        let e = document.elementFromPoint(x, y);
-        // SVG doesn't have 'click'
-        while (e && !e.click) e = e.parentNode;
-        console.log("click on ", e);
-        if (e) e.click();
-        // can't hide the tab here,
-        // otherwise click actions won't know which tab was active
-      },
-      onMenu: async () => {
-        console.log("menu click tab", tab.id);
-        //	browser.showMenu(tab.ref);
-        //	return;
-
-        // FIXME just for now a hack to close a tab
-        // close & remove tab
-        close(tab);
-      },
-      onBlank: (url) => {
-        hide(tab);
-        open(url);
-      },
+      apiCtx: tab.id,
     };
 
     // open the browser
     tab.ref = await browser.open(params);
-  };
 
+    // set ref to context
+    updateTab({ ref: tab.ref }, tab.id);
+  };
+  
   const close = async (tab) => {
     hide(tab);
 
-    await deleteTab(tab.id);
+    await dbi.deleteTab(tab.id);
     tab.ref.close();
 
-    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
-    const tabs = ws.tabs.filter((t) => t.id !== tab.id);
-    console.log("was tabs", ws.tabs.length);
-    console.log("now tabs", tabs.length);
-    updateWorkspace({ currentTab: null, tabs });
+    updateWorkspace((ws) => { return {
+      tabs: ws.tabs.filter((t) => t.id !== tab.id)
+    }});
   };
 
   const hide = (tab) => {
     if (tab) {
       tab.ref.hide();
-      updateWorkspace({ currentTab: null });
+      updateWorkspace({ currentTabId: "" });
     }
 
     document.getElementById("pins").style.display = "block";
@@ -507,15 +509,14 @@ const AppContextProvider = ({ children }) => {
         if (!tab.ref) await createTabBrowser(tab);
 
         await tab.ref.show();
-        updateWorkspace({ currentTab: { ...tab } });
+	updateWorkspace({ currentTabId: tab.id});
         ok();
       }, 0);
     });
   };
 
   const openApp = async (url, app) => {
-    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
-    const pin = ws.pins.find((p) => p.appNaddr == app.naddr);
+    const pin = currentWorkspace.pins.find((p) => p.appNaddr == app.naddr);
 
     return open(
       url,
@@ -534,11 +535,9 @@ const AppContextProvider = ({ children }) => {
   const open = async (url, pin, opts = {}) => {
     console.log("open", url, "pin", pin);
 
-    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
-
     // check if an open tab for this app exists
     if (pin) {
-      const tab = ws.tabs.find((t) => t?.appNaddr === pin.appNaddr);
+      const tab = currentWorkspace.tabs.find((t) => t?.appNaddr === pin.appNaddr);
       if (tab && (!opts.newTab || tab.url === url)) {
         show(tab);
         return;
@@ -554,7 +553,7 @@ const AppContextProvider = ({ children }) => {
       title: pin ? pin.title : title,
       icon: pin ? pin.icon : U.origin + "/favicon.ico",
       url,
-      order: ws.tabs.length + 1,
+      order: currentWorkspace.tabs.length + 1,
       ref: null, // filled below
       pinned: pin && pin.id,
     };
@@ -562,13 +561,13 @@ const AppContextProvider = ({ children }) => {
     console.log("open", url, JSON.stringify(pin), JSON.stringify(tab));
 
     // add to tab list
-    updateWorkspace({
+    updateWorkspace((ws) => { return {
       tabs: [...ws.tabs, tab],
-      lastCurrentTab: null, // make sure previous active tab doesn't reopen on modal close
-    });
+      lastCurrentTab: "", // make sure previous active tab doesn't reopen on modal close
+    }});
 
     // add to db
-    await addTab(tab);
+    await dbi.addTab(tab);
 
     // it creates the tab and sets as current
     show(tab);
@@ -607,32 +606,28 @@ const AppContextProvider = ({ children }) => {
 
   const closeTab = () => {
     console.log("closeTab");
-    const tab = workspaces.find((w) => w.pubkey == currentPubkey).currentTab;
-    if (tab) close(tab);
+    if (currentTab) close(currentTab);
   };
 
   const hideTab = () => {
     console.log("hideTab");
-    const tab = workspaces.find((w) => w.pubkey == currentPubkey).currentTab;
-    if (tab) hide(tab);
+    if (currentTab) hide(currentTab);
   };
 
   const showTabs = () => {};
 
   const togglePinTab = (openPinAppModal) => {
-    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
-    const currentTab = ws.currentTab;
     if (!currentTab) return;
 
     if (currentTab.pinned) {
       // unpin
-      const pin = ws.pins.find((p) => p.appNaddr == currentTab.appNaddr);
+      const pin = currentWorkspace.pins.find((p) => p.appNaddr == currentTab.appNaddr);
       if (pin) {
-        updateWorkspace({
+        updateWorkspace((ws) => { return {
           pins: ws.pins.filter((p) => p.id != pin.id),
-          currentTab: { ...currentTab, pinned: false },
-        });
-        deletePin(pin.id);
+        }});
+	updateTab({ pinned: false });
+        dbi.deletePin(pin.id);
       }
     } else {
       const app = apps.find((a) => a.naddr == currentTab.appNaddr);
@@ -648,65 +643,67 @@ const AppContextProvider = ({ children }) => {
   };
 
   const savePin = (perms) => {
-    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
-    const currentTab = ws.currentTab;
-    if (!currentTab) return;
+    const lastCurrentTabId = currentWorkspace.lastCurrentTabId;
+    console.log("onModalClose", lastCurrentTabId);
+    if (!lastCurrentTabId) return;
+
+    const tab = getTab(lastCurrentTabId);
+    if (!tab) return;
 
     const pin = {
       id: "" + Math.random(),
-      url: currentTab.url,
-      appNaddr: currentTab.appNaddr,
-      title: currentTab.title,
-      icon: currentTab.icon,
-      order: ws.pins.length,
+      url: tab.url,
+      appNaddr: tab.appNaddr,
+      title: tab.title,
+      icon: tab.icon,
+      order: currentWorkspace.pins.length,
       pubkey: currentPubkey,
       perms,
     };
 
     console.log("perms", JSON.stringify(perms));
 
-    updateWorkspace({
+    updateWorkspace((ws) => { return {
       pins: [...ws.pins, pin],
-      currentTab: { ...currentTab, pinned: true },
-    });
+    }});
+    updateTab({ pinned: true }, tab.id);
 
-    addPin(pin);
+    dbi.addPin(pin);
 
-    currentTab.ref.show();
+//    currentTab.ref.show();
   };
 
-  const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
-
   const onModalOpen = () => {
-    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
-    const currentTab = ws.currentTab;
     console.log("onModalOpen", currentTab);
     if (!currentTab) return;
 
     hide(currentTab);
 
-    updateWorkspace({
-      lastCurrentTab: currentTab,
-    });
+    updateWorkspace({ lastCurrentTabId: currentTab.id });
   };
 
   const onModalClose = () => {
-    const ws = workspaces.find((w) => w.pubkey == currentPubkey);
-    const lastCurrentTab = ws.lastCurrentTab;
-    console.log("onModalClose", lastCurrentTab);
+    const lastCurrentTabId = currentWorkspace.lastCurrentTabId;
+    console.log("onModalClose", lastCurrentTabId);
+    if (!lastCurrentTabId) return;
+    
+    const lastCurrentTab = currentWorkspace.tabs.find((t) => t.id === lastCurrentTabId);
     if (!lastCurrentTab) return;
 
     show(lastCurrentTab);
 
-    updateWorkspace({
-      lastCurrentTab: null,
-    });
+    updateWorkspace({ lastCurrentTabId: "" });
+  };
+
+  const isGuest = () => {
+    return currentPubkey == DEFAULT_PUBKEY;
   };
   
   return (
     <AppContext.Provider
       value={{
         currentPubkey,
+	isGuest,
         keys,
         profile,
         profiles,
@@ -730,6 +727,7 @@ const AppContextProvider = ({ children }) => {
         onOpenEvent: setOpenEventAddr,
         workspaces,
         currentWorkspace,
+        currentTab,
         onModalOpen,
         onModalClose,
 	contextInput,
