@@ -370,6 +370,8 @@ export function open(params) {
       cordova.InAppBrowser.open(event.url, '_self');
     else if (API.onBeforeLoad)
       await API.onBeforeLoad(params.apiCtx, event.url);
+    else // FIXME new domain?
+      cb(event.url);
   });
 
   // return to caller
