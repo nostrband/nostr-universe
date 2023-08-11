@@ -137,7 +137,7 @@ export async function fetchApps() {
 
   // convert to a convenient app object
   const apps = [];
-  events.map((e) => {
+  events.forEach((e) => {
     // app author
     const author = profiles.find((p) => p.pubkey == e.pubkey);
 
@@ -167,6 +167,9 @@ export async function fetchApps() {
         type: url_type[1],
       };
     });
+
+    if (Object.keys(handlers).length == 0)
+      return;
 
     const app = {
       naddr: nip19.naddrEncode({
