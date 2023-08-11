@@ -16,7 +16,7 @@ export const PinItem = ({
   onClick,
   withTitle,
 }) => {
-  const [url, setUrl] = useState(image);
+  const [url, setUrl] = useState("");
   const colorRef = useRef(getRandomColor());
 
   useEffect(() => {

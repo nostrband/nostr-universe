@@ -26,17 +26,13 @@ export const Header = ({
   const navigate = useNavigate();
 
   const {
-    currentPubkey,
-    workspaces,
+    currentTab,
     keys,
     profile,
     onAddKey,
     onSelectKey,
     setOpenKey,
   } = contextData || {};
-
-  const ws = workspaces.find((w) => w.pubkey === currentPubkey);
-  const currentTab = ws?.currentTab;
 
   const renderedKeys = getRenderedKeys(keys);
 
@@ -57,51 +53,6 @@ export const Header = ({
           src={getProfileImage(profile?.profile)}
           onClick={navigateToProfilePage}
         />
-        {false && (
-          <Dropdown data-bs-theme="dark" drop="down-centered">
-            <Dropdown.Toggle id="dropdown-basic" variant="secondary">
-              {currentPubkey && currentPubkey.length === 64
-                ? getShortenText(nip19.npubEncode(currentPubkey))
-                : "Key is not chosen"}
-            </Dropdown.Toggle>
-
-            <Dropdown.Menu>
-              {renderedKeys.map((key, index) => {
-                return (
-                  <Dropdown.Item
-                    key={key}
-                    href={`#/${key + 1}`}
-                    className="d-flex align-items-center gap-4"
-                  >
-                    <BsFillPersonFill color="white" size={35} />
-                    <div
-                      className="fs-3 text-white flex-grow-1"
-                      onClick={() => onSelectKey(index)}
-                    >
-                      {getShortenText(key)}
-                    </div>
-                    <div onClick={() => editKeyHandler(index)}>
-                      <BiSolidPencil
-                        color="white"
-                        size={26}
-                        className=" pe-none "
-                      />
-                    </div>
-                  </Dropdown.Item>
-                );
-              })}
-              {renderedKeys && <Dropdown.Divider />}
-              <Dropdown.Item
-                href="#"
-                className=" d-flex justify-content-center  "
-              >
-                <Button variant="secondary" size="lg" onClick={onAddKey}>
-                  + Add keys
-                </Button>
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        )}
         <ActionsContainer>
           {false && (
             <>

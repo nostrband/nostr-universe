@@ -11,8 +11,9 @@ export const SearchModal = ({ isOpen, onClose, onSearch }) => {
 
   const handleClickSearchBtn = () => {
     const str = inputSearchRef.current.value
-    if (onSearch(str))
+    if (onSearch(str)) {
       onClose()
+    }
   }
 
   const submitSearchInput = (ev) => {
