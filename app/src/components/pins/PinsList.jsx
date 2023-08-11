@@ -27,7 +27,7 @@ export const PinsList = ({ drawerBleeding }) => {
 const StyledContainer = styled("div")(({ length, bleeddingheight }) => ({
   display: "flex",
   flexDirection: "row",
-  justifyContent: "space-between",
+  justifyContent: "flex-start",
   alignItems: "flex-start",
   padding: "0 0 1rem",
   margin: "0 1rem",
@@ -40,5 +40,7 @@ const StyledContainer = styled("div")(({ length, bleeddingheight }) => ({
     width: `calc(100% / ${length} - 10px)`,
     minWidth: "56px",
     minHeight: "56px",
+    maxWidth: "56px",
+    maxHeight: "56px",
   },
 }));

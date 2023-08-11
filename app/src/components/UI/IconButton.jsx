@@ -26,7 +26,7 @@ export const IconButton = ({ data, onClick, size, openedTab }) => {
         src={img ? img : defaultIcon}
         alt={title}
         className={size === "big" ? "iconImgBig" : "iconImgSmall"}
-	onError={(e) => { e.target.src = defaultIcon; }}
+	      onError={(e) => { e.target.src = defaultIcon; }}
       />
       {size === "big" && (
         <h5 className="iconTitle" style={TITLE_STYLES[size]}>

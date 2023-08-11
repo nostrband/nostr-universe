@@ -12,10 +12,9 @@ import { ContextMenuModal } from "../components/context-menu-modal/ContextMenuMo
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
 import { AppContext } from "../store/app-context";
-import { stringToBech32 } from "../nostr"
+import { stringToBech32 } from "../nostr";
 
 const MainPage = () => {
-
   const contextData = useContext(AppContext);
   const { open, contextInput, setContextInput } = contextData || {};
 
@@ -35,7 +34,7 @@ const MainPage = () => {
   const onOpenEvent = () => {
     setOpenAddr("");
   };
-  
+
   const [showTabMenu, setShowTabMenu] = useState(false);
 
   const onSearch = (str) => {
@@ -45,7 +44,7 @@ const MainPage = () => {
       return true;
     }
 
-    const url = new URL('/', str)
+    const url = new URL("/", str);
     if (url) {
       open(str);
       return true;
@@ -53,56 +52,62 @@ const MainPage = () => {
 
     return false;
   };
-  
+
   return (
     <Container>
       <Header
-	onOpenSearchModal={toggleSearchModalVisibility}
-	onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
-	onOpenTabMenuModal={() => setShowTabMenu(true)}
+        onOpenSearchModal={toggleSearchModalVisibility}
+        onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
+        onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main>
-	{false && <button onClick={() => db.delete()}>Delete DB</button>}
+        {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
-	<TrendingProfiles onOpenProfile={setOpenAddr} />
+        <TrendingProfiles onOpenProfile={setOpenAddr} />
 
-	{true && <AppsList />}
+        {true && <AppsList />}
 
-	<EditKeyModal
-	  isOpen={isEditKeyModalVisible}
-	  onClose={() => setIsEditKeyModalVisible(false)}
-	/>
+        <EditKeyModal
+          isOpen={isEditKeyModalVisible}
+          onClose={() => setIsEditKeyModalVisible(false)}
+        />
 
-	<SearchModal
-	  isOpen={isSearchModalVisible}
-	  onSearch={onSearch}
-	  onClose={toggleSearchModalVisibility}
-	/>
+        <SearchModal
+          isOpen={isSearchModalVisible}
+          onSearch={onSearch}
+          onClose={toggleSearchModalVisibility}
+        />
 
-	<PinAppModal
-	  isOpen={isPinModalVisible}
-	  onClose={togglePinModalVisibility}
-	/>
+        <PinAppModal
+          isOpen={isPinModalVisible}
+          onClose={togglePinModalVisibility}
+        />
 
-	<EventAppsModal
-	  isOpen={openAddr != ""}
-	  onClose={() => setOpenAddr("")}
-	  addr={openAddr}
-	  onSelect={onOpenEvent}
-	/>
+        <EventAppsModal
+          isOpen={openAddr != ""}
+          onClose={() => setOpenAddr("")}
+          addr={openAddr}
+          onSelect={onOpenEvent}
+        />
 
-	<TabMenuModal
-	  isOpen={showTabMenu}
-	  onClose={() => setShowTabMenu(false)}
-	  onOpenWith={(id) => { setShowTabMenu(false); setTimeout(() => setOpenAddr(id), 0) }}
-	/>
+        <TabMenuModal
+          isOpen={showTabMenu}
+          onClose={() => setShowTabMenu(false)}
+          onOpenWith={(id) => {
+            setShowTabMenu(false);
+            setTimeout(() => setOpenAddr(id), 0);
+          }}
+        />
 
-	<ContextMenuModal
-	  isOpen={!!contextInput}
-	  onClose={() => setContextInput("")}
-	  input={contextInput}
-	  onOpenWith={(id) => { setContextInput(""); setTimeout(() => setOpenAddr(id), 0) }}
-	/>
+        <ContextMenuModal
+          isOpen={!!contextInput}
+          onClose={() => setContextInput("")}
+          input={contextInput}
+          onOpenWith={(id) => {
+            setContextInput("");
+            setTimeout(() => setOpenAddr(id), 0);
+          }}
+        />
       </main>
 
       <Footer onOpenPinModal={togglePinModalVisibility} />
