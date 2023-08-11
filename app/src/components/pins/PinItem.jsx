@@ -1,5 +1,5 @@
 import { Avatar, styled } from "@mui/material";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 function getRandomColor() {
   const minBrightness = 50;
@@ -22,7 +22,7 @@ export const PinItem = ({
   useEffect(() => {
     setUrl(image);
   }, [image]);
-  
+
   const errorHandler = () => setUrl("");
 
   return (
@@ -56,7 +56,6 @@ const Container = styled("div")(() => ({
 
 const AvatarContainer = styled("div")(({ background }) => ({
   width: "100%",
-  height: "100%",
   display: "grid",
   placeItems: "center",
   aspectRatio: "1 / 1",
