@@ -72,7 +72,9 @@ export const SwipeableDrawer = () => {
       swipeAreaWidth={`${drawerBleeding}%`}
       disableSwipeToOpen={false}
       allowSwipeInChildren={(e, area, paper) => {
-        paper.style.transform = `translate(0,${paper.clientHeight}px !important)`;
+        setTimeout(() => {
+          paper.style.transform = `translate(0, ${paper.clientHeight}px)`;
+        }, 0);
         return true;
       }}
       ModalProps={{
@@ -80,7 +82,7 @@ export const SwipeableDrawer = () => {
       }}
       transitionDuration={200}
       id="pins"
-      disableDiscovery
+      // disableDiscovery
     >
       <VisibleContent bleedingheight={drawerBleeding} open={open}>
         <Puller onClick={toggleDrawer} />
