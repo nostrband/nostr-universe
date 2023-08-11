@@ -21,7 +21,7 @@ const getInitialBleedingHeight = (windowInstance) => {
 
 export const SwipeableDrawer = () => {
   const [open, setOpen] = useState(false);
-  const [drawerBleeding, setDrawerBleedingHeight] = useState(
+  const [drawerBleeding, setDrawerBleedingHeight] = useState(() =>
     window ? getInitialBleedingHeight(window) : 10.5
   );
 
@@ -72,9 +72,10 @@ export const SwipeableDrawer = () => {
       swipeAreaWidth={`${drawerBleeding}%`}
       disableSwipeToOpen={false}
       allowSwipeInChildren={(e, area, paper) => {
+        // @TODO find a better solution
         setTimeout(() => {
           paper.style.transform = `translate(0, ${paper.clientHeight}px)`;
-        }, 0);
+        }, 1);
         return true;
       }}
       ModalProps={{

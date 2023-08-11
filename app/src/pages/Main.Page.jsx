@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
 import { db } from "../db";
@@ -13,14 +13,22 @@ import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
 import { AppContext } from "../store/app-context";
 import { stringToBech32 } from "../nostr";
+import { useSearchParams } from "react-router-dom";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
   const { open, contextInput, setContextInput } = contextData || {};
 
-  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isSearchModalVisible = Boolean(searchParams.get("search"));
+
   const toggleSearchModalVisibility = () => {
-    setIsSearchModalVisible((prevState) => !prevState);
+    if (!isSearchModalVisible) {
+      searchParams.set("search", true);
+      return setSearchParams(searchParams);
+    }
+    searchParams.delete("search");
+    return setSearchParams(searchParams, { replace: true });
   };
 
   const [isEditKeyModalVisible, setIsEditKeyModalVisible] = useState(false);
@@ -57,7 +65,7 @@ const MainPage = () => {
   return (
     <Container>
       <Header
-        onOpenSearchModal={toggleSearchModalVisibility}
+        onSearchClick={toggleSearchModalVisibility}
         onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
         onOpenTabMenuModal={() => setShowTabMenu(true)}
       />

@@ -8,7 +8,7 @@ import {
   getProfileImage,
   getRenderedUsername,
   getNpub,
-  isGuest
+  isGuest,
 } from "../../utils/helpers/general";
 import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
@@ -17,7 +17,8 @@ const MODAL_SEARCH_PARAM = "change-account";
 
 export const Profile = () => {
   const contextData = useContext(AppContext);
-  const { currentPubkey, onSelectKey, profile, keys, profiles, onAddKey } = contextData || {};
+  const { currentPubkey, onSelectKey, profile, keys, profiles, onAddKey } =
+    contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isChangeAccountModalOpen = Boolean(
@@ -41,7 +42,9 @@ export const Profile = () => {
 
   const currentUsername = getRenderedUsername(profile, currentPubkey);
 
-  const accounts = keys.map(k => { return {pubkey: k, ...profiles?.find(p => p.pubkey === k)} });
+  const accounts = keys.map((k) => {
+    return { pubkey: k, ...profiles?.find((p) => p.pubkey === k) };
+  });
 
   return (
     <>
@@ -50,8 +53,8 @@ export const Profile = () => {
           username={currentUsername}
           profileImage={getProfileImage(profile?.profile)}
           onOpenChangeAccountModal={openChangeAccountModalHandler}
-	  onAddKey={onAddKey}
-	  isGuest={isGuest(currentPubkey)}
+          onAddKey={onAddKey}
+          isGuest={isGuest(currentPubkey)}
         />
         <Tools />
       </Container>
