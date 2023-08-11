@@ -1,21 +1,13 @@
-type User = {
-  name: string
-  isActive: boolean
-}
-
-const user: User = {
-  name: 'Jhon',
-  isActive: true
-}
-
-const arr = [user, user, user]
+import { Route, Routes } from 'react-router-dom'
+import { MainPage } from './pages/MainPage/MainPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 export const App = () => {
-  // const isActiveUser: boolean = user.isActive
-
-  const fn = (a: User[]) => {
-    return a
-  }
-
-  return <>{fn(arr)}</>
+  return (
+    <Routes>
+      <Route path="/" element={<MainPage />}>
+        <Route path="/profile" element={<ProfilePage />} />
+      </Route>
+    </Routes>
+  )
 }
