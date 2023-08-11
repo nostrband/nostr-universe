@@ -13,6 +13,7 @@ export const PinsList = ({ drawerBleeding }) => {
       {pins.map((pin) => {
         return (
           <PinItem
+            key={pin.id}
             image={pin.icon}
             {...pin}
             onClick={() => onOpenPin(pin.url, pin)}

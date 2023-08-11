@@ -52,7 +52,6 @@ const Container = styled("div")(() => ({
 
 const AvatarContainer = styled("div")(({ background }) => ({
   width: "100%",
-  height: "100%",
   display: "grid",
   placeItems: "center",
   aspectRatio: "1 / 1",

@@ -10,11 +10,11 @@ import { AppContext } from "../../store/app-context";
 import { PinItem } from "../pins/PinItem";
 
 const getInitialBleedingHeight = (windowInstance) => {
-  if (windowInstance.innerHeight < 730) {
-    return 13.5;
-  }
   if (windowInstance.innerHeight < 600) {
     return 16.5;
+  }
+  if (windowInstance.innerHeight < 730) {
+    return 13.5;
   }
   return 10.5;
 };
@@ -41,11 +41,11 @@ export const SwipeableDrawer = () => {
     if (!window) return;
 
     const handleResize = () => {
-      if (window.innerHeight < 730) {
-        return setDrawerBleedingHeight(13.5);
-      }
       if (window.innerHeight < 600) {
         return setDrawerBleedingHeight(16.5);
+      }
+      if (window.innerHeight < 730) {
+        return setDrawerBleedingHeight(13.5);
       }
       setDrawerBleedingHeight(10.5);
     };
@@ -71,16 +71,16 @@ export const SwipeableDrawer = () => {
       onOpen={toggleDrawer(true)}
       swipeAreaWidth={`${drawerBleeding}%`}
       disableSwipeToOpen={false}
-      allowSwipeInChildren
+      allowSwipeInChildren={(e, area, paper) => {
+        paper.style.transform = `translate(0,${paper.clientHeight}px !important)`;
+        return true;
+      }}
       ModalProps={{
         keepMounted: true,
       }}
       transitionDuration={200}
-      hysteresis={0.7}
       id="pins"
-      SlideProps={{
-        draggable: false,
-      }}
+      disableDiscovery
     >
       <VisibleContent bleedingheight={drawerBleeding} open={open}>
         <Puller onClick={toggleDrawer} />
@@ -94,6 +94,7 @@ export const SwipeableDrawer = () => {
           {pins.map((pin) => {
             return (
               <PinItem
+                key={pin.id}
                 image={pin.icon}
                 {...pin}
                 onClick={() => onOpenPin(pin.url, pin)}
@@ -104,6 +105,7 @@ export const SwipeableDrawer = () => {
           {renderedTabs.map((tab) => {
             return (
               <PinItem
+                key={tab.id}
                 image={tab.icon}
                 {...tab}
                 onClick={() => onOpenTab(tab)}
@@ -118,18 +120,13 @@ export const SwipeableDrawer = () => {
 };
 
 const TabsContainer = styled("div")(({ length }) => ({
-  display: "flex",
-  flexDirection: "row",
-  flexWrap: "wrap",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  padding: "1rem 1rem",
-  columnGap: "0.75rem",
-  rowGap: "1rem",
+  display: "grid",
+  gridTemplateColumns: `repeat(auto-fill, minmax(56px, 1fr))`,
+  gap: "1rem",
+  padding: "1rem",
   overflowY: "hidden",
   "& > .item": {
-    width: `calc(100% / ${length})`,
-    minWidth: "56px",
+    width: "100%",
     minHeight: "56px",
   },
 }));
@@ -151,7 +148,7 @@ const StyledSwipeableDrawer = styled(MuiSwipeableDrawer)(
 
 const VisibleContent = styled(Box)(({ bleedingheight, open }) => ({
   position: "absolute",
-  top: open ? "-1rem" : `-${bleedingheight + 3}%`,
+  top: open ? "calc(-1rem + 1px)" : `-${bleedingheight + 3}%`,
   borderTopLeftRadius: "2rem",
   borderTopRightRadius: "2rem",
   visibility: "visible",
