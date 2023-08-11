@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { AiOutlineClose } from 'react-icons/ai'
-import { fetchEventByBech32, stringToBech32 } from "../../nostr";
+import { fetchEventByBech32, stringToBech32, launchZapDialog } from "../../nostr";
 import { AppContext } from "../../store/app-context";
 import { Tools } from "../profile/tools/Tools";
 import {
@@ -57,7 +57,7 @@ export const TabMenu = ({ onClose, onOpenWith }) => {
 	    title: "Zap",
 	    id: "zap",
 	    Icon: () => (<img width={23} height={23} src={zapIcon} />),
-	    onClick: () => console.log("zap", id),
+	    onClick: () => launchZapDialog(id, event),
 	  });
 	}
 

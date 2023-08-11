@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AiOutlineClose } from 'react-icons/ai'
-import { fetchEventByBech32, stringToBech32 } from "../../nostr";
+import { fetchEventByBech32, stringToBech32, launchZapDialog } from "../../nostr";
 import { Tools } from "../profile/tools/Tools";
 import {
   openWithIcon,
@@ -35,6 +35,9 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	  switch (action) {
 	    case "open-with":
 	      onOpenWith(id, event);
+	      break;
+	    case "zap":
+	      launchZapDialog(id, event);
 	      break;
 	  }
 	}
