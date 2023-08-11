@@ -26,6 +26,7 @@ import {
   fetchApps,
   subscribeProfiles,
   fetchAppsForEvent,
+  stringToBech32,
 } from "../nostr";
 import { browser } from "../browser";
 import { allRelays } from "../nostr";
@@ -258,6 +259,7 @@ const AppContextProvider = ({ children }) => {
   const [openKey, setOpenKey] = useState();
 
   const [openEventAddr, setOpenEventAddr] = useState("");
+  const [contextInput, setContextInput] = useState("");
 
   const API = {
     setUrl: async function (tab, url) {
@@ -268,10 +270,10 @@ const AppContextProvider = ({ children }) => {
         await updateTab(tab);
       }
     },
-    showEventMenu: async function (tab, id) {
+    showContextMenu: async function (tab, id) {
       if (tab) {
-	console.log("tab", tab.id, "event menu", id);
-	// FIXME implement
+	console.log("event menu", id);
+	setContextInput(id);
       }
     },
     decodeBech32: function (tab, s) {
@@ -700,7 +702,7 @@ const AppContextProvider = ({ children }) => {
       lastCurrentTab: null,
     });
   };
-
+  
   return (
     <AppContext.Provider
       value={{
@@ -730,6 +732,8 @@ const AppContextProvider = ({ children }) => {
         currentWorkspace,
         onModalOpen,
         onModalClose,
+	contextInput,
+	setContextInput
       }}
     >
       {children}

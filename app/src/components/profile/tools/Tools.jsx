@@ -2,11 +2,11 @@ import { styled } from "@mui/material";
 import React from "react";
 import { ToolsList } from "./ToolsList";
 
-export const Tools = () => {
+export const Tools = ({tools}) => {
   return (
     <Container>
-      <h3>Tools</h3>
-      <ToolsList />
+      {!tools && (<h3>Tools</h3>)}
+      <ToolsList tools={tools} />
     </Container>
   );
 };

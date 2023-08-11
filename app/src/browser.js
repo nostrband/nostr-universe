@@ -36,7 +36,7 @@ const initTab = () => {
     //    for (const name of apiMethods)
     //      window.nostrCordovaPlugin[name] = _gen(name);
     window.nostrCordovaPlugin.setUrl = _gen("setUrl");
-    window.nostrCordovaPlugin.showEventMenu = _gen("showEventMenu");
+    window.nostrCordovaPlugin.showContextMenu = _gen("showContextMenu");
     window.nostrCordovaPlugin.decodeBech32 = _gen("decodeBech32");
   };
 
@@ -76,10 +76,8 @@ const nostrMenuConnect = () => {
   }
 
   const touchStart = (e) => {
-    try {
-      // Error: unable to preventdefault inside passive event listener due to target being treated as passive
-      e.preventDefault();
-    } catch (e) {}
+    // Error: unable to preventdefault inside passive event listener due to target being treated as passive
+    //  e.preventDefault();
 
     const touch = e.touches?.item(0) || e;
     if (!timer) {
@@ -143,7 +141,7 @@ const nostrMenuConnect = () => {
 
     console.log("menu for event", bech32);
 
-    window.nostrCordovaPlugin.showEventMenu(bech32);
+    window.nostrCordovaPlugin.showContextMenu(bech32);
 
 //    const d = document.createElement("div");
 //    d.setAttribute("data-npub", bech32);
@@ -168,11 +166,11 @@ const nostrMenuConnect = () => {
     console.log("longtouch", t);
     try {
       return await menuByAttr(t, "href")
-        || await menuByAttr(t, "id")
-        || await menuByAttr(t, "data-npub")
-        || await menuByAttr(t, "data-id")
-        || await menuByAttr(t, "data-note-id")
-        ;
+          || await menuByAttr(t, "id")
+          || await menuByAttr(t, "data-npub")
+          || await menuByAttr(t, "data-id")
+          || await menuByAttr(t, "data-note-id")
+      ;
     } catch (e) {
       console.log("menu failed", t);
     }

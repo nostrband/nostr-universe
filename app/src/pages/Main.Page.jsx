@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
 import { db } from "../db";
@@ -8,10 +8,17 @@ import { SearchModal } from "../components/search-modal/SearchModal";
 import { PinAppModal } from "../components/pin-app-modal/PinAppModal";
 import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
 import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
+import { ContextMenuModal } from "../components/context-menu-modal/ContextMenuModal";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
+import { AppContext } from "../store/app-context";
+import { stringToBech32 } from "../nostr"
 
 const MainPage = () => {
+
+  const contextData = useContext(AppContext);
+  const { open, contextInput, setContextInput } = contextData || {};
+
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const toggleSearchModalVisibility = () => {
     setIsSearchModalVisible((prevState) => !prevState);
@@ -30,6 +37,22 @@ const MainPage = () => {
   };
   
   const [showTabMenu, setShowTabMenu] = useState(false);
+
+  const onSearch = (str) => {
+    const b32 = stringToBech32(str);
+    if (b32) {
+      setOpenAddr(b32);
+      return true;
+    }
+
+    const url = new URL('/', str)
+    if (url) {
+      open(str);
+      return true;
+    }
+
+    return false;
+  };
   
   return (
     <Container>
@@ -52,6 +75,7 @@ const MainPage = () => {
 
 	<SearchModal
 	  isOpen={isSearchModalVisible}
+	  onSearch={onSearch}
 	  onClose={toggleSearchModalVisibility}
 	/>
 
@@ -72,12 +96,19 @@ const MainPage = () => {
 	  onClose={() => setShowTabMenu(false)}
 	  onOpenWith={(id) => { setShowTabMenu(false); setTimeout(() => setOpenAddr(id), 0) }}
 	/>
+
+	<ContextMenuModal
+	  isOpen={!!contextInput}
+	  onClose={() => setContextInput("")}
+	  input={contextInput}
+	  onOpenWith={(id) => { setContextInput(""); setTimeout(() => setOpenAddr(id), 0) }}
+	/>
       </main>
 
       <Footer onOpenPinModal={togglePinModalVisibility} />
     </Container>
   );
-    };
+};
 
 const Container = styled("div")`
   min-height: 100%;
