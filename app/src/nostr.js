@@ -671,3 +671,13 @@ export function connect() {
 
   return ndk.connect(/* timeoutMs */ 1000, /* minConns */ 3);
 }
+
+export function launchZapDialog(id, event) {
+  const d = document.createElement("div");
+  d.setAttribute("data-npub", nip19.npubEncode(event.pubkey));
+  if (event.kind != 0)
+    d.setAttribute("data-note-id", nip19.noteEncode(event.id));
+  window.nostrZap.initTarget(d);
+  d.click();
+  d.remove();
+}

@@ -7,6 +7,8 @@
   </author>
   <access origin="*" />
   <content src="index.html" />
+  <allow-intent href="lightning:*" />
+  <allow-intent href="nostr:*" />
   <allow-intent href="http://*/*" />
   <allow-intent href="https://*/*" />
   <allow-navigation href="http://*/*" />
