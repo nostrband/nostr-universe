@@ -26,7 +26,10 @@ export const SearchModal = ({ isOpen, onClose, onSearch }) => {
             placeholder="Search"
             endAdornment={<SearchIcon />}
             onChange={({ target }) => setSearchValue(target.value)}
-            autoFocus
+            autoFocus={true}
+            inputProps={{
+              autoFocus: true,
+            }}
           />
           <IconButton type="submit">
             <BsArrowRightCircle color="white" size={30} />
