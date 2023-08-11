@@ -20,10 +20,9 @@ const getRenderedProfiles = (profiles, isLoading) => {
 
 export const TrendingProfiles = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
-  const { workspaces, currentPubkey, onOpenEvent } = contextData || {};
+  const { currentWorkspace, onOpenEvent } = contextData || {};
 
-  const ws = workspaces.find((w) => w.pubkey === currentPubkey);
-  const trendingProfiles = ws?.trendingProfiles || [];
+  const trendingProfiles = currentWorkspace?.trendingProfiles || [];
 
   const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);

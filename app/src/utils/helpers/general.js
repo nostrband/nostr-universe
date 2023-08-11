@@ -16,11 +16,15 @@ export const getProfileImage = (profile) => {
   return "";
 };
 
+export const isGuest = (pubkey) => {
+  return pubkey.length != 64;
+}
+
 export const getRenderedUsername = (profile, pubkey) => {
   return (
     profile?.profile?.display_name ||
     profile?.profile?.name ||
-    (pubkey.length == 64 ? getShortenText(getNpub(pubkey)) : "Guest")
+    (isGuest(pubkey) ? "Guest" : getShortenText(getNpub(pubkey)))
   );
 };
 

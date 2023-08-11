@@ -1,5 +1,5 @@
 import { Avatar, styled } from "@mui/material";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 function getRandomColor() {
   const minBrightness = 50;
@@ -16,9 +16,13 @@ export const PinItem = ({
   onClick,
   withTitle,
 }) => {
-  const [url, setUrl] = useState(image);
+  const [url, setUrl] = useState("");
   const colorRef = useRef(getRandomColor());
 
+  useEffect(() => {
+    setUrl(image);
+  }, [image]);
+  
   const errorHandler = () => setUrl("");
 
   return (
