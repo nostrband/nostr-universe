@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { AiOutlineClose } from 'react-icons/ai'
-import { fetchEventByBech32, stringToBech32 } from "../../nostr";
+import { fetchEventByBech32, stringToBech32, launchZapDialog } from "../../nostr";
 import { Tools } from "../profile/tools/Tools";
+import {
+  openWithIcon,
+  zapIcon,
+} from "../../assets";
 
 export const ContextMenu = ({ input, onClose, onOpenWith }) => {
   
@@ -32,6 +36,9 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	    case "open-with":
 	      onOpenWith(id, event);
 	      break;
+	    case "zap":
+	      launchZapDialog(id, event);
+	      break;
 	  }
 	}
 
@@ -39,7 +46,7 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	  {
 	    title: "Open with",
 	    id: "open-with",
-	    Icon: () => (<div></div>),
+	    Icon: () => (<img width={23} height={23} src={openWithIcon} />),
 	    onClick: onAction,
 	  },
 	];
@@ -48,7 +55,7 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	  tools.push({
 	    title: "Zap",
 	    id: "zap",
-	    Icon: () => (<div></div>),
+	    Icon: () => (<img width={23} height={23} src={zapIcon} />),
 	    onClick: onAction,
 	  });
 	}
@@ -75,7 +82,7 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	<div className="d-flex flex-column p-3 justify-content-start align-items-start">
 	  {!id && ("Loading...")}
 	  {id && (
-	    <div>
+	    <div style={{maxWidth:"100%"}}>
 	      {!event && (<>Id: {id}</>)}
 	      {event && (
 		<div>

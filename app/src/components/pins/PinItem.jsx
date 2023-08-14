@@ -27,13 +27,13 @@ export const PinItem = ({
 
   return (
     <Container className="item" onClick={onClick}>
-      <AvatarContainer background={colorRef.current}>
+      <AvatarContainer background={url ? "black" : colorRef.current}>
         <Avatar
           className="pin_app_avatar"
           src={url}
           imgProps={{ onError: errorHandler }}
         >
-          {title[0]}
+          {(title || "?").toUpperCase()[0]}
         </Avatar>
       </AvatarContainer>
       {withTitle && <p className="title">{title}</p>}

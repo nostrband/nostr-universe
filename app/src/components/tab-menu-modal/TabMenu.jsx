@@ -1,15 +1,19 @@
 import { useState, useEffect, useContext } from "react";
 import { AiOutlineClose } from 'react-icons/ai'
-import { fetchEventByBech32, stringToBech32 } from "../../nostr";
+import { fetchEventByBech32, stringToBech32, launchZapDialog } from "../../nostr";
 import { AppContext } from "../../store/app-context";
 import { Tools } from "../profile/tools/Tools";
+import {
+  openWithIcon,
+  zapIcon,
+} from "../../assets";
 
 export const TabMenu = ({ onClose, onOpenWith }) => {
 
   const contextData = useContext(AppContext);
   const { currentWorkspace, apps } = contextData || {};
 
-  const tab = currentWorkspace?.lastCurrentTab;
+  const tab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace?.lastCurrentTabId);
   
   const [url, setUrl] = useState("");
   const [app, setApp] = useState(null);
@@ -43,7 +47,7 @@ export const TabMenu = ({ onClose, onOpenWith }) => {
 	  {
 	    title: "Open with",
 	    id: "open-with",
-	    Icon: () => (<div></div>),
+	    Icon: () => (<img width={23} height={23} src={openWithIcon} />),
 	    onClick: () => onOpenWith(id),
 	  },
 	];
@@ -52,8 +56,8 @@ export const TabMenu = ({ onClose, onOpenWith }) => {
 	  tools.push({
 	    title: "Zap",
 	    id: "zap",
-	    Icon: () => (<div></div>),
-	    onClick: () => console.log("zap", id),
+	    Icon: () => (<img width={23} height={23} src={zapIcon} />),
+	    onClick: () => launchZapDialog(id, event),
 	  });
 	}
 
@@ -82,7 +86,7 @@ export const TabMenu = ({ onClose, onOpenWith }) => {
 	<div className="d-flex flex-column p-3 justify-content-start align-items-start">
 	  {!url && ("Loading...")}
 	  {url && (
-	    <div>
+	    <div style={{maxWidth:"100%"}}>
 	      <div style={{overflowWrap: "break-word", width:"100%"}}>
 		URL: {url}
 	      </div>

@@ -464,23 +464,27 @@ const AppContextProvider = ({ children }) => {
     updateWorkspace({ currentTabId: tab.id });
 
     const params = {
+      id: tab.id,
       url: tab.url,
       hidden: true,
       apiCtx: tab.id,
     };
 
-    // open the browser
-    tab.ref = await browser.open(params);
+    updateTab({ opened: true }, tab.id);
 
-    // set ref to context
-    updateTab({ ref: tab.ref }, tab.id);
+    // open the browser
+    await browser.open(params);
+  };
+
+  const ensureBrowser = async (tab) => {
+    if (!tab.opened) await createTabBrowser(tab);
   };
 
   const close = async (tab) => {
     hide(tab);
 
     await dbi.deleteTab(tab.id);
-    tab.ref.close();
+    browser.close(tab.id);
 
     updateWorkspace((ws) => {
       return {
@@ -491,7 +495,7 @@ const AppContextProvider = ({ children }) => {
 
   const hide = (tab) => {
     if (tab) {
-      tab.ref.hide();
+      browser.hide(tab.id);
       updateWorkspace({ currentTabId: "" });
     }
 
@@ -514,9 +518,9 @@ const AppContextProvider = ({ children }) => {
     return new Promise((ok) => {
       setTimeout(async () => {
         // schedule the open after task bar is changed
-        if (!tab.ref) await createTabBrowser(tab);
+        await ensureBrowser(tab);
 
-        await tab.ref.show();
+        await browser.show(tab.id);
         updateWorkspace({ currentTabId: tab.id });
         ok();
       }, 0);
@@ -564,7 +568,6 @@ const AppContextProvider = ({ children }) => {
       icon: pin ? pin.icon : U.origin + "/favicon.ico",
       url,
       order: currentWorkspace.tabs.length + 1,
-      ref: null, // filled below
       pinned: pin && pin.id,
     };
     if (pin) tab.appNaddr = pin.appNaddr;
@@ -574,7 +577,7 @@ const AppContextProvider = ({ children }) => {
     updateWorkspace((ws) => {
       return {
         tabs: [...ws.tabs, tab],
-        lastCurrentTab: "", // make sure previous active tab doesn't reopen on modal close
+        lastCurrentTabId: "", // make sure previous active tab doesn't reopen on modal close
       };
     });
 
@@ -651,7 +654,7 @@ const AppContextProvider = ({ children }) => {
       if (app) {
         setPinApp(app);
         openPinAppModal();
-        currentTab.ref.hide();
+        browser.hide(currentTab.id);
       } else {
         savePin([]);
       }
@@ -687,8 +690,6 @@ const AppContextProvider = ({ children }) => {
     updateTab({ pinned: true }, tab.id);
 
     dbi.addPin(pin);
-
-    //    currentTab.ref.show();
   };
 
   const onModalOpen = () => {

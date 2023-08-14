@@ -137,7 +137,7 @@ export async function fetchApps() {
 
   // convert to a convenient app object
   const apps = [];
-  events.map((e) => {
+  events.forEach((e) => {
     // app author
     const author = profiles.find((p) => p.pubkey == e.pubkey);
 
@@ -167,6 +167,9 @@ export async function fetchApps() {
         type: url_type[1],
       };
     });
+
+    if (Object.keys(handlers).length == 0)
+      return;
 
     const app = {
       naddr: nip19.naddrEncode({
@@ -667,4 +670,14 @@ export function connect() {
   ndk = new NDK({ explicitRelayUrls: allRelays });
 
   return ndk.connect(/* timeoutMs */ 1000, /* minConns */ 3);
+}
+
+export function launchZapDialog(id, event) {
+  const d = document.createElement("div");
+  d.setAttribute("data-npub", nip19.npubEncode(event.pubkey));
+  if (event.kind != 0)
+    d.setAttribute("data-note-id", nip19.noteEncode(event.id));
+  window.nostrZap.initTarget(d);
+  d.click();
+  d.remove();
 }
