@@ -9,6 +9,10 @@ export const getNpub = (key) => {
   return nip19.npubEncode(key);
 };
 
+export const getNoteId = (key) => {
+  return nip19.noteEncode(key);
+};
+
 export const getProfileImage = (profile) => {
   if (profile && profile?.picture) {
     return profile.picture;
