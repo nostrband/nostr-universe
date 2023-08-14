@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -81,14 +81,14 @@ export const SwipeableDrawer = () => {
         // @TODO find a better solution
         setTimeout(() => {
           paper.style.transform = `translate(0, ${paper.clientHeight}px)`;
-        }, 1);
+        }, 0);
         return true;
       }}
       ModalProps={{
         keepMounted: true,
       }}
       transitionDuration={200}
-      id="pins"
+      disablePortal
       // disableDiscovery
     >
       <VisibleContent bleedingheight={drawerBleeding} open={open}>

@@ -9,12 +9,10 @@ import { SearchIcon } from "../../assets";
 export const SearchModal = ({ isOpen, onClose, onSearch }) => {
   const [searchValue, setSearchValue] = useState("");
 
-  const submitHandler = (ev) => {
-    ev.preventDefault();
-
-    if (onSearch(searchValue)) {
-      onClose();
-    }
+  const submitHandler = (e) => {
+    e.preventDefault();
+    onSearch(searchValue);
+    onClose();
   };
 
   return (
