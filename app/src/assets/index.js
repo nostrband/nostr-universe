@@ -24,3 +24,7 @@ export { ReactComponent as PlusIcon } from "./icons/plus-icon.svg";
 
 export { default as openWithIcon } from "./icons/open-with.svg";
 export { default as zapIcon } from "./icons/zap.svg";
+export { default as homeIcon } from "./icons/home.svg";
+export { default as unpinIcon } from "./icons/unpin.svg";
+export { default as pinIcon } from "./icons/pin.svg";
+export { default as closeIcon } from "./icons/close.svg";

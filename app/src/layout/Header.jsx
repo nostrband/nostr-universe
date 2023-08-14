@@ -95,6 +95,7 @@ const ActionsContainer = styled("div")(() => ({
   display: "flex",
   alignItems: "center",
 }));
+
 const StyledIconButton = styled(IconButton)(() => ({
   width: "44px",
   height: "44px",

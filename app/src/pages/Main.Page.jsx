@@ -94,10 +94,8 @@ const MainPage = () => {
         <TabMenuModal
           isOpen={showTabMenu}
           onClose={() => setShowTabMenu(false)}
-          onOpenWith={(id) => {
-            setShowTabMenu(false);
-            setTimeout(() => setOpenAddr(id), 0);
-          }}
+          onOpenWith={setOpenAddr}
+	  onOpenPinAppModal={togglePinModalVisibility}
         />
 
         <ContextMenuModal
