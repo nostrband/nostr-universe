@@ -6,14 +6,17 @@ import { Tools } from "../profile/tools/Tools";
 import {
   openWithIcon,
   zapIcon,
+  pinIcon,
+  unpinIcon,
+  closeIcon,
 } from "../../assets";
 
-export const TabMenu = ({ onClose, onOpenWith }) => {
+export const TabMenu = ({ onClose, onOpenWith, onOpenPinAppModal }) => {
 
   const contextData = useContext(AppContext);
-  const { currentWorkspace, apps } = contextData || {};
+  const { lastCurrentTab, onCloseTab, pinTab, unpinTab, apps } = contextData || {};
 
-  const tab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace?.lastCurrentTabId);
+  const tab = lastCurrentTab;
   
   const [url, setUrl] = useState("");
   const [app, setApp] = useState(null);
@@ -37,20 +40,48 @@ export const TabMenu = ({ onClose, onOpenWith }) => {
 	setApp(app);
       }
 
+      const tools = [];
+
+      const onClick = (cb) => {
+	onClose();
+	setTimeout(cb, 0);
+      };
+
+      tools.push({
+	title: "Close tab",
+	id: "close-tab",
+	Icon: () => (<img width={23} height={23} src={closeIcon} />),
+	onClick: () => onClick(onCloseTab),
+      });
+
+      if (tab.pinned) {
+	tools.push({
+	  title: "Unpin app",
+	  id: "unpin-app",
+	  Icon: () => (<img width={23} height={23} src={unpinIcon} />),
+	  onClick: () => onClick(unpinTab),
+	});
+      } else {
+	tools.push({
+	  title: "Pin tab",
+	  id: "pin-tab",
+	  Icon: () => (<img width={23} height={23} src={pinIcon} />),
+	  onClick: () => onClick(() => pinTab(onOpenPinAppModal)),
+	});
+      }
+
       // Event:
       if (id) {
 	const event = await fetchEventByBech32(id);
 	console.log("id", id, "event", event);
 	setEvent(event);
 
-	const tools = [
-	  {
-	    title: "Open with",
-	    id: "open-with",
-	    Icon: () => (<img width={23} height={23} src={openWithIcon} />),
-	    onClick: () => onOpenWith(id),
-	  },
-	];
+	tools.push({
+	  title: "Open with",
+	  id: "open-with",
+	  Icon: () => (<img width={23} height={23} src={openWithIcon} />),
+	  onClick: () => onClick(() => onOpenWith(id)),
+	});
 
 	if (event.kind == 0 || event.kind == 1) {
 	  tools.push({
@@ -61,11 +92,9 @@ export const TabMenu = ({ onClose, onOpenWith }) => {
 	  });
 	}
 
-	setTools(tools);
       }
 
-      // Tab:
-      
+      setTools(tools);
     };
 
     if (tab)
@@ -96,17 +125,14 @@ export const TabMenu = ({ onClose, onOpenWith }) => {
 		</div>
 	      )}
 	      {event && (
-		<div>
-		  <div style={{overflowWrap: "break-word", width:"100%"}}>
-		    Event: {id}
-		  </div>
-
-		  <Tools tools={tools} />
+		<div style={{overflowWrap: "break-word", width:"100%"}}>
+		  Event: {id}
 		</div>
 	      )}
+
+	      <Tools tools={tools} />
 	    </div>
 	  )}
-    
 	</div>
       </div>
     </div>

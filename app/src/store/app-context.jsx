@@ -351,9 +351,8 @@ const AppContextProvider = ({ children }) => {
   }, []);
 
   const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
-  const currentTab = currentWorkspace?.tabs.find(
-    (t) => t.id === currentWorkspace.currentTabId
-  );
+  const currentTab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace.currentTabId);
+  const lastCurrentTab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace.lastCurrentTabId);
   const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
 
   const updateWorkspace = (cbProps, pubkey) => {
@@ -622,6 +621,7 @@ const AppContextProvider = ({ children }) => {
   const closeTab = () => {
     console.log("closeTab");
     if (currentTab) close(currentTab);
+    if (lastCurrentTab) close(lastCurrentTab);
   };
 
   const hideTab = () => {
@@ -630,6 +630,34 @@ const AppContextProvider = ({ children }) => {
   };
 
   const showTabs = () => {};
+
+  const unpinTab = () => {
+    const tab = lastCurrentTab;
+    if (!tab || !tab.pinned) return;
+      
+    const pin = currentWorkspace.pins.find((p) => p.appNaddr == tab.appNaddr);
+    if (pin) {
+      updateWorkspace((ws) => { return {
+        pins: ws.pins.filter((p) => p.id != pin.id),
+      }});
+      updateTab({ pinned: false }, tab.id);
+      dbi.deletePin(pin.id);
+    }
+  };
+
+  const pinTab = (openPinAppModal) => {
+    const tab = lastCurrentTab;
+    if (!tab || tab.pinned) return;
+    
+    const app = apps.find((a) => a.naddr == tab.appNaddr);
+    if (app) {
+      setPinApp(app);
+      openPinAppModal();
+      browser.hide(tab.id);
+    } else {
+      savePin([]);
+    }
+  };
 
   const togglePinTab = (openPinAppModal) => {
     if (!currentTab) return;
@@ -662,11 +690,7 @@ const AppContextProvider = ({ children }) => {
   };
 
   const savePin = (perms) => {
-    const lastCurrentTabId = currentWorkspace.lastCurrentTabId;
-    console.log("onModalClose", lastCurrentTabId);
-    if (!lastCurrentTabId) return;
-
-    const tab = getTab(lastCurrentTabId);
+    const tab = lastCurrentTab;
     if (!tab) return;
 
     const pin = {
@@ -745,10 +769,13 @@ const AppContextProvider = ({ children }) => {
         pinApp,
         onSavePin: savePin,
         onTogglePin: togglePinTab,
+	pinTab,
+	unpinTab,
         onOpenEvent: setOpenEventAddr,
         workspaces,
         currentWorkspace,
         currentTab,
+        lastCurrentTab,
         onModalOpen,
         onModalClose,
         contextInput,
