@@ -59,6 +59,12 @@ export const SwipeableDrawer = () => {
   const container =
     window !== undefined ? () => window.document.body : undefined;
 
+  useEffect(() => {
+    return () => {
+      setOpen(false);
+    };
+  }, []);
+
   return (
     <StyledSwipeableDrawer
       container={container}
