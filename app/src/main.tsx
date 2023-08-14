@@ -1,15 +1,15 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
+import { StyledEngineProvider } from '@mui/material/styles'
 import { ThemeProvider } from './modules/theme/ThemeProvider.tsx'
 import { App } from './App.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ThemeProvider>
-      <HashRouter>
+  <ThemeProvider>
+    <HashRouter>
+      <StyledEngineProvider injectFirst>
         <App />
-      </HashRouter>
-    </ThemeProvider>
-  </React.StrictMode>
+      </StyledEngineProvider>
+    </HashRouter>
+  </ThemeProvider>
 )

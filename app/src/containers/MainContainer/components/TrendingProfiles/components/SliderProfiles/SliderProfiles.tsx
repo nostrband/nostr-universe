@@ -2,13 +2,13 @@ import { Swiper, SwiperSlide } from 'swiper/react'
 import { FreeMode } from 'swiper/modules'
 import { Profile } from '../Profile/Profile'
 import { ISliderProfiles } from './types'
+import { StyledSlideWrapper } from './styled'
 import 'swiper/css'
 import './style.css'
 
 export const SliderProfiles = ({ data }: ISliderProfiles) => {
   return (
     <Swiper
-      spaceBetween={20}
       slidesPerView="auto"
       freeMode={true}
       onSlideChange={() => console.log('slide change')}
@@ -17,7 +17,9 @@ export const SliderProfiles = ({ data }: ISliderProfiles) => {
     >
       {data.map((profile, i) => (
         <SwiperSlide key={i}>
-          <Profile profile={profile} />
+          <StyledSlideWrapper>
+            <Profile profile={profile} />
+          </StyledSlideWrapper>
         </SwiperSlide>
       ))}
     </Swiper>

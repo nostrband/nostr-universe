@@ -1,7 +1,7 @@
-import { Typography } from '@mui/material'
-import { StyledWrapper } from './styled'
 import { ITrendingProfiles } from './types'
 import { SliderProfiles } from './components/SliderProfiles/SliderProfiles'
+import { Container } from '../../../../layout/Container/Conatiner'
+import { StyledTitle, StyledWrapper } from './styled'
 
 const dataTrendingProfiles: ITrendingProfiles = [
   {
@@ -29,9 +29,11 @@ const dataTrendingProfiles: ITrendingProfiles = [
 export const TrendingProfiles = () => {
   return (
     <StyledWrapper>
-      <Typography variant="h5" gutterBottom component="div">
-        Trending Profiles
-      </Typography>
+      <Container>
+        <StyledTitle variant="h5" gutterBottom component="div">
+          Trending Profiles
+        </StyledTitle>
+      </Container>
 
       <SliderProfiles data={dataTrendingProfiles} />
     </StyledWrapper>

@@ -40,6 +40,7 @@
     "husky": "^8.0.0",
     "lint-staged": "^13.2.3",
     "prettier": "^3.0.1",
+    "sass": "^1.65.1",
     "typescript": "^5.0.2",
     "vite": "^4.4.5"
   }

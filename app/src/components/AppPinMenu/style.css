@@ -1,0 +1,9 @@
+.swiper-slide {
+  width: fit-content;
+  padding-right: 8px;
+
+  &:first-child {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
