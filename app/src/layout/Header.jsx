@@ -1,45 +1,26 @@
 import React, { useContext } from "react";
-import { nip19 } from "@nostrband/nostr-tools";
-import Dropdown from "react-bootstrap/Dropdown";
-import { BsFillPersonFill } from "react-icons/bs";
-import { BiSolidPencil } from "react-icons/bi";
-import Button from "react-bootstrap/Button";
-import { getProfileImage, getShortenText } from "../utils/helpers/general";
+import { getProfileImage } from "../utils/helpers/general";
 import { AppContext } from "../store/app-context";
 import { Avatar, Container, Divider, IconButton, styled } from "@mui/material";
-import { SearchIcon, MeatballsIcon, ServerIcon, WalletIcon } from "../assets";
+import {
+  SearchIcon,
+  MeatballsIcon,
+  ServerIcon,
+  WalletIcon,
+  SecondaryCloseIcon,
+} from "../assets";
 import { useNavigate } from "react-router-dom";
 
-const getRenderedKeys = (keys) => {
-  if (!keys || keys.length === 0) {
-    return [];
-  }
-  return keys.map((key) => nip19.npubEncode(key));
-};
-
 export const Header = ({
-  onOpenSearchModal,
-  onOpenEditKeyModal,
+  onSearchClick,
   onOpenTabMenuModal,
+  searchMode = false,
+  onClose = () => {},
 }) => {
   const contextData = useContext(AppContext);
   const navigate = useNavigate();
 
-  const {
-    currentTab,
-    keys,
-    profile,
-    onAddKey,
-    onSelectKey,
-    setOpenKey,
-  } = contextData || {};
-
-  const renderedKeys = getRenderedKeys(keys);
-
-  const editKeyHandler = (index) => {
-    onOpenEditKeyModal();
-    setOpenKey(keys[index]);
-  };
+  const { currentTab, profile } = contextData || {};
 
   const navigateToProfilePage = () => {
     navigate("/profile");
@@ -54,22 +35,26 @@ export const Header = ({
           onClick={navigateToProfilePage}
         />
         <ActionsContainer>
-          {false && (
-            <>
-              <StyledIconButton>
-                <ServerIcon />
-              </StyledIconButton>
-              <StyledIconButton>
-                <WalletIcon />
-              </StyledIconButton>
-            </>
-          )}
-          <StyledIconButton onClick={onOpenSearchModal}>
-            <SearchIcon />
+          <StyledIconButton>
+            <ServerIcon />
           </StyledIconButton>
+          <StyledIconButton>
+            <WalletIcon />
+          </StyledIconButton>
+          {!searchMode && (
+            <StyledIconButton onClick={onSearchClick}>
+              <SearchIcon />
+            </StyledIconButton>
+          )}
           {currentTab && (
             <StyledIconButton onClick={onOpenTabMenuModal}>
               <MeatballsIcon />
+            </StyledIconButton>
+          )}
+
+          {searchMode && (
+            <StyledIconButton onClick={onClose}>
+              <SecondaryCloseIcon />
             </StyledIconButton>
           )}
         </ActionsContainer>

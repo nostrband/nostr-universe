@@ -20,13 +20,15 @@ export const Footer = ({ onOpenPinModal }) => {
 
   return (
     <footer id="footer">
-      <SwipeableDrawer />
+      <div id="pins" className="d-block">
+        <SwipeableDrawer />
+      </div>
       <>
         {currentWorkspace && (
           <div
             id="tab-menu"
             className="container d-none justify-content-between align-items-center gap-1"
-            style={{ position: "relative", zIndex: 1200 }}
+            style={{ position: "relative", zIndex: 1200, background: "#000" }}
           >
             <div className="me-3">
 	      <div className="d-flex justify-content-start align-items-center">
