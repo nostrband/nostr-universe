@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -21,7 +21,7 @@ const getInitialBleedingHeight = (windowInstance) => {
 
 export const SwipeableDrawer = () => {
   const [open, setOpen] = useState(false);
-  const [drawerBleeding, setDrawerBleedingHeight] = useState(
+  const [drawerBleeding, setDrawerBleedingHeight] = useState(() =>
     window ? getInitialBleedingHeight(window) : 10.5
   );
 
@@ -59,6 +59,12 @@ export const SwipeableDrawer = () => {
   const container =
     window !== undefined ? () => window.document.body : undefined;
 
+  useEffect(() => {
+    return () => {
+      setOpen(false);
+    };
+  }, []);
+
   return (
     <StyledSwipeableDrawer
       container={container}
@@ -72,6 +78,7 @@ export const SwipeableDrawer = () => {
       swipeAreaWidth={`${drawerBleeding}%`}
       disableSwipeToOpen={false}
       allowSwipeInChildren={(e, area, paper) => {
+        // @TODO find a better solution
         setTimeout(() => {
           paper.style.transform = `translate(0, ${paper.clientHeight}px)`;
         }, 0);
@@ -81,7 +88,7 @@ export const SwipeableDrawer = () => {
         keepMounted: true,
       }}
       transitionDuration={200}
-      id="pins"
+      disablePortal
       // disableDiscovery
     >
       <VisibleContent bleedingheight={drawerBleeding} open={open}>

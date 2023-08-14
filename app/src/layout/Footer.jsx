@@ -17,13 +17,15 @@ export const Footer = ({ onOpenPinModal }) => {
 
   return (
     <footer id="footer">
-      <SwipeableDrawer />
+      <div id="pins" className="d-block">
+        <SwipeableDrawer />
+      </div>
       <>
         {currentWorkspace && (
           <div
             id="tab-menu"
             className="container d-none justify-content-end gap-1"
-            style={{ position: "relative", zIndex: 1200 }}
+            style={{ position: "relative", zIndex: 1200, background: "#000" }}
           >
             <div className="me-3">
               {currentTab && currentTab.loading && "Loading..."}

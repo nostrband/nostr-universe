@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { keystore } from "../keystore";
-import {
-  db,
-  dbi
-} from "../db";
+import { db, dbi } from "../db";
 import {
   coracleIcon,
   irisIcon,
@@ -258,7 +255,7 @@ const AppContextProvider = ({ children }) => {
     setProfile(null); // FIXME loading
     setProfiles([]); // FIXME loading
     if (!keys || !keys.length) return;
-    
+
     subscribeProfiles(keys, (profile) => {
       console.log("profile update", profile);
       if (profile.pubkey == currentPubkey) setProfile(profile);
@@ -299,7 +296,12 @@ const AppContextProvider = ({ children }) => {
     console.log("workspaceKey", workspace.pubkey);
     workspace.pins = await dbi.listPins(workspace.pubkey);
     workspace.tabs = await dbi.listTabs(workspace.pubkey);
-    console.log("load pins", workspace.pins.length, "tabs", workspace.tabs.length);
+    console.log(
+      "load pins",
+      workspace.pins.length,
+      "tabs",
+      workspace.tabs.length
+    );
   };
 
   const addWorkspace = async (pubkey, props) => {
@@ -348,38 +350,45 @@ const AppContextProvider = ({ children }) => {
     else document.addEventListener("deviceready", onDeviceReady, false);
   }, []);
 
-
   const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
-  const currentTab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace.currentTabId);
+  const currentTab = currentWorkspace?.tabs.find(
+    (t) => t.id === currentWorkspace.currentTabId
+  );
   const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
 
   const updateWorkspace = (cbProps, pubkey) => {
     pubkey = pubkey || currentPubkey;
     setWorkspaces((prev) =>
-      prev.map((w) => (w.pubkey === pubkey
-		     ? { ...w, ...(typeof cbProps === "function" ? cbProps(w) : cbProps) }
-		     : w))
+      prev.map((w) =>
+        w.pubkey === pubkey
+          ? { ...w, ...(typeof cbProps === "function" ? cbProps(w) : cbProps) }
+          : w
+      )
     );
   };
 
   const updateTab = (cbProps, tabId) => {
     tabId = tabId || currentTab?.id;
-    updateWorkspace((ws) => { return {
-      tabs: ws.tabs.map(
-	(t) => (t.id === tabId
-	      ? { ...t, ...(typeof cbProps === "function" ? cbProps(t) : cbProps) }
-	      : t)
-      )
-    }});
+    updateWorkspace((ws) => {
+      return {
+        tabs: ws.tabs.map((t) =>
+          t.id === tabId
+            ? {
+                ...t,
+                ...(typeof cbProps === "function" ? cbProps(t) : cbProps),
+              }
+            : t
+        ),
+      };
+    });
   };
-  
+
   const API = {
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
       const tab = getTab(tabId);
-      if (tab)
-	await dbi.updateTab(tab);
+      if (tab) await dbi.updateTab(tab);
     },
     showContextMenu: async function (tabId, id) {
       console.log("event menu", id);
@@ -395,8 +404,7 @@ const AppContextProvider = ({ children }) => {
       console.log("loaded", event.url);
       updateTab({ url: event.url, loading: false }, tabId);
       const tab = getTab(tabId);
-      if (tab)
-	await dbi.updateTab(tab);
+      if (tab) await dbi.updateTab(tab);
     },
     onGetPubkey: (tabId, pubkey) => {
       if (pubkey !== currentPubkey) {
@@ -414,15 +422,14 @@ const AppContextProvider = ({ children }) => {
     },
     onBlank: (tabId, url) => {
       const tab = getTab(tabId);
-      if (tab)
-	hide(tab);
+      if (tab) hide(tab);
       open(url);
     },
   };
 
   // update on every rerender to capture new callbacks
   browser.setAPI(API);
-  
+
   const addKey = async () => {
     await keystore.addKey();
 
@@ -453,9 +460,8 @@ const AppContextProvider = ({ children }) => {
   };
 
   const createTabBrowser = async (tab) => {
-
     updateTab({ loading: true }, tab.id);
-    updateWorkspace({ currentTabId: tab.id});
+    updateWorkspace({ currentTabId: tab.id });
 
     const params = {
       id: tab.id,
@@ -471,19 +477,20 @@ const AppContextProvider = ({ children }) => {
   };
 
   const ensureBrowser = async (tab) => {
-    if (!tab.opened)
-      await createTabBrowser(tab);
+    if (!tab.opened) await createTabBrowser(tab);
   };
-  
+
   const close = async (tab) => {
     hide(tab);
 
     await dbi.deleteTab(tab.id);
     browser.close(tab.id);
 
-    updateWorkspace((ws) => { return {
-      tabs: ws.tabs.filter((t) => t.id !== tab.id)
-    }});
+    updateWorkspace((ws) => {
+      return {
+        tabs: ws.tabs.filter((t) => t.id !== tab.id),
+      };
+    });
   };
 
   const hide = (tab) => {
@@ -511,10 +518,10 @@ const AppContextProvider = ({ children }) => {
     return new Promise((ok) => {
       setTimeout(async () => {
         // schedule the open after task bar is changed
-	await ensureBrowser(tab);
+        await ensureBrowser(tab);
 
         await browser.show(tab.id);
-	updateWorkspace({ currentTabId: tab.id});
+        updateWorkspace({ currentTabId: tab.id });
         ok();
       }, 0);
     });
@@ -542,7 +549,9 @@ const AppContextProvider = ({ children }) => {
 
     // check if an open tab for this app exists
     if (pin) {
-      const tab = currentWorkspace.tabs.find((t) => t?.appNaddr === pin.appNaddr);
+      const tab = currentWorkspace.tabs.find(
+        (t) => t?.appNaddr === pin.appNaddr
+      );
       if (tab && (!opts.newTab || tab.url === url)) {
         show(tab);
         return;
@@ -565,10 +574,12 @@ const AppContextProvider = ({ children }) => {
     console.log("open", url, JSON.stringify(pin), JSON.stringify(tab));
 
     // add to tab list
-    updateWorkspace((ws) => { return {
-      tabs: [...ws.tabs, tab],
-      lastCurrentTabId: "", // make sure previous active tab doesn't reopen on modal close
-    }});
+    updateWorkspace((ws) => {
+      return {
+        tabs: [...ws.tabs, tab],
+        lastCurrentTabId: "", // make sure previous active tab doesn't reopen on modal close
+      };
+    });
 
     // add to db
     await dbi.addTab(tab);
@@ -625,12 +636,16 @@ const AppContextProvider = ({ children }) => {
 
     if (currentTab.pinned) {
       // unpin
-      const pin = currentWorkspace.pins.find((p) => p.appNaddr == currentTab.appNaddr);
+      const pin = currentWorkspace.pins.find(
+        (p) => p.appNaddr == currentTab.appNaddr
+      );
       if (pin) {
-        updateWorkspace((ws) => { return {
-          pins: ws.pins.filter((p) => p.id != pin.id),
-        }});
-	updateTab({ pinned: false });
+        updateWorkspace((ws) => {
+          return {
+            pins: ws.pins.filter((p) => p.id != pin.id),
+          };
+        });
+        updateTab({ pinned: false });
         dbi.deletePin(pin.id);
       }
     } else {
@@ -667,9 +682,11 @@ const AppContextProvider = ({ children }) => {
 
     console.log("perms", JSON.stringify(perms));
 
-    updateWorkspace((ws) => { return {
-      pins: [...ws.pins, pin],
-    }});
+    updateWorkspace((ws) => {
+      return {
+        pins: [...ws.pins, pin],
+      };
+    });
     updateTab({ pinned: true }, tab.id);
 
     dbi.addPin(pin);
@@ -688,8 +705,10 @@ const AppContextProvider = ({ children }) => {
     const lastCurrentTabId = currentWorkspace.lastCurrentTabId;
     console.log("onModalClose", lastCurrentTabId);
     if (!lastCurrentTabId) return;
-    
-    const lastCurrentTab = currentWorkspace.tabs.find((t) => t.id === lastCurrentTabId);
+
+    const lastCurrentTab = currentWorkspace.tabs.find(
+      (t) => t.id === lastCurrentTabId
+    );
     if (!lastCurrentTab) return;
 
     show(lastCurrentTab);
@@ -700,12 +719,12 @@ const AppContextProvider = ({ children }) => {
   const isGuest = () => {
     return currentPubkey == DEFAULT_PUBKEY;
   };
-  
+
   return (
     <AppContext.Provider
       value={{
         currentPubkey,
-	isGuest,
+        isGuest,
         keys,
         profile,
         profiles,
@@ -732,8 +751,8 @@ const AppContextProvider = ({ children }) => {
         currentTab,
         onModalOpen,
         onModalClose,
-	contextInput,
-	setContextInput
+        contextInput,
+        setContextInput,
       }}
     >
       {children}
