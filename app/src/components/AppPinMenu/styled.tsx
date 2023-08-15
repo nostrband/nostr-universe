@@ -7,17 +7,17 @@ export const StyledPinApps = styled(
   forwardRef<HTMLAnchorElement, IStyledPinApps>(function PinAppsDisplayName(props, ref) {
     return <Box ref={ref} {...props} />
   })
-)(({ theme, drawerBleeding }) => ({
+)(({ theme, drawerbleeding }) => ({
   backgroundColor: theme.palette.secondary.dark,
   position: 'absolute',
-  top: -drawerBleeding,
+  top: -drawerbleeding,
   borderTopLeftRadius: theme.shape.borderRadius,
   borderTopRightRadius: theme.shape.borderRadius,
   visibility: 'visible',
   right: 0,
   left: 0,
   paddingTop: 25,
-  height: drawerBleeding,
+  height: drawerbleeding,
   width: '100%'
 }))
 

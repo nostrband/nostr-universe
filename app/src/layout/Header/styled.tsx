@@ -6,5 +6,6 @@ export const StyledHeader = styled(Box)(({ theme }) => ({
   paddingBottom: theme.spacing(1),
   marginBottom: theme.spacing(3),
   display: 'flex',
-  justifyContent: 'space-between'
+  justifyContent: 'space-between',
+  alignItems: 'center'
 }))

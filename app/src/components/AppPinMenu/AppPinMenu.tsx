@@ -3,134 +3,134 @@ import { Global } from '@emotion/react'
 import { SwipeableDrawer, Grid } from '@mui/material'
 import { Puller, StyledPinApps, StyledSwipeableDrawerContent } from './styled'
 import { IAppPinMenu } from './types'
-import { drawerBleeding } from './const'
+import { drawerbleeding } from './const'
 import { Container } from '../../layout/Container/Conatiner'
 import { AppNostro } from '../../shared/AppNostro/AppNostro'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { FreeMode } from 'swiper/modules'
+import styles from './slider.module.scss'
 import 'swiper/css'
-import './style.css'
 
 const dataAppsNostro = [
   {
     name: 'Cygnus-21',
-    img: 'https://i.pravatar.cc/150?img=1'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Eclipse-47',
-    img: 'https://i.pravatar.cc/150?img=2'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Chronotro...',
-    img: 'https://i.pravatar.cc/150?img=4'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Helix-27',
-    img: 'https://i.pravatar.cc/150?img=5'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Omega-50',
-    img: 'https://i.pravatar.cc/150?img=6'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Cygnus-21',
-    img: 'https://i.pravatar.cc/150?img=1'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Eclipse-47',
-    img: 'https://i.pravatar.cc/150?img=2'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Chronotro...',
-    img: 'https://i.pravatar.cc/150?img=4'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Helix-27',
-    img: 'https://i.pravatar.cc/150?img=5'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Omega-50',
-    img: 'https://i.pravatar.cc/150?img=6'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Cygnus-21',
-    img: 'https://i.pravatar.cc/150?img=1'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Eclipse-47',
-    img: 'https://i.pravatar.cc/150?img=2'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Chronotro...',
-    img: 'https://i.pravatar.cc/150?img=4'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Helix-27',
-    img: 'https://i.pravatar.cc/150?img=5'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Omega-50',
-    img: 'https://i.pravatar.cc/150?img=6'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Cygnus-21',
-    img: 'https://i.pravatar.cc/150?img=1'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Eclipse-47',
-    img: 'https://i.pravatar.cc/150?img=2'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Chronotro...',
-    img: 'https://i.pravatar.cc/150?img=4'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Helix-27',
-    img: 'https://i.pravatar.cc/150?img=5'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Omega-50',
-    img: 'https://i.pravatar.cc/150?img=6'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Cygnus-21',
-    img: 'https://i.pravatar.cc/150?img=1'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Eclipse-47',
-    img: 'https://i.pravatar.cc/150?img=2'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Chronotro...',
-    img: 'https://i.pravatar.cc/150?img=4'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Helix-27',
-    img: 'https://i.pravatar.cc/150?img=5'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Omega-50',
-    img: 'https://i.pravatar.cc/150?img=6'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Cygnus-21',
-    img: 'https://i.pravatar.cc/150?img=1'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Eclipse-47',
-    img: 'https://i.pravatar.cc/150?img=2'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Chronotro...',
-    img: 'https://i.pravatar.cc/150?img=4'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Helix-27',
-    img: 'https://i.pravatar.cc/150?img=5'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Omega-50',
-    img: 'https://i.pravatar.cc/150?img=6'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   }
 ]
 
@@ -150,7 +150,7 @@ export const AppPinMenu = (props: IAppPinMenu) => {
       <Global
         styles={{
           '.MuiDrawer-root > .MuiPaper-root': {
-            height: `calc(80% - ${drawerBleeding}px)`,
+            height: `calc(80% - ${drawerbleeding}px)`,
             overflow: 'visible'
           }
         }}
@@ -162,7 +162,7 @@ export const AppPinMenu = (props: IAppPinMenu) => {
         open={open}
         onClose={toggleDrawer(false)}
         onOpen={toggleDrawer(true)}
-        swipeAreaWidth={drawerBleeding}
+        swipeAreaWidth={drawerbleeding}
         disableSwipeToOpen={false}
         allowSwipeInChildren={true}
         ModalProps={{
@@ -170,7 +170,7 @@ export const AppPinMenu = (props: IAppPinMenu) => {
         }}
         transitionDuration={200}
       >
-        <StyledPinApps drawerBleeding={drawerBleeding}>
+        <StyledPinApps drawerbleeding={drawerbleeding}>
           <Puller />
           <Swiper
             slidesPerView="auto"
@@ -180,7 +180,7 @@ export const AppPinMenu = (props: IAppPinMenu) => {
             modules={[FreeMode]}
           >
             {dataAppsNostro.map((app, i) => (
-              <SwiperSlide key={i}>
+              <SwiperSlide className={styles.slide} key={i}>
                 <AppNostro app={app} size="small" hideName />
               </SwiperSlide>
             ))}

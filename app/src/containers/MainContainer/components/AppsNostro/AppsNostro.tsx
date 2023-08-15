@@ -6,23 +6,23 @@ import { StyledTitle } from './styled'
 const dataTrendingProfiles: IAppsNostro = [
   {
     name: 'Cygnus',
-    img: 'https://i.pravatar.cc/150?img=7'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Eclipse',
-    img: 'https://i.pravatar.cc/150?img=7'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Chrono',
-    img: 'https://i.pravatar.cc/150?img=7'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Helix',
-    img: 'https://i.pravatar.cc/150?img=7'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   },
   {
     name: 'Omega',
-    img: 'https://i.pravatar.cc/150?img=7'
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   }
 ]
 

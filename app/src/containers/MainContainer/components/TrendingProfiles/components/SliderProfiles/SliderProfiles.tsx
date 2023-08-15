@@ -3,20 +3,14 @@ import { FreeMode } from 'swiper/modules'
 import { Profile } from '../Profile/Profile'
 import { ISliderProfiles } from './types'
 import { StyledSlideWrapper } from './styled'
+import styles from './slider.module.scss'
 import 'swiper/css'
-import './style.css'
 
 export const SliderProfiles = ({ data }: ISliderProfiles) => {
   return (
-    <Swiper
-      slidesPerView="auto"
-      freeMode={true}
-      onSlideChange={() => console.log('slide change')}
-      onSwiper={(swiper) => console.log(swiper)}
-      modules={[FreeMode]}
-    >
+    <Swiper slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
       {data.map((profile, i) => (
-        <SwiperSlide key={i}>
+        <SwiperSlide className={styles.slide} key={i}>
           <StyledSlideWrapper>
             <Profile profile={profile} />
           </StyledSlideWrapper>

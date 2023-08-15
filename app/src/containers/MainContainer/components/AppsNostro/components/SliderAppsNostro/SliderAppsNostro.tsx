@@ -3,8 +3,8 @@ import { FreeMode } from 'swiper/modules'
 import { AppNostro } from '../../../../../../shared/AppNostro/AppNostro'
 import { ISliderAppsNostro } from './types'
 import { StyledSlideWrapper } from './styled'
+import styles from './slider.module.scss'
 import 'swiper/css'
-import './style.css'
 
 export const SliderAppsNostro = ({ data }: ISliderAppsNostro) => {
   return (
@@ -16,7 +16,7 @@ export const SliderAppsNostro = ({ data }: ISliderAppsNostro) => {
       modules={[FreeMode]}
     >
       {data.map((app, i) => (
-        <SwiperSlide key={i}>
+        <SwiperSlide className={styles.slide} key={i}>
           <StyledSlideWrapper>
             <AppNostro app={app} />
           </StyledSlideWrapper>

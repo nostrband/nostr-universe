@@ -5,5 +5,5 @@ export interface IAppPinMenu {
 }
 
 export interface IStyledPinApps extends BoxProps {
-  drawerBleeding: number
+  drawerbleeding: number
 }

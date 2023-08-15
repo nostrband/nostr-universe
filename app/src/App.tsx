@@ -1,7 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { MainPage } from './pages/MainPage/MainPage'
 import { ProfilePage } from './pages/ProfilePage/ProfilePage'
-import { AppPinMenu } from './components/AppPinMenu/AppPinMenu'
 
 export const App = () => {
   return (
@@ -11,8 +10,6 @@ export const App = () => {
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Routes>
-
-      <AppPinMenu />
     </>
   )
 }
