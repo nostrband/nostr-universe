@@ -30,7 +30,7 @@ export const dbi = {
   },
   updateTab: async (tab) => {
     try {
-      await db.tabs.where('id').equals(tab.id).modify({url: tab.url});
+      await db.tabs.where('id').equals(tab.id).modify({url: tab.url, icon: tab.icon});
     } catch (error) {
       console.log(`Update tab in DB error: ${JSON.stringify(error)}`);
     }

@@ -296,6 +296,8 @@ const AppContextProvider = ({ children }) => {
     console.log("workspaceKey", workspace.pubkey);
     workspace.pins = await dbi.listPins(workspace.pubkey);
     workspace.tabs = await dbi.listTabs(workspace.pubkey);
+    // FIXME remove later
+    workspace.tabs.forEach(t => t.opened = false);
     console.log(
       "load pins",
       workspace.pins.length,
@@ -387,7 +389,10 @@ const AppContextProvider = ({ children }) => {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
       const tab = getTab(tabId);
-      if (tab) await dbi.updateTab(tab);
+      if (tab) {
+	tab.url = url;
+	await dbi.updateTab(tab);
+      }
     },
     showContextMenu: async function (tabId, id) {
       console.log("event menu", id);
@@ -423,6 +428,14 @@ const AppContextProvider = ({ children }) => {
       const tab = getTab(tabId);
       if (tab) hide(tab);
       open(url);
+    },
+    onIcon: async (tabId, icon) => {
+      updateTab({ icon }, tabId);
+      const tab = getTab(tabId);
+      if (tab) {
+	tab.icon = icon;
+	await dbi.updateTab(tab);
+      }
     },
   };
 
