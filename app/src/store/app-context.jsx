@@ -24,22 +24,8 @@ import { getNpub } from "../utils/helpers/general";
 const defaultApps = [
   {
     naddr:
-      "naddr1qqxnzd3cx5urqvf3xserqdenqgsgrz3ekhckgg6lscj5kyk2tph0enqljh5ck3wtrjguw8w9m9yxmksrqsqqql8kvwe43l",
-    name: "Nostr Apps",
-    picture: "https://nostrapp.link/logo.png",
-    url: "https://nostrapp.link/",
-    about: "Find new Nostr apps, publish apps, switch between apps.",
-    kinds: [0, 30117, 31990],
-    handlers: {
-      0: { url: "https://nosta.me/p/<bech32>" },
-      30117: { url: "https://nosta.me/r/<bech32>" },
-      31990: { url: "https://nosta.me/a/<bech32>" },
-    },
-  },
-  {
-    naddr:
       "naddr1qqqnqq3qsx9rnd03vs34lp39fvfv5krwlnxpl90f3dzuk8y3cuwutk2gdhdqxpqqqp70vh7mzgu",
-    name: "Nostr",
+    name: "Nostr.Band",
     picture: nostrIcon,
     url: "https://nostr.band/",
     about: "Search and discovery on Nostr",
@@ -102,6 +88,20 @@ const defaultApps = [
     handlers: {
       0: { url: "https://satellite.earth/@<bech32>" },
       1: { url: "https://satellite.earth/thread/<bech32>" },
+    },
+  },
+  {
+    naddr:
+      "naddr1qqxnzd3cx5urqvf3xserqdenqgsgrz3ekhckgg6lscj5kyk2tph0enqljh5ck3wtrjguw8w9m9yxmksrqsqqql8kvwe43l",
+    name: "Nostr Apps",
+    picture: "https://nostrapp.link/logo.png",
+    url: "https://nostrapp.link/",
+    about: "Find new Nostr apps, publish apps, switch between apps.",
+    kinds: [0, 30117, 31990],
+    handlers: {
+      0: { url: "https://nosta.me/p/<bech32>" },
+      30117: { url: "https://nosta.me/r/<bech32>" },
+      31990: { url: "https://nosta.me/a/<bech32>" },
     },
   },
   {
@@ -296,6 +296,8 @@ const AppContextProvider = ({ children }) => {
     console.log("workspaceKey", workspace.pubkey);
     workspace.pins = await dbi.listPins(workspace.pubkey);
     workspace.tabs = await dbi.listTabs(workspace.pubkey);
+    workspace.pins.sort((a, b) => a.order - b.order);
+    workspace.tabs.sort((a, b) => a.order - b.order);
     // FIXME remove later
     workspace.tabs.forEach(t => t.opened = false);
     console.log(
@@ -579,7 +581,7 @@ const AppContextProvider = ({ children }) => {
       title: pin ? pin.title : title,
       icon: pin ? pin.icon : U.origin + "/favicon.ico",
       url,
-      order: currentWorkspace.tabs.length + 1,
+      order: currentWorkspace.tabs.length,
       pinned: pin && pin.id,
     };
     if (pin) tab.appNaddr = pin.appNaddr;
