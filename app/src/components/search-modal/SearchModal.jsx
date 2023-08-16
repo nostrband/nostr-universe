@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Modal } from "../UI/modal/Modal";
 
-import { BsArrowRightCircle } from "react-icons/bs";
 import { IconButton, InputBase, styled } from "@mui/material";
 import { Header } from "../../layout/Header";
 import { SearchIcon } from "../../assets";
@@ -22,16 +21,17 @@ export const SearchModal = ({ isOpen, onClose, onSearch }) => {
         <Form onSubmit={submitHandler}>
           <StyledInput
             placeholder="Search"
-            endAdornment={<SearchIcon />}
+            endAdornment={
+              <StyledIconButton type="submit">
+                <SearchIcon />
+              </StyledIconButton>
+            }
             onChange={({ target }) => setSearchValue(target.value)}
             autoFocus={true}
             inputProps={{
               autoFocus: true,
             }}
           />
-          <IconButton type="submit">
-            <BsArrowRightCircle color="white" size={30} />
-          </IconButton>
         </Form>
       </Container>
     </Modal>
@@ -65,4 +65,11 @@ const StyledInput = styled(InputBase)(() => ({
     color: "#C9C9C9",
   },
   gap: "0.5rem",
+}));
+
+const StyledIconButton = styled(IconButton)(() => ({
+  transition: "background 0.3s ease-out",
+  "&:active": {
+    background: "rgba(255, 255, 255, 0.1)",
+  },
 }));

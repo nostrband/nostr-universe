@@ -35,12 +35,12 @@ export const Header = ({
           onClick={navigateToProfilePage}
         />
         <ActionsContainer>
-          <StyledIconButton>
+          {/* <StyledIconButton>
             <ServerIcon />
           </StyledIconButton>
           <StyledIconButton>
             <WalletIcon />
-          </StyledIconButton>
+          </StyledIconButton> */}
           {!searchMode && (
             <StyledIconButton onClick={onSearchClick}>
               <SearchIcon />
