@@ -250,6 +250,8 @@ const AppContextProvider = ({ children }) => {
   const [openEventAddr, setOpenEventAddr] = useState("");
   const [contextInput, setContextInput] = useState("");
 
+  const [isShowDrawer, setIsShowDrawer] = useState(true);
+
   // helpers for initial loading w/ useEffect
   const reloadProfiles = async (keys, currentPubkey) => {
     setProfile(null); // FIXME loading
@@ -351,8 +353,12 @@ const AppContextProvider = ({ children }) => {
   }, []);
 
   const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
-  const currentTab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace.currentTabId);
-  const lastCurrentTab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace.lastCurrentTabId);
+  const currentTab = currentWorkspace?.tabs.find(
+    (t) => t.id === currentWorkspace.currentTabId
+  );
+  const lastCurrentTab = currentWorkspace?.tabs.find(
+    (t) => t.id === currentWorkspace.lastCurrentTabId
+  );
   const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
 
   const updateWorkspace = (cbProps, pubkey) => {
@@ -497,16 +503,13 @@ const AppContextProvider = ({ children }) => {
       browser.hide(tab.id);
       updateWorkspace({ currentTabId: "" });
     }
-
-    document.getElementById("pins").style.display = "block";
-    // document.getElementById("pins").classList.add("d-flex");
+    setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
   };
 
   const showTabMenu = () => {
-    document.getElementById("pins").style.display = "none";
-    // document.getElementById("pins").classList.add("d-none");
+    setIsShowDrawer(false);
     document.getElementById("tab-menu").classList.remove("d-none");
     document.getElementById("tab-menu").classList.add("d-flex");
   };
@@ -634,12 +637,14 @@ const AppContextProvider = ({ children }) => {
   const unpinTab = () => {
     const tab = lastCurrentTab;
     if (!tab || !tab.pinned) return;
-      
+
     const pin = currentWorkspace.pins.find((p) => p.appNaddr == tab.appNaddr);
     if (pin) {
-      updateWorkspace((ws) => { return {
-        pins: ws.pins.filter((p) => p.id != pin.id),
-      }});
+      updateWorkspace((ws) => {
+        return {
+          pins: ws.pins.filter((p) => p.id != pin.id),
+        };
+      });
       updateTab({ pinned: false }, tab.id);
       dbi.deletePin(pin.id);
     }
@@ -648,7 +653,7 @@ const AppContextProvider = ({ children }) => {
   const pinTab = (openPinAppModal) => {
     const tab = lastCurrentTab;
     if (!tab || tab.pinned) return;
-    
+
     const app = apps.find((a) => a.naddr == tab.appNaddr);
     if (app) {
       setPinApp(app);
@@ -769,8 +774,8 @@ const AppContextProvider = ({ children }) => {
         pinApp,
         onSavePin: savePin,
         onTogglePin: togglePinTab,
-	pinTab,
-	unpinTab,
+        pinTab,
+        unpinTab,
         onOpenEvent: setOpenEventAddr,
         workspaces,
         currentWorkspace,
@@ -780,6 +785,7 @@ const AppContextProvider = ({ children }) => {
         onModalClose,
         contextInput,
         setContextInput,
+        isShowDrawer,
       }}
     >
       {children}

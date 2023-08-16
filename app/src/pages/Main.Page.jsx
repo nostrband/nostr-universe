@@ -93,7 +93,7 @@ const MainPage = () => {
         />
 
         <EventAppsModal
-          isOpen={openAddr != ""}
+          isOpen={openAddr !== ""}
           onClose={() => setOpenAddr("")}
           addr={openAddr}
           onSelect={onOpenEvent}
@@ -103,7 +103,7 @@ const MainPage = () => {
           isOpen={showTabMenu}
           onClose={() => setShowTabMenu(false)}
           onOpenWith={setOpenAddr}
-	  onOpenPinAppModal={togglePinModalVisibility}
+          onOpenPinAppModal={togglePinModalVisibility}
         />
 
         <ContextMenuModal

@@ -3,7 +3,7 @@ import { Dialog, Slide } from "@mui/material";
 import { AppContext } from "../../../store/app-context";
 
 const ModalContent = (props) => {
-  return <div>{props.children}</div>;
+  return <>{props.children}</>;
 };
 
 const Transition = React.forwardRef(function (props, ref) {
@@ -19,20 +19,17 @@ export const Modal = ({
   direction = "right",
   ...props
 }) => {
-
   const [open, setOpen] = useState(false);
-  
+
   const contextData = useContext(AppContext);
   const { onModalOpen, onModalClose } = contextData || {};
 
   useEffect(() => {
-    if (!open && isOpen)
-      onModalOpen();
-    if (open && !isOpen)
-      onModalClose();
+    if (!open && isOpen) onModalOpen();
+    if (open && !isOpen) onModalClose();
     setOpen(isOpen);
   }, [isOpen]);
-  
+
   return (
     <Dialog
       fullScreen={fullScreen}
