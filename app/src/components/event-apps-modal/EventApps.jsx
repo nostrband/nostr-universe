@@ -66,8 +66,6 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
     onOpenApp(url, app);
   };
 
-  console.log(apps);
-
   return (
     <Container>
       <div className="header">
@@ -123,6 +121,13 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
             onOpen(app.url, app);
           }}
         />
+        {!isLoading && apps.length && (
+          <EventsContainer>
+            {apps.map((app) => (
+              <EventApp app={app} onClick={() => onOpen(app.url, app)} />
+            ))}
+          </EventsContainer>
+        )}
       </div>
     </Container>
   );
