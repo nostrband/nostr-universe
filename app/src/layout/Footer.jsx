@@ -12,10 +12,7 @@ export const Footer = ({ onOpenPinModal }) => {
   const {
     currentWorkspace,
     currentTab,
-    onCloseTab,
     onHideTab,
-    onShowTabs,
-    onTogglePin,
   } = contextData || {};
 
   return (
