@@ -391,6 +391,11 @@ export function open(params) {
       cb(event.url);
   });
 
+  ref.addEventListener('icon', async (event) => {
+    if (API.onIcon)
+      await API.onIcon(params.apiCtx, event.icon);
+  });
+
   refs[params.id] = ref;
 }
 

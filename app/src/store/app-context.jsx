@@ -24,22 +24,8 @@ import { getNpub } from "../utils/helpers/general";
 const defaultApps = [
   {
     naddr:
-      "naddr1qqxnzd3cx5urqvf3xserqdenqgsgrz3ekhckgg6lscj5kyk2tph0enqljh5ck3wtrjguw8w9m9yxmksrqsqqql8kvwe43l",
-    name: "Nostr Apps",
-    picture: "https://nostrapp.link/logo.png",
-    url: "https://nostrapp.link/",
-    about: "Find new Nostr apps, publish apps, switch between apps.",
-    kinds: [0, 30117, 31990],
-    handlers: {
-      0: { url: "https://nosta.me/p/<bech32>" },
-      30117: { url: "https://nosta.me/r/<bech32>" },
-      31990: { url: "https://nosta.me/a/<bech32>" },
-    },
-  },
-  {
-    naddr:
       "naddr1qqqnqq3qsx9rnd03vs34lp39fvfv5krwlnxpl90f3dzuk8y3cuwutk2gdhdqxpqqqp70vh7mzgu",
-    name: "Nostr",
+    name: "Nostr.Band",
     picture: nostrIcon,
     url: "https://nostr.band/",
     about: "Search and discovery on Nostr",
@@ -102,6 +88,20 @@ const defaultApps = [
     handlers: {
       0: { url: "https://satellite.earth/@<bech32>" },
       1: { url: "https://satellite.earth/thread/<bech32>" },
+    },
+  },
+  {
+    naddr:
+      "naddr1qqxnzd3cx5urqvf3xserqdenqgsgrz3ekhckgg6lscj5kyk2tph0enqljh5ck3wtrjguw8w9m9yxmksrqsqqql8kvwe43l",
+    name: "Nostr Apps",
+    picture: "https://nostrapp.link/logo.png",
+    url: "https://nostrapp.link/",
+    about: "Find new Nostr apps, publish apps, switch between apps.",
+    kinds: [0, 30117, 31990],
+    handlers: {
+      0: { url: "https://nosta.me/p/<bech32>" },
+      30117: { url: "https://nosta.me/r/<bech32>" },
+      31990: { url: "https://nosta.me/a/<bech32>" },
     },
   },
   {
@@ -220,12 +220,57 @@ function createWorkspace(pubkey, props = {}) {
   return {
     pubkey,
     trendingProfiles: [],
+    tabGroups: {},
     tabs: [],
     pins: [],
     currentTabId: "",
     lastCurrentTabId: "",
     ...props,
   };
+}
+
+function getTabGroupId(pt) {
+  return pt.appNaddr || new URL(pt.url).origin;
+}
+
+function addToTabGroup(workspace, pt, isPin) {
+  const id = getTabGroupId(pt);
+  if (!(id in workspace.tabGroups))
+    workspace.tabGroups[id] = {
+      id,
+      info: pt,
+      tabs: [],
+    };
+
+  const tg = workspace.tabGroups[id];
+  if (isPin && !tg.pin) {
+    tg.pin = pt;
+  }
+
+  if (!isPin) {
+    tg.tabs.push(pt.id);
+  }
+  console.log(
+    "add pt",
+    pt.id,
+    "isPin",
+    isPin,
+    "gid",
+    id,
+    "tg",
+    JSON.stringify(tg)
+  );
+}
+
+function deleteFromTabGroup(workspace, pt, isPin) {
+  const id = getTabGroupId(pt);
+  if (!(id in workspace.tabGroups)) return;
+
+  const tg = workspace.tabGroups[id];
+  if (!isPin) tg.tabs = tg.tabs.filter((id) => id !== pt.id);
+  else if (tg.pin?.id === pt.id) tg.pin = null;
+
+  if (!tg.pin && !tg.tabs.length) delete workspace.tabGroups[id];
 }
 
 const AppContext = React.createContext();
@@ -298,11 +343,22 @@ const AppContextProvider = ({ children }) => {
     console.log("workspaceKey", workspace.pubkey);
     workspace.pins = await dbi.listPins(workspace.pubkey);
     workspace.tabs = await dbi.listTabs(workspace.pubkey);
+    workspace.pins.sort((a, b) => a.order - b.order);
+    workspace.tabs.sort((a, b) => a.order - b.order);
+
+    // reset just in case
+    workspace.tabs.forEach((t) => (t.opened = false));
+
+    workspace.pins.forEach((p) => addToTabGroup(workspace, p, true));
+    workspace.tabs.forEach((t) => addToTabGroup(workspace, t));
+
     console.log(
       "load pins",
       workspace.pins.length,
       "tabs",
-      workspace.tabs.length
+      workspace.tabs.length,
+      "tabGroups",
+      Object.keys(workspace.tabGroups).length
     );
   };
 
@@ -356,6 +412,9 @@ const AppContextProvider = ({ children }) => {
   const currentTab = currentWorkspace?.tabs.find(
     (t) => t.id === currentWorkspace.currentTabId
   );
+  const currentTabGroup = currentTab
+    ? currentWorkspace?.tabGroups[getTabGroupId(currentTab)]
+    : undefined;
   const lastCurrentTab = currentWorkspace?.tabs.find(
     (t) => t.id === currentWorkspace.lastCurrentTabId
   );
@@ -393,7 +452,10 @@ const AppContextProvider = ({ children }) => {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
       const tab = getTab(tabId);
-      if (tab) await dbi.updateTab(tab);
+      if (tab) {
+        tab.url = url;
+        await dbi.updateTab(tab);
+      }
     },
     showContextMenu: async function (tabId, id) {
       console.log("event menu", id);
@@ -429,6 +491,14 @@ const AppContextProvider = ({ children }) => {
       const tab = getTab(tabId);
       if (tab) hide(tab);
       open(url);
+    },
+    onIcon: async (tabId, icon) => {
+      updateTab({ icon }, tabId);
+      const tab = getTab(tabId);
+      if (tab) {
+        tab.icon = icon;
+        await dbi.updateTab(tab);
+      }
     },
   };
 
@@ -492,8 +562,10 @@ const AppContextProvider = ({ children }) => {
     browser.close(tab.id);
 
     updateWorkspace((ws) => {
+      deleteFromTabGroup(ws, tab);
       return {
         tabs: ws.tabs.filter((t) => t.id !== tab.id),
+        tabGroups: { ...ws.tabGroups },
       };
     });
   };
@@ -520,6 +592,7 @@ const AppContextProvider = ({ children }) => {
     return new Promise((ok) => {
       setTimeout(async () => {
         // schedule the open after task bar is changed
+        console.log("show", JSON.stringify(tab));
         await ensureBrowser(tab);
 
         await browser.show(tab.id);
@@ -569,7 +642,7 @@ const AppContextProvider = ({ children }) => {
       title: pin ? pin.title : title,
       icon: pin ? pin.icon : U.origin + "/favicon.ico",
       url,
-      order: currentWorkspace.tabs.length + 1,
+      order: currentWorkspace.tabs.length,
       pinned: pin && pin.id,
     };
     if (pin) tab.appNaddr = pin.appNaddr;
@@ -577,9 +650,11 @@ const AppContextProvider = ({ children }) => {
 
     // add to tab list
     updateWorkspace((ws) => {
+      addToTabGroup(ws, tab);
       return {
         tabs: [...ws.tabs, tab],
         lastCurrentTabId: "", // make sure previous active tab doesn't reopen on modal close
+        tabGroups: { ...ws.tabGroups },
       };
     });
 
@@ -621,6 +696,11 @@ const AppContextProvider = ({ children }) => {
     reloadProfiles(keys, currentPubkey);
   };
 
+  const openTabGroup = (tg) => {
+    if (tg.tabs.length) show(getTab(tg.tabs[0])); // FIXME open current tab
+    else open(tg.pin.url, tg.pin);
+  };
+
   const closeTab = () => {
     console.log("closeTab");
     if (currentTab) close(currentTab);
@@ -632,8 +712,6 @@ const AppContextProvider = ({ children }) => {
     if (currentTab) hide(currentTab);
   };
 
-  const showTabs = () => {};
-
   const unpinTab = () => {
     const tab = lastCurrentTab;
     if (!tab || !tab.pinned) return;
@@ -641,8 +719,10 @@ const AppContextProvider = ({ children }) => {
     const pin = currentWorkspace.pins.find((p) => p.appNaddr == tab.appNaddr);
     if (pin) {
       updateWorkspace((ws) => {
+        deleteFromTabGroup(ws, pin, true);
         return {
           pins: ws.pins.filter((p) => p.id != pin.id),
+          tabGroups: { ...ws.tabGroups },
         };
       });
       updateTab({ pinned: false }, tab.id);
@@ -664,36 +744,6 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  const togglePinTab = (openPinAppModal) => {
-    if (!currentTab) return;
-
-    if (currentTab.pinned) {
-      // unpin
-      const pin = currentWorkspace.pins.find(
-        (p) => p.appNaddr == currentTab.appNaddr
-      );
-      if (pin) {
-        updateWorkspace((ws) => {
-          return {
-            pins: ws.pins.filter((p) => p.id != pin.id),
-          };
-        });
-        updateTab({ pinned: false });
-        dbi.deletePin(pin.id);
-      }
-    } else {
-      const app = apps.find((a) => a.naddr == currentTab.appNaddr);
-      console.log("pin app", app);
-      if (app) {
-        setPinApp(app);
-        openPinAppModal();
-        browser.hide(currentTab.id);
-      } else {
-        savePin([]);
-      }
-    }
-  };
-
   const savePin = (perms) => {
     const tab = lastCurrentTab;
     if (!tab) return;
@@ -712,8 +762,10 @@ const AppContextProvider = ({ children }) => {
     console.log("perms", JSON.stringify(perms));
 
     updateWorkspace((ws) => {
+      addToTabGroup(ws, pin, true);
       return {
         pins: [...ws.pins, pin],
+        tabGroups: { ...ws.tabGroups },
       };
     });
     updateTab({ pinned: true }, tab.id);
@@ -758,14 +810,13 @@ const AppContextProvider = ({ children }) => {
         profile,
         profiles,
         apps,
-        open,
         onAddKey: addKey,
         onSelectKey: selectKey,
         onOpenApp: openApp,
         onOpenTab: show,
+        onOpenTabGroup: openTabGroup,
         onCloseTab: closeTab,
         onHideTab: hideTab,
-        onShowTabs: showTabs,
         setOpenKey,
         onCopyKey: copyKey,
         onShowKey: showKey,
@@ -773,13 +824,13 @@ const AppContextProvider = ({ children }) => {
         keyProp: { publicKey: openKey },
         pinApp,
         onSavePin: savePin,
-        onTogglePin: togglePinTab,
         pinTab,
         unpinTab,
         onOpenEvent: setOpenEventAddr,
         workspaces,
         currentWorkspace,
         currentTab,
+        currentTabGroup,
         lastCurrentTab,
         onModalOpen,
         onModalClose,
