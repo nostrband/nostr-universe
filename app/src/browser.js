@@ -400,11 +400,11 @@ export function open(params) {
 }
 
 const show = async (id) => {
-  refs[id]?.show();
+  await refs[id]?.show();
 }
 
 const hide = async (id) => {
-  refs[id]?.hide();
+  await refs[id]?.hide();
 }
 
 const close = async (id) => {
@@ -412,7 +412,7 @@ const close = async (id) => {
     return;
 
   const ref = refs[id];
-  ref.close();
+  await ref.close();
   delete refs[id];
 }
 

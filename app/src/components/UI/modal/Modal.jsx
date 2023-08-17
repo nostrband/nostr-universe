@@ -26,11 +26,14 @@ export const Modal = ({
   const { onModalOpen, onModalClose } = contextData || {};
 
   useEffect(() => {
-    if (!open && isOpen)
-      onModalOpen();
-    if (open && !isOpen)
-      onModalClose();
+    const cb = async () => {
+      if (!open && isOpen)
+	await onModalOpen();
+      if (open && !isOpen)
+	await onModalClose();
+    }
     setOpen(isOpen);
+    cb();
   }, [isOpen]);
   
   return (

@@ -10,7 +10,7 @@ export const EventApp = ({ app, onOpen }) => {
   
   return (
     <div key={naddr} className="d-flex p-2 justify-content-start align-items-center"
-      style={{cursor:"pointer"}} onClick={() => onOpen(url, app)}>
+      style={{cursor:"pointer"}} onClick={() => onOpen(app)}>
       <button className="iconBtn">
 	<img
           src={picture ? picture : defaultIcon}
