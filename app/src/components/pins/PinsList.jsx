@@ -5,34 +5,22 @@ import { PinItem } from "./PinItem";
 
 export const PinsList = ({ drawerBleeding }) => {
   const contextData = useContext(AppContext);
-  const { currentWorkspace, open: onOpenPin, onOpenTab } = contextData || {};
-  const { pins = [], tabs = [] } = currentWorkspace || {};
+  const { currentWorkspace, onOpenTabGroup } = contextData || {};
+  const { tabGroups = {} } = currentWorkspace || {};
 
-  const renderedTabs = tabs.filter(
-    (t) => !t.appNaddr || !pins.find((p) => p.appNaddr === t.appNaddr)
-  );
-
+  const keys = Object.keys(tabGroups);
   return (
-    <StyledContainer length={pins.length} bleeddingheight={drawerBleeding}>
-      {pins.map((pin) => {
+    <StyledContainer length={keys.length} bleeddingheight={drawerBleeding}>
+      {keys.map(id => {
+	const tg = tabGroups[id];
         return (
           <PinItem
-            key={pin.id}
-            image={pin.icon}
-            {...pin}
-            onClick={() => onOpenPin(pin.url, pin)}
+            key={tg.info.id}
+            image={tg.info.icon}
+            {...tg.info}
+            onClick={() => onOpenTabGroup(tg)}
           />
-        );
-      })}
-      {renderedTabs.map((tab) => {
-        return (
-          <PinItem
-            key={tab.id}
-            image={tab.icon}
-            {...tab}
-            onClick={() => onOpenTab(tab)}
-          />
-        );
+	)
       })}
     </StyledContainer>
   );
