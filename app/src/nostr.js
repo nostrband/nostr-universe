@@ -576,6 +576,7 @@ export async function fetchAppsForEvent(id, event) {
   const info = addr.kind in kindApps
 	     ? {...kindApps[addr.kind]}
 	     : await fetchAppsByKinds(ndk, [addr.kind]);
+  info.addr = addr;
 
   // put to cache
   kindApps[addr.kind] = info;

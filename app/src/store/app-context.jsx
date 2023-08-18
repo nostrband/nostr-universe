@@ -223,6 +223,7 @@ function createWorkspace(pubkey, props = {}) {
     tabGroups: {},
     tabs: [],
     pins: [],
+    lastKindApps: {},
     currentTabId: "",
     lastCurrentTabId: "",
     ...props,
@@ -439,23 +440,32 @@ const AppContextProvider = ({ children }) => {
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
+
       const tab = getTab(tabId);
-      const tgid = getTabGroupId(tab);
       if (tab) {
-	const wasUrl = tab.url;
+	// save old tab to reuse in state update
+	const wasTab = {...tab};
+
+	// set new url
+	tab.url = url;
 
 	// need to switch tab group?
-	tab.url = url;
-	if (tgid !== getTabGroupId(tab)) {
-	  const ws = workspaces.find((w) => w.pubkey === tab.pubkey);
+	const tgid = getTabGroupId(tab);
+	if (tgid !== getTabGroupId(wasTab)) {
+	  updateWorkspace((ws) => {
+	    console.log("tab", wasTab.id, "delete from", wasTab.url);
+	    deleteFromTabGroup(ws, wasTab);
+	    
+	    wasTab.url = url;
+	    addToTabGroup(ws, wasTab);
 
-	  tab.url = wasUrl;
-	  deleteFromTabGroup(ws, tab);
+	    const tg = ws.tabGroups[tgid];
+	    tg.lastTabId = wasTab.id;
 
-	  tab.url = url;
-	  addToTabGroup(ws, tab);
+	    return { tabGroups: {...ws.tabGroups} }
+	  }, tab.pubkey);
 	}
-	
+
 	dbi.updateTab(tab);
       }
     },
@@ -472,9 +482,8 @@ const AppContextProvider = ({ children }) => {
     },
     onLoadStop: async (tabId, event) => {
       console.log("loaded", event.url);
-      updateTab({ url: event.url, loading: false }, tabId);
-      const tab = getTab(tabId);
-      if (tab) dbi.updateTab(tab);
+      API.setUrl(tabId, event.url);
+      updateTab({ loading: false }, tabId);
     },
     onGetPubkey: (tabId, pubkey) => {
       if (pubkey !== currentPubkey) {
@@ -629,9 +638,18 @@ const AppContextProvider = ({ children }) => {
   };
 
   const openApp = async (params) => {
+
+    if (params.kind !== undefined) {
+      updateWorkspace((ws) => {
+	ws.lastKindApps[params.kind] = params.naddr;
+	return {
+	  lastKindApps: {...ws.lastKindApps}
+	}
+      });
+    }
     
     const pin = currentWorkspace.pins.find((p) => p.appNaddr == params.naddr);
-
+    
     await openBlank({
       url: params.url,
       pinned: !!pin,
