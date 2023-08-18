@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "prettier": "npx prettier --write src",
     "preview": "vite preview",
-    "prepare": "cd .. && husky install app/.husky"
+    "prepare": "cd .. && husky install"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
