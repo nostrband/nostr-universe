@@ -41,24 +41,22 @@ export const Footer = ({ onOpenPinModal }) => {
             className="container d-none justify-content-between align-items-center gap-1"
             style={{ position: "relative", zIndex: 1200, background: "#000" }}
           >
-            <div className="me-3">
-	      <div className="d-flex justify-content-start align-items-center">
-		{currentTabGroup && currentTabGroup.tabs.map(id => {
-		  const tab = getTab(id);
-		  return (
-		    <div style={{width: "34px"}}>
-		      <PinItem
-			image={tab.icon}
-			      title={tab.title}
-			      active={tab.id === currentTab.id}
-			      onClick={() => switchTab(tab)}
-		      />
-		    </div>
-		  )
-		})}
-	      </div>
+            <div className="me-0 d-flex justify-content-start align-items-center" style={{overflowX:"scroll"}}>
+	      {currentTabGroup && currentTabGroup.tabs.map(id => {
+		const tab = getTab(id);
+		return (
+		  <div style={{width: "34px", minWidth:"34px"}}>
+		    <PinItem
+		      image={tab.icon}
+		      title={tab.title}
+		      active={tab.id === currentTab.id}
+		      onClick={() => switchTab(tab)}
+		    />
+		  </div>
+		)
+	      })}
             </div>
-            <div>
+            <div className="flex-shrink-0">
 	      <StyledIconButton
 		onClick={onStopReload}
                 disabled={!currentTab}
