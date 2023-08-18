@@ -239,7 +239,8 @@ function addToTabGroup(workspace, pt, isPin) {
     workspace.tabGroups[id] = {
       id,
       info: pt,
-      tabs: []
+      tabs: [],
+      lastTabId: "",
     };
 
   const tg = workspace.tabGroups[id];
@@ -542,8 +543,6 @@ const AppContextProvider = ({ children }) => {
   };
 
   const close = async (tab) => {
-    await hide(tab);
-
     await dbi.deleteTab(tab.id);
     await browser.close(tab.id);
 
@@ -556,10 +555,24 @@ const AppContextProvider = ({ children }) => {
     });
   };
 
+  const stop = async (tab) => {
+    if (tab) {
+      updateTab({ loading: false }, tab.id);
+      await browser.stop(tab.id);
+    }
+  }
+
+  const reload = async (tab) => {
+    if (tab) {
+      updateTab({ loading: true }, tab.id);
+      await browser.reload(tab.id);
+    }
+  }
+
   const hide = async (tab) => {
     if (tab) {
-      await browser.hide(tab.id);
       updateWorkspace({ currentTabId: "" });
+      await browser.hide(tab.id);
     }
 
     document.getElementById("pins").style.display = "block";
@@ -585,7 +598,11 @@ const AppContextProvider = ({ children }) => {
         await ensureBrowser(tab);
 
         await browser.show(tab.id);
-        updateWorkspace({ currentTabId: tab.id });
+        updateWorkspace((ws) => {
+	  const tg = ws.tabGroups[getTabGroupId(tab)];
+	  tg.lastTabId = tab.id;
+	  return { currentTabId: tab.id, tabGroups: {...ws.tabGroups} }
+	});
         ok();
       }, 0);
     });
@@ -708,21 +725,50 @@ const AppContextProvider = ({ children }) => {
   };
 
   const openTabGroup = async (tg) => {
-    if (tg.tabs.length)
-      await show(getTab(tg.tabs[0])); // FIXME open current tab
-    else
+    if (tg.tabs.length) {
+      const tab = getTab(tg.lastTabId || tg.tabs[0]);
+      await show(tab);
+    } else {
       await open({...tg.pin, pinned: true});
+    }
   };
 
   const closeTab = async () => {
     console.log("closeTab");
-    if (currentTab) await close(currentTab);
-    else if (lastCurrentTab) await close(lastCurrentTab);
+    const tab = currentTab || lastCurrentTab;
+    if (!tab)
+      return;
+    
+    // hide first
+    await hide(tab);
+
+    // get tab group of the closed tab
+    const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];
+    
+    // switch to previous one of the group
+    const index = tg.tabs.findIndex(id => id === tab.id);
+    const next = index ? index - 1 : index + 1;
+    console.log("next", next);
+    if (next < tg.tabs.length)
+      await show(getTab(tg.tabs[next]));
+    
+    // close in bg after that
+    await close(tab);
   };
 
   const hideTab = async () => {
     console.log("hideTab");
     if (currentTab) await hide(currentTab);
+  };
+
+  const stopTab = async () => {
+    console.log("stopTab");
+    if (currentTab) await stop(currentTab);
+  };
+
+  const reloadTab = async () => {
+    console.log("reloadTab");
+    if (currentTab) await reload(currentTab);
   };
 
   const unpinTab = () => {
@@ -835,6 +881,8 @@ const AppContextProvider = ({ children }) => {
         onOpenTabGroup: openTabGroup,
         onCloseTab: closeTab,
         onHideTab: hideTab,
+        onStopTab: stopTab,
+        onReloadTab: reloadTab,
         setOpenKey,
         onCopyKey: copyKey,
         onShowKey: showKey,
@@ -849,6 +897,7 @@ const AppContextProvider = ({ children }) => {
         currentWorkspace,
         currentTab,
         currentTabGroup,
+	getTab,
         lastCurrentTab,
 	clearLastCurrentTab,
         onModalOpen,

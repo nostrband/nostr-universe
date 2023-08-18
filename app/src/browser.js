@@ -411,6 +411,14 @@ const hide = async (id) => {
   await refs[id]?.hide();
 }
 
+const stop = async (id) => {
+  await refs[id]?.stop();
+}
+
+const reload = async (id) => {
+  await refs[id]?.reload();
+}
+
 const close = async (id) => {
   if (!(id in refs))
     return;
@@ -463,6 +471,8 @@ export const browser = {
   show,
   close,
   hide,
+  stop,
+  reload,
   setAPI,
   showMenu
 }

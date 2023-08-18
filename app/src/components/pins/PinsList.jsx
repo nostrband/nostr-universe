@@ -19,6 +19,7 @@ export const PinsList = ({ drawerBleeding }) => {
             image={tg.info.icon}
             {...tg.info}
             onClick={() => onOpenTabGroup(tg)}
+	    active={tg.tabs.length > 0}
           />
 	)
       })}
