@@ -3,7 +3,8 @@ import { TrendingProfileItem } from "./TrendingProfileItem";
 import { AppContext } from "../../store/app-context";
 import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
-import { nostrbandRelay, fetchAppsForEvent } from '../../nostr'
+import { nostrbandRelay } from "../../nostr";
+import { SectionTitle } from "../UI/SectionTitle";
 
 function createDuplicateList() {
   return Array.from({ length: 10 }, () => {
@@ -20,8 +21,7 @@ const getRenderedProfiles = (profiles, isLoading) => {
 
 export const TrendingProfiles = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
-  const { currentWorkspace, onOpenEvent } = contextData || {};
-
+  const { currentWorkspace } = contextData || {};
   const trendingProfiles = currentWorkspace?.trendingProfiles || [];
 
   const onProfileClick = async (pubkey) => {
@@ -39,32 +39,27 @@ export const TrendingProfiles = ({ onOpenProfile }) => {
     trendingProfiles,
     trendingProfiles.length > 0
   );
-  
+
   return (
-    <StyledContainer>
-      <h1>Trending profiles</h1>
+    <StyledSection>
+      <SectionTitle color="#E2E8A3">Trending profiles</SectionTitle>
       <TrendingProfilesContainer>
-        {trendingProfiles.length > 0 && renderedProfiles.map((p) => (
-          <TrendingProfileItem
-            key={p.pubkey}
-            profile={p}
-            onClick={onProfileClick}
-          />
-        ))}
+        {trendingProfiles.length > 0 &&
+          renderedProfiles.map((p) => (
+            <TrendingProfileItem
+              key={p.pubkey}
+              profile={p}
+              onClick={onProfileClick}
+            />
+          ))}
       </TrendingProfilesContainer>
-    </StyledContainer>
+    </StyledSection>
   );
 };
 
-const StyledContainer = styled("div")(() => ({
+const StyledSection = styled("section")(() => ({
   marginTop: "2.3rem",
   paddingLeft: "1rem",
-  h1: {
-    fontSize: "20px",
-    fontWeight: 600,
-    color: "#E2E8A3",
-    marginBottom: "0.75rem",
-  },
 }));
 
 const TrendingProfilesContainer = styled("div")(() => ({

@@ -14,10 +14,12 @@ import { styled } from "@mui/material";
 import { AppContext } from "../store/app-context";
 import { stringToBech32 } from "../nostr";
 import { useSearchParams } from "react-router-dom";
+import { TrendingNotes } from "../components/trending-notes/TrendingNotes";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
-  const { onOpenBlank, contextInput, setContextInput, clearLastCurrentTab } = contextData || {};
+  const { onOpenBlank, contextInput, setContextInput, clearLastCurrentTab } =
+    contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isSearchModalVisible = Boolean(searchParams.get("search"));
@@ -46,24 +48,22 @@ const MainPage = () => {
   const [showTabMenu, setShowTabMenu] = useState(false);
 
   const onSearch = (str) => {
-
     clearLastCurrentTab();
-
     try {
       const url = new URL("/", str);
       if (url) {
-	// need async launch to let the search modal close itself
-	setTimeout(() => onOpenBlank({url: str}), 0);
-	return true;
+        // need async launch to let the search modal close itself
+        setTimeout(() => onOpenBlank({ url: str }), 0);
+        return true;
       }
     } catch {}
-  
+
     const b32 = stringToBech32(str);
     if (b32) {
       setOpenAddr(b32);
       return true;
     }
-    
+
     return false;
   };
 
@@ -78,6 +78,7 @@ const MainPage = () => {
         {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
         <TrendingProfiles onOpenProfile={setOpenAddr} />
+        <TrendingNotes />
 
         {true && <AppsList />}
 
@@ -98,7 +99,7 @@ const MainPage = () => {
         />
 
         <EventAppsModal
-          isOpen={openAddr != ""}
+          isOpen={openAddr !== ""}
           onClose={() => setOpenAddr("")}
           addr={openAddr}
           onSelect={onOpenEvent}
@@ -108,7 +109,7 @@ const MainPage = () => {
           isOpen={showTabMenu}
           onClose={() => setShowTabMenu(false)}
           onOpenWith={setOpenAddr}
-	  onOpenPinAppModal={togglePinModalVisibility}
+          onOpenPinAppModal={togglePinModalVisibility}
         />
 
         <ContextMenuModal

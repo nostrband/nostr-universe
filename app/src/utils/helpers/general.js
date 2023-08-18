@@ -21,8 +21,8 @@ export const getProfileImage = (profile) => {
 };
 
 export const isGuest = (pubkey) => {
-  return pubkey.length != 64;
-}
+  return pubkey.length !== 64;
+};
 
 export const getRenderedUsername = (profile, pubkey) => {
   return (
@@ -33,7 +33,7 @@ export const getRenderedUsername = (profile, pubkey) => {
 };
 
 export const renderDefaultAppIcon = (title) => {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = 128;
   canvas.height = 128;
 
@@ -49,4 +49,4 @@ export const renderDefaultAppIcon = (title) => {
   ctx.fillText(title.substring(0, 1).toUpperCase(), 32, 95);
   const dataURL = canvas.toDataURL();
   return dataURL;
-}
+};
