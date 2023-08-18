@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { List, ListItemButton, ListItemAvatar, Avatar, ListItem, ListItemText } from '@mui/material'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
+import { Container } from '@/layout/Container/Conatiner'
 import {
   StyledViewAction,
   StyledViewAvatar,
@@ -11,7 +12,6 @@ import {
   StyledViewModal,
   StyledViewName
 } from './styled'
-import { Container } from '../../../../layout/Container/Conatiner'
 
 export const ProfileView = () => {
   const [open, setOpen] = useState(false)

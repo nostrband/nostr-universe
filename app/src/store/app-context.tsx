@@ -1,15 +1,16 @@
 /* eslint-disable */
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
-import { keystore } from '../modules/keystore'
-import { db, dbi } from '../modules/db'
-import { coracleIcon, irisIcon, nostrIcon, satelliteIcon, snortIcon } from '../assets'
+import { keystore } from '@/modules/keystore'
+import { db } from '@/modules/db'
+import { coracleIcon, irisIcon, nostrIcon, satelliteIcon, snortIcon } from '@/assets'
 import { nip19 } from '@nostrband/nostr-tools'
-import { config } from '../modules/config'
-import { connect, fetchApps, subscribeProfiles, fetchAppsForEvent, stringToBech32 } from '../modules/nostr'
-import { browser } from '../modules/browser'
+import { config } from '@/modules/config'
+
+import { connect, fetchApps, subscribeProfiles, fetchAppsForEvent, stringToBech32 } from '@/modules/nostr'
+import { browser } from '@/modules/browser'
 // import { allRelays } from '../nostr'
-import { getNpub } from '../utils/helpers/general'
+import { getNpub } from '@/utils/helpers/general'
 
 const defaultApps = [
   {

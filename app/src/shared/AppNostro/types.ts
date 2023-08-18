@@ -1,5 +1,5 @@
 import { BoxProps, TypographyProps } from '@mui/material'
-import { OverridableStringUnion } from '../../types/utility'
+import { OverridableStringUnion } from '@/types/utility'
 import { APP_NOSTRO_SIZE } from './const'
 
 export type AppNostro = {

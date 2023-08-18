@@ -2,7 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Header } from './components/Header/Header'
 import { TrendingProfiles } from './components/TrendingProfiles/TrendingProfiles'
 import { AppsNostro } from './components/AppsNostro/AppsNostro'
-import { AppPinMenu } from '../../components/AppPinMenu/AppPinMenu'
+import { AppPinMenu } from '@/components/AppPinMenu/AppPinMenu'
 
 export const MainContainer = () => {
   const location = useLocation()

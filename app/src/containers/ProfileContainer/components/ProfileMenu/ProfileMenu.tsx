@@ -3,7 +3,7 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
-import { Container } from '../../../../layout/Container/Conatiner'
+import { Container } from '@/layout/Container/Conatiner'
 import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuTitle, StyledMenuWrapper } from './styled'
 
 export const ProfilMenu = () => {

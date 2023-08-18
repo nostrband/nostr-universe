@@ -1,6 +1,6 @@
 import { IAppsNostro } from './types'
 import { SliderAppsNostro } from './components/SliderAppsNostro/SliderAppsNostro'
-import { Container } from '../../../../layout/Container/Conatiner'
+import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle } from './styled'
 
 const dataTrendingProfiles: IAppsNostro = [

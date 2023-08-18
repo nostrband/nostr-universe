@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Avatar, IconButton } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
-import { Header as HeaderLayout } from '../../../../layout/Header/Header'
+import { Header as HeaderLayout } from '@/layout/Header/Header'
 import styles from './header.module.scss'
 
 export const Header = () => {

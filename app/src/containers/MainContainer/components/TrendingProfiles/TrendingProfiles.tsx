@@ -3,8 +3,8 @@
 import { useContext } from 'react'
 import { ITrendingProfiles } from './types'
 import { SliderProfiles } from './components/SliderProfiles/SliderProfiles'
-import { Container } from '../../../../layout/Container/Conatiner'
-import { AppContext } from '../../../../store/app-context'
+import { Container } from '@/layout/Container/Conatiner'
+import { AppContext } from '@/store/app-context'
 import { StyledTitle, StyledWrapper } from './styled'
 
 const dataTrendingProfiles: ITrendingProfiles = [

@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
-import { MainPage } from './pages/MainPage/MainPage'
-import { ProfilePage } from './pages/ProfilePage/ProfilePage'
+import { MainPage } from '@/pages/MainPage/MainPage'
+import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
 
 export const App = () => {
   return (

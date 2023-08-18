@@ -1,6 +1,6 @@
 import { IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
-import { Header as HeaderLayout } from '../../../../layout/Header/Header'
+import { Header as HeaderLayout } from '@/layout/Header/Header'
 import { StyledProfileTitle } from './styled'
 import { IHeader } from './types'
 
