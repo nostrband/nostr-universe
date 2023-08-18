@@ -131,6 +131,10 @@ const dataAppsNostro = [
   {
     name: 'Omega-50',
     img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
+  },
+  {
+    name: 'Omega-50',
+    img: 'https://miro.medium.com/v2/resize:fit:956/1*BoIwK3flsWLkT57s18Bpgg.png'
   }
 ]
 
