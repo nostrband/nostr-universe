@@ -61,9 +61,9 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
     return setApps([]);
   }, [addr]);
 
-  const onOpen = (url, app) => {
+  const onOpen = (app) => {
     onSelect();
-    onOpenApp(url, app);
+    onOpenApp(app);
   };
 
   return (

@@ -19,6 +19,7 @@ export const TrendingProfileItem = (props) => {
     name,
     display_name,
     picture,
+    about
   } = props.profile || {};
   const isShowSkeleton = name === null;
 
@@ -31,27 +32,35 @@ export const TrendingProfileItem = (props) => {
   // const about = crop(props.profile?.about || "", 25);
 
   return (
-    <Card>
+    <Card
+      classes={{ disabled: "disabled" }}
+      disabled={isShowSkeleton}
+      onClick={() => props.onClick(pubkey)}
+    >
       {isShowSkeleton ? (
-        <StyledSkeleton variant="circular" width={48} height={48} />
+	<StyledSkeleton variant="circular" width={48} height={48} />
       ) : (
-        <Avatar src={pictureSource} className="avatar">
+	<Avatar src={pictureSource} className="avatar">
           {renderedName}
-        </Avatar>
+	</Avatar>
       )}
       {isShowSkeleton ? (
-        <StyledSkeleton variant="text" className="text" />
+	<StyledSkeleton variant="text" className="text" />
       ) : (
-        <Typography className="username">{renderedName}</Typography>
+	<>
+	  <Typography className="username">{renderedName}</Typography>
+	  <Typography className="about">{about || ""}</Typography>
+	</>
       )}
 
-      <StyledIconButton
-        disabled={isShowSkeleton}
-        onClick={() => props.onClick(pubkey)}
-        classes={{ disabled: "disabled" }}
-      >
-        <PlusIcon />
+      {false && (<StyledIconButton
+		   disabled={isShowSkeleton}
+		   onClick={() => props.onClick(pubkey)}
+		   classes={{ disabled: "disabled" }}
+		 >
+	<PlusIcon />
       </StyledIconButton>
+      )}
     </Card>
   );
 };
@@ -61,11 +70,11 @@ const Card = styled("div")(() => ({
   borderRadius: "24px",
   backgroundColor: "#222222",
   minHeight: "148px",
-  minWidth: "115px",
+  minWidth: "145px",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: "10px",
+  gap: "5px",
   marginRight: "0.75rem",
   "& .avatar": {
     width: "48px",
@@ -81,6 +90,19 @@ const Card = styled("div")(() => ({
     textAlign: "center",
     overflow: "hidden",
     textOverflow: "ellipsis",
+  },
+  "& .about": {
+    fontFamily: "Outfit",
+    fontSize: "0.8rem",
+    fontWeight: 200,
+    color: "#fff",
+    width: "86%",
+    textAlign: "center",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    display: "-webkit-box",
+    "-webkitLineClamp": "2",
+    "-webkitBoxOrient": "vertical",
   },
 }));
 

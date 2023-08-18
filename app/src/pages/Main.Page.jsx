@@ -17,7 +17,7 @@ import { useSearchParams } from "react-router-dom";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
-  const { open, contextInput, setContextInput } = contextData || {};
+  const { onOpenBlank, contextInput, setContextInput, clearLastCurrentTab } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isSearchModalVisible = Boolean(searchParams.get("search"));
@@ -46,19 +46,24 @@ const MainPage = () => {
   const [showTabMenu, setShowTabMenu] = useState(false);
 
   const onSearch = (str) => {
+
+    clearLastCurrentTab();
+
+    try {
+      const url = new URL("/", str);
+      if (url) {
+	// need async launch to let the search modal close itself
+	setTimeout(() => onOpenBlank({url: str}), 0);
+	return true;
+      }
+    } catch {}
+  
     const b32 = stringToBech32(str);
     if (b32) {
       setOpenAddr(b32);
       return true;
     }
-
-    const url = new URL("/", str);
-    if (url) {
-      // need async launch to let the search modal close itself
-      setTimeout(() => open(str), 0);
-      return true;
-    }
-
+    
     return false;
   };
 

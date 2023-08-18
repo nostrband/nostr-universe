@@ -1,14 +1,23 @@
 import React from "react";
 import { Container, IconButton, styled } from "@mui/material";
 import { CloseIcon } from "../assets";
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AppContext } from "../store/app-context";
 import { Profile } from "../components/profile/Profile";
 import { AnimatedContainer } from "../components/UI/AnimatedContainer";
 
 const ProfilePage = () => {
+
+  const contextData = useContext(AppContext);
+  const { onModalClose } = contextData || {};
+
   const navigate = useNavigate();
 
-  const navigateBackToMain = () => navigate("/", { replace: true });
+  const navigateBackToMain = async () => {
+    navigate("/", { replace: true })
+    onModalClose();
+  };
   return (
     <AnimatedContainer>
       <StyledContainer>

@@ -250,16 +250,6 @@ function addToTabGroup(workspace, pt, isPin) {
   if (!isPin) {
     tg.tabs.push(pt.id);
   }
-  console.log(
-    "add pt",
-    pt.id,
-    "isPin",
-    isPin,
-    "gid",
-    id,
-    "tg",
-    JSON.stringify(tg)
-  );
 }
 
 function deleteFromTabGroup(workspace, pt, isPin) {
@@ -487,10 +477,10 @@ const AppContextProvider = ({ children }) => {
       console.log("click on ", e);
       if (e) e.click();
     },
-    onBlank: (tabId, url) => {
+    onBlank: async (tabId, url) => {
       const tab = getTab(tabId);
-      if (tab) hide(tab);
-      open(url);
+      if (tab) await hide(tab);
+      openBlank({ url });
     },
     onIcon: async (tabId, icon) => {
       updateTab({ icon }, tabId);
@@ -556,10 +546,10 @@ const AppContextProvider = ({ children }) => {
   };
 
   const close = async (tab) => {
-    hide(tab);
+    await hide(tab);
 
     await dbi.deleteTab(tab.id);
-    browser.close(tab.id);
+    await browser.close(tab.id);
 
     updateWorkspace((ws) => {
       deleteFromTabGroup(ws, tab);
@@ -570,9 +560,9 @@ const AppContextProvider = ({ children }) => {
     });
   };
 
-  const hide = (tab) => {
+  const hide = async (tab) => {
     if (tab) {
-      browser.hide(tab.id);
+      await browser.hide(tab.id);
       updateWorkspace({ currentTabId: "" });
     }
     setIsShowDrawer(true);
@@ -602,51 +592,73 @@ const AppContextProvider = ({ children }) => {
     });
   };
 
-  const openApp = async (url, app) => {
-    const pin = currentWorkspace.pins.find((p) => p.appNaddr == app.naddr);
+  const openApp = async (params) => {
+    const pin = currentWorkspace.pins.find((p) => p.appNaddr == params.naddr);
 
-    return open(
-      url,
-      {
-        id: pin?.id,
-        appNaddr: app.naddr,
-        title: app.name,
-        icon: app.picture,
-      },
-      {
-        newTab: true,
-      }
-    );
+    await openBlank({
+      url: params.url,
+      pinned: !!pin,
+      appNaddr: params.naddr,
+      title: params.name,
+      icon: params.picture,
+    });
   };
 
-  const open = async (url, pin, opts = {}) => {
-    console.log("open", url, "pin", pin);
+  const openBlank = async (params) => {
+    const { url } = params;
+    console.log("openBlank", JSON.stringify(params));
 
-    // check if an open tab for this app exists
-    if (pin) {
-      const tab = currentWorkspace.tabs.find(
-        (t) => t?.appNaddr === pin.appNaddr
-      );
-      if (tab && (!opts.newTab || tab.url === url)) {
-        show(tab);
-        return;
-      }
+    // find an existing tab w/ same url
+    const tab = currentWorkspace.tabs.find((t) => t.url === url);
+    if (tab) {
+      await show(tab);
+      return;
     }
 
+    // find an existing app for this url
+    const origin = new URL(url).origin;
+    const app = apps.find((a) => a.url.startsWith(origin));
+    if (app) {
+      const pin = currentWorkspace.pins.find((p) => p.appNaddr === app.naddr);
+      await open({
+        url,
+        pinned: !!pin,
+        icon: app.picture,
+        title: app.title,
+        appNaddr: app.naddr,
+      });
+      return;
+    }
+
+    // nothing's known about this url, open a new tab
+    await open(params);
+  };
+
+  const open = async (params) => {
+    console.log("open", JSON.stringify(params));
+
+    let { url, title = "", icon = "", pinned = false } = params;
+
     const U = new URL(url);
-    const title = U.hostname;
+
+    if (!title)
+      title = U.hostname.startsWith("www.")
+        ? U.hostname.substring(4)
+        : U.hostname;
+
+    if (!icon) icon = U.origin + "/favicon.ico";
 
     const tab = {
+      url,
       id: "" + Math.random(),
       pubkey: currentPubkey,
-      title: pin ? pin.title : title,
-      icon: pin ? pin.icon : U.origin + "/favicon.ico",
-      url,
+      title: title,
+      icon: icon,
+      appNaddr: params.appNaddr,
       order: currentWorkspace.tabs.length,
-      pinned: pin && pin.id,
+      pinned,
     };
-    if (pin) tab.appNaddr = pin.appNaddr;
-    console.log("open", url, JSON.stringify(pin), JSON.stringify(tab));
+    console.log("open", url, JSON.stringify(params), JSON.stringify(tab));
 
     // add to tab list
     updateWorkspace((ws) => {
@@ -662,7 +674,7 @@ const AppContextProvider = ({ children }) => {
     await dbi.addTab(tab);
 
     // it creates the tab and sets as current
-    show(tab);
+    await show(tab);
   };
 
   async function copyKey() {
@@ -696,20 +708,21 @@ const AppContextProvider = ({ children }) => {
     reloadProfiles(keys, currentPubkey);
   };
 
-  const openTabGroup = (tg) => {
-    if (tg.tabs.length) show(getTab(tg.tabs[0])); // FIXME open current tab
-    else open(tg.pin.url, tg.pin);
+  const openTabGroup = async (tg) => {
+    if (tg.tabs.length)
+      await show(getTab(tg.tabs[0])); // FIXME open current tab
+    else await open({ ...tg.pin, pinned: true });
   };
 
-  const closeTab = () => {
+  const closeTab = async () => {
     console.log("closeTab");
-    if (currentTab) close(currentTab);
-    if (lastCurrentTab) close(lastCurrentTab);
+    if (currentTab) await close(currentTab);
+    else if (lastCurrentTab) await close(lastCurrentTab);
   };
 
-  const hideTab = () => {
+  const hideTab = async () => {
     console.log("hideTab");
-    if (currentTab) hide(currentTab);
+    if (currentTab) await hide(currentTab);
   };
 
   const unpinTab = () => {
@@ -730,7 +743,7 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  const pinTab = (openPinAppModal) => {
+  const pinTab = async (openPinAppModal) => {
     const tab = lastCurrentTab;
     if (!tab || tab.pinned) return;
 
@@ -738,7 +751,7 @@ const AppContextProvider = ({ children }) => {
     if (app) {
       setPinApp(app);
       openPinAppModal();
-      browser.hide(tab.id);
+      await browser.hide(tab.id);
     } else {
       savePin([]);
     }
@@ -773,16 +786,16 @@ const AppContextProvider = ({ children }) => {
     dbi.addPin(pin);
   };
 
-  const onModalOpen = () => {
+  const onModalOpen = async () => {
     console.log("onModalOpen", currentTab);
     if (!currentTab) return;
 
-    hide(currentTab);
+    await hide(currentTab);
 
     updateWorkspace({ lastCurrentTabId: currentTab.id });
   };
 
-  const onModalClose = () => {
+  const onModalClose = async () => {
     const lastCurrentTabId = currentWorkspace.lastCurrentTabId;
     console.log("onModalClose", lastCurrentTabId);
     if (!lastCurrentTabId) return;
@@ -792,8 +805,12 @@ const AppContextProvider = ({ children }) => {
     );
     if (!lastCurrentTab) return;
 
-    show(lastCurrentTab);
+    await show(lastCurrentTab);
 
+    updateWorkspace({ lastCurrentTabId: "" });
+  };
+
+  const clearLastCurrentTab = () => {
     updateWorkspace({ lastCurrentTabId: "" });
   };
 
@@ -812,6 +829,7 @@ const AppContextProvider = ({ children }) => {
         apps,
         onAddKey: addKey,
         onSelectKey: selectKey,
+        onOpenBlank: openBlank,
         onOpenApp: openApp,
         onOpenTab: show,
         onOpenTabGroup: openTabGroup,
@@ -832,6 +850,7 @@ const AppContextProvider = ({ children }) => {
         currentTab,
         currentTabGroup,
         lastCurrentTab,
+        clearLastCurrentTab,
         onModalOpen,
         onModalClose,
         contextInput,
