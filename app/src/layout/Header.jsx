@@ -20,9 +20,10 @@ export const Header = ({
   const contextData = useContext(AppContext);
   const navigate = useNavigate();
 
-  const { currentTab, profile } = contextData || {};
+  const { currentTab, profile, onModalOpen } = contextData || {};
 
-  const navigateToProfilePage = () => {
+  const navigateToProfilePage = async () => {
+    await onModalOpen();
     navigate("/profile");
   };
 
