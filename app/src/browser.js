@@ -172,6 +172,10 @@ const nostrMenuConnect = () => {
     const t = e.target;
     console.log("longtouch", t);
     try {
+      const sel = window.getSelection().toString();
+      if (sel)
+	return await menu(sel);
+
       return await menuByAttr(t, "href")
           || await menuByAttr(t, "id")
           || await menuByAttr(t, "data-npub")
