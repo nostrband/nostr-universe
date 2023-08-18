@@ -1,6 +1,10 @@
+/* eslint-disable */
+// @ts-nocheck
+import { useContext } from 'react'
 import { ITrendingProfiles } from './types'
 import { SliderProfiles } from './components/SliderProfiles/SliderProfiles'
 import { Container } from '../../../../layout/Container/Conatiner'
+import { AppContext } from '../../../../store/app-context'
 import { StyledTitle, StyledWrapper } from './styled'
 
 const dataTrendingProfiles: ITrendingProfiles = [
@@ -27,6 +31,13 @@ const dataTrendingProfiles: ITrendingProfiles = [
 ]
 
 export const TrendingProfiles = () => {
+  const contextData = useContext(AppContext)
+  const { currentWorkspace, onOpenEvent } = contextData || {}
+
+  const trendingProfiles = currentWorkspace?.trendingProfiles || []
+
+  console.log(trendingProfiles)
+
   return (
     <StyledWrapper>
       <Container>

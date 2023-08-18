@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Global } from '@emotion/react'
-import { SwipeableDrawer, Grid } from '@mui/material'
-import { Puller, StyledPinApps, StyledSwipeableDrawerContent } from './styled'
+import { Grid } from '@mui/material'
+import { Puller, StyledSwipeableMenu, StyledPinApps, StyledSwipeableDrawerContent } from './styled'
 import { IAppPinMenu } from './types'
 import { drawerbleeding } from './const'
 import { Container } from '../../layout/Container/Conatiner'
@@ -137,6 +137,8 @@ const dataAppsNostro = [
 export const AppPinMenu = (props: IAppPinMenu) => {
   const { window } = props
   const [open, setOpen] = useState(false)
+  const [isDrag, setDrag] = useState<boolean>(false)
+  const [initialPoint, setInitialPoint] = useState<null | number>(null)
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen)
@@ -156,34 +158,45 @@ export const AppPinMenu = (props: IAppPinMenu) => {
         }}
       />
 
-      <SwipeableDrawer
+      <StyledSwipeableMenu
         container={container}
         anchor="bottom"
         open={open}
+        isdrag={isDrag ? 1 : 0}
+        initialpoint={initialPoint}
         onClose={toggleDrawer(false)}
         onOpen={toggleDrawer(true)}
         swipeAreaWidth={drawerbleeding}
         disableSwipeToOpen={false}
-        allowSwipeInChildren={true}
+        allowSwipeInChildren={(...args: [TouchEvent, HTMLElement, HTMLElement]) => {
+          const paper = args[2]
+          setInitialPoint(paper.clientHeight)
+
+          return true
+        }}
         ModalProps={{
           keepMounted: true
         }}
-        transitionDuration={200}
+        // transitionDuration={300}
       >
-        <StyledPinApps drawerbleeding={drawerbleeding}>
+        <StyledPinApps
+          drawerbleeding={drawerbleeding}
+          open={open}
+          onTouchMove={() => {
+            setDrag(true)
+          }}
+          onTouchEnd={() => {
+            setDrag(false)
+          }}
+        >
           <Puller />
-          <Swiper
-            slidesPerView="auto"
-            freeMode={true}
-            onSlideChange={() => console.log('slide change')}
-            onSwiper={(swiper) => console.log(swiper)}
-            modules={[FreeMode]}
-          >
-            {dataAppsNostro.map((app, i) => (
-              <SwiperSlide className={styles.slide} key={i}>
-                <AppNostro app={app} size="small" hideName />
-              </SwiperSlide>
-            ))}
+          <Swiper slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
+            {!open &&
+              dataAppsNostro.map((app, i) => (
+                <SwiperSlide className={styles.slide} key={i}>
+                  <AppNostro app={app} size="small" hideName />
+                </SwiperSlide>
+              ))}
           </Swiper>
         </StyledPinApps>
         <StyledSwipeableDrawerContent>
@@ -197,7 +210,7 @@ export const AppPinMenu = (props: IAppPinMenu) => {
             </Grid>
           </Container>
         </StyledSwipeableDrawerContent>
-      </SwipeableDrawer>
+      </StyledSwipeableMenu>
     </>
   )
 }
