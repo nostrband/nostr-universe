@@ -25,6 +25,8 @@ export const allRelays = [nostrbandRelayCounts, ...writeRelays];
 // global ndk instance for now
 let ndk = null;
 
+const kindApps = {};
+
 function fetchEventsRead(ndk, filter) {
   return ndk.fetchEvents(filter, NDKRelaySet.fromRelayUrls(readRelays, ndk));
 }
@@ -569,20 +571,25 @@ export async function fetchAppsForEvent(id, event) {
     }    
   }
   console.log('resolved addr', addr);
-
+  
   // now fetch the apps for event kind
-  const info = await fetchAppsByKinds(ndk, [addr.kind]);
-//  console.log("addr", addr, "apps", info);
+  const info = addr.kind in kindApps
+	     ? {...kindApps[addr.kind]}
+	     : await fetchAppsByKinds(ndk, [addr.kind]);
+  info.addr = addr;
+
+  // put to cache
+  kindApps[addr.kind] = info;
 
   // init convenient url property for each handler
-  // to redirect to this eevnt
+  // to redirect to this event
   for (const id in info.apps) {
     const app = info.apps[id];
     for (const h of app.handlers) {
       h.eventUrl = getUrl(h, addr);
     }
   }
-  
+    
   return info;
 }
 
@@ -626,6 +633,8 @@ export async function subscribeProfiles(pubkeys, cb) {
   });
 
   sub.start();
+
+//  console.log("subscribe to profiles", JSON.stringify(pubkeys));
 }
 
 export function stringToBech32(s, hex = false) {

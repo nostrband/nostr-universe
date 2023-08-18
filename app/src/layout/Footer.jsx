@@ -4,7 +4,7 @@ import Button from "react-bootstrap/esm/Button";
 import { AppContext } from "../store/app-context";
 import { SwipeableDrawer } from "../components/swipeable-drawer/SwipeableDrawer";
 import { IconButton, styled } from "@mui/material";
-import { homeIcon } from "../assets";
+import { homeIcon, stopIcon, reloadIcon } from "../assets";
 import { PinItem } from "../components/pins/PinItem";
 
 export const Footer = ({ onOpenPinModal }) => {
@@ -12,9 +12,23 @@ export const Footer = ({ onOpenPinModal }) => {
   const {
     currentWorkspace,
     currentTab,
+    currentTabGroup,
+    getTab,
+    onOpenTab,
     onHideTab,
+    onStopTab,
+    onReloadTab,
   } = contextData || {};
 
+  const switchTab = async (tab) => {
+    await onHideTab();
+    onOpenTab(tab);
+  };
+
+  const onStopReload = async () => {
+    currentTab.loading ? onStopTab() : onReloadTab();
+  };
+  
   return (
     <footer id="footer">
       <div id="pins" className="d-block">
@@ -27,20 +41,32 @@ export const Footer = ({ onOpenPinModal }) => {
             className="container d-none justify-content-between align-items-center gap-1"
             style={{ position: "relative", zIndex: 1200, background: "#000" }}
           >
-            <div className="me-3">
-	      <div className="d-flex justify-content-start align-items-center">
-		{currentTab && currentTab.icon && (
-		  <div style={{width: "34px"}}>
+            <div className="me-0 d-flex justify-content-start align-items-center" style={{overflowX:"scroll"}}>
+	      {currentTabGroup && currentTabGroup.tabs.map(id => {
+		const tab = getTab(id);
+		return (
+		  <div style={{width: "34px", minWidth:"34px"}}>
 		    <PinItem
-		      image={currentTab.icon}
-		      title={currentTab.title}
+		      image={tab.icon}
+		      title={tab.title}
+		      active={tab.id === currentTab.id}
+		      onClick={() => switchTab(tab)}
 		    />
 		  </div>
-		)}
-		{currentTab && currentTab.loading && "Loading..."}
-	      </div>
+		)
+	      })}
             </div>
-            <div>
+            <div className="flex-shrink-0">
+	      <StyledIconButton
+		onClick={onStopReload}
+                disabled={!currentTab}
+	      >
+		<img
+		  src={currentTab && !currentTab.loading ? reloadIcon : stopIcon}
+		  width={"24px"}
+		  height={"24px"}
+		/>
+	      </StyledIconButton>
 	      <StyledIconButton
 		onClick={onHideTab}
                 disabled={!currentTab}

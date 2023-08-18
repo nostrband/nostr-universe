@@ -107,6 +107,7 @@ export const SwipeableDrawer = () => {
 		{...tg.info}
 		onClick={() => onOpenTabGroup(tg)}
                 withTitle
+		active={tg.tabs.length > 0}
               />
 	    )
 	  })}
