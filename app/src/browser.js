@@ -381,7 +381,9 @@ export function open(params) {
 
   ref.addEventListener('blank', async (event) => {
     console.log("blank", event.url);
-    if (API.onBlank)
+    if (event.url.startsWith("lightning:"))
+      cordova.InAppBrowser.open(event.url, '_self');
+    else if (API.onBlank)
       await API.onBlank(params.apiCtx, event.url);
   });
 
