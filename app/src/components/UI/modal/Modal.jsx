@@ -31,8 +31,9 @@ export const Modal = ({
 	await onModalOpen();
       if (open && !isOpen)
 	await onModalClose();
+
+      setOpen(isOpen);
     }
-    setOpen(isOpen);
     cb();
   }, [isOpen]);
   

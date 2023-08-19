@@ -230,8 +230,16 @@ function createWorkspace(pubkey, props = {}) {
   };
 }
 
+function getOrigin(url) {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url;
+  }
+}
+
 function getTabGroupId(pt) {
-  return pt.appNaddr || (new URL(pt.url)).origin;
+  return pt.appNaddr || getOrigin(pt.url);
 }
 
 function addToTabGroup(workspace, pt, isPin) {
@@ -671,7 +679,7 @@ const AppContextProvider = ({ children }) => {
     }
 
     // find an existing app for this url
-    const origin = (new URL(url)).origin;
+    const origin = getOrigin(url);
     const app = params.appNaddr
 	      ? apps.find(a => a.naddr === params.appNaddr)
 	      : apps.find(a => a.url.startsWith(origin));
@@ -696,13 +704,16 @@ const AppContextProvider = ({ children }) => {
 
     let {url, title = "", icon = "", pinned = false} = params;
 
-    const U = new URL(url);
-
-    if (!title)
-      title = U.hostname.startsWith("www.") ? U.hostname.substring(4) : U.hostname;
-
-    if (!icon)
-      icon = U.origin + "/favicon.ico"
+    try {
+      const U = new URL(url);
+      if (!title)
+	title = U.hostname.startsWith("www.") ? U.hostname.substring(4) : U.hostname;
+      if (!icon)
+	icon = U.origin + "/favicon.ico"
+    } catch {
+      if (!title)
+	title = url;
+    }
 
     const tab = {
       url,
