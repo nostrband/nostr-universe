@@ -296,7 +296,7 @@ const AppContextProvider = ({ children }) => {
   const [pinApp, setPinApp] = useState(null);
   const [openKey, setOpenKey] = useState();
 
-  const [openEventAddr, setOpenEventAddr] = useState("");
+  const [openAddr, setOpenAddr] = useState("");
   const [contextInput, setContextInput] = useState("");
 
   // helpers for initial loading w/ useEffect
@@ -510,7 +510,21 @@ const AppContextProvider = ({ children }) => {
     onBlank: async (tabId, url) => {
       const tab = getTab(tabId);
       if (tab) await hide(tab);
-      openBlank({url});
+      if (url.startsWith("nostr:")) {
+	const b32 = stringToBech32(url);
+	if (b32) {
+	  // offer to choose an app to show the event
+	  setOpenAddr(b32);
+	} else {
+	  // try some external app that might know this type of nostr: link
+	  window.cordova.InAppBrowser.open(url, '_self');
+	}
+      } else {
+	openBlank({url});
+      }
+    },
+    onBeforeLoad: async (tabId, url) => {
+      await API.onBlank(tabId, url);
     },
     onHide: (tabId) => {
       console.log("hide", tabId);
@@ -943,7 +957,6 @@ const AppContextProvider = ({ children }) => {
         onSavePin: savePin,
 	pinTab,
 	unpinTab,
-        onOpenEvent: setOpenEventAddr,
         workspaces,
         currentWorkspace,
         currentTab,
@@ -955,6 +968,8 @@ const AppContextProvider = ({ children }) => {
         onModalClose,
         contextInput,
         setContextInput,
+	openAddr,
+	setOpenAddr
       }}
     >
       {children}

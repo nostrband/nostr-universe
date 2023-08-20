@@ -602,6 +602,42 @@ export async function fetchEventByBech32(b32) {
   return await fetchEventByAddr(ndk, addr);
 }
 
+export async function searchProfiles(q) {
+  // try to fetch best apps list from our relay
+  const top = await ndk.fetchTop(
+    {
+      kinds: [KIND_META],
+      search: q,
+      limit: 20,
+    },
+    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+  );
+  console.log("top profiles", top?.ids.length);
+
+  let events = null;
+  if (top.ids.length) {
+    // fetch the app events themselves from the list
+    events = await fetchEventsRead(
+      ndk,
+      {
+        ids: top.ids,
+      }
+    );
+  }
+  events = [...events.values()];
+
+  events.forEach(e => {
+    e.profile = parseContentJson(e.content);
+    e.profile.pubkey = e.pubkey;
+    e.profile.npub = nip19.npubEncode(e.pubkey);
+    e.order = top.ids.findIndex(i => e.id === i);
+  });
+
+  events.sort((a, b) => a.order - b.order);
+
+  return events;
+}
+
 export async function subscribeProfiles(pubkeys, cb) {
   const sub = await ndk.subscribe(
     {

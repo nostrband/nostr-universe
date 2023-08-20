@@ -1,16 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "../UI/modal/Modal";
 
 import { IconButton, InputBase, styled } from "@mui/material";
 import { Header } from "../../layout/Header";
 import { SearchIcon } from "../../assets";
+import { nostrbandRelay, searchProfiles } from "../../nostr";
+import { nip19 } from "@nostrband/nostr-tools";
+import { TrendingProfileItem } from "../trending-profiles/TrendingProfileItem";
 
-export const SearchModal = ({ isOpen, onClose, onSearch }) => {
+export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent }) => {
   const [searchValue, setSearchValue] = useState("");
+  const [profiles, setProfiles] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const submitHandler = (e) => {
+  useEffect(() => {
+    setProfiles(null);
+    setIsLoading(false);
+  }, [isOpen]);
+
+  const submitHandler = async (e) => {
     e.preventDefault();
-    onSearch(searchValue);
+
+    if (onSearch(searchValue)) {
+      onClose();
+    }
+
+    setIsLoading(true);
+    const profiles = await searchProfiles(searchValue);
+    setProfiles(profiles);
+    setIsLoading(false);
+  };
+
+  const onProfileClick = async (pubkey) => {
+    console.log("show", pubkey);
+
+    const nprofile = nip19.nprofileEncode({
+      pubkey,
+      relays: [nostrbandRelay],
+    });
+
+    onOpenEvent(nprofile);
     onClose();
   };
 
@@ -33,6 +62,25 @@ export const SearchModal = ({ isOpen, onClose, onSearch }) => {
             }}
           />
         </Form>
+
+	<div className="ms-3">{isLoading && (<>Searching...</>)}</div>
+	{profiles && (
+	  <StyledContainer>
+	    <h1>Profiles</h1>
+	    <ProfilesContainer>
+              {profiles.map((e) => {
+		const p = e.profile;
+		return (
+		  <TrendingProfileItem
+		    key={p.pubkey}
+		    profile={p}
+		    onClick={onProfileClick}
+		  />
+              )})}
+	    </ProfilesContainer>
+	  </StyledContainer>
+	)}
+
       </Container>
     </Modal>
   );
@@ -44,7 +92,7 @@ const Container = styled("div")(() => ({
 }));
 
 const Form = styled("form")(() => ({
-  marginTop: "1.5rem",
+  marginTop: "1rem",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -60,7 +108,7 @@ const StyledInput = styled(InputBase)(() => ({
   fontFamily: "Outfit",
   fontSize: "16px",
   fontWeight: 400,
-  padding: "11px 16px",
+  padding: "4px 16px",
   "&:placeholder": {
     color: "#C9C9C9",
   },
@@ -72,4 +120,22 @@ const StyledIconButton = styled(IconButton)(() => ({
   "&:active": {
     background: "rgba(255, 255, 255, 0.1)",
   },
+}));
+
+const StyledContainer = styled("div")(() => ({
+  marginTop: "1.3rem",
+  paddingLeft: "1rem",
+  h1: {
+    fontSize: "20px",
+    fontWeight: 600,
+    color: "#E2E8A3",
+    marginBottom: "0.75rem",
+  },
+}));
+
+const ProfilesContainer = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "nowrap",
+  overflow: "auto",
 }));

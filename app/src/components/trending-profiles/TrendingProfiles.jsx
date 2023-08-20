@@ -20,7 +20,7 @@ const getRenderedProfiles = (profiles, isLoading) => {
 
 export const TrendingProfiles = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
-  const { currentWorkspace, onOpenEvent } = contextData || {};
+  const { currentWorkspace } = contextData || {};
 
   const trendingProfiles = currentWorkspace?.trendingProfiles || [];
 

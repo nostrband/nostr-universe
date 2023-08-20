@@ -17,7 +17,14 @@ import { useSearchParams } from "react-router-dom";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
-  const { onOpenBlank, contextInput, setContextInput, clearLastCurrentTab } = contextData || {};
+  const {
+    onOpenBlank,
+    contextInput,
+    setContextInput,
+    clearLastCurrentTab,
+    openAddr,
+    setOpenAddr
+  } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isSearchModalVisible = Boolean(searchParams.get("search"));
@@ -38,7 +45,6 @@ const MainPage = () => {
     setIsPinModalVisible((prevState) => !prevState);
   };
 
-  const [openAddr, setOpenAddr] = useState("");
   const onOpenEvent = () => {
     setOpenAddr("");
   };
@@ -90,6 +96,7 @@ const MainPage = () => {
           isOpen={isSearchModalVisible}
           onSearch={onSearch}
           onClose={toggleSearchModalVisibility}
+	  onOpenEvent={setOpenAddr} 
         />
 
         <PinAppModal
