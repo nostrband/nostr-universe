@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
+import { db } from "../db";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
-import { db } from "../db";
+import { ContactList } from "../components/contact-list/ContactList";
 import { AppsList } from "../components/apps/AppsList";
 import { EditKeyModal } from "../components/edit-key-modal/EditKeyModal";
 import { SearchModal } from "../components/search-modal/SearchModal";
@@ -84,6 +85,8 @@ const MainPage = () => {
         {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
         <TrendingProfiles onOpenProfile={setOpenAddr} />
+
+        <ContactList onOpenProfile={setOpenAddr} />
 
         {true && <AppsList />}
 

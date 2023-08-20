@@ -2,6 +2,7 @@ import NDK, { NDKRelaySet } from "@nostrband/ndk";
 import { nip19 } from "@nostrband/nostr-tools";
 
 const KIND_META = 0;
+const KIND_CONTACT_LIST = 3;
 const KIND_APP = 31990;
 
 // we only care about web apps
@@ -26,6 +27,7 @@ export const allRelays = [nostrbandRelayCounts, ...writeRelays];
 let ndk = null;
 
 const kindApps = {};
+const profileCache = [];
 
 function fetchEventsRead(ndk, filter) {
   return ndk.fetchEvents(filter, NDKRelaySet.fromRelayUrls(readRelays, ndk));
@@ -670,7 +672,61 @@ export async function subscribeProfiles(pubkeys, cb) {
 
   sub.start();
 
-//  console.log("subscribe to profiles", JSON.stringify(pubkeys));
+  //  console.log("subscribe to profiles", JSON.stringify(pubkeys));
+}
+
+export async function subscribeContactLists(pubkeys, cb) {
+  const sub = await ndk.subscribe(
+    {
+      authors: [...pubkeys],
+      kinds: [KIND_CONTACT_LIST],
+    },
+    {
+      subId: "cl",
+    },
+    NDKRelaySet.fromRelayUrls(readRelays, ndk),
+    /* autoStart */ false
+  );
+
+  sub.on("event", async (event) => {
+
+    const contactList = {
+      id: event.id,
+      pubkey: event.pubkey,
+      kind: event.kind,
+      tags: event.tags,
+      created_at: event.created_at,
+      content: event.content,
+      contactPubkeys: event.tags.filter(t => t.length >= 2 && t[0] === 'p').map(t => t[1]),
+      contactEvents: [],
+    };
+
+    // dedup
+    contactList.contactPubkeys = [...new Set(contactList.contactPubkeys)];
+
+    if (contactList.contactPubkeys.length) {
+      contactList.contactEvents = await collectEvents(
+	fetchEventsRead(ndk, {
+          kinds: [KIND_META],
+          authors: contactList.contactPubkeys,
+	}),
+      );
+
+      contactList.contactEvents.forEach(p => {
+	p.profile = parseContentJson(p.content);
+	p.profile.pubkey = p.pubkey;
+	p.profile.npub = nip19.npubEncode(p.pubkey);
+	p.order = contactList.contactPubkeys.findIndex(pk => pk == p.pubkey);
+      });
+
+      contactList.contactEvents.sort((a, b) => b.order - a.order);
+    }
+    
+    console.log("got contact list", contactList);
+    cb(contactList);
+  });
+
+  sub.start();
 }
 
 export function stringToBech32(s, hex = false) {

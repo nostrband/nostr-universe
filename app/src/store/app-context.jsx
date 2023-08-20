@@ -14,6 +14,7 @@ import {
   connect,
   fetchApps,
   subscribeProfiles,
+  subscribeContactLists,
   fetchAppsForEvent,
   stringToBech32,
 } from "../nostr";
@@ -285,6 +286,7 @@ const AppContextProvider = ({ children }) => {
   const [currentPubkey, setCurrentPubkey] = useState();
   const [profile, setProfile] = useState({});
   const [profiles, setProfiles] = useState([]);
+  const [contactList, setContactList] = useState({});
 
   // global list of top apps from the network
   const [apps, setApps] = useState(defaultApps);
@@ -302,11 +304,13 @@ const AppContextProvider = ({ children }) => {
   // helpers for initial loading w/ useEffect
   const reloadProfiles = async (keys, currentPubkey) => {
     console.log("reloadProfiles", keys, currentPubkey);
-    setProfile(null); // FIXME loading
-    setProfiles([]); // FIXME loading
+    setProfile({});
+    setProfiles([]);
+    setContactList({});
     if (!keys || !keys.length) return;
 
     subscribeProfiles(keys, (profile) => {
+      // FIXME ensure newest!
 //      console.log("profile update", profile);
       if (profile.pubkey == currentPubkey) setProfile(profile);
       if (keys.find((k) => profile.pubkey))
@@ -314,6 +318,14 @@ const AppContextProvider = ({ children }) => {
           profile,
           ...prev.filter((p) => p.pubkey != profile.pubkey),
         ]);
+    });
+
+    subscribeContactLists(keys, (cl) => {
+      if (cl.pubkey == currentPubkey
+	  && (!contactList.pubkey || contactList.created_at < cl.created_at)) {
+	console.log("contact list update", cl);
+	setContactList(cl);
+      }
     });
   };
 
@@ -937,6 +949,7 @@ const AppContextProvider = ({ children }) => {
         keys,
         profile,
         profiles,
+        contactList,
         apps,
         onAddKey: addKey,
         onSelectKey: selectKey,
