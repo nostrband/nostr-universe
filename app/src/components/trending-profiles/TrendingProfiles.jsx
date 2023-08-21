@@ -3,7 +3,7 @@ import { TrendingProfileItem } from "./TrendingProfileItem";
 import { AppContext } from "../../store/app-context";
 import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
-import { nostrbandRelay, fetchAppsForEvent } from '../../nostr'
+import { nostrbandRelay } from "../../nostr";
 
 function createDuplicateList() {
   return Array.from({ length: 10 }, () => {
@@ -39,18 +39,19 @@ export const TrendingProfiles = ({ onOpenProfile }) => {
     trendingProfiles,
     trendingProfiles.length > 0
   );
-  
+
   return (
     <StyledContainer>
       <h1>Trending profiles</h1>
       <TrendingProfilesContainer>
-        {trendingProfiles.length > 0 && renderedProfiles.map((p) => (
-          <TrendingProfileItem
-            key={p.pubkey}
-            profile={p}
-            onClick={onProfileClick}
-          />
-        ))}
+        {trendingProfiles.length > 0 &&
+          renderedProfiles.map((p) => (
+            <TrendingProfileItem
+              key={p.pubkey}
+              profile={p}
+              onClick={onProfileClick}
+            />
+          ))}
       </TrendingProfilesContainer>
     </StyledContainer>
   );

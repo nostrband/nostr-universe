@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "../UI/modal/Modal";
 
-import { IconButton, InputBase, styled } from "@mui/material";
+import { IconButton, InputBase, Typography, styled } from "@mui/material";
 import { Header } from "../../layout/Header";
 import { SearchIcon } from "../../assets";
 import { nostrbandRelay, searchProfiles } from "../../nostr";
@@ -9,7 +9,13 @@ import { nip19 } from "@nostrband/nostr-tools";
 import { TrendingProfileItem } from "../trending-profiles/TrendingProfileItem";
 import { ContactList } from "../contact-list/ContactList";
 
-export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent, onOpenContact }) => {
+export const SearchModal = ({
+  isOpen,
+  onClose,
+  onSearch,
+  onOpenEvent,
+  onOpenContact,
+}) => {
   const [searchValue, setSearchValue] = useState("");
   const [profiles, setProfiles] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,47 +49,51 @@ export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent, onOpenCont
     onOpenEvent(nprofile);
     onClose();
   };
-  
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} direction="left">
       <Container>
-	<Header searchMode onClose={onClose} />
-	<Form onSubmit={submitHandler}>
-	  <StyledInput
-	    placeholder="Search"
-	    endAdornment={
-	      <StyledIconButton type="submit">
-		<SearchIcon />
-	      </StyledIconButton>
-	    }
-	    onChange={({ target }) => setSearchValue(target.value)}
-	    autoFocus={true}
-	    inputProps={{
-	      autoFocus: true,
-	    }}
-	  />
-	</Form>
+        <Header searchMode onClose={onClose} />
+        <Form onSubmit={submitHandler}>
+          <StyledInput
+            placeholder="Search"
+            endAdornment={
+              <StyledIconButton type="submit">
+                <SearchIcon />
+              </StyledIconButton>
+            }
+            onChange={({ target }) => setSearchValue(target.value)}
+            autoFocus={true}
+            inputProps={{
+              autoFocus: true,
+            }}
+          />
+        </Form>
 
-	{!searchValue && <ContactList onOpenProfile={onOpenContact} />}
+        {!searchValue && <ContactList onOpenProfile={onOpenContact} />}
 
-	<div className="ms-3">{isLoading && (<>Searching...</>)}</div>
-	{profiles && (
-	  <StyledContainer>
-	    <h1>Profiles</h1>
-	    <ProfilesContainer>
+        <div className="ms-3">
+          {isLoading && (
+            <Typography textAlign={"center"}>Searching...</Typography>
+          )}
+        </div>
+        {profiles && (
+          <StyledContainer>
+            <h1>Profiles</h1>
+            <ProfilesContainer>
               {profiles.map((e) => {
-		const p = e.profile;
-		return (
-		  <TrendingProfileItem
-		    key={p.pubkey}
-			profile={p}
-			onClick={onProfileClick}
-		  />
-              )})}
-	    </ProfilesContainer>
-	  </StyledContainer>
-	)}
-
+                const p = e.profile;
+                return (
+                  <TrendingProfileItem
+                    key={p.pubkey}
+                    profile={p}
+                    onClick={onProfileClick}
+                  />
+                );
+              })}
+            </ProfilesContainer>
+          </StyledContainer>
+        )}
       </Container>
     </Modal>
   );

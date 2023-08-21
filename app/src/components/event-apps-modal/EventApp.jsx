@@ -1,28 +1,67 @@
-import { useMemo } from 'react'
-import { renderDefaultAppIcon } from '../../utils/helpers/general'
+import { Badge, styled } from "@mui/material";
+import { PinIcon } from "../../assets";
+import { AppAvatar } from "./AppAvatar";
 
-export const EventApp = ({ app, onOpen }) => {
-  const { naddr, url, picture, name, about } = app;
-
-  const defaultIcon = useMemo(() => {
-    return renderDefaultAppIcon(name);
-  }, [name]);
-  
+export const EventApp = ({ app = {}, isMenuItem = false, ...restProps }) => {
+  const { picture, name, about, pinned, lastUsed } = app;
+  console.log({
+    lastUsed,
+    app,
+    pinned,
+  });
   return (
-    <div key={naddr} className="d-flex p-2 justify-content-start align-items-center"
-      style={{cursor:"pointer"}} onClick={() => onOpen(app)}>
-      <button className="iconBtn">
-	<img
-          src={picture ? picture : defaultIcon}
-	  alt={name}
-	  className="iconImgBig"
-	  onError={(e) => { e.target.src = defaultIcon; }}
-	/>
-      </button>
-      <div className="ms-3">
-	<h5>{name}</h5>
-	<div style={{maxHeight: "1.3em", overflow: "hidden", textOverflow: "ellipsis"}}>{about}</div>
-      </div>
-    </div>
+    <AppContainer {...restProps} boxshadow={isMenuItem}>
+      <StyledBadge
+        badgeContent={pinned && !isMenuItem ? <PinIcon /> : ""}
+        classes={{ badge: "badge" }}
+      >
+        <AppAvatar name={name} picture={picture} />
+      </StyledBadge>
+      <Details>
+        <h5>{name}</h5>
+        <p className="description">{about}</p>
+        {lastUsed && !isMenuItem && (
+          <span className="last_used">Last used</span>
+        )}
+      </Details>
+    </AppContainer>
   );
 };
+
+const AppContainer = styled("div")(({ boxshadow }) => ({
+  display: "flex",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  padding: "0.5rem",
+  cursor: "pointer",
+  gap: "1rem",
+  width: "100%",
+  boxShadow: boxshadow ? "none" : "0px -4px 8px 0px #00000033",
+  background: "#111111",
+  borderRadius: "16px",
+}));
+
+const Details = styled("div")(() => ({
+  width: "calc(100% - 56px - 1rem)",
+  position: "relative",
+  "& .description": {
+    maxHeight: "1.3em",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    maxWidth: "95%",
+    margin: 0,
+  },
+  "& .last_used": {
+    position: "absolute",
+    top: 0,
+    right: "0.5rem",
+    fontSize: "0.8rem",
+  },
+}));
+
+const StyledBadge = styled(Badge)(() => ({
+  "& .badge": {
+    right: "-5px",
+  },
+}));

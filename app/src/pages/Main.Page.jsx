@@ -27,7 +27,7 @@ const MainPage = () => {
     openAddr,
     setOpenAddr,
     updateLastContact,
-    currentTab
+    currentTab,
   } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -57,97 +57,99 @@ const MainPage = () => {
     updateLastContact(addr);
     setOpenAddr(addr);
   };
-  
+
   const [showTabMenu, setShowTabMenu] = useState(false);
 
   const onSearch = (str) => {
-
     clearLastCurrentTab();
 
     try {
       const url = new URL("/", str);
       if (url) {
-	// need async launch to let the search modal close itself
-	setTimeout(() => onOpenBlank({url: str}), 0);
-	return true;
+        // need async launch to let the search modal close itself
+        setTimeout(() => onOpenBlank({ url: str }), 0);
+        return true;
       }
     } catch {}
-  
+
     const b32 = stringToBech32(str);
     if (b32) {
       setOpenAddr(b32);
       return true;
     }
-    
+
     return false;
   };
 
   return (
     <Container>
       <Header
-	onSearchClick={toggleSearchModalVisibility}
-	onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
-	onOpenTabMenuModal={() => setShowTabMenu(true)}
+        onSearchClick={toggleSearchModalVisibility}
+        onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
+        onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main>
-	{false && <button onClick={() => db.delete()}>Delete DB</button>}
+        {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
-	<TrendingProfiles onOpenProfile={setOpenAddr} />
+        <TrendingProfiles onOpenProfile={setOpenAddr} />
 
-	<ContactList onOpenProfile={setContactOpenAddr} />
+        <ContactList onOpenProfile={setContactOpenAddr} />
 
-	{true && <AppsList />}
+        {true && <AppsList />}
 
-	<EditKeyModal
-	  isOpen={isEditKeyModalVisible}
-	  onClose={() => setIsEditKeyModalVisible(false)}
-	/>
+        <EditKeyModal
+          isOpen={isEditKeyModalVisible}
+          onClose={() => setIsEditKeyModalVisible(false)}
+        />
 
-	<SearchModal
-	  isOpen={isSearchModalVisible}
-	  onSearch={onSearch}
-	  onClose={toggleSearchModalVisibility}
-	  onOpenEvent={setOpenAddr}
-	  onOpenContact={setContactOpenAddr}
-	/>
+        <SearchModal
+          isOpen={isSearchModalVisible}
+          onSearch={onSearch}
+          onClose={toggleSearchModalVisibility}
+          onOpenEvent={setOpenAddr}
+          onOpenContact={setContactOpenAddr}
+        />
 
-	<PinAppModal
-	  isOpen={isPinModalVisible}
-	  onClose={togglePinModalVisibility}
-	/>
+        <PinAppModal
+          isOpen={isPinModalVisible}
+          onClose={togglePinModalVisibility}
+        />
 
-	<EventAppsModal
-	  isOpen={openAddr != ""}
-	  onClose={() => setOpenAddr("")}
-	  addr={openAddr}
-	  onSelect={onOpenedEvent}
-	/>
+        <EventAppsModal
+          isOpen={openAddr != ""}
+          onClose={() => setOpenAddr("")}
+          addr={openAddr}
+          onSelect={onOpenedEvent}
+        />
 
-	<TabMenuModal
-	  isOpen={showTabMenu}
-	  onClose={() => setShowTabMenu(false)}
-	  onOpenWith={setOpenAddr}
-	  onOpenPinAppModal={togglePinModalVisibility}
-	/>
+        <TabMenuModal
+          isOpen={showTabMenu}
+          onClose={() => setShowTabMenu(false)}
+          onOpenWith={setOpenAddr}
+          onOpenPinAppModal={togglePinModalVisibility}
+        />
 
-	<ContextMenuModal
-	  isOpen={!!contextInput}
-	  onClose={() => setContextInput("")}
-	  input={contextInput}
-	  onOpenWith={(id) => {
-	    setContextInput("");
-	    setTimeout(() => setOpenAddr(id), 0);
-	  }}
-	/>
+        <ContextMenuModal
+          isOpen={!!contextInput}
+          onClose={() => setContextInput("")}
+          input={contextInput}
+          onOpenWith={(id) => {
+            setContextInput("");
+            setTimeout(() => setOpenAddr(id), 0);
+          }}
+        />
 
-	{currentTab &&
-	 <TabBackground className="d-flex flex-column justify-content-center align-items-center">
-	   <div>
-	     <IconButton data={{title: currentTab.title, img: currentTab.icon}} size="big" />
-	   </div>
-	   <div className="mt-2">Loading...</div>
-	 </TabBackground>
-	}
+        {currentTab && (
+          <TabBackground className="d-flex flex-column justify-content-center align-items-center">
+            <div>
+              <IconButton
+                data={{ title: currentTab.title, img: currentTab.icon }}
+                size="big"
+              />
+            </div>
+            <div className="mt-2">Loading...</div>
+          </TabBackground>
+        )}
       </main>
 
       <Footer onOpenPinModal={togglePinModalVisibility} />

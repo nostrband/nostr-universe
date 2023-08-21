@@ -3,7 +3,7 @@ import { ContactListItem } from "./ContactListItem";
 import { AppContext } from "../../store/app-context";
 import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
-import { nostrbandRelay, fetchAppsForEvent } from '../../nostr'
+import { nostrbandRelay } from "../../nostr";
 import { isGuest } from "../../utils/helpers/general";
 
 function createDuplicateList() {
@@ -23,9 +23,8 @@ export const ContactList = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
   const { currentPubkey, contactList = {} } = contextData || {};
 
-  if (isGuest(currentPubkey) || !contactList.contactEvents)
-    return;
-  
+  if (isGuest(currentPubkey) || !contactList.contactEvents) return;
+
   const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);
 
@@ -46,13 +45,14 @@ export const ContactList = ({ onOpenProfile }) => {
     <StyledContainer>
       <h1>Contacts</h1>
       <ContactListContainer>
-	{renderedProfiles.length > 0 && renderedProfiles.map((p, i) => (
-	  <ContactListItem
-	    key={i}
-	    profile={p.profile}
-	    onClick={onProfileClick}
-	  />
-	))}
+        {renderedProfiles.length > 0 &&
+          renderedProfiles.map((p, i) => (
+            <ContactListItem
+              key={i}
+              profile={p.profile}
+              onClick={onProfileClick}
+            />
+          ))}
       </ContactListContainer>
     </StyledContainer>
   );

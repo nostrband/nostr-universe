@@ -15,11 +15,10 @@ import {
   fetchApps,
   subscribeProfiles,
   subscribeContactLists,
-  fetchAppsForEvent,
   stringToBech32,
 } from "../nostr";
 import { browser } from "../browser";
-import { allRelays, parseAddr } from "../nostr";
+import { parseAddr } from "../nostr";
 import { getNpub } from "../utils/helpers/general";
 
 const defaultApps = [
@@ -261,21 +260,17 @@ function addToTabGroup(workspace, pt, isPin) {
   if (!isPin) {
     tg.tabs.push(pt.id);
   }
-};
+}
 
 function deleteFromTabGroup(workspace, pt, isPin) {
   const id = getTabGroupId(pt);
-  if (!(id in workspace.tabGroups))
-    return;
+  if (!(id in workspace.tabGroups)) return;
 
   const tg = workspace.tabGroups[id];
-  if (!isPin)
-    tg.tabs = tg.tabs.filter(id => id !== pt.id);
-  else if (tg.pin?.id === pt.id)
-    tg.pin = null;
+  if (!isPin) tg.tabs = tg.tabs.filter((id) => id !== pt.id);
+  else if (tg.pin?.id === pt.id) tg.pin = null;
 
-  if (!tg.pin && !tg.tabs.length)
-    delete workspace.tabGroups[id];
+  if (!tg.pin && !tg.tabs.length) delete workspace.tabGroups[id];
 }
 
 const AppContext = React.createContext();
@@ -301,29 +296,31 @@ const AppContextProvider = ({ children }) => {
   const [openAddr, setOpenAddr] = useState("");
   const [contextInput, setContextInput] = useState("");
 
+  const [isShowDrawer, setIsShowDrawer] = useState(true);
+
   const setContacts = async (cl) => {
     if (cl.contactEvents) {
       const lastContacts = await dbi.listLastContacts(cl.pubkey);
       console.log("lastContacts", lastContacts);
-      lastContacts.forEach(lc => {
-	const c = cl.contactEvents.find(ce => ce.pubkey === lc.contactPubkey);
-	if (c) {
-	  c.order = lc.tm;
-	  console.log("lastContact", lc.contactPubkey, "tm", lc.tm);
-	}
+      lastContacts.forEach((lc) => {
+        const c = cl.contactEvents.find((ce) => ce.pubkey === lc.contactPubkey);
+        if (c) {
+          c.order = lc.tm;
+          console.log("lastContact", lc.contactPubkey, "tm", lc.tm);
+        }
       });
-      
-      cl.contactEvents.sort ((a, b) => b.order - a.order);
+
+      cl.contactEvents.sort((a, b) => b.order - a.order);
     }
-    
+
     setContactList(cl);
   };
-  
+
   // helpers for initial loading w/ useEffect
   const reloadProfiles = async (keys, currentPubkey, profiles) => {
     console.log("reloadProfiles", keys, currentPubkey);
     if (profiles && profile.pubkey !== currentPubkey) {
-      const p = profiles.find(p => p.pubkey === currentPubkey);
+      const p = profiles.find((p) => p.pubkey === currentPubkey);
       setProfile(p || {});
       setContacts({});
     }
@@ -337,15 +334,17 @@ const AppContextProvider = ({ children }) => {
           ...prev.filter((p) => p.pubkey != profile.pubkey),
         ]);
 
-	dbi.putProfile(profile);
+        dbi.putProfile(profile);
       }
     });
 
     subscribeContactLists(keys, (cl) => {
-      if (cl.pubkey == currentPubkey
-	  && (!contactList.pubkey || contactList.created_at < cl.created_at)) {
-	console.log("contact list update", cl);
-	setContacts(cl);
+      if (
+        cl.pubkey == currentPubkey &&
+        (!contactList.pubkey || contactList.created_at < cl.created_at)
+      ) {
+        console.log("contact list update", cl);
+        setContacts(cl);
       }
     });
   };
@@ -383,10 +382,10 @@ const AppContextProvider = ({ children }) => {
     workspace.tabs.sort((a, b) => a.order - b.order);
 
     // reset just in case
-    workspace.tabs.forEach(t => t.opened = false);
+    workspace.tabs.forEach((t) => (t.opened = false));
 
-    workspace.pins.forEach(p => addToTabGroup(workspace, p, true));
-    workspace.tabs.forEach(t => addToTabGroup(workspace, t));
+    workspace.pins.forEach((p) => addToTabGroup(workspace, p, true));
+    workspace.tabs.forEach((t) => addToTabGroup(workspace, t));
 
     console.log(
       "load pins",
@@ -427,11 +426,11 @@ const AppContextProvider = ({ children }) => {
       if (apps.length > 0) setApps(apps);
       const profiles = await dbi.listProfiles();
       if (profiles.length > 0) {
-	setProfiles(profiles);
-	const p = profiles.find(p => p.pubkey === currentPubkey);
-	setProfile(p || {});
+        setProfiles(profiles);
+        const p = profiles.find((p) => p.pubkey === currentPubkey);
+        setProfile(p || {});
       }
-      
+
       // fetch trending stuff, set to all workspaces
       await fetchTrendingProfiles().then((profiles) => {
         setWorkspaces((prev) =>
@@ -444,16 +443,16 @@ const AppContextProvider = ({ children }) => {
       connect().then(async () => {
         console.log("ndk connected", Date.now());
 
-	// update apps first
+        // update apps first
         const apps = await fetchApps();
-	if (apps.length) {
-	  setApps(apps);
-	  await db.apps.bulkPut(apps);
-	}
+        if (apps.length) {
+          setApps(apps);
+          await db.apps.bulkPut(apps);
+        }
 
-	// start profile updater after we're done with apps,
-	// this should be the last of the initial loading
-	// operations
+        // start profile updater after we're done with apps,
+        // this should be the last of the initial loading
+        // operations
         reloadProfiles(keys, currentPubkey, profiles);
       });
     }
@@ -463,9 +462,15 @@ const AppContextProvider = ({ children }) => {
   }, []);
 
   const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
-  const currentTab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace.currentTabId);
-  const currentTabGroup = currentTab ? currentWorkspace?.tabGroups[getTabGroupId(currentTab)] : undefined;
-  const lastCurrentTab = currentWorkspace?.tabs.find((t) => t.id === currentWorkspace.lastCurrentTabId);
+  const currentTab = currentWorkspace?.tabs.find(
+    (t) => t.id === currentWorkspace.currentTabId
+  );
+  const currentTabGroup = currentTab
+    ? currentWorkspace?.tabGroups[getTabGroupId(currentTab)]
+    : undefined;
+  const lastCurrentTab = currentWorkspace?.tabs.find(
+    (t) => t.id === currentWorkspace.lastCurrentTabId
+  );
   const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
 
   const updateWorkspace = (cbProps, pubkey) => {
@@ -502,30 +507,30 @@ const AppContextProvider = ({ children }) => {
 
       const tab = getTab(tabId);
       if (tab) {
-	// save old tab to reuse in state update
-	const wasTab = {...tab};
+        // save old tab to reuse in state update
+        const wasTab = { ...tab };
 
-	// set new url
-	tab.url = url;
+        // set new url
+        tab.url = url;
 
-	// need to switch tab group?
-	const tgid = getTabGroupId(tab);
-	if (tgid !== getTabGroupId(wasTab)) {
-	  updateWorkspace((ws) => {
-	    console.log("tab", wasTab.id, "delete from", wasTab.url);
-	    deleteFromTabGroup(ws, wasTab);
-	    
-	    wasTab.url = url;
-	    addToTabGroup(ws, wasTab);
+        // need to switch tab group?
+        const tgid = getTabGroupId(tab);
+        if (tgid !== getTabGroupId(wasTab)) {
+          updateWorkspace((ws) => {
+            console.log("tab", wasTab.id, "delete from", wasTab.url);
+            deleteFromTabGroup(ws, wasTab);
 
-	    const tg = ws.tabGroups[tgid];
-	    tg.lastTabId = wasTab.id;
+            wasTab.url = url;
+            addToTabGroup(ws, wasTab);
 
-	    return { tabGroups: {...ws.tabGroups} }
-	  }, tab.pubkey);
-	}
+            const tg = ws.tabGroups[tgid];
+            tg.lastTabId = wasTab.id;
 
-	dbi.updateTab(tab);
+            return { tabGroups: { ...ws.tabGroups } };
+          }, tab.pubkey);
+        }
+
+        dbi.updateTab(tab);
       }
     },
     showContextMenu: async function (tabId, id) {
@@ -562,16 +567,16 @@ const AppContextProvider = ({ children }) => {
       const tab = getTab(tabId);
       if (tab) await hide(tab);
       if (url.startsWith("nostr:")) {
-	const b32 = stringToBech32(url);
-	if (b32) {
-	  // offer to choose an app to show the event
-	  setOpenAddr(b32);
-	} else {
-	  // try some external app that might know this type of nostr: link
-	  window.cordova.InAppBrowser.open(url, '_self');
-	}
+        const b32 = stringToBech32(url);
+        if (b32) {
+          // offer to choose an app to show the event
+          setOpenAddr(b32);
+        } else {
+          // try some external app that might know this type of nostr: link
+          window.cordova.InAppBrowser.open(url, "_self");
+        }
       } else {
-	openBlank({url});
+        openBlank({ url });
       }
     },
     onBeforeLoad: async (tabId, url) => {
@@ -585,8 +590,8 @@ const AppContextProvider = ({ children }) => {
       updateTab({ icon }, tabId);
       const tab = getTab(tabId);
       if (tab) {
-	tab.icon = icon;
-	dbi.updateTab(tab);
+        tab.icon = icon;
+        dbi.updateTab(tab);
       }
     },
   };
@@ -652,7 +657,7 @@ const AppContextProvider = ({ children }) => {
       deleteFromTabGroup(ws, tab);
       return {
         tabs: ws.tabs.filter((t) => t.id !== tab.id),
-	tabGroups: {...ws.tabGroups}
+        tabGroups: { ...ws.tabGroups },
       };
     });
   };
@@ -662,30 +667,27 @@ const AppContextProvider = ({ children }) => {
       updateTab({ loading: false }, tab.id);
       await browser.stop(tab.id);
     }
-  }
+  };
 
   const reload = async (tab) => {
     if (tab) {
       updateTab({ loading: true }, tab.id);
       await browser.reload(tab.id);
     }
-  }
+  };
 
   const hide = async (tab) => {
     if (tab) {
       updateWorkspace({ currentTabId: "" });
       await browser.hide(tab.id);
     }
-
-    document.getElementById("pins").style.display = "block";
-    // document.getElementById("pins").classList.add("d-flex");
+    setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
   };
 
   const showTabMenu = () => {
-    document.getElementById("pins").style.display = "none";
-    // document.getElementById("pins").classList.add("d-none");
+    setIsShowDrawer(false);
     document.getElementById("tab-menu").classList.remove("d-none");
     document.getElementById("tab-menu").classList.add("d-flex");
   };
@@ -696,33 +698,32 @@ const AppContextProvider = ({ children }) => {
     return new Promise((ok) => {
       setTimeout(async () => {
         // schedule the open after task bar is changed
-	console.log("show", JSON.stringify(tab));
+        console.log("show", JSON.stringify(tab));
         await ensureBrowser(tab);
 
         await browser.show(tab.id);
         updateWorkspace((ws) => {
-	  const tg = ws.tabGroups[getTabGroupId(tab)];
-	  tg.lastTabId = tab.id;
-	  return { currentTabId: tab.id, tabGroups: {...ws.tabGroups} }
-	});
+          const tg = ws.tabGroups[getTabGroupId(tab)];
+          tg.lastTabId = tab.id;
+          return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
+        });
         ok();
       }, 0);
     });
   };
 
   const openApp = async (params) => {
-
     if (params.kind !== undefined) {
       updateWorkspace((ws) => {
-	ws.lastKindApps[params.kind] = params.naddr;
-	return {
-	  lastKindApps: {...ws.lastKindApps}
-	}
+        ws.lastKindApps[params.kind] = params.naddr;
+        return {
+          lastKindApps: { ...ws.lastKindApps },
+        };
       });
     }
-    
+
     const pin = currentWorkspace.pins.find((p) => p.appNaddr == params.naddr);
-    
+
     await openBlank({
       url: params.url,
       pinned: !!pin,
@@ -737,7 +738,7 @@ const AppContextProvider = ({ children }) => {
     console.log("openBlank", JSON.stringify(params));
 
     // find an existing tab w/ same url
-    const tab = currentWorkspace.tabs.find(t => t.url === url);
+    const tab = currentWorkspace.tabs.find((t) => t.url === url);
     if (tab) {
       await show(tab);
       return;
@@ -746,16 +747,16 @@ const AppContextProvider = ({ children }) => {
     // find an existing app for this url
     const origin = getOrigin(url);
     const app = params.appNaddr
-	      ? apps.find(a => a.naddr === params.appNaddr)
-	      : apps.find(a => a.url.startsWith(origin));
+      ? apps.find((a) => a.naddr === params.appNaddr)
+      : apps.find((a) => a.url.startsWith(origin));
     if (app) {
-      const pin = currentWorkspace.pins.find(p => p.appNaddr === app.naddr);
+      const pin = currentWorkspace.pins.find((p) => p.appNaddr === app.naddr);
       await open({
-	url,
-	pinned: !!pin,
-	icon: app.picture,
-	title: app.name,
-	appNaddr: app.naddr
+        url,
+        pinned: !!pin,
+        icon: app.picture,
+        title: app.name,
+        appNaddr: app.naddr,
       });
       return;
     }
@@ -763,21 +764,21 @@ const AppContextProvider = ({ children }) => {
     // nothing's known about this url, open a new tab
     await open(params);
   };
-  
+
   const open = async (params) => {
     console.log("open", JSON.stringify(params));
 
-    let {url, title = "", icon = "", pinned = false} = params;
+    let { url, title = "", icon = "", pinned = false } = params;
 
     try {
       const U = new URL(url);
       if (!title)
-	title = U.hostname.startsWith("www.") ? U.hostname.substring(4) : U.hostname;
-      if (!icon)
-	icon = U.origin + "/favicon.ico"
+        title = U.hostname.startsWith("www.")
+          ? U.hostname.substring(4)
+          : U.hostname;
+      if (!icon) icon = U.origin + "/favicon.ico";
     } catch {
-      if (!title)
-	title = url;
+      if (!title) title = url;
     }
 
     const tab = {
@@ -798,7 +799,7 @@ const AppContextProvider = ({ children }) => {
       return {
         tabs: [...ws.tabs, tab],
         lastCurrentTabId: "", // make sure previous active tab doesn't reopen on modal close
-	tabGroups: {...ws.tabGroups},
+        tabGroups: { ...ws.tabGroups },
       };
     });
 
@@ -845,29 +846,27 @@ const AppContextProvider = ({ children }) => {
       const tab = getTab(tg.lastTabId || tg.tabs[0]);
       await show(tab);
     } else {
-      await open({...tg.pin, pinned: true});
+      await open({ ...tg.pin, pinned: true });
     }
   };
 
   const closeTab = async () => {
     console.log("closeTab");
     const tab = currentTab || lastCurrentTab;
-    if (!tab)
-      return;
-    
+    if (!tab) return;
+
     // hide first
     await hide(tab);
 
     // get tab group of the closed tab
     const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];
-    
+
     // switch to previous one of the group
-    const index = tg.tabs.findIndex(id => id === tab.id);
+    const index = tg.tabs.findIndex((id) => id === tab.id);
     const next = index ? index - 1 : index + 1;
     console.log("next", next);
-    if (next < tg.tabs.length)
-      await show(getTab(tg.tabs[next]));
-    
+    if (next < tg.tabs.length) await show(getTab(tg.tabs[next]));
+
     // close in bg after that
     await close(tab);
   };
@@ -890,15 +889,15 @@ const AppContextProvider = ({ children }) => {
   const unpinTab = () => {
     const tab = lastCurrentTab;
     if (!tab || !tab.pinned) return;
-      
+
     const pin = currentWorkspace.pins.find((p) => p.appNaddr == tab.appNaddr);
     if (pin) {
       updateWorkspace((ws) => {
-	deleteFromTabGroup(ws, pin, true);
-	return {
+        deleteFromTabGroup(ws, pin, true);
+        return {
           pins: ws.pins.filter((p) => p.id != pin.id),
-	  tabGroups: {...ws.tabGroups}
-	}
+          tabGroups: { ...ws.tabGroups },
+        };
       });
       updateTab({ pinned: false }, tab.id);
       dbi.deletePin(pin.id);
@@ -911,14 +910,14 @@ const AppContextProvider = ({ children }) => {
 
     savePin([]);
 
-//    const app = apps.find((a) => a.naddr == tab.appNaddr);
-//    if (app) {
-//      setPinApp(app);
-//      openPinAppModal();
-//      await browser.hide(tab.id);
-//    } else {
-//      savePin([]);
-//    }
+    //    const app = apps.find((a) => a.naddr == tab.appNaddr);
+    //    if (app) {
+    //      setPinApp(app);
+    //      openPinAppModal();
+    //      await browser.hide(tab.id);
+    //    } else {
+    //      savePin([]);
+    //    }
   };
 
   const savePin = (perms) => {
@@ -942,7 +941,7 @@ const AppContextProvider = ({ children }) => {
       addToTabGroup(ws, pin, true);
       return {
         pins: [...ws.pins, pin],
-	tabGroups: {...ws.tabGroups},
+        tabGroups: { ...ws.tabGroups },
       };
     });
     updateTab({ pinned: true }, tab.id);
@@ -968,7 +967,7 @@ const AppContextProvider = ({ children }) => {
       (t) => t.id === lastCurrentTabId
     );
     if (!lastCurrentTab) return;
-    
+
     await show(lastCurrentTab);
 
     updateWorkspace({ lastCurrentTabId: "" });
@@ -982,10 +981,10 @@ const AppContextProvider = ({ children }) => {
     const addr = parseAddr(b32);
     if (addr.kind === 0 && addr.pubkey) {
       await dbi.updateLastContact(currentPubkey, addr.pubkey);
-      setContacts({...contactList});
+      setContacts({ ...contactList });
     }
   };
-  
+
   return (
     <AppContext.Provider
       value={{
@@ -997,7 +996,7 @@ const AppContextProvider = ({ children }) => {
         apps,
         onAddKey: addKey,
         onSelectKey: selectKey,
-	onOpenBlank: openBlank,
+        onOpenBlank: openBlank,
         onOpenApp: openApp,
         onOpenTab: show,
         onOpenTabGroup: openTabGroup,
@@ -1012,22 +1011,23 @@ const AppContextProvider = ({ children }) => {
         keyProp: { publicKey: openKey },
         pinApp,
         onSavePin: savePin,
-	pinTab,
-	unpinTab,
+        pinTab,
+        unpinTab,
         workspaces,
         currentWorkspace,
         currentTab,
         currentTabGroup,
-	getTab,
+        getTab,
         lastCurrentTab,
-	clearLastCurrentTab,
+        clearLastCurrentTab,
         onModalOpen,
         onModalClose,
         contextInput,
         setContextInput,
-	openAddr,
-	setOpenAddr,
-	updateLastContact
+        isShowDrawer,
+        openAddr,
+        setOpenAddr,
+        updateLastContact,
       }}
     >
       {children}
