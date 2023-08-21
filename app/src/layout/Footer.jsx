@@ -1,6 +1,5 @@
 import React, { useContext } from "react";
 
-import Button from "react-bootstrap/esm/Button";
 import { AppContext } from "../store/app-context";
 import { SwipeableDrawer } from "../components/swipeable-drawer/SwipeableDrawer";
 import { IconButton, styled } from "@mui/material";
@@ -18,6 +17,7 @@ export const Footer = ({ onOpenPinModal }) => {
     onHideTab,
     onStopTab,
     onReloadTab,
+    isShowDrawer,
   } = contextData || {};
 
   const switchTab = async (tab) => {
@@ -28,12 +28,10 @@ export const Footer = ({ onOpenPinModal }) => {
   const onStopReload = async () => {
     currentTab.loading ? onStopTab() : onReloadTab();
   };
-  
+
   return (
     <footer id="footer">
-      <div id="pins" className="d-block">
-        <SwipeableDrawer />
-      </div>
+      {isShowDrawer && <SwipeableDrawer />}
       <>
         {currentWorkspace && (
           <div
@@ -41,39 +39,39 @@ export const Footer = ({ onOpenPinModal }) => {
             className="container d-none justify-content-between align-items-center gap-1"
             style={{ position: "relative", zIndex: 1200, background: "#000" }}
           >
-            <div className="me-0 d-flex justify-content-start align-items-center" style={{overflowX:"scroll"}}>
-	      {currentTabGroup && currentTabGroup.tabs.map(id => {
-		const tab = getTab(id);
-		return (
-		  <div style={{width: "34px", minWidth:"34px"}}>
-		    <PinItem
-		      image={tab.icon}
-		      title={tab.title}
-		      active={tab.id === currentTab.id}
-		      onClick={() => switchTab(tab)}
-		    />
-		  </div>
-		)
-	      })}
+            <div
+              className="me-0 d-flex justify-content-start align-items-center"
+              style={{ overflowX: "scroll" }}
+            >
+              {currentTabGroup &&
+                currentTabGroup.tabs.map((id) => {
+                  const tab = getTab(id);
+                  return (
+                    <div style={{ width: "34px", minWidth: "34px" }}>
+                      <PinItem
+                        image={tab.icon}
+                        title={tab.title}
+                        active={tab.id === currentTab.id}
+                        onClick={() => switchTab(tab)}
+                      />
+                    </div>
+                  );
+                })}
             </div>
             <div className="flex-shrink-0">
-	      <StyledIconButton
-		onClick={onStopReload}
-                disabled={!currentTab}
-	      >
-		<img
-		  src={currentTab && !currentTab.loading ? reloadIcon : stopIcon}
-		  width={"24px"}
-		  height={"24px"}
-		/>
-	      </StyledIconButton>
-	      <StyledIconButton
-		onClick={onHideTab}
-                disabled={!currentTab}
-	      >
-		<img src={homeIcon} width={"24px"} height={"24px"} />
-	      </StyledIconButton>
-	    </div>
+              <StyledIconButton onClick={onStopReload} disabled={!currentTab}>
+                <img
+                  src={
+                    currentTab && !currentTab.loading ? reloadIcon : stopIcon
+                  }
+                  width={"24px"}
+                  height={"24px"}
+                />
+              </StyledIconButton>
+              <StyledIconButton onClick={onHideTab} disabled={!currentTab}>
+                <img src={homeIcon} width={"24px"} height={"24px"} />
+              </StyledIconButton>
+            </div>
           </div>
         )}
       </>

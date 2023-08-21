@@ -3,8 +3,15 @@ import { keystore } from "../keystore";
 import { db, dbi } from "../db";
 import { nip19 } from "@nostrband/nostr-tools";
 import { config } from "../config";
-import { connect, fetchApps, subscribeProfiles } from "../nostr";
+import {
+  connect,
+  fetchApps,
+  subscribeProfiles,
+  subscribeContactLists,
+  stringToBech32,
+} from "../nostr";
 import { browser } from "../browser";
+import { parseAddr } from "../nostr";
 import { getNpub } from "../utils/helpers/general";
 import { getTrendingProfilesRequest } from "../api/profiles";
 import { getTrendingNotesRequest } from "../api/notes";
@@ -31,8 +38,16 @@ function createWorkspace(pubkey, props = {}) {
   };
 }
 
+function getOrigin(url) {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url;
+  }
+}
+
 function getTabGroupId(pt) {
-  return pt.appNaddr || new URL(pt.url).origin;
+  return pt.appNaddr || getOrigin(pt.url);
 }
 
 function addToTabGroup(workspace, pt, isPin) {
@@ -74,6 +89,7 @@ const AppContextProvider = ({ children }) => {
   const [currentPubkey, setCurrentPubkey] = useState();
   const [profile, setProfile] = useState({});
   const [profiles, setProfiles] = useState([]);
+  const [contactList, setContactList] = useState({});
 
   // global list of top apps from the network
   const [apps, setApps] = useState(DEFAULT_APPS);
@@ -85,24 +101,59 @@ const AppContextProvider = ({ children }) => {
   const [pinApp, setPinApp] = useState(null);
   const [openKey, setOpenKey] = useState();
 
-  const [openEventAddr, setOpenEventAddr] = useState("");
+  const [openAddr, setOpenAddr] = useState("");
   const [contextInput, setContextInput] = useState("");
 
+  const [isShowDrawer, setIsShowDrawer] = useState(true);
+
+  const setContacts = async (cl) => {
+    if (cl.contactEvents) {
+      const lastContacts = await dbi.listLastContacts(cl.pubkey);
+      console.log("lastContacts", lastContacts);
+      lastContacts.forEach((lc) => {
+        const c = cl.contactEvents.find((ce) => ce.pubkey === lc.contactPubkey);
+        if (c) {
+          c.order = lc.tm;
+          console.log("lastContact", lc.contactPubkey, "tm", lc.tm);
+        }
+      });
+
+      cl.contactEvents.sort((a, b) => b.order - a.order);
+    }
+
+    setContactList(cl);
+  };
+
   // helpers for initial loading w/ useEffect
-  const reloadProfiles = async (keys, currentPubkey) => {
+  const reloadProfiles = async (keys, currentPubkey, profiles) => {
     console.log("reloadProfiles", keys, currentPubkey);
-    setProfile(null); // FIXME loading
-    setProfiles([]); // FIXME loading
+    if (profiles && profile.pubkey !== currentPubkey) {
+      const p = profiles.find((p) => p.pubkey === currentPubkey);
+      setProfile(p || {});
+      setContacts({});
+    }
     if (!keys || !keys.length) return;
 
     subscribeProfiles(keys, (profile) => {
-      //      console.log("profile update", profile);
       if (profile.pubkey == currentPubkey) setProfile(profile);
-      if (keys.find((k) => profile.pubkey))
+      if (keys.find((k) => profile.pubkey)) {
         setProfiles((prev) => [
           profile,
           ...prev.filter((p) => p.pubkey != profile.pubkey),
         ]);
+
+        dbi.putProfile(profile);
+      }
+    });
+
+    subscribeContactLists(keys, (cl) => {
+      if (
+        cl.pubkey == currentPubkey &&
+        (!contactList.pubkey || contactList.created_at < cl.created_at)
+      ) {
+        console.log("contact list update", cl);
+        setContacts(cl);
+      }
     });
   };
 
@@ -178,6 +229,16 @@ const AppContextProvider = ({ children }) => {
         setCurrentPubkey(DEFAULT_PUBKEY);
       }
 
+      // fetch cached stuff
+      const apps = await dbi.listApps();
+      if (apps.length > 0) setApps(apps);
+      const profiles = await dbi.listProfiles();
+      if (profiles.length > 0) {
+        setProfiles(profiles);
+        const p = profiles.find((p) => p.pubkey === currentPubkey);
+        setProfile(p || {});
+      }
+
       // fetch trending stuff, set to all workspaces
       await getTrendingProfilesRequest().then((profiles) => {
         setWorkspaces((prev) =>
@@ -192,11 +253,20 @@ const AppContextProvider = ({ children }) => {
         );
       });
 
-      connect().then((_) => {
+      connect().then(async () => {
         console.log("ndk connected", Date.now());
 
-        fetchApps().then(setApps);
-        reloadProfiles(keys, currentPubkey);
+        // update apps first
+        const apps = await fetchApps();
+        if (apps.length) {
+          setApps(apps);
+          await db.apps.bulkPut(apps);
+        }
+
+        // start profile updater after we're done with apps,
+        // this should be the last of the initial loading
+        // operations
+        reloadProfiles(keys, currentPubkey, profiles);
       });
     }
 
@@ -308,7 +378,21 @@ const AppContextProvider = ({ children }) => {
     onBlank: async (tabId, url) => {
       const tab = getTab(tabId);
       if (tab) await hide(tab);
-      openBlank({ url });
+      if (url.startsWith("nostr:")) {
+        const b32 = stringToBech32(url);
+        if (b32) {
+          // offer to choose an app to show the event
+          setOpenAddr(b32);
+        } else {
+          // try some external app that might know this type of nostr: link
+          window.cordova.InAppBrowser.open(url, "_self");
+        }
+      } else {
+        openBlank({ url });
+      }
+    },
+    onBeforeLoad: async (tabId, url) => {
+      await API.onBlank(tabId, url);
     },
     onHide: (tabId) => {
       console.log("hide", tabId);
@@ -352,7 +436,7 @@ const AppContextProvider = ({ children }) => {
     }
 
     // make sure we have info on this new profile
-    reloadProfiles(keys, pubkey);
+    reloadProfiles(keys, pubkey, profiles);
   };
 
   const createTabBrowser = async (tab) => {
@@ -408,14 +492,13 @@ const AppContextProvider = ({ children }) => {
       updateWorkspace({ currentTabId: "" });
       await browser.hide(tab.id);
     }
-
-    document.getElementById("pins").style.display = "block";
+    setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
   };
 
   const showTabMenu = () => {
-    document.getElementById("pins").style.display = "none";
+    setIsShowDrawer(false);
     document.getElementById("tab-menu").classList.remove("d-none");
     document.getElementById("tab-menu").classList.add("d-flex");
   };
@@ -473,7 +556,7 @@ const AppContextProvider = ({ children }) => {
     }
 
     // find an existing app for this url
-    const origin = new URL(url).origin;
+    const origin = getOrigin(url);
     const app = params.appNaddr
       ? apps.find((a) => a.naddr === params.appNaddr)
       : apps.find((a) => a.url.startsWith(origin));
@@ -498,14 +581,16 @@ const AppContextProvider = ({ children }) => {
 
     let { url, title = "", icon = "", pinned = false } = params;
 
-    const U = new URL(url);
-
-    if (!title)
-      title = U.hostname.startsWith("www.")
-        ? U.hostname.substring(4)
-        : U.hostname;
-
-    if (!icon) icon = U.origin + "/favicon.ico";
+    try {
+      const U = new URL(url);
+      if (!title)
+        title = U.hostname.startsWith("www.")
+          ? U.hostname.substring(4)
+          : U.hostname;
+      if (!icon) icon = U.origin + "/favicon.ico";
+    } catch {
+      if (!title) title = url;
+    }
 
     const tab = {
       url,
@@ -556,7 +641,7 @@ const AppContextProvider = ({ children }) => {
       setCurrentPubkey(pubkey);
       setKeys(keys);
 
-      reloadProfiles(keys, pubkey);
+      reloadProfiles(keys, pubkey, profiles);
     }
   };
 
@@ -564,7 +649,7 @@ const AppContextProvider = ({ children }) => {
     const keysList = await keystore.editKey(keyInfoObj);
     // update some key infos? idk
 
-    reloadProfiles(keys, currentPubkey);
+    reloadProfiles(keys, currentPubkey, profiles);
   };
 
   const openTabGroup = async (tg) => {
@@ -616,12 +701,12 @@ const AppContextProvider = ({ children }) => {
     const tab = lastCurrentTab;
     if (!tab || !tab.pinned) return;
 
-    const pin = currentWorkspace.pins.find((p) => p.appNaddr === tab.appNaddr);
+    const pin = currentWorkspace.pins.find((p) => p.appNaddr == tab.appNaddr);
     if (pin) {
       updateWorkspace((ws) => {
         deleteFromTabGroup(ws, pin, true);
         return {
-          pins: ws.pins.filter((p) => p.id !== pin.id),
+          pins: ws.pins.filter((p) => p.id != pin.id),
           tabGroups: { ...ws.tabGroups },
         };
       });
@@ -634,14 +719,16 @@ const AppContextProvider = ({ children }) => {
     const tab = lastCurrentTab;
     if (!tab || tab.pinned) return;
 
-    const app = apps.find((a) => a.naddr === tab.appNaddr);
-    if (app) {
-      setPinApp(app);
-      openPinAppModal();
-      await browser.hide(tab.id);
-    } else {
-      savePin([]);
-    }
+    savePin([]);
+
+    //    const app = apps.find((a) => a.naddr == tab.appNaddr);
+    //    if (app) {
+    //      setPinApp(app);
+    //      openPinAppModal();
+    //      await browser.hide(tab.id);
+    //    } else {
+    //      savePin([]);
+    //    }
   };
 
   const savePin = (perms) => {
@@ -701,18 +788,22 @@ const AppContextProvider = ({ children }) => {
     updateWorkspace({ lastCurrentTabId: "" });
   };
 
-  const isGuest = () => {
-    return currentPubkey === DEFAULT_PUBKEY;
+  const updateLastContact = async (b32) => {
+    const addr = parseAddr(b32);
+    if (addr.kind === 0 && addr.pubkey) {
+      await dbi.updateLastContact(currentPubkey, addr.pubkey);
+      setContacts({ ...contactList });
+    }
   };
 
   return (
     <AppContext.Provider
       value={{
         currentPubkey,
-        isGuest,
         keys,
         profile,
         profiles,
+        contactList,
         apps,
         onAddKey: addKey,
         onSelectKey: selectKey,
@@ -733,7 +824,6 @@ const AppContextProvider = ({ children }) => {
         onSavePin: savePin,
         pinTab,
         unpinTab,
-        onOpenEvent: setOpenEventAddr,
         workspaces,
         currentWorkspace,
         currentTab,
@@ -745,6 +835,10 @@ const AppContextProvider = ({ children }) => {
         onModalClose,
         contextInput,
         setContextInput,
+        isShowDrawer,
+        openAddr,
+        setOpenAddr,
+        updateLastContact,
       }}
     >
       {children}

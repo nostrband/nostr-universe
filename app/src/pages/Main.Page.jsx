@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
+import { db } from "../db";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
-import { db } from "../db";
+import { ContactList } from "../components/contact-list/ContactList";
 import { AppsList } from "../components/apps/AppsList";
 import { EditKeyModal } from "../components/edit-key-modal/EditKeyModal";
 import { SearchModal } from "../components/search-modal/SearchModal";
@@ -9,6 +10,7 @@ import { PinAppModal } from "../components/pin-app-modal/PinAppModal";
 import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
 import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
 import { ContextMenuModal } from "../components/context-menu-modal/ContextMenuModal";
+import { IconButton } from "../components/UI/IconButton";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
 import { AppContext } from "../store/app-context";
@@ -18,8 +20,16 @@ import { TrendingNotes } from "../components/trending-notes/TrendingNotes";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
-  const { onOpenBlank, contextInput, setContextInput, clearLastCurrentTab } =
-    contextData || {};
+  const {
+    onOpenBlank,
+    contextInput,
+    setContextInput,
+    clearLastCurrentTab,
+    openAddr,
+    setOpenAddr,
+    updateLastContact,
+    currentTab,
+  } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isSearchModalVisible = Boolean(searchParams.get("search"));
@@ -40,9 +50,13 @@ const MainPage = () => {
     setIsPinModalVisible((prevState) => !prevState);
   };
 
-  const [openAddr, setOpenAddr] = useState("");
-  const onOpenEvent = () => {
+  const onOpenedEvent = () => {
     setOpenAddr("");
+  };
+
+  const setContactOpenAddr = (addr) => {
+    updateLastContact(addr);
+    setOpenAddr(addr);
   };
 
   const [showTabMenu, setShowTabMenu] = useState(false);
@@ -80,6 +94,8 @@ const MainPage = () => {
         <TrendingProfiles onOpenProfile={setOpenAddr} />
         <TrendingNotes />
 
+        <ContactList onOpenProfile={setContactOpenAddr} />
+
         {true && <AppsList />}
 
         <EditKeyModal
@@ -91,6 +107,8 @@ const MainPage = () => {
           isOpen={isSearchModalVisible}
           onSearch={onSearch}
           onClose={toggleSearchModalVisibility}
+          onOpenEvent={setOpenAddr}
+          onOpenContact={setContactOpenAddr}
         />
 
         <PinAppModal
@@ -102,7 +120,7 @@ const MainPage = () => {
           isOpen={openAddr !== ""}
           onClose={() => setOpenAddr("")}
           addr={openAddr}
-          onSelect={onOpenEvent}
+          onSelect={onOpenedEvent}
         />
 
         <TabMenuModal
@@ -121,6 +139,18 @@ const MainPage = () => {
             setTimeout(() => setOpenAddr(id), 0);
           }}
         />
+
+        {currentTab && (
+          <TabBackground className="d-flex flex-column justify-content-center align-items-center">
+            <div>
+              <IconButton
+                data={{ title: currentTab.title, img: currentTab.icon }}
+                size="big"
+              />
+            </div>
+            <div className="mt-2">Loading...</div>
+          </TabBackground>
+        )}
       </main>
 
       <Footer onOpenPinModal={togglePinModalVisibility} />
@@ -152,6 +182,16 @@ const Container = styled("div")`
     overflow: auto;
     scrollbar-width: thin;
   }
+`;
+
+const TabBackground = styled("div")`
+  position: fixed;
+  top: 44px;
+  left: 0;
+  right: 0;
+  bottom: 44px;
+  background-color: #000;
+  z-index: 1201;
 `;
 
 export default MainPage;

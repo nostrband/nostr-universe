@@ -2,6 +2,7 @@ import NDK, { NDKRelaySet } from "@nostrband/ndk";
 import { nip19 } from "@nostrband/nostr-tools";
 
 const KIND_META = 0;
+const KIND_CONTACT_LIST = 3;
 const KIND_APP = 31990;
 
 // we only care about web apps
@@ -26,6 +27,7 @@ export const allRelays = [nostrbandRelayCounts, ...writeRelays];
 let ndk = null;
 
 const kindApps = {};
+const profileCache = [];
 
 function fetchEventsRead(ndk, filter) {
   return ndk.fetchEvents(filter, NDKRelaySet.fromRelayUrls(readRelays, ndk));
@@ -114,6 +116,7 @@ export async function fetchApps() {
     );
   }
   events = [...events.values()];
+  console.log("top app events", events.length);
 
   // load authors of the apps, we need them both for the app
   // info and for apps that inherit the author's profile info
@@ -183,7 +186,7 @@ export async function fetchApps() {
       url: (profile && profile.website) || "",
       picture: (profile && profile.picture) || "",
       about: (profile && profile.about) || "",
-      author,
+//      author,
       kinds,
       handlers,
     };
@@ -194,7 +197,7 @@ export async function fetchApps() {
   return apps;
 }
 
-const parseAddr = (id) => {
+export function parseAddr(id) {
   let addr = {
     kind: undefined,
     pubkey: undefined,
@@ -602,39 +605,137 @@ export async function fetchEventByBech32(b32) {
   return await fetchEventByAddr(ndk, addr);
 }
 
+export async function searchProfiles(q) {
+  // try to fetch best apps list from our relay
+  const top = await ndk.fetchTop(
+    {
+      kinds: [KIND_META],
+      search: q,
+      limit: 20,
+    },
+    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+  );
+  console.log("top profiles", top?.ids.length);
+
+  let events = null;
+  if (top.ids.length) {
+    // fetch the app events themselves from the list
+    events = await fetchEventsRead(
+      ndk,
+      {
+        ids: top.ids,
+      }
+    );
+  }
+  events = [...events.values()];
+
+  events.forEach(e => {
+    e.profile = parseContentJson(e.content);
+    e.profile.pubkey = e.pubkey;
+    e.profile.npub = nip19.npubEncode(e.pubkey);
+    e.order = top.ids.findIndex(i => e.id === i);
+  });
+
+  events.sort((a, b) => a.order - b.order);
+
+  return events;
+}
+
 export async function subscribeProfiles(pubkeys, cb) {
+  return new Promise(async (ok) => {
+    
+    const sub = await ndk.subscribe(
+      {
+	authors: [...pubkeys],
+	kinds: [KIND_META],
+      },
+      {
+	// FIXME not great for privacy
+	// use of the same subId allows us to avoid sending
+	// close to cancel the last sub
+	subId: "profiles",
+      },
+      NDKRelaySet.fromRelayUrls(readRelays, ndk),
+      /* autoStart */ false
+    );
+
+    // call cb on each event
+    sub.on("event", (event) => {
+      const profile = {
+	id: event.id,
+	pubkey: event.pubkey,
+	kind: event.kind,
+	tags: event.tags,
+	created_at: event.created_at,
+	content: event.content,
+	profile: parseContentJson(event.content),
+      };
+      console.log("got profile", profile);
+      cb(profile);
+    });
+
+    // notify that initial fetch is over
+    sub.on("eose", ok);
+
+    // start
+    sub.start();
+  });
+}
+
+export async function subscribeContactLists(pubkeys, cb) {
+  
   const sub = await ndk.subscribe(
     {
       authors: [...pubkeys],
-      kinds: [KIND_META],
+      kinds: [KIND_CONTACT_LIST],
     },
     {
-      // FIXME not great for privacy
-      // use of the same subId allows us to avoid sending
-      // close to cancel the last sub
-      subId: "profiles",
+      subId: "cl",
     },
     NDKRelaySet.fromRelayUrls(readRelays, ndk),
     /* autoStart */ false
   );
 
-  sub.on("event", (event) => {
-    const profile = {
+  sub.on("event", async (event) => {
+
+    const contactList = {
       id: event.id,
       pubkey: event.pubkey,
       kind: event.kind,
       tags: event.tags,
       created_at: event.created_at,
       content: event.content,
-      profile: parseContentJson(event.content),
+      contactPubkeys: event.tags.filter(t => t.length >= 2 && t[0] === 'p').map(t => t[1]),
+      contactEvents: [],
     };
-    console.log("got profile", profile);
-    cb(profile);
+
+    // dedup
+    contactList.contactPubkeys = [...new Set(contactList.contactPubkeys)];
+
+    if (contactList.contactPubkeys.length) {
+      contactList.contactEvents = await collectEvents(
+	fetchEventsRead(ndk, {
+          kinds: [KIND_META],
+          authors: contactList.contactPubkeys,
+	}),
+      );
+
+      contactList.contactEvents.forEach(p => {
+	p.profile = parseContentJson(p.content);
+	p.profile.pubkey = p.pubkey;
+	p.profile.npub = nip19.npubEncode(p.pubkey);
+	p.order = contactList.contactPubkeys.findIndex(pk => pk == p.pubkey);
+      });
+
+      // desc
+      contactList.contactEvents.sort((a, b) => b.order - a.order);
+    }
+    
+    console.log("got contact list", contactList);
+    cb(contactList);
   });
 
   sub.start();
-
-//  console.log("subscribe to profiles", JSON.stringify(pubkeys));
 }
 
 export function stringToBech32(s, hex = false) {

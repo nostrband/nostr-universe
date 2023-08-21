@@ -1,14 +1,14 @@
 import React, { useContext } from "react";
-import { TrendingProfileItem } from "./TrendingProfileItem";
+import { ContactListItem } from "./ContactListItem";
 import { AppContext } from "../../store/app-context";
 import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
 import { nostrbandRelay } from "../../nostr";
-import { SectionTitle } from "../UI/SectionTitle";
+import { isGuest } from "../../utils/helpers/general";
 
 function createDuplicateList() {
   return Array.from({ length: 10 }, () => {
-    return { pubkey: "", name: null, picture: null, about: null };
+    return { pubkey: "", name: null, picture: null };
   });
 }
 
@@ -19,10 +19,11 @@ const getRenderedProfiles = (profiles, isLoading) => {
   return profiles;
 };
 
-export const TrendingProfiles = ({ onOpenProfile }) => {
+export const ContactList = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
-  const { currentWorkspace } = contextData || {};
-  const trendingProfiles = currentWorkspace?.trendingProfiles || [];
+  const { currentPubkey, contactList = {} } = contextData || {};
+
+  if (isGuest(currentPubkey) || !contactList.contactEvents) return;
 
   const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);
@@ -36,33 +37,39 @@ export const TrendingProfiles = ({ onOpenProfile }) => {
   };
 
   const renderedProfiles = getRenderedProfiles(
-    trendingProfiles,
-    trendingProfiles.length > 0
+    contactList.contactEvents,
+    contactList.contactEvents?.length > 0
   );
 
   return (
-    <StyledSection>
-      <SectionTitle color="#E2E8A3">Trending profiles</SectionTitle>
-      <TrendingProfilesContainer>
-        {trendingProfiles.length > 0 &&
-          renderedProfiles.map((p) => (
-            <TrendingProfileItem
-              key={p.pubkey}
-              profile={p}
+    <StyledContainer>
+      <h1>Contacts</h1>
+      <ContactListContainer>
+        {renderedProfiles.length > 0 &&
+          renderedProfiles.map((p, i) => (
+            <ContactListItem
+              key={i}
+              profile={p.profile}
               onClick={onProfileClick}
             />
           ))}
-      </TrendingProfilesContainer>
-    </StyledSection>
+      </ContactListContainer>
+    </StyledContainer>
   );
 };
 
-const StyledSection = styled("section")(() => ({
-  marginTop: "2.3rem",
+const StyledContainer = styled("div")(() => ({
+  marginTop: "1rem",
   paddingLeft: "1rem",
+  h1: {
+    fontSize: "20px",
+    fontWeight: 600,
+    color: "#CBA3E8",
+    marginBottom: "0.75rem",
+  },
 }));
 
-const TrendingProfilesContainer = styled("div")(() => ({
+const ContactListContainer = styled("div")(() => ({
   display: "flex",
   flexDirection: "row",
   flexWrap: "nowrap",

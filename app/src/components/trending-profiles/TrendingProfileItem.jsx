@@ -102,8 +102,8 @@ const Card = styled("div")(() => ({
     overflow: "hidden",
     textOverflow: "ellipsis",
     display: "-webkit-box",
-    "-webkitLineClamp": "2",
-    "-webkitBoxOrient": "vertical",
+    "WebkitLineClamp": "2",
+    "WebkitBoxOrient": "vertical",
   },
 }));
 
