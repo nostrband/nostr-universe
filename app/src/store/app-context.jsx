@@ -14,6 +14,7 @@ import {
   connect,
   fetchApps,
   subscribeProfiles,
+  subscribeContactLists,
   fetchAppsForEvent,
   stringToBech32,
 } from "../nostr";
@@ -223,14 +224,23 @@ function createWorkspace(pubkey, props = {}) {
     tabGroups: {},
     tabs: [],
     pins: [],
+    lastKindApps: {},
     currentTabId: "",
     lastCurrentTabId: "",
     ...props,
   };
 }
 
+function getOrigin(url) {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url;
+  }
+}
+
 function getTabGroupId(pt) {
-  return pt.appNaddr || new URL(pt.url).origin;
+  return pt.appNaddr || getOrigin(pt.url);
 }
 
 function addToTabGroup(workspace, pt, isPin) {
@@ -240,6 +250,7 @@ function addToTabGroup(workspace, pt, isPin) {
       id,
       info: pt,
       tabs: [],
+      lastTabId: "",
     };
 
   const tg = workspace.tabGroups[id];
@@ -271,6 +282,7 @@ const AppContextProvider = ({ children }) => {
   const [currentPubkey, setCurrentPubkey] = useState();
   const [profile, setProfile] = useState({});
   const [profiles, setProfiles] = useState([]);
+  const [contactList, setContactList] = useState({});
 
   // global list of top apps from the network
   const [apps, setApps] = useState(defaultApps);
@@ -282,25 +294,38 @@ const AppContextProvider = ({ children }) => {
   const [pinApp, setPinApp] = useState(null);
   const [openKey, setOpenKey] = useState();
 
-  const [openEventAddr, setOpenEventAddr] = useState("");
+  const [openAddr, setOpenAddr] = useState("");
   const [contextInput, setContextInput] = useState("");
 
   const [isShowDrawer, setIsShowDrawer] = useState(true);
 
   // helpers for initial loading w/ useEffect
   const reloadProfiles = async (keys, currentPubkey) => {
-    setProfile(null); // FIXME loading
-    setProfiles([]); // FIXME loading
+    console.log("reloadProfiles", keys, currentPubkey);
+    setProfile({});
+    setProfiles([]);
+    setContactList({});
     if (!keys || !keys.length) return;
 
     subscribeProfiles(keys, (profile) => {
-      console.log("profile update", profile);
+      // FIXME ensure newest!
+      //      console.log("profile update", profile);
       if (profile.pubkey == currentPubkey) setProfile(profile);
       if (keys.find((k) => profile.pubkey))
         setProfiles((prev) => [
           profile,
           ...prev.filter((p) => p.pubkey != profile.pubkey),
         ]);
+    });
+
+    subscribeContactLists(keys, (cl) => {
+      if (
+        cl.pubkey == currentPubkey &&
+        (!contactList.pubkey || contactList.created_at < cl.created_at)
+      ) {
+        console.log("contact list update", cl);
+        setContactList(cl);
+      }
     });
   };
 
@@ -441,10 +466,33 @@ const AppContextProvider = ({ children }) => {
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
+
       const tab = getTab(tabId);
       if (tab) {
+        // save old tab to reuse in state update
+        const wasTab = { ...tab };
+
+        // set new url
         tab.url = url;
-        await dbi.updateTab(tab);
+
+        // need to switch tab group?
+        const tgid = getTabGroupId(tab);
+        if (tgid !== getTabGroupId(wasTab)) {
+          updateWorkspace((ws) => {
+            console.log("tab", wasTab.id, "delete from", wasTab.url);
+            deleteFromTabGroup(ws, wasTab);
+
+            wasTab.url = url;
+            addToTabGroup(ws, wasTab);
+
+            const tg = ws.tabGroups[tgid];
+            tg.lastTabId = wasTab.id;
+
+            return { tabGroups: { ...ws.tabGroups } };
+          }, tab.pubkey);
+        }
+
+        dbi.updateTab(tab);
       }
     },
     showContextMenu: async function (tabId, id) {
@@ -456,12 +504,12 @@ const AppContextProvider = ({ children }) => {
     },
     onLoadStart: async (tabId, event) => {
       console.log("loading", JSON.stringify(event));
+      API.setUrl(tabId, event.url);
     },
     onLoadStop: async (tabId, event) => {
       console.log("loaded", event.url);
-      updateTab({ url: event.url, loading: false }, tabId);
-      const tab = getTab(tabId);
-      if (tab) await dbi.updateTab(tab);
+      API.setUrl(tabId, event.url);
+      updateTab({ loading: false }, tabId);
     },
     onGetPubkey: (tabId, pubkey) => {
       if (pubkey !== currentPubkey) {
@@ -480,14 +528,32 @@ const AppContextProvider = ({ children }) => {
     onBlank: async (tabId, url) => {
       const tab = getTab(tabId);
       if (tab) await hide(tab);
-      openBlank({ url });
+      if (url.startsWith("nostr:")) {
+        const b32 = stringToBech32(url);
+        if (b32) {
+          // offer to choose an app to show the event
+          setOpenAddr(b32);
+        } else {
+          // try some external app that might know this type of nostr: link
+          window.cordova.InAppBrowser.open(url, "_self");
+        }
+      } else {
+        openBlank({ url });
+      }
+    },
+    onBeforeLoad: async (tabId, url) => {
+      await API.onBlank(tabId, url);
+    },
+    onHide: (tabId) => {
+      console.log("hide", tabId);
+      hide(getTab(tabId));
     },
     onIcon: async (tabId, icon) => {
       updateTab({ icon }, tabId);
       const tab = getTab(tabId);
       if (tab) {
         tab.icon = icon;
-        await dbi.updateTab(tab);
+        dbi.updateTab(tab);
       }
     },
   };
@@ -546,8 +612,6 @@ const AppContextProvider = ({ children }) => {
   };
 
   const close = async (tab) => {
-    await hide(tab);
-
     await dbi.deleteTab(tab.id);
     await browser.close(tab.id);
 
@@ -560,10 +624,24 @@ const AppContextProvider = ({ children }) => {
     });
   };
 
+  const stop = async (tab) => {
+    if (tab) {
+      updateTab({ loading: false }, tab.id);
+      await browser.stop(tab.id);
+    }
+  };
+
+  const reload = async (tab) => {
+    if (tab) {
+      updateTab({ loading: true }, tab.id);
+      await browser.reload(tab.id);
+    }
+  };
+
   const hide = async (tab) => {
     if (tab) {
-      await browser.hide(tab.id);
       updateWorkspace({ currentTabId: "" });
+      await browser.hide(tab.id);
     }
     setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
@@ -586,13 +664,26 @@ const AppContextProvider = ({ children }) => {
         await ensureBrowser(tab);
 
         await browser.show(tab.id);
-        updateWorkspace({ currentTabId: tab.id });
+        updateWorkspace((ws) => {
+          const tg = ws.tabGroups[getTabGroupId(tab)];
+          tg.lastTabId = tab.id;
+          return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
+        });
         ok();
       }, 0);
     });
   };
 
   const openApp = async (params) => {
+    if (params.kind !== undefined) {
+      updateWorkspace((ws) => {
+        ws.lastKindApps[params.kind] = params.naddr;
+        return {
+          lastKindApps: { ...ws.lastKindApps },
+        };
+      });
+    }
+
     const pin = currentWorkspace.pins.find((p) => p.appNaddr == params.naddr);
 
     await openBlank({
@@ -616,15 +707,17 @@ const AppContextProvider = ({ children }) => {
     }
 
     // find an existing app for this url
-    const origin = new URL(url).origin;
-    const app = apps.find((a) => a.url.startsWith(origin));
+    const origin = getOrigin(url);
+    const app = params.appNaddr
+      ? apps.find((a) => a.naddr === params.appNaddr)
+      : apps.find((a) => a.url.startsWith(origin));
     if (app) {
       const pin = currentWorkspace.pins.find((p) => p.appNaddr === app.naddr);
       await open({
         url,
         pinned: !!pin,
         icon: app.picture,
-        title: app.title,
+        title: app.name,
         appNaddr: app.naddr,
       });
       return;
@@ -639,14 +732,16 @@ const AppContextProvider = ({ children }) => {
 
     let { url, title = "", icon = "", pinned = false } = params;
 
-    const U = new URL(url);
-
-    if (!title)
-      title = U.hostname.startsWith("www.")
-        ? U.hostname.substring(4)
-        : U.hostname;
-
-    if (!icon) icon = U.origin + "/favicon.ico";
+    try {
+      const U = new URL(url);
+      if (!title)
+        title = U.hostname.startsWith("www.")
+          ? U.hostname.substring(4)
+          : U.hostname;
+      if (!icon) icon = U.origin + "/favicon.ico";
+    } catch {
+      if (!title) title = url;
+    }
 
     const tab = {
       url,
@@ -709,20 +804,48 @@ const AppContextProvider = ({ children }) => {
   };
 
   const openTabGroup = async (tg) => {
-    if (tg.tabs.length)
-      await show(getTab(tg.tabs[0])); // FIXME open current tab
-    else await open({ ...tg.pin, pinned: true });
+    if (tg.tabs.length) {
+      const tab = getTab(tg.lastTabId || tg.tabs[0]);
+      await show(tab);
+    } else {
+      await open({ ...tg.pin, pinned: true });
+    }
   };
 
   const closeTab = async () => {
     console.log("closeTab");
-    if (currentTab) await close(currentTab);
-    else if (lastCurrentTab) await close(lastCurrentTab);
+    const tab = currentTab || lastCurrentTab;
+    if (!tab) return;
+
+    // hide first
+    await hide(tab);
+
+    // get tab group of the closed tab
+    const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];
+
+    // switch to previous one of the group
+    const index = tg.tabs.findIndex((id) => id === tab.id);
+    const next = index ? index - 1 : index + 1;
+    console.log("next", next);
+    if (next < tg.tabs.length) await show(getTab(tg.tabs[next]));
+
+    // close in bg after that
+    await close(tab);
   };
 
   const hideTab = async () => {
     console.log("hideTab");
     if (currentTab) await hide(currentTab);
+  };
+
+  const stopTab = async () => {
+    console.log("stopTab");
+    if (currentTab) await stop(currentTab);
+  };
+
+  const reloadTab = async () => {
+    console.log("reloadTab");
+    if (currentTab) await reload(currentTab);
   };
 
   const unpinTab = () => {
@@ -826,6 +949,7 @@ const AppContextProvider = ({ children }) => {
         keys,
         profile,
         profiles,
+        contactList,
         apps,
         onAddKey: addKey,
         onSelectKey: selectKey,
@@ -835,6 +959,8 @@ const AppContextProvider = ({ children }) => {
         onOpenTabGroup: openTabGroup,
         onCloseTab: closeTab,
         onHideTab: hideTab,
+        onStopTab: stopTab,
+        onReloadTab: reloadTab,
         setOpenKey,
         onCopyKey: copyKey,
         onShowKey: showKey,
@@ -844,11 +970,11 @@ const AppContextProvider = ({ children }) => {
         onSavePin: savePin,
         pinTab,
         unpinTab,
-        onOpenEvent: setOpenEventAddr,
         workspaces,
         currentWorkspace,
         currentTab,
         currentTabGroup,
+        getTab,
         lastCurrentTab,
         clearLastCurrentTab,
         onModalOpen,
@@ -856,6 +982,8 @@ const AppContextProvider = ({ children }) => {
         contextInput,
         setContextInput,
         isShowDrawer,
+        openAddr,
+        setOpenAddr,
       }}
     >
       {children}

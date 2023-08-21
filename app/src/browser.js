@@ -381,7 +381,9 @@ export function open(params) {
 
   ref.addEventListener('blank', async (event) => {
     console.log("blank", event.url);
-    if (API.onBlank)
+    if (event.url.startsWith("lightning:"))
+      cordova.InAppBrowser.open(event.url, '_self');
+    else if (API.onBlank)
       await API.onBlank(params.apiCtx, event.url);
   });
 
@@ -409,6 +411,14 @@ const show = async (id) => {
 
 const hide = async (id) => {
   await refs[id]?.hide();
+}
+
+const stop = async (id) => {
+  await refs[id]?.stop();
+}
+
+const reload = async (id) => {
+  await refs[id]?.reload();
 }
 
 const close = async (id) => {
@@ -463,6 +473,8 @@ export const browser = {
   show,
   close,
   hide,
+  stop,
+  reload,
   setAPI,
   showMenu
 }

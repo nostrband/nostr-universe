@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
+import { db } from "../db";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
-import { db } from "../db";
+import { ContactList } from "../components/contact-list/ContactList";
 import { AppsList } from "../components/apps/AppsList";
 import { EditKeyModal } from "../components/edit-key-modal/EditKeyModal";
 import { SearchModal } from "../components/search-modal/SearchModal";
@@ -17,7 +18,14 @@ import { useSearchParams } from "react-router-dom";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
-  const { onOpenBlank, contextInput, setContextInput, clearLastCurrentTab } = contextData || {};
+  const {
+    onOpenBlank,
+    contextInput,
+    setContextInput,
+    clearLastCurrentTab,
+    openAddr,
+    setOpenAddr
+  } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isSearchModalVisible = Boolean(searchParams.get("search"));
@@ -38,7 +46,6 @@ const MainPage = () => {
     setIsPinModalVisible((prevState) => !prevState);
   };
 
-  const [openAddr, setOpenAddr] = useState("");
   const onOpenEvent = () => {
     setOpenAddr("");
   };
@@ -79,6 +86,8 @@ const MainPage = () => {
 
         <TrendingProfiles onOpenProfile={setOpenAddr} />
 
+        <ContactList onOpenProfile={setOpenAddr} />
+
         {true && <AppsList />}
 
         <EditKeyModal
@@ -90,6 +99,7 @@ const MainPage = () => {
           isOpen={isSearchModalVisible}
           onSearch={onSearch}
           onClose={toggleSearchModalVisibility}
+	  onOpenEvent={setOpenAddr} 
         />
 
         <PinAppModal

@@ -2,6 +2,7 @@ import NDK, { NDKRelaySet } from "@nostrband/ndk";
 import { nip19 } from "@nostrband/nostr-tools";
 
 const KIND_META = 0;
+const KIND_CONTACT_LIST = 3;
 const KIND_APP = 31990;
 
 // we only care about web apps
@@ -24,6 +25,9 @@ export const allRelays = [nostrbandRelayCounts, ...writeRelays];
 
 // global ndk instance for now
 let ndk = null;
+
+const kindApps = {};
+const profileCache = [];
 
 function fetchEventsRead(ndk, filter) {
   return ndk.fetchEvents(filter, NDKRelaySet.fromRelayUrls(readRelays, ndk));
@@ -569,20 +573,25 @@ export async function fetchAppsForEvent(id, event) {
     }    
   }
   console.log('resolved addr', addr);
-
+  
   // now fetch the apps for event kind
-  const info = await fetchAppsByKinds(ndk, [addr.kind]);
-//  console.log("addr", addr, "apps", info);
+  const info = addr.kind in kindApps
+	     ? {...kindApps[addr.kind]}
+	     : await fetchAppsByKinds(ndk, [addr.kind]);
+  info.addr = addr;
+
+  // put to cache
+  kindApps[addr.kind] = info;
 
   // init convenient url property for each handler
-  // to redirect to this eevnt
+  // to redirect to this event
   for (const id in info.apps) {
     const app = info.apps[id];
     for (const h of app.handlers) {
       h.eventUrl = getUrl(h, addr);
     }
   }
-  
+    
   return info;
 }
 
@@ -593,6 +602,42 @@ export async function fetchEventByBech32(b32) {
     throw new Error("Bad address");
 
   return await fetchEventByAddr(ndk, addr);
+}
+
+export async function searchProfiles(q) {
+  // try to fetch best apps list from our relay
+  const top = await ndk.fetchTop(
+    {
+      kinds: [KIND_META],
+      search: q,
+      limit: 20,
+    },
+    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+  );
+  console.log("top profiles", top?.ids.length);
+
+  let events = null;
+  if (top.ids.length) {
+    // fetch the app events themselves from the list
+    events = await fetchEventsRead(
+      ndk,
+      {
+        ids: top.ids,
+      }
+    );
+  }
+  events = [...events.values()];
+
+  events.forEach(e => {
+    e.profile = parseContentJson(e.content);
+    e.profile.pubkey = e.pubkey;
+    e.profile.npub = nip19.npubEncode(e.pubkey);
+    e.order = top.ids.findIndex(i => e.id === i);
+  });
+
+  events.sort((a, b) => a.order - b.order);
+
+  return events;
 }
 
 export async function subscribeProfiles(pubkeys, cb) {
@@ -623,6 +668,62 @@ export async function subscribeProfiles(pubkeys, cb) {
     };
     console.log("got profile", profile);
     cb(profile);
+  });
+
+  sub.start();
+
+  //  console.log("subscribe to profiles", JSON.stringify(pubkeys));
+}
+
+export async function subscribeContactLists(pubkeys, cb) {
+  const sub = await ndk.subscribe(
+    {
+      authors: [...pubkeys],
+      kinds: [KIND_CONTACT_LIST],
+    },
+    {
+      subId: "cl",
+    },
+    NDKRelaySet.fromRelayUrls(readRelays, ndk),
+    /* autoStart */ false
+  );
+
+  sub.on("event", async (event) => {
+
+    const contactList = {
+      id: event.id,
+      pubkey: event.pubkey,
+      kind: event.kind,
+      tags: event.tags,
+      created_at: event.created_at,
+      content: event.content,
+      contactPubkeys: event.tags.filter(t => t.length >= 2 && t[0] === 'p').map(t => t[1]),
+      contactEvents: [],
+    };
+
+    // dedup
+    contactList.contactPubkeys = [...new Set(contactList.contactPubkeys)];
+
+    if (contactList.contactPubkeys.length) {
+      contactList.contactEvents = await collectEvents(
+	fetchEventsRead(ndk, {
+          kinds: [KIND_META],
+          authors: contactList.contactPubkeys,
+	}),
+      );
+
+      contactList.contactEvents.forEach(p => {
+	p.profile = parseContentJson(p.content);
+	p.profile.pubkey = p.pubkey;
+	p.profile.npub = nip19.npubEncode(p.pubkey);
+	p.order = contactList.contactPubkeys.findIndex(pk => pk == p.pubkey);
+      });
+
+      contactList.contactEvents.sort((a, b) => b.order - a.order);
+    }
+    
+    console.log("got contact list", contactList);
+    cb(contactList);
   });
 
   sub.start();

@@ -15,6 +15,7 @@ export const PinItem = ({
   isActive,
   onClick,
   withTitle,
+  active
 }) => {
   const [url, setUrl] = useState("");
   const colorRef = useRef(getRandomColor());
@@ -27,7 +28,7 @@ export const PinItem = ({
 
   return (
     <Container className="item" onClick={onClick}>
-      <AvatarContainer background={url ? "black" : colorRef.current}>
+      <AvatarContainer background={url ? "black" : colorRef.current} active={active}>
         <Avatar
           className="pin_app_avatar"
           src={url}
@@ -54,7 +55,7 @@ const Container = styled("div")(() => ({
   },
 }));
 
-const AvatarContainer = styled("div")(({ background }) => ({
+const AvatarContainer = styled("div")(({ background, active }) => ({
   width: "100%",
   display: "grid",
   placeItems: "center",
@@ -64,10 +65,15 @@ const AvatarContainer = styled("div")(({ background }) => ({
     height: "auto",
     aspectRatio: "1",
     backgroundColor: background,
-    backgroundClip: "padding-box",
-    border: "4px solid rgba(255, 255, 255, 0.1)",
+    backgroundClip: "padding-box", 
+    border: active ? "4px solid rgba(255, 0, 255, 0.6)" : "4px solid rgba(255, 255, 255, 0.1)",
     fontFamily: "Outfit",
     fontWeight: 600,
+    borderRadius: "1rem",
+  },
+  "& .active1": {
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    border: "4px solid rgba(0, 0, 0, 0.1)",
     borderRadius: "1rem",
   },
 }));

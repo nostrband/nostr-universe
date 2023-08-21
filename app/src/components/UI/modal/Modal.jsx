@@ -28,8 +28,9 @@ export const Modal = ({
     const cb = async () => {
       if (!open && isOpen) await onModalOpen();
       if (open && !isOpen) await onModalClose();
+
+      setOpen(isOpen);
     };
-    setOpen(isOpen);
     cb();
   }, [isOpen]);
 

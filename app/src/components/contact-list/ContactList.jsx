@@ -1,13 +1,13 @@
 import React, { useContext } from "react";
-import { TrendingProfileItem } from "./TrendingProfileItem";
+import { ContactListItem } from "./ContactListItem";
 import { AppContext } from "../../store/app-context";
 import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
-import { nostrbandRelay } from "../../nostr";
+import { nostrbandRelay, fetchAppsForEvent } from '../../nostr'
 
 function createDuplicateList() {
   return Array.from({ length: 10 }, () => {
-    return { pubkey: "", name: null, picture: null, about: null };
+    return { pubkey: "", name: null, picture: null };
   });
 }
 
@@ -18,11 +18,9 @@ const getRenderedProfiles = (profiles, isLoading) => {
   return profiles;
 };
 
-export const TrendingProfiles = ({ onOpenProfile }) => {
+export const ContactList = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
-  const { currentWorkspace } = contextData || {};
-
-  const trendingProfiles = currentWorkspace?.trendingProfiles || [];
+  const { contactList = {} } = contextData || {};
 
   const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);
@@ -36,23 +34,22 @@ export const TrendingProfiles = ({ onOpenProfile }) => {
   };
 
   const renderedProfiles = getRenderedProfiles(
-    trendingProfiles,
-    trendingProfiles.length > 0
+    contactList.contactEvents,
+    contactList.contactEvents?.length > 0
   );
-
+  
   return (
     <StyledContainer>
-      <h1>Trending profiles</h1>
-      <TrendingProfilesContainer>
-        {trendingProfiles.length > 0 &&
-          renderedProfiles.map((p) => (
-            <TrendingProfileItem
-              key={p.pubkey}
-              profile={p}
-              onClick={onProfileClick}
-            />
-          ))}
-      </TrendingProfilesContainer>
+      <h1>Contacts</h1>
+      <ContactListContainer>
+        {renderedProfiles.length > 0 && renderedProfiles.map((p, i) => (
+          <ContactListItem
+            key={i}
+            profile={p.profile}
+            onClick={onProfileClick}
+          />
+        ))}
+      </ContactListContainer>
     </StyledContainer>
   );
 };
@@ -68,7 +65,7 @@ const StyledContainer = styled("div")(() => ({
   },
 }));
 
-const TrendingProfilesContainer = styled("div")(() => ({
+const ContactListContainer = styled("div")(() => ({
   display: "flex",
   flexDirection: "row",
   flexWrap: "nowrap",
