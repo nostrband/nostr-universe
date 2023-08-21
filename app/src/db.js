@@ -10,9 +10,11 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('nostrUniverseDB');
 
-db.version(2).stores({
+db.version(5).stores({
   tabs: 'id,pubkey,url,appNaddr,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
+  apps: '&naddr,name,picture,url,about',
+  profiles: '&id,pubkey,kind,created_at',
   flags: 'id,pubkey,name,value',
 });
 
@@ -70,6 +72,27 @@ export const dbi = {
       return await db.pins.where('pubkey').equals(pubkey).toArray();
     } catch (error) {
       console.log(`List tabs error: ${JSON.stringify(error)}`);
+    }
+  },
+  listApps: async () => {
+    try {
+      return await db.apps.toArray();
+    } catch (error) {
+      console.log(`List apps error: ${JSON.stringify(error)}`);
+    }
+  },
+  listProfiles: async () => {
+    try {
+      return await db.profiles.toArray();
+    } catch (error) {
+      console.log(`List profiles error: ${JSON.stringify(error)}`);
+    }
+  },
+  putProfile: async (p) => {
+    try {
+      await db.profiles.put(p)
+    } catch (error) {
+      console.log(`Put profile to DB error: ${JSON.stringify(error)}`)
     }
   },
   getFlag: async (pubkey, name) => {

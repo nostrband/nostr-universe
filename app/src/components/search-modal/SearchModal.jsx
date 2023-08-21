@@ -7,6 +7,7 @@ import { SearchIcon } from "../../assets";
 import { nostrbandRelay, searchProfiles } from "../../nostr";
 import { nip19 } from "@nostrband/nostr-tools";
 import { TrendingProfileItem } from "../trending-profiles/TrendingProfileItem";
+import { ContactList } from "../contact-list/ContactList";
 
 export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent }) => {
   const [searchValue, setSearchValue] = useState("");
@@ -46,22 +47,24 @@ export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} direction="left">
       <Container>
-        <Header searchMode onClose={onClose} />
-        <Form onSubmit={submitHandler}>
-          <StyledInput
-            placeholder="Search"
-            endAdornment={
-              <StyledIconButton type="submit">
-                <SearchIcon />
-              </StyledIconButton>
-            }
-            onChange={({ target }) => setSearchValue(target.value)}
-            autoFocus={true}
-            inputProps={{
-              autoFocus: true,
-            }}
-          />
-        </Form>
+	<Header searchMode onClose={onClose} />
+	<Form onSubmit={submitHandler}>
+	  <StyledInput
+	    placeholder="Search"
+	    endAdornment={
+	      <StyledIconButton type="submit">
+		<SearchIcon />
+	      </StyledIconButton>
+	    }
+	    onChange={({ target }) => setSearchValue(target.value)}
+	    autoFocus={true}
+	    inputProps={{
+	      autoFocus: true,
+	    }}
+	  />
+	</Form>
+
+	{!searchValue && <ContactList onOpenProfile={onProfileClick} />}
 
 	<div className="ms-3">{isLoading && (<>Searching...</>)}</div>
 	{profiles && (
@@ -73,8 +76,8 @@ export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent }) => {
 		return (
 		  <TrendingProfileItem
 		    key={p.pubkey}
-		    profile={p}
-		    onClick={onProfileClick}
+			profile={p}
+			onClick={onProfileClick}
 		  />
               )})}
 	    </ProfilesContainer>
@@ -84,7 +87,7 @@ export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent }) => {
       </Container>
     </Modal>
   );
-};
+    };
 
 const Container = styled("div")(() => ({
   display: "flex",

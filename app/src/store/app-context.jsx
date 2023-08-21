@@ -302,22 +302,25 @@ const AppContextProvider = ({ children }) => {
   const [contextInput, setContextInput] = useState("");
 
   // helpers for initial loading w/ useEffect
-  const reloadProfiles = async (keys, currentPubkey) => {
+  const reloadProfiles = async (keys, currentPubkey, profiles) => {
     console.log("reloadProfiles", keys, currentPubkey);
-    setProfile({});
-    setProfiles([]);
-    setContactList({});
+    if (profiles && profile.pubkey !== currentPubkey) {
+      const p = profiles.find(p => p.pubkey === currentPubkey);
+      setProfile(p || {});
+      setContactList({});
+    }
     if (!keys || !keys.length) return;
 
     subscribeProfiles(keys, (profile) => {
-      // FIXME ensure newest!
-//      console.log("profile update", profile);
       if (profile.pubkey == currentPubkey) setProfile(profile);
-      if (keys.find((k) => profile.pubkey))
+      if (keys.find((k) => profile.pubkey)) {
         setProfiles((prev) => [
           profile,
           ...prev.filter((p) => p.pubkey != profile.pubkey),
         ]);
+
+	dbi.putProfile(profile);
+      }
     });
 
     subscribeContactLists(keys, (cl) => {
@@ -401,6 +404,16 @@ const AppContextProvider = ({ children }) => {
         setCurrentPubkey(DEFAULT_PUBKEY);
       }
 
+      // fetch cached stuff
+      const apps = await dbi.listApps();
+      if (apps.length > 0) setApps(apps);
+      const profiles = await dbi.listProfiles();
+      if (profiles.length > 0) {
+	setProfiles(profiles);
+	const p = profiles.find(p => p.pubkey === currentPubkey);
+	setProfile(p || {});
+      }
+      
       // fetch trending stuff, set to all workspaces
       await fetchTrendingProfiles().then((profiles) => {
         setWorkspaces((prev) =>
@@ -410,12 +423,20 @@ const AppContextProvider = ({ children }) => {
         );
       });
 
-      connect().then((_) => {
+      connect().then(async () => {
         console.log("ndk connected", Date.now());
 
-        fetchApps().then(setApps);
+	// update apps first
+        const apps = await fetchApps();
+	if (apps.length) {
+	  setApps(apps);
+	  await db.apps.bulkPut(apps);
+	}
 
-        reloadProfiles(keys, currentPubkey);
+	// start profile updater after we're done with apps,
+	// this should be the last of the initial loading
+	// operations
+        reloadProfiles(keys, currentPubkey, profiles);
       });
     }
 
@@ -581,7 +602,7 @@ const AppContextProvider = ({ children }) => {
     }
 
     // make sure we have info on this new profile
-    reloadProfiles(keys, pubkey);
+    reloadProfiles(keys, pubkey, profiles);
   };
 
   const createTabBrowser = async (tab) => {
@@ -790,7 +811,7 @@ const AppContextProvider = ({ children }) => {
       setCurrentPubkey(pubkey);
       setKeys(keys);
 
-      reloadProfiles(keys, pubkey);
+      reloadProfiles(keys, pubkey, profiles);
     }
   };
 
@@ -798,7 +819,7 @@ const AppContextProvider = ({ children }) => {
     const keysList = await keystore.editKey(keyInfoObj);
     // update some key infos? idk
 
-    reloadProfiles(keys, currentPubkey);
+    reloadProfiles(keys, currentPubkey, profiles);
   };
 
   const openTabGroup = async (tg) => {
@@ -869,15 +890,17 @@ const AppContextProvider = ({ children }) => {
   const pinTab = async (openPinAppModal) => {
     const tab = lastCurrentTab;
     if (!tab || tab.pinned) return;
-    
-    const app = apps.find((a) => a.naddr == tab.appNaddr);
-    if (app) {
-      setPinApp(app);
-      openPinAppModal();
-      await browser.hide(tab.id);
-    } else {
-      savePin([]);
-    }
+
+    savePin([]);
+
+//    const app = apps.find((a) => a.naddr == tab.appNaddr);
+//    if (app) {
+//      setPinApp(app);
+//      openPinAppModal();
+//      await browser.hide(tab.id);
+//    } else {
+//      savePin([]);
+//    }
   };
 
   const savePin = (perms) => {

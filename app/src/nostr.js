@@ -116,6 +116,7 @@ export async function fetchApps() {
     );
   }
   events = [...events.values()];
+  console.log("top app events", events.length);
 
   // load authors of the apps, we need them both for the app
   // info and for apps that inherit the author's profile info
@@ -185,7 +186,7 @@ export async function fetchApps() {
       url: (profile && profile.website) || "",
       picture: (profile && profile.picture) || "",
       about: (profile && profile.about) || "",
-      author,
+//      author,
       kinds,
       handlers,
     };
@@ -641,41 +642,48 @@ export async function searchProfiles(q) {
 }
 
 export async function subscribeProfiles(pubkeys, cb) {
-  const sub = await ndk.subscribe(
-    {
-      authors: [...pubkeys],
-      kinds: [KIND_META],
-    },
-    {
-      // FIXME not great for privacy
-      // use of the same subId allows us to avoid sending
-      // close to cancel the last sub
-      subId: "profiles",
-    },
-    NDKRelaySet.fromRelayUrls(readRelays, ndk),
-    /* autoStart */ false
-  );
+  return new Promise(async (ok) => {
+    
+    const sub = await ndk.subscribe(
+      {
+	authors: [...pubkeys],
+	kinds: [KIND_META],
+      },
+      {
+	// FIXME not great for privacy
+	// use of the same subId allows us to avoid sending
+	// close to cancel the last sub
+	subId: "profiles",
+      },
+      NDKRelaySet.fromRelayUrls(readRelays, ndk),
+      /* autoStart */ false
+    );
 
-  sub.on("event", (event) => {
-    const profile = {
-      id: event.id,
-      pubkey: event.pubkey,
-      kind: event.kind,
-      tags: event.tags,
-      created_at: event.created_at,
-      content: event.content,
-      profile: parseContentJson(event.content),
-    };
-    console.log("got profile", profile);
-    cb(profile);
+    // call cb on each event
+    sub.on("event", (event) => {
+      const profile = {
+	id: event.id,
+	pubkey: event.pubkey,
+	kind: event.kind,
+	tags: event.tags,
+	created_at: event.created_at,
+	content: event.content,
+	profile: parseContentJson(event.content),
+      };
+      console.log("got profile", profile);
+      cb(profile);
+    });
+
+    // notify that initial fetch is over
+    sub.on("eose", ok);
+
+    // start
+    sub.start();
   });
-
-  sub.start();
-
-  //  console.log("subscribe to profiles", JSON.stringify(pubkeys));
 }
 
 export async function subscribeContactLists(pubkeys, cb) {
+  
   const sub = await ndk.subscribe(
     {
       authors: [...pubkeys],

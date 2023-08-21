@@ -24,7 +24,7 @@ const MainPage = () => {
     setContextInput,
     clearLastCurrentTab,
     openAddr,
-    setOpenAddr
+    setOpenAddr,
   } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
