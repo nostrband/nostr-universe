@@ -34,6 +34,9 @@ const Card = styled("div")(() => ({
   flexDirection: "column",
   gap: "4px",
   marginRight: "0.75rem",
+  "&:first-of-type": {
+    marginLeft: "0.75rem",
+  },
 }));
 
 const Header = styled("div")(() => ({

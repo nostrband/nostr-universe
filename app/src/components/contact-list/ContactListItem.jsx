@@ -1,9 +1,4 @@
-import {
-  Avatar,
-  Skeleton,
-  Typography,
-  styled,
-} from "@mui/material";
+import { Avatar, Skeleton, Typography, styled } from "@mui/material";
 
 export const ContactListItem = (props) => {
   const {
@@ -11,13 +6,11 @@ export const ContactListItem = (props) => {
     pubkey = "",
     name,
     display_name,
-    picture
+    picture,
   } = props.profile || {};
   const isShowSkeleton = name === null;
 
-  const renderedName = isShowSkeleton
-    ? ""
-    : (name || display_name || npub);
+  const renderedName = isShowSkeleton ? "" : name || display_name || npub;
 
   const pictureSource = picture || "";
 
@@ -28,18 +21,18 @@ export const ContactListItem = (props) => {
       onClick={() => props.onClick(pubkey)}
     >
       {isShowSkeleton ? (
-	<StyledSkeleton variant="circular" width={48} height={48} />
+        <StyledSkeleton variant="circular" width={48} height={48} />
       ) : (
-	<Avatar src={pictureSource} className="avatar">
+        <Avatar src={pictureSource} className="avatar">
           {renderedName}
-	</Avatar>
+        </Avatar>
       )}
       {isShowSkeleton ? (
-	<StyledSkeleton variant="text" className="text" />
+        <StyledSkeleton variant="text" className="text" />
       ) : (
-	<>
-	  <Typography className="username">{renderedName}</Typography>
-	</>
+        <>
+          <Typography className="username">{renderedName}</Typography>
+        </>
       )}
     </Card>
   );
@@ -56,6 +49,9 @@ const Card = styled("div")(() => ({
   alignItems: "center",
   gap: "5px",
   marginRight: "0.75rem",
+  "&:first-of-type": {
+    marginLeft: "0.75rem",
+  },
   "& .avatar": {
     width: "48px",
     height: "48px",

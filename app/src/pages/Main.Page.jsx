@@ -175,6 +175,7 @@ const Container = styled("div")`
   & > main {
     grid-area: main;
     overflow: auto;
+    padding-bottom: 5rem;
   }
 
   & > footer {

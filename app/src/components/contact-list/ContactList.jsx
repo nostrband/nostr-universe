@@ -5,6 +5,7 @@ import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
 import { nostrbandRelay } from "../../nostr";
 import { isGuest } from "../../utils/helpers/general";
+import { SectionTitle } from "../UI/SectionTitle";
 
 function createDuplicateList() {
   return Array.from({ length: 10 }, () => {
@@ -43,7 +44,7 @@ export const ContactList = ({ onOpenProfile }) => {
 
   return (
     <StyledContainer>
-      <h1>Contacts</h1>
+      <SectionTitle color="#A3B2E8">Contacts</SectionTitle>
       <ContactListContainer>
         {renderedProfiles.length > 0 &&
           renderedProfiles.map((p, i) => (
@@ -60,13 +61,6 @@ export const ContactList = ({ onOpenProfile }) => {
 
 const StyledContainer = styled("div")(() => ({
   marginTop: "1rem",
-  paddingLeft: "1rem",
-  h1: {
-    fontSize: "20px",
-    fontWeight: 600,
-    color: "#CBA3E8",
-    marginBottom: "0.75rem",
-  },
 }));
 
 const ContactListContainer = styled("div")(() => ({

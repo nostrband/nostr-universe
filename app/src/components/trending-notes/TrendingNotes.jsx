@@ -12,7 +12,6 @@ export const TrendingNotes = () => {
   return (
     <StyledSection>
       <SectionTitle color="#CBA3E8">Trending notes</SectionTitle>
-
       <NotesContainer>
         {notes.map((note) => {
           return <TrendingNoteItem author={note.author} content={note.event} />;
@@ -24,7 +23,7 @@ export const TrendingNotes = () => {
 
 const StyledSection = styled("section")(() => ({
   marginTop: "2.5rem",
-  paddingLeft: "1rem",
+  minHeight: "5rem",
 }));
 
 const NotesContainer = styled("div")(() => ({

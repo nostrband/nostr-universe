@@ -77,6 +77,9 @@ const Card = styled("div")(() => ({
   alignItems: "center",
   gap: "5px",
   marginRight: "0.75rem",
+  "&:first-of-type": {
+    marginLeft: "0.75rem",
+  },
   "& .avatar": {
     width: "48px",
     height: "48px",
@@ -102,8 +105,8 @@ const Card = styled("div")(() => ({
     overflow: "hidden",
     textOverflow: "ellipsis",
     display: "-webkit-box",
-    "WebkitLineClamp": "2",
-    "WebkitBoxOrient": "vertical",
+    WebkitLineClamp: "2",
+    WebkitBoxOrient: "vertical",
   },
 }));
 
