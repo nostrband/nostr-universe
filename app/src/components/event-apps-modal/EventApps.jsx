@@ -1,15 +1,18 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { fetchAppsForEvent } from "../../nostr";
 import { AppContext } from "../../store/app-context";
 import { EventApp } from "./EventApp";
 import {
-  Autocomplete,
   CircularProgress,
   IconButton,
   InputBase,
+  Menu,
+  MenuItem,
   styled,
 } from "@mui/material";
 import { CloseIcon, SearchIcon } from "../../assets";
+import { useDebounce } from "use-debounce";
+import { AppAvatar } from "./AppAvatar";
 
 export const EventApps = ({ addr, onClose, onSelect }) => {
   const contextData = useContext(AppContext);
@@ -17,11 +20,21 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
 
   const [apps, setApps] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedApp, setSelectedApp] = useState(null);
 
-  useEffect(() => {
-    setSelectedApp(null);
-  }, []);
+  const searchInputRef = useRef();
+
+  const [enteredSearch, setEnteredSearch] = useState("");
+  const [searchTerm] = useDebounce(enteredSearch, 600);
+  const [foundApps, setFoundApps] = useState([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(null);
+
+  const handleClick = (event) => {
+    setIsMenuOpen(true);
+  };
+  const handleClose = () => {
+    setIsMenuOpen(null);
+  };
+
   const [kind, setKind] = useState();
 
   useEffect(() => {
@@ -90,6 +103,73 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
     onOpenApp({ ...app, kind });
   };
 
+  useEffect(() => {
+    const isSearchTermValid = searchTerm.trim().length;
+    if (!isSearchTermValid) {
+      return setFoundApps([]);
+    }
+    if (isSearchTermValid) {
+      setFoundApps(
+        apps.filter((app) =>
+          app.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+      setIsMenuOpen(true);
+    }
+  }, [searchTerm, apps]);
+
+  const searchValueChangeHandler = (e) => setEnteredSearch(e.target.value);
+
+  const renderSearchInput = () => {
+    return (
+      <>
+        <StyledInput
+          placeholder="Search"
+          endAdornment={
+            <StyledIconButton onClick={handleClick}>
+              <SearchIcon />
+            </StyledIconButton>
+          }
+          onChange={searchValueChangeHandler}
+          value={enteredSearch}
+          ref={searchInputRef}
+        />
+        <StyledMenu
+          anchorEl={searchInputRef.current}
+          open={isMenuOpen}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "center",
+          }}
+          slotProps={{
+            paper: {
+              className: "paper",
+            },
+          }}
+          paperwidth={searchInputRef.current?.offsetWidth}
+        >
+          {!foundApps.length && (
+            <MenuItem sx={{ justifyContent: "center" }} disabled>
+              No apps
+            </MenuItem>
+          )}
+          {foundApps.map((app) => {
+            return (
+              <MenuItem key={app.naddr}>
+                <EventApp
+                  app={app}
+                  isMenuItem
+                  onClick={() => onOpen(app.url, app)}
+                />
+              </MenuItem>
+            );
+          })}
+        </StyledMenu>
+      </>
+    );
+  };
+
   return (
     <Container>
       <div className="header">
@@ -105,53 +185,17 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
             <CircularProgress className="spinner" />
           </SpinnerContainer>
         )}
-        <Autocomplete
-          options={apps.length ? apps : []}
-          freeSolo={false}
-          selectOnFocus
-          disableClearable
-          renderInput={(params) => {
-            return (
-              <StyledInput
-                placeholder="Search"
-                endAdornment={<SearchIcon />}
-                {...params.InputProps}
-                inputProps={params.inputProps}
-              />
-            );
-          }}
-          getOptionLabel={(option) => option.name}
-          renderOption={(props, option) => {
-            return <EventApp app={option} {...props} />;
-          }}
-          ListboxProps={{
-            sx: {
-              background: "#111111",
-              color: "white",
-              boxShadow: "0px -4px 8px 0px #00000033",
-              borderRadius: "1rem",
-            },
-          }}
-          value={selectedApp}
-          slotProps={{
-            paper: {
-              sx: {
-                background: "transparent",
-              },
-            },
-          }}
-          onChange={(_, app) => {
-            setSelectedApp(app);
-            onOpen(app.url, app);
-          }}
-        />
-        {!isLoading && apps.length && (
-          <EventsContainer>
-            {apps.map((app) => (
-              <EventApp app={app} onClick={() => onOpen(app.url, app)} />
-            ))}
-          </EventsContainer>
-        )}
+
+        {!isLoading && apps.length ? (
+          <>
+            {renderSearchInput()}
+            <EventsContainer>
+              {apps.map((app) => (
+                <EventApp app={app} onClick={() => onOpen(app.url, app)} />
+              ))}
+            </EventsContainer>
+          </>
+        ) : null}
       </div>
     </Container>
   );
@@ -181,6 +225,8 @@ const EventsContainer = styled("div")(() => ({
   overflow: "hidden",
   textOverflow: "ellipsis",
   width: "100%",
+  margin: "1rem 0",
+  gap: "0.5rem",
 }));
 
 const SpinnerContainer = styled("div")(() => ({
@@ -206,4 +252,26 @@ const StyledInput = styled(InputBase)(() => ({
     color: "#C9C9C9",
   },
   gap: "0.5rem",
+}));
+
+const StyledIconButton = styled(IconButton)(() => ({
+  transition: "background 0.3s ease-out",
+  "&:active": {
+    background: "rgba(255, 255, 255, 0.1)",
+  },
+}));
+
+const StyledMenu = styled(Menu)(({ paperwidth }) => ({
+  padding: 0,
+  "& .MuiMenuItem-root": {
+    padding: 0,
+  },
+  "& .paper": {
+    background: "#111111",
+    color: "white",
+    boxShadow: "0px -4px 8px 0px #00000033",
+    borderRadius: "16px",
+    width: paperwidth || "calc(100% - 32px)",
+    maxHeight: "60vh",
+  },
 }));

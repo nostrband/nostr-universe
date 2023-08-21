@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "../UI/modal/Modal";
 
-import { IconButton, InputBase, styled } from "@mui/material";
+import { IconButton, InputBase, Typography, styled } from "@mui/material";
 import { Header } from "../../layout/Header";
 import { SearchIcon } from "../../assets";
 import { nostrbandRelay, searchProfiles } from "../../nostr";
@@ -63,24 +63,28 @@ export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent }) => {
           />
         </Form>
 
-	<div className="ms-3">{isLoading && (<>Searching...</>)}</div>
-	{profiles && (
-	  <StyledContainer>
-	    <h1>Profiles</h1>
-	    <ProfilesContainer>
+        <div className="ms-3">
+          {isLoading && (
+            <Typography textAlign={"center"}>Searching...</Typography>
+          )}
+        </div>
+        {profiles && (
+          <StyledContainer>
+            <h1>Profiles</h1>
+            <ProfilesContainer>
               {profiles.map((e) => {
-		const p = e.profile;
-		return (
-		  <TrendingProfileItem
-		    key={p.pubkey}
-		    profile={p}
-		    onClick={onProfileClick}
-		  />
-              )})}
-	    </ProfilesContainer>
-	  </StyledContainer>
-	)}
-
+                const p = e.profile;
+                return (
+                  <TrendingProfileItem
+                    key={p.pubkey}
+                    profile={p}
+                    onClick={onProfileClick}
+                  />
+                );
+              })}
+            </ProfilesContainer>
+          </StyledContainer>
+        )}
       </Container>
     </Modal>
   );

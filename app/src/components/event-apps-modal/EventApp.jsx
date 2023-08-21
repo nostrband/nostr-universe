@@ -1,40 +1,34 @@
-import { useMemo } from "react";
-import { renderDefaultAppIcon } from "../../utils/helpers/general";
-import { Avatar, styled } from "@mui/material";
+import { Badge, styled } from "@mui/material";
+import { PinIcon } from "../../assets";
+import { AppAvatar } from "./AppAvatar";
 
-export const EventApp = ({ app, ...restProps }) => {
-  const { picture, name, about } = app;
-
-  const defaultIcon = useMemo(() => {
-    return renderDefaultAppIcon(name);
-  }, [name]);
-
-  const renderedName = (name || "?").toUpperCase()[0];
-
+export const EventApp = ({ app = {}, isMenuItem = false, ...restProps }) => {
+  const { picture, name, about, pinned, lastUsed } = app;
+  console.log({
+    lastUsed,
+    app,
+    pinned,
+  });
   return (
-    <AppContainer {...restProps}>
-      <Avatar
-        className="app_avatar"
-        src={picture || defaultIcon}
-        alt={name}
-        imgProps={{
-          onError: (e) => {
-            e.currentTarget.src = defaultIcon;
-          },
-        }}
-        variant="square"
+    <AppContainer {...restProps} boxshadow={isMenuItem}>
+      <StyledBadge
+        badgeContent={pinned && !isMenuItem ? <PinIcon /> : ""}
+        classes={{ badge: "badge" }}
       >
-        {renderedName}
-      </Avatar>
+        <AppAvatar name={name} picture={picture} />
+      </StyledBadge>
       <Details>
         <h5>{name}</h5>
         <p className="description">{about}</p>
+        {lastUsed && !isMenuItem && (
+          <span className="last_used">Last used</span>
+        )}
       </Details>
     </AppContainer>
   );
 };
 
-const AppContainer = styled("div")(() => ({
+const AppContainer = styled("div")(({ boxshadow }) => ({
   display: "flex",
   justifyContent: "flex-start",
   alignItems: "center",
@@ -42,20 +36,32 @@ const AppContainer = styled("div")(() => ({
   cursor: "pointer",
   gap: "1rem",
   width: "100%",
-  "& .app_avatar": {
-    width: 56,
-    height: 56,
-    borderRadius: "1rem",
-  },
+  boxShadow: boxshadow ? "none" : "0px -4px 8px 0px #00000033",
+  background: "#111111",
+  borderRadius: "16px",
 }));
 
 const Details = styled("div")(() => ({
-  width: "100%",
+  width: "calc(100% - 56px - 1rem)",
+  position: "relative",
   "& .description": {
     maxHeight: "1.3em",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
     overflow: "hidden",
-    maxWidth: "calc(95% - 56px)",
+    maxWidth: "95%",
+    margin: 0,
+  },
+  "& .last_used": {
+    position: "absolute",
+    top: 0,
+    right: "0.5rem",
+    fontSize: "0.8rem",
+  },
+}));
+
+const StyledBadge = styled(Badge)(() => ({
+  "& .badge": {
+    right: "-5px",
   },
 }));
