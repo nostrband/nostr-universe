@@ -99,6 +99,7 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
   }, [addr]);
 
   const onOpen = (app) => {
+    console.log("app", app, kind);
     onSelect();
     onOpenApp({ ...app, kind });
   };
@@ -160,7 +161,7 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
                 <EventApp
                   app={app}
                   isMenuItem
-                  onClick={() => onOpen(app.url, app)}
+                  onClick={() => onOpen(app)}
                 />
               </MenuItem>
             );
@@ -188,10 +189,10 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
 
         {!isLoading && apps.length ? (
           <>
-            {renderSearchInput()}
+            {false && renderSearchInput()}
             <EventsContainer>
               {apps.map((app) => (
-                <EventApp app={app} onClick={() => onOpen(app.url, app)} />
+                <EventApp app={app} onClick={() => onOpen(app)} />
               ))}
             </EventsContainer>
           </>
