@@ -981,7 +981,6 @@ const AppContextProvider = ({ children }) => {
   const updateLastContact = async (b32) => {
     const addr = parseAddr(b32);
     if (addr.kind === 0 && addr.pubkey) {
-      console.log("update last contact", currentPubkey, addr.pubkey);
       await dbi.updateLastContact(currentPubkey, addr.pubkey);
       setContacts({...contactList});
     }
