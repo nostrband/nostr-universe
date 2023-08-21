@@ -21,8 +21,8 @@ export const getProfileImage = (profile) => {
 };
 
 export const isGuest = (pubkey) => {
-  return pubkey.length != 64;
-};
+  return !pubkey || pubkey.length !== 64;
+}
 
 export const getRenderedUsername = (profile, pubkey) => {
   return (

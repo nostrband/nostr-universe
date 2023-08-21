@@ -4,6 +4,7 @@ import { AppContext } from "../../store/app-context";
 import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
 import { nostrbandRelay } from "../../nostr";
+import { isGuest } from "../../utils/helpers/general";
 
 function createDuplicateList() {
   return Array.from({ length: 10 }, () => {
@@ -20,9 +21,9 @@ const getRenderedProfiles = (profiles, isLoading) => {
 
 export const ContactList = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
-  const { contactList = {} } = contextData || {};
+  const { currentPubkey, contactList = {} } = contextData || {};
 
-  const { contactEvents = [] } = contactList;
+  if (isGuest(currentPubkey) || !contactList.contactEvents) return;
 
   const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);
@@ -36,8 +37,8 @@ export const ContactList = ({ onOpenProfile }) => {
   };
 
   const renderedProfiles = getRenderedProfiles(
-    contactEvents,
-    contactEvents.length > 0
+    contactList.contactEvents,
+    contactList.contactEvents?.length > 0
   );
 
   return (
@@ -63,7 +64,7 @@ const StyledContainer = styled("div")(() => ({
   h1: {
     fontSize: "20px",
     fontWeight: 600,
-    color: "#E2E8A3",
+    color: "#CBA3E8",
     marginBottom: "0.75rem",
   },
 }));

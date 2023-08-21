@@ -259,7 +259,7 @@ export function open(params) {
   const hidden = params.hidden ? "yes" : "no";
   const geticon = params.geticon ? "yes" : "no";
 
-  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden},geticon=${geticon}`;
+  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`;
   console.log("browser options", options);
 
   const ref = cordova.InAppBrowser.open(params.url, '_blank', options);

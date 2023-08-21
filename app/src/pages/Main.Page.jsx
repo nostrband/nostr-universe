@@ -10,6 +10,7 @@ import { PinAppModal } from "../components/pin-app-modal/PinAppModal";
 import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
 import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
 import { ContextMenuModal } from "../components/context-menu-modal/ContextMenuModal";
+import { IconButton } from "../components/UI/IconButton";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
 import { AppContext } from "../store/app-context";
@@ -24,7 +25,9 @@ const MainPage = () => {
     setContextInput,
     clearLastCurrentTab,
     openAddr,
-    setOpenAddr
+    setOpenAddr,
+    updateLastContact,
+    currentTab,
   } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,31 +49,35 @@ const MainPage = () => {
     setIsPinModalVisible((prevState) => !prevState);
   };
 
-  const onOpenEvent = () => {
+  const onOpenedEvent = () => {
     setOpenAddr("");
+  };
+
+  const setContactOpenAddr = (addr) => {
+    updateLastContact(addr);
+    setOpenAddr(addr);
   };
 
   const [showTabMenu, setShowTabMenu] = useState(false);
 
   const onSearch = (str) => {
-
     clearLastCurrentTab();
 
     try {
       const url = new URL("/", str);
       if (url) {
-	// need async launch to let the search modal close itself
-	setTimeout(() => onOpenBlank({url: str}), 0);
-	return true;
+        // need async launch to let the search modal close itself
+        setTimeout(() => onOpenBlank({ url: str }), 0);
+        return true;
       }
     } catch {}
-  
+
     const b32 = stringToBech32(str);
     if (b32) {
       setOpenAddr(b32);
       return true;
     }
-    
+
     return false;
   };
 
@@ -86,7 +93,7 @@ const MainPage = () => {
 
         <TrendingProfiles onOpenProfile={setOpenAddr} />
 
-        <ContactList onOpenProfile={setOpenAddr} />
+        <ContactList onOpenProfile={setContactOpenAddr} />
 
         {true && <AppsList />}
 
@@ -99,7 +106,8 @@ const MainPage = () => {
           isOpen={isSearchModalVisible}
           onSearch={onSearch}
           onClose={toggleSearchModalVisibility}
-	  onOpenEvent={setOpenAddr} 
+          onOpenEvent={setOpenAddr}
+          onOpenContact={setContactOpenAddr}
         />
 
         <PinAppModal
@@ -108,10 +116,10 @@ const MainPage = () => {
         />
 
         <EventAppsModal
-          isOpen={openAddr !== ""}
+          isOpen={openAddr != ""}
           onClose={() => setOpenAddr("")}
           addr={openAddr}
-          onSelect={onOpenEvent}
+          onSelect={onOpenedEvent}
         />
 
         <TabMenuModal
@@ -130,6 +138,18 @@ const MainPage = () => {
             setTimeout(() => setOpenAddr(id), 0);
           }}
         />
+
+        {currentTab && (
+          <TabBackground className="d-flex flex-column justify-content-center align-items-center">
+            <div>
+              <IconButton
+                data={{ title: currentTab.title, img: currentTab.icon }}
+                size="big"
+              />
+            </div>
+            <div className="mt-2">Loading...</div>
+          </TabBackground>
+        )}
       </main>
 
       <Footer onOpenPinModal={togglePinModalVisibility} />
@@ -161,6 +181,16 @@ const Container = styled("div")`
     overflow: auto;
     scrollbar-width: thin;
   }
+`;
+
+const TabBackground = styled("div")`
+  position: fixed;
+  top: 44px;
+  left: 0;
+  right: 0;
+  bottom: 44px;
+  background-color: #000;
+  z-index: 1201;
 `;
 
 export default MainPage;

@@ -26,7 +26,7 @@ export const SwipeableDrawer = () => {
   );
 
   const contextData = useContext(AppContext);
-  const { currentWorkspace, onOpenTabGroup } = contextData || {};
+  const { currentWorkspace, onOpenTabGroup, currentTab } = contextData || {};
   const { tabGroups = {} } = currentWorkspace || {};
 
   const toggleDrawer = (newOpen) => () => {
@@ -70,7 +70,7 @@ export const SwipeableDrawer = () => {
       PaperProps={{
         className: "paper",
       }}
-      open={open}
+      open={open && !currentTab}
       onClose={toggleDrawer(false)}
       onOpen={toggleDrawer(true)}
       swipeAreaWidth={`${drawerBleeding}%`}

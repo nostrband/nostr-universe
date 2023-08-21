@@ -7,8 +7,15 @@ import { SearchIcon } from "../../assets";
 import { nostrbandRelay, searchProfiles } from "../../nostr";
 import { nip19 } from "@nostrband/nostr-tools";
 import { TrendingProfileItem } from "../trending-profiles/TrendingProfileItem";
+import { ContactList } from "../contact-list/ContactList";
 
-export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent }) => {
+export const SearchModal = ({
+  isOpen,
+  onClose,
+  onSearch,
+  onOpenEvent,
+  onOpenContact,
+}) => {
   const [searchValue, setSearchValue] = useState("");
   const [profiles, setProfiles] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,6 +69,8 @@ export const SearchModal = ({ isOpen, onClose, onSearch, onOpenEvent }) => {
             }}
           />
         </Form>
+
+        {!searchValue && <ContactList onOpenProfile={onOpenContact} />}
 
         <div className="ms-3">
           {isLoading && (
