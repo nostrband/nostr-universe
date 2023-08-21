@@ -19,7 +19,7 @@ import {
   stringToBech32,
 } from "../nostr";
 import { browser } from "../browser";
-import { allRelays } from "../nostr";
+import { allRelays, parseAddr } from "../nostr";
 import { getNpub } from "../utils/helpers/general";
 
 const defaultApps = [
@@ -301,13 +301,31 @@ const AppContextProvider = ({ children }) => {
   const [openAddr, setOpenAddr] = useState("");
   const [contextInput, setContextInput] = useState("");
 
+  const setContacts = async (cl) => {
+    if (cl.contactEvents) {
+      const lastContacts = await dbi.listLastContacts(cl.pubkey);
+      console.log("lastContacts", lastContacts);
+      lastContacts.forEach(lc => {
+	const c = cl.contactEvents.find(ce => ce.pubkey === lc.contactPubkey);
+	if (c) {
+	  c.order = lc.tm;
+	  console.log("lastContact", lc.contactPubkey, "tm", lc.tm);
+	}
+      });
+      
+      cl.contactEvents.sort ((a, b) => b.order - a.order);
+    }
+    
+    setContactList(cl);
+  };
+  
   // helpers for initial loading w/ useEffect
   const reloadProfiles = async (keys, currentPubkey, profiles) => {
     console.log("reloadProfiles", keys, currentPubkey);
     if (profiles && profile.pubkey !== currentPubkey) {
       const p = profiles.find(p => p.pubkey === currentPubkey);
       setProfile(p || {});
-      setContactList({});
+      setContacts({});
     }
     if (!keys || !keys.length) return;
 
@@ -327,7 +345,7 @@ const AppContextProvider = ({ children }) => {
       if (cl.pubkey == currentPubkey
 	  && (!contactList.pubkey || contactList.created_at < cl.created_at)) {
 	console.log("contact list update", cl);
-	setContactList(cl);
+	setContacts(cl);
       }
     });
   };
@@ -959,16 +977,20 @@ const AppContextProvider = ({ children }) => {
   const clearLastCurrentTab = () => {
     updateWorkspace({ lastCurrentTabId: "" });
   };
-  
-  const isGuest = () => {
-    return currentPubkey == DEFAULT_PUBKEY;
-  };
 
+  const updateLastContact = async (b32) => {
+    const addr = parseAddr(b32);
+    if (addr.kind === 0 && addr.pubkey) {
+      console.log("update last contact", currentPubkey, addr.pubkey);
+      await dbi.updateLastContact(currentPubkey, addr.pubkey);
+      setContacts({...contactList});
+    }
+  };
+  
   return (
     <AppContext.Provider
       value={{
         currentPubkey,
-        isGuest,
         keys,
         profile,
         profiles,
@@ -1005,7 +1027,8 @@ const AppContextProvider = ({ children }) => {
         contextInput,
         setContextInput,
 	openAddr,
-	setOpenAddr
+	setOpenAddr,
+	updateLastContact
       }}
     >
       {children}

@@ -10,11 +10,12 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('nostrUniverseDB');
 
-db.version(5).stores({
+db.version(6).stores({
   tabs: 'id,pubkey,url,appNaddr,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
   profiles: '&id,pubkey,kind,created_at',
+  lastContacts: '[pubkey+contactPubkey],tm',
   flags: 'id,pubkey,name,value',
 });
 
@@ -88,11 +89,25 @@ export const dbi = {
       console.log(`List profiles error: ${JSON.stringify(error)}`);
     }
   },
+  listLastContacts: async (pubkey) => {
+    try {
+      return await db.lastContacts.where('pubkey').equals(pubkey).toArray();
+    } catch (error) {
+      console.log(`List lastContacts error: ${JSON.stringify(error)}`);
+    }
+  },
   putProfile: async (p) => {
     try {
       await db.profiles.put(p)
     } catch (error) {
       console.log(`Put profile to DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  updateLastContact: async (pubkey, contactPubkey) => {
+    try {
+      await db.lastContacts.put({pubkey, contactPubkey, tm: Date.now() / 1000})
+    } catch (error) {
+      console.log(`Put lastContact to DB error: ${JSON.stringify(error)}`)
     }
   },
   getFlag: async (pubkey, name) => {

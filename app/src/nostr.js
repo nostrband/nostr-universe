@@ -197,7 +197,7 @@ export async function fetchApps() {
   return apps;
 }
 
-const parseAddr = (id) => {
+export function parseAddr(id) {
   let addr = {
     kind: undefined,
     pubkey: undefined,
@@ -727,6 +727,7 @@ export async function subscribeContactLists(pubkeys, cb) {
 	p.order = contactList.contactPubkeys.findIndex(pk => pk == p.pubkey);
       });
 
+      // desc
       contactList.contactEvents.sort((a, b) => b.order - a.order);
     }
     

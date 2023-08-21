@@ -25,6 +25,7 @@ const MainPage = () => {
     clearLastCurrentTab,
     openAddr,
     setOpenAddr,
+    updateLastContact
   } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,10 +47,15 @@ const MainPage = () => {
     setIsPinModalVisible((prevState) => !prevState);
   };
 
-  const onOpenEvent = () => {
+  const onOpenedEvent = () => {
     setOpenAddr("");
   };
 
+  const setContactOpenAddr = (addr) => {
+    updateLastContact(addr);
+    setOpenAddr(addr);
+  };
+  
   const [showTabMenu, setShowTabMenu] = useState(false);
 
   const onSearch = (str) => {
@@ -84,52 +90,53 @@ const MainPage = () => {
       <main>
         {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
-        <TrendingProfiles onOpenProfile={setOpenAddr} />
+	<TrendingProfiles onOpenProfile={setOpenAddr} />
 
-        <ContactList onOpenProfile={setOpenAddr} />
+	<ContactList onOpenProfile={setContactOpenAddr} />
 
-        {true && <AppsList />}
+	{true && <AppsList />}
 
-        <EditKeyModal
-          isOpen={isEditKeyModalVisible}
-          onClose={() => setIsEditKeyModalVisible(false)}
-        />
+	<EditKeyModal
+	  isOpen={isEditKeyModalVisible}
+	  onClose={() => setIsEditKeyModalVisible(false)}
+	/>
 
-        <SearchModal
-          isOpen={isSearchModalVisible}
-          onSearch={onSearch}
-          onClose={toggleSearchModalVisibility}
-	  onOpenEvent={setOpenAddr} 
-        />
+	<SearchModal
+	  isOpen={isSearchModalVisible}
+	  onSearch={onSearch}
+	  onClose={toggleSearchModalVisibility}
+	  onOpenEvent={setOpenAddr}
+	  onOpenContact={setContactOpenAddr}
+	/>
 
-        <PinAppModal
-          isOpen={isPinModalVisible}
-          onClose={togglePinModalVisibility}
-        />
+	<PinAppModal
+	  isOpen={isPinModalVisible}
+	  onClose={togglePinModalVisibility}
+	/>
 
-        <EventAppsModal
-          isOpen={openAddr != ""}
-          onClose={() => setOpenAddr("")}
-          addr={openAddr}
-          onSelect={onOpenEvent}
-        />
+	<EventAppsModal
+	  isOpen={openAddr != ""}
+	  onClose={() => setOpenAddr("")}
+	  addr={openAddr}
+	  onSelect={onOpenedEvent}
+	/>
 
-        <TabMenuModal
-          isOpen={showTabMenu}
-          onClose={() => setShowTabMenu(false)}
-          onOpenWith={setOpenAddr}
+	<TabMenuModal
+	  isOpen={showTabMenu}
+	  onClose={() => setShowTabMenu(false)}
+	  onOpenWith={setOpenAddr}
 	  onOpenPinAppModal={togglePinModalVisibility}
-        />
+	/>
 
-        <ContextMenuModal
-          isOpen={!!contextInput}
-          onClose={() => setContextInput("")}
-          input={contextInput}
-          onOpenWith={(id) => {
+	<ContextMenuModal
+	  isOpen={!!contextInput}
+	  onClose={() => setContextInput("")}
+	  input={contextInput}
+	  onOpenWith={(id) => {
             setContextInput("");
             setTimeout(() => setOpenAddr(id), 0);
-          }}
-        />
+	  }}
+	/>
       </main>
 
       <Footer onOpenPinModal={togglePinModalVisibility} />
