@@ -44,6 +44,9 @@ const AppContainer = styled("div")(({ boxshadow }) => ({
 const Details = styled("div")(() => ({
   width: "calc(100% - 56px - 1rem)",
   position: "relative",
+  "& h5": {
+    marginBottom: "0",
+  },
   "& .description": {
     maxHeight: "1.3em",
     whiteSpace: "nowrap",
@@ -51,6 +54,7 @@ const Details = styled("div")(() => ({
     overflow: "hidden",
     maxWidth: "95%",
     margin: 0,
+    color: "#C9C9C9",
   },
   "& .last_used": {
     position: "absolute",

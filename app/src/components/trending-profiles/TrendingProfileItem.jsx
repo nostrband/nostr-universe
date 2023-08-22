@@ -107,6 +107,7 @@ const Card = styled("div")(() => ({
     display: "-webkit-box",
     WebkitLineClamp: "2",
     WebkitBoxOrient: "vertical",
+    color: "#C9C9C9",
   },
 }));
 

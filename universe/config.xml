@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.nostr.universe" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <name>Nostr Universe</name>
-  <description>Browse Nostr safely.</description>
+<widget id="com.nostr.universe" version="0.1.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>Spring</name>
+  <description>The Nostr browser.</description>
   <author email="artur@nostr.band" href="https://nostr.band/">
     Nostr.Band Team
   </author>

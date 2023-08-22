@@ -58,7 +58,7 @@ export const TrendingProfiles = ({ onOpenProfile }) => {
 };
 
 const StyledSection = styled("section")(() => ({
-  marginTop: "2.3rem",
+  marginTop: "1rem",
   minHeight: "5rem",
 }));
 

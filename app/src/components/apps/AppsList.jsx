@@ -10,7 +10,7 @@ export const AppsList = () => {
 
   return (
     <Container>
-      <SectionTitle color="#A3B2E8">Popular Apps</SectionTitle>
+      <SectionTitle color="#a3e8c4">Popular Apps</SectionTitle>
       <div className="container d-flex align-items-start">
         <div className="contentWrapper d-flex gap-1">
           {apps.map((app, index) => {
@@ -29,5 +29,5 @@ export const AppsList = () => {
 };
 
 const Container = styled("section")(() => ({
-  margin: "1.5rem 0 10rem",
+  margin: "1rem 0 6rem",
 }));

@@ -184,7 +184,7 @@ const StyledInput = styled(InputBase)(() => ({
   fontFamily: "Outfit",
   fontSize: "16px",
   fontWeight: 400,
-  padding: "11px 16px",
+  padding: "4px 16px",
   "&:placeholder": {
     color: "#C9C9C9",
   },

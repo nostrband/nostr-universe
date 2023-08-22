@@ -22,7 +22,7 @@ export const TrendingNotes = () => {
 };
 
 const StyledSection = styled("section")(() => ({
-  marginTop: "2.5rem",
+  marginTop: "1rem",
   minHeight: "5rem",
 }));
 
