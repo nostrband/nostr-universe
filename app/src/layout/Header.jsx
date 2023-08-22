@@ -2,13 +2,7 @@ import React, { useContext } from "react";
 import { getProfileImage } from "../utils/helpers/general";
 import { AppContext } from "../store/app-context";
 import { Avatar, Container, Divider, IconButton, styled } from "@mui/material";
-import {
-  SearchIcon,
-  MeatballsIcon,
-  ServerIcon,
-  WalletIcon,
-  SecondaryCloseIcon,
-} from "../assets";
+import { SearchIcon, MeatballsIcon, SecondaryCloseIcon } from "../assets";
 import { useNavigate } from "react-router-dom";
 
 export const Header = ({
