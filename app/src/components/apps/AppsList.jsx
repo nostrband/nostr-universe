@@ -12,7 +12,7 @@ export const AppsList = () => {
     <Container>
       <SectionTitle color="#A3B2E8">Popular Apps</SectionTitle>
       <div className="container d-flex align-items-start">
-        <div className="contentWrapper d-flex gap-4">
+        <div className="contentWrapper d-flex gap-1">
           {apps.map((app, index) => {
             return (
               <AppItem
