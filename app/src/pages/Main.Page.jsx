@@ -89,14 +89,12 @@ const MainPage = () => {
         onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main id="main">
-        {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
         <TrendingProfiles onOpenProfile={setOpenAddr} />
         <TrendingNotes onOpenNote={setOpenAddr} />
-
+        <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+        <AppsList />
         <ContactList onOpenProfile={setContactOpenAddr} />
-
-        {true && <AppsList />}
 
         <EditKeyModal
           isOpen={isEditKeyModalVisible}
@@ -180,6 +178,7 @@ const Container = styled("div")`
     grid-area: main;
     overflow: scroll;
     max-height: 100%;
+    padding-bottom: 6rem;
   }
 
   & > footer {

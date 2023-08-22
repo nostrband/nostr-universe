@@ -15,6 +15,7 @@ import { parseAddr } from "../nostr";
 import { getNpub } from "../utils/helpers/general";
 import { getTrendingProfilesRequest } from "../api/profiles";
 import { getTrendingNotesRequest } from "../api/notes";
+import { getSuggestedProfilesRequest } from "../api/suggested-profiles";
 import { DEFAULT_APPS, DEFAULT_PUBKEY } from "../utils/constants/general";
 
 async function loadKeys() {
@@ -28,6 +29,7 @@ function createWorkspace(pubkey, props = {}) {
     pubkey,
     trendingProfiles: [],
     trendingNotes: [],
+    suggestedProfiles: [],
     tabGroups: {},
     tabs: [],
     pins: [],
@@ -212,6 +214,16 @@ const AppContextProvider = ({ children }) => {
     setWorkspaces((prev) => [...prev, workspace]);
   };
 
+  const updateWorkspace = (cbProps, pubkey = currentPubkey) => {
+    setWorkspaces((prev) =>
+      prev.map((w) =>
+        w.pubkey === pubkey
+          ? { ...w, ...(typeof cbProps === "function" ? cbProps(w) : cbProps) }
+          : w
+      )
+    );
+  };
+  
   useEffect(() => {
     async function onDeviceReady() {
       console.log("device ready", Date.now());
@@ -239,19 +251,24 @@ const AppContextProvider = ({ children }) => {
         setProfile(p || {});
       }
 
-      // fetch trending stuff, set to all workspaces
-      await getTrendingProfilesRequest().then((profiles) => {
+      // fetch trending stuff, can do it in parallel
+      getTrendingProfilesRequest().then((profiles) => {
         setWorkspaces((prev) =>
           prev.map((w) => {
             return { ...w, trendingProfiles: profiles };
           })
         );
       });
-      await getTrendingNotesRequest().then((notes) => {
+      getTrendingNotesRequest().then((notes) => {
         setWorkspaces((prev) =>
           prev.map((w) => ({ ...w, trendingNotes: notes }))
         );
       });
+      if (currentPubkey !== DEFAULT_PUBKEY) {
+	getSuggestedProfilesRequest(currentPubkey).then((profiles) => {
+	  updateWorkspace((ws) => { return { ...ws, suggestedProfiles: profiles } }, currentPubkey);
+	});
+      }
 
       connect().then(async () => {
         console.log("ndk connected", Date.now());
@@ -285,16 +302,6 @@ const AppContextProvider = ({ children }) => {
     (t) => t.id === currentWorkspace.lastCurrentTabId
   );
   const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
-
-  const updateWorkspace = (cbProps, pubkey = currentPubkey) => {
-    setWorkspaces((prev) =>
-      prev.map((w) =>
-        w.pubkey === pubkey
-          ? { ...w, ...(typeof cbProps === "function" ? cbProps(w) : cbProps) }
-          : w
-      )
-    );
-  };
 
   const updateTab = (cbProps, tabId) => {
     tabId = tabId || currentTab?.id;
@@ -433,6 +440,11 @@ const AppContextProvider = ({ children }) => {
 
       // init new workspace
       addWorkspace(pubkey, { trendingProfiles, trendingNotes });
+
+      // load suggested profiles
+      await getSuggestedProfilesRequest(pubkey).then((profiles) => {
+	updateWorkspace((ws) => { return { ...ws, suggestedProfiles: profiles } }, pubkey);
+      });
     }
 
     // make sure we have info on this new profile

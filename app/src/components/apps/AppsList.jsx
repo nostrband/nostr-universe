@@ -29,5 +29,5 @@ export const AppsList = () => {
 };
 
 const Container = styled("section")(() => ({
-  margin: "1rem 0 6rem",
+  marginTop: "1rem",
 }));

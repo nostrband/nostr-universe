@@ -2,6 +2,7 @@ import NDK, { NDKRelaySet } from "@nostrband/ndk";
 import { nip19 } from "@nostrband/nostr-tools";
 
 const KIND_META = 0;
+const KIND_NOTE = 1;
 const KIND_CONTACT_LIST = 3;
 const KIND_APP = 31990;
 
@@ -606,12 +607,12 @@ export async function fetchEventByBech32(b32) {
 }
 
 export async function searchProfiles(q) {
-  // try to fetch best apps list from our relay
+  // try to fetch best profiles from our relay
   const top = await ndk.fetchTop(
     {
       kinds: [KIND_META],
       search: q,
-      limit: 20,
+      limit: 30,
     },
     NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
   );
@@ -637,6 +638,55 @@ export async function searchProfiles(q) {
   });
 
   events.sort((a, b) => a.order - b.order);
+
+  return events;
+}
+
+export async function searchNotes(q) {
+  // try to fetch best apps list from our relay
+  let events = await fetchEventsRead(
+    ndk,
+    {
+      kinds: [KIND_NOTE],
+      search: q,
+      limit: 30,
+    }
+  );
+  console.log("notes", events);
+
+  events = [...events.values()].map(e => { return {
+    id: e.id,
+    pubkey: e.pubkey,
+    created_at: e.created_at,
+    kind: e.kind,
+    tags: e.tags,
+    content: e.content,
+
+    order: e.created_at
+  }});
+  
+  if (events.length > 0) {
+    const metas = await collectEvents(
+      fetchEventsRead(ndk, {
+        kinds: [KIND_META],
+        authors: events.map(e => e.pubkey),
+      }),
+    );
+    //    console.log('metas', metas);
+
+    // parse profiles
+    metas.forEach(e => {
+      e.profile = parseContentJson(e.content);
+      e.profile.pubkey = e.pubkey;
+      e.profile.npub = nip19.npubEncode(e.pubkey);
+    });
+
+    // assign to notes
+    events.forEach(e => e.author = metas.find(m => m.pubkey === e.pubkey));
+  }
+
+  // desc by tm
+  events.sort((a, b) => b.order - a.order);
 
   return events;
 }

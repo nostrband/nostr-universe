@@ -4,11 +4,6 @@ import { AppAvatar } from "./AppAvatar";
 
 export const EventApp = ({ app = {}, isMenuItem = false, ...restProps }) => {
   const { picture, name, about, pinned, lastUsed } = app;
-  console.log({
-    lastUsed,
-    app,
-    pinned,
-  });
   return (
     <AppContainer {...restProps} boxshadow={isMenuItem}>
       <StyledBadge

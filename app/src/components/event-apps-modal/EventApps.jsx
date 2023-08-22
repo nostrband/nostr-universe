@@ -68,7 +68,6 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
 
       apps.sort((a, b) => b.order - a.order);
 
-      console.log("apps", JSON.stringify(apps));
       setApps(apps);
     };
 

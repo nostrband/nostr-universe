@@ -27,7 +27,7 @@ export const TrendingNotes = ({ onOpenNote }) => {
       <SectionTitle color="#CBA3E8">Trending notes</SectionTitle>
       <NotesContainer>
         {notes.map((note) => {
-          return <TrendingNoteItem author={note.author} content={note.event} onClick={onNoteClick} />;
+          return <TrendingNoteItem author={note.author.profile} content={note} onClick={onNoteClick} />;
         })}
       </NotesContainer>
     </StyledSection>

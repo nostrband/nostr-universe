@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "../UI/modal/Modal";
 
-import { IconButton, InputBase, Typography, styled } from "@mui/material";
+import { CircularProgress, IconButton, InputBase, Typography, styled } from "@mui/material";
 import { Header } from "../../layout/Header";
 import { SearchIcon } from "../../assets";
-import { nostrbandRelay, searchProfiles } from "../../nostr";
+import { nostrbandRelay, searchProfiles, searchNotes } from "../../nostr";
 import { nip19 } from "@nostrband/nostr-tools";
 import { TrendingProfileItem } from "../trending-profiles/TrendingProfileItem";
+import { TrendingNoteItem } from "../trending-notes/TrendingNoteItem";
 import { ContactList } from "../contact-list/ContactList";
 
 export const SearchModal = ({
@@ -18,10 +19,12 @@ export const SearchModal = ({
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [profiles, setProfiles] = useState(null);
+  const [notes, setNotes] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setProfiles(null);
+    setNotes(null);
     setIsLoading(false);
   }, [isOpen]);
 
@@ -33,11 +36,19 @@ export const SearchModal = ({
     }
 
     setIsLoading(true);
-    const profiles = await searchProfiles(searchValue);
-    setProfiles(profiles);
-    setIsLoading(false);
+    searchProfiles(searchValue)
+      .then(setProfiles)
+      .then(() => searchNotes(searchValue))
+      .then(setNotes)
+      .finally(() => setIsLoading(false))
+    ;
   };
 
+  const open = (addr) => {
+    onOpenEvent(addr);
+    onClose();
+  };
+  
   const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);
 
@@ -46,8 +57,18 @@ export const SearchModal = ({
       relays: [nostrbandRelay],
     });
 
-    onOpenEvent(nprofile);
-    onClose();
+    open(nprofile);
+  };
+
+  const onEventClick = async (id) => {
+    console.log("show", id);
+
+    const nevent = nip19.neventEncode({
+      id,
+      relays: [nostrbandRelay],
+    });
+
+    open(nevent);
   };
 
   return (
@@ -74,7 +95,9 @@ export const SearchModal = ({
 
         <div className="ms-3">
           {isLoading && (
-            <Typography textAlign={"center"}>Searching...</Typography>
+            <SpinnerContainer>
+              <CircularProgress className="spinner" />
+            </SpinnerContainer>
           )}
         </div>
         {profiles && (
@@ -90,6 +113,23 @@ export const SearchModal = ({
                     onClick={onProfileClick}
                   />
                 );
+              })}
+            </ProfilesContainer>
+          </StyledContainer>
+        )}
+        {notes && (
+          <StyledContainer>
+            <h1 style={{color:"#CBA3E8"}}>Notes</h1>
+            <ProfilesContainer>
+              {notes.map((note) => {
+		return (
+		  <TrendingNoteItem
+                    key={note.id}
+		    author={note.author.profile}
+		    content={note}
+		    onClick={onEventClick}
+		  />
+		)
               })}
             </ProfilesContainer>
           </StyledContainer>
@@ -137,12 +177,12 @@ const StyledIconButton = styled(IconButton)(() => ({
 
 const StyledContainer = styled("div")(() => ({
   marginTop: "1.3rem",
-  paddingLeft: "1rem",
   h1: {
     fontSize: "20px",
     fontWeight: 600,
     color: "#E2E8A3",
     marginBottom: "0.75rem",
+    marginLeft: "1rem",
   },
 }));
 
@@ -151,4 +191,15 @@ const ProfilesContainer = styled("div")(() => ({
   flexDirection: "row",
   flexWrap: "nowrap",
   overflow: "auto",
+}));
+
+const SpinnerContainer = styled("div")(() => ({
+  display: "grid",
+  placeItems: "center",
+  height: "100%",
+  width: "100%",
+  marginTop: "1rem",
+  "& .spinner": {
+    color: "#fff",
+  },
 }));
