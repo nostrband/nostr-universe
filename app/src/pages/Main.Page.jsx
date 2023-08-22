@@ -170,6 +170,10 @@ const Container = styled("div")`
 
   & > header {
     grid-area: header;
+    position: sticky;
+    background: #000;
+    z-index: 99999;
+    top: 0;
   }
 
   & > main {
