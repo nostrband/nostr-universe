@@ -6,8 +6,9 @@ const TITLE_STYLES = {
     overflow: "hidden",
     textOverflow: "ellipsis",
     fontSize: "0.8rem",
+    margin: "0"
   },
-  big: { overflow: "hidden", textOverflow: "ellipsis", fontSize: "1rem" },
+  big: { overflow: "hidden", textOverflow: "ellipsis", maxWidth: "80px", fontSize: "1rem", margin: "0" },
 };
 
 export const IconButton = ({ data, onClick, size, openedTab }) => {
