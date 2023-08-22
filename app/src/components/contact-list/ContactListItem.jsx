@@ -1,4 +1,5 @@
 import { Avatar, Skeleton, Typography, styled } from "@mui/material";
+import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 
 export const ContactListItem = (props) => {
   const {
@@ -12,7 +13,13 @@ export const ContactListItem = (props) => {
 
   const renderedName = isShowSkeleton ? "" : name || display_name || npub;
 
-  const pictureSource = picture || "";
+  const originalImage = picture || "";
+  // it’s not in design
+  // const about = crop(props.profile?.about || "", 25);
+  const profileImageSource = useOptimizedMediaSource({
+    pubkey: pubkey,
+    originalImage,
+  });
 
   return (
     <Card
@@ -23,7 +30,7 @@ export const ContactListItem = (props) => {
       {isShowSkeleton ? (
         <StyledSkeleton variant="circular" width={48} height={48} />
       ) : (
-        <Avatar src={pictureSource} className="avatar">
+        <Avatar src={profileImageSource} className="avatar">
           {renderedName}
         </Avatar>
       )}

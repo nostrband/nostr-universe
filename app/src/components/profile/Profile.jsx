@@ -5,13 +5,13 @@ import { ProfileAvatar } from "./ProfileAvatar";
 import { Tools } from "./tools/Tools";
 import { AppContext } from "../../store/app-context";
 import {
-  getProfileImage,
   getRenderedUsername,
   getNpub,
   isGuest,
 } from "../../utils/helpers/general";
 import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
+import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 
 const MODAL_SEARCH_PARAM = "change-account";
 
@@ -19,6 +19,14 @@ export const Profile = () => {
   const contextData = useContext(AppContext);
   const { currentPubkey, onSelectKey, profile, keys, profiles, onAddKey } =
     contextData || {};
+
+  const { profile: originalProfile = {} } = profile || {};
+  const { picture } = originalProfile || {};
+
+  const profileImage = useOptimizedMediaSource({
+    pubkey: currentPubkey,
+    originalImage: picture,
+  });
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isChangeAccountModalOpen = Boolean(
@@ -40,7 +48,7 @@ export const Profile = () => {
     closeModalHandler();
   };
 
-  const currentUsername = getRenderedUsername(profile, currentPubkey);
+  const currentUsername = getRenderedUsername(profile?.profile, currentPubkey);
 
   const accounts = keys.map((k) => {
     return { pubkey: k, ...profiles?.find((p) => p.pubkey === k) };
@@ -51,7 +59,7 @@ export const Profile = () => {
       <Container>
         <ProfileAvatar
           username={currentUsername}
-          profileImage={getProfileImage(profile?.profile)}
+          profileImage={profileImage}
           onOpenChangeAccountModal={openChangeAccountModalHandler}
           onAddKey={onAddKey}
           isGuest={isGuest(currentPubkey)}

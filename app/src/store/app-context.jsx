@@ -223,7 +223,7 @@ const AppContextProvider = ({ children }) => {
       )
     );
   };
-  
+
   useEffect(() => {
     async function onDeviceReady() {
       console.log("device ready", Date.now());
@@ -265,9 +265,11 @@ const AppContextProvider = ({ children }) => {
         );
       });
       if (currentPubkey !== DEFAULT_PUBKEY) {
-	getSuggestedProfilesRequest(currentPubkey).then((profiles) => {
-	  updateWorkspace((ws) => { return { ...ws, suggestedProfiles: profiles } }, currentPubkey);
-	});
+        getSuggestedProfilesRequest(currentPubkey).then((profiles) => {
+          updateWorkspace((ws) => {
+            return { ...ws, suggestedProfiles: profiles };
+          }, currentPubkey);
+        });
       }
 
       connect().then(async () => {
@@ -443,7 +445,9 @@ const AppContextProvider = ({ children }) => {
 
       // load suggested profiles
       await getSuggestedProfilesRequest(pubkey).then((profiles) => {
-	updateWorkspace((ws) => { return { ...ws, suggestedProfiles: profiles } }, pubkey);
+        updateWorkspace((ws) => {
+          return { ...ws, suggestedProfiles: profiles };
+        }, pubkey);
       });
     }
 
