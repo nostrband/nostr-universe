@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+
 /* 
 pins are known apps that are attached to the taskbar,
 when pin is clicked, a tab is created that has same appNaddr,
@@ -12,9 +13,12 @@ import Dexie from 'dexie'
 
 export const db = new Dexie('nostrUniverseDB')
 
-db.version(2).stores({
+db.version(6).stores({
   tabs: 'id,pubkey,url,appNaddr,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
+  apps: '&naddr,name,picture,url,about',
+  profiles: '&id,pubkey,kind,created_at',
+  lastContacts: '[pubkey+contactPubkey],tm',
   flags: 'id,pubkey,name,value'
 })
 
@@ -31,7 +35,7 @@ export const dbi = {
   },
   updateTab: async (tab) => {
     try {
-      await db.tabs.where('id').equals(tab.id).modify({ url: tab.url })
+      await db.tabs.where('id').equals(tab.id).modify({ url: tab.url, icon: tab.icon })
     } catch (error) {
       console.log(`Update tab in DB error: ${JSON.stringify(error)}`)
     }
@@ -71,6 +75,41 @@ export const dbi = {
       return await db.pins.where('pubkey').equals(pubkey).toArray()
     } catch (error) {
       console.log(`List tabs error: ${JSON.stringify(error)}`)
+    }
+  },
+  listApps: async () => {
+    try {
+      return await db.apps.toArray()
+    } catch (error) {
+      console.log(`List apps error: ${JSON.stringify(error)}`)
+    }
+  },
+  listProfiles: async () => {
+    try {
+      return await db.profiles.toArray()
+    } catch (error) {
+      console.log(`List profiles error: ${JSON.stringify(error)}`)
+    }
+  },
+  listLastContacts: async (pubkey) => {
+    try {
+      return await db.lastContacts.where('pubkey').equals(pubkey).toArray()
+    } catch (error) {
+      console.log(`List lastContacts error: ${JSON.stringify(error)}`)
+    }
+  },
+  putProfile: async (p) => {
+    try {
+      await db.profiles.put(p)
+    } catch (error) {
+      console.log(`Put profile to DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  updateLastContact: async (pubkey, contactPubkey) => {
+    try {
+      await db.lastContacts.put({ pubkey, contactPubkey, tm: Date.now() / 1000 })
+    } catch (error) {
+      console.log(`Put lastContact to DB error: ${JSON.stringify(error)}`)
     }
   },
   getFlag: async (pubkey, name) => {

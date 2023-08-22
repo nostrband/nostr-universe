@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3000",
-    "build": "tsc && vite build",
+    "dev": "vite --port 3000 --mode development",
+    "build": "tsc && vite build --mode production",
     "lint": "eslint . --ext ts,tsx",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "prettier": "npx prettier --write src",
@@ -19,9 +19,12 @@
     "@mui/material": "^5.14.4",
     "@nostrband/ndk": "^0.8.15",
     "@nostrband/nostr-tools": "^1.14.2",
+    "@reduxjs/toolkit": "^1.9.5",
+    "@types/react-redux": "^7.1.25",
     "dexie": "^3.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-redux": "^8.1.2",
     "react-router": "^6.15.0",
     "react-router-dom": "^6.15.0",
     "swiper": "^10.1.0"

@@ -1,5 +1,6 @@
-import { ITrendingProfiles } from '../../types'
+import { ITrendingProfiles } from '@/types/trending-profiles'
 
 export interface ISliderProfiles {
-  data: ITrendingProfiles
+  data: ITrendingProfiles | undefined
+  isLoading?: boolean
 }

@@ -3,8 +3,8 @@ import { OverridableStringUnion } from '@/types/utility'
 import { APP_NOSTRO_SIZE } from './const'
 
 export type AppNostro = {
-  name?: string
-  img: string
+  title?: string
+  icon: string
 }
 
 export type AppNostroSizeUnion = (typeof APP_NOSTRO_SIZE)[keyof typeof APP_NOSTRO_SIZE]

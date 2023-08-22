@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+import { ReturnProfileType } from '@/types/profile'
 import { nip19 } from '@nostrband/nostr-tools'
 
 export const getShortenText = (str) => {
@@ -15,12 +16,12 @@ export const getNoteId = (key) => {
   return nip19.noteEncode(key)
 }
 
-export const getProfileImage = (profile) => {
-  if (profile && profile?.picture) {
-    return profile.picture
-  }
-  return ''
-}
+// export const getProfileImage = (profile) => {
+//   if (profile && profile?.picture) {
+//     return profile.picture
+//   }
+//   return ''
+// }
 
 export const isGuest = (pubkey) => {
   return pubkey.length != 64
@@ -51,4 +52,11 @@ export const renderDefaultAppIcon = (title) => {
   ctx.fillText(title.substring(0, 1).toUpperCase(), 32, 95)
   const dataURL = canvas.toDataURL()
   return dataURL
+}
+
+export const checkIsCurrentUser = (npub: string, account: ReturnProfileType) => {
+  if (account && account?.pubkey) {
+    return npub === getNpub(account.pubkey)
+  }
+  return false
 }

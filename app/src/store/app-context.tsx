@@ -2,7 +2,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import { keystore } from '@/modules/keystore'
-import { db } from '@/modules/db'
+import { db, dbi } from '@/modules/db'
 import { coracleIcon, irisIcon, nostrIcon, satelliteIcon, snortIcon } from '@/assets'
 import { nip19 } from '@nostrband/nostr-tools'
 import { config } from '@/modules/config'
@@ -174,8 +174,8 @@ async function fetchTrendingProfiles() {
   const tp = tpr.profiles.map((p) => {
     try {
       const pr = JSON.parse(p.profile.content)
-      pr.npub = getNpub(p.pubkey)
-      pr.pubkey = p.pubkey
+      pr.npub = getNpub(p.pubkey) // ?
+      pr.pubkey = p.pubkey // ?
       return pr
     } catch (e) {
       console.log('failed to parse profile', e)
@@ -294,7 +294,7 @@ const AppContextProvider = ({ children }) => {
 
       // init default one if db is empty
       if (!currentPubkey) {
-        addWorkspace(DEFAULT_PUBKEY)
+        addWorkspace(DEFAULT_PUBKEY) // ??
         setCurrentPubkey(DEFAULT_PUBKEY)
       }
 

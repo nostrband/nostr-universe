@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import { styled } from '@mui/material/styles'
-import { Box, Avatar, Typography, TypographyProps, Button, Dialog } from '@mui/material'
+import { Box, Avatar, Typography, TypographyProps, Button } from '@mui/material'
 
 export const StyledViewBaner = styled(Box)(({ theme }) => ({
   position: 'relative',
@@ -60,12 +60,4 @@ export const StyledViewAction = styled(Button)(() => ({
   margin: 'auto',
   display: 'flex',
   marginBottom: 20
-}))
-
-export const StyledViewModal = styled(Dialog)(() => ({
-  '.MuiDialog-paper': {
-    margin: 0,
-    width: 'calc(100% - 30px)',
-    background: '#3D3D3D'
-  }
 }))

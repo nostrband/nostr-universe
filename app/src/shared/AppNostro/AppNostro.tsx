@@ -4,11 +4,11 @@ import { IAppNostro } from './types'
 export const AppNostro = ({ app, size, hideName }: IAppNostro) => (
   <StyledAppWraper>
     <StyledApp size={size}>
-      <StyledAppImg src={app.img} />
+      <StyledAppImg src={app.icon} />
     </StyledApp>
     {!hideName && (
       <StyledAppName size={size} component="div">
-        {app.name}
+        {app.title}
       </StyledAppName>
     )}
   </StyledAppWraper>

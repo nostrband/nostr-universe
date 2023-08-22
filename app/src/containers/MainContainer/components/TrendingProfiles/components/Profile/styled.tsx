@@ -2,11 +2,12 @@ import { styled } from '@mui/material/styles'
 import { Box, Avatar, Typography, IconButton } from '@mui/material'
 
 export const StyledProfile = styled(Box)(({ theme }) => ({
-  display: 'flex',
+  display: 'inline-flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '15px 20px',
-  minWidth: 100,
+  padding: '15px 5px',
+  minWidth: 110,
+  maxWidth: 130,
   background: theme.palette.secondary.main,
   borderRadius: theme.shape.borderRadius
 }))

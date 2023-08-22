@@ -1,4 +1,4 @@
-import { TrendingProfile } from '../../types'
+import { TrendingProfile } from '@/types/trending-profiles'
 
 export interface IProfile {
   profile: TrendingProfile

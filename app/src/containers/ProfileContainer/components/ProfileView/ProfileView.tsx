@@ -1,59 +1,57 @@
-import { useState } from 'react'
-import { List, ListItemButton, ListItemAvatar, Avatar, ListItem, ListItemText } from '@mui/material'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 import { Container } from '@/layout/Container/Conatiner'
+import { useAppSelector } from '@/store/hooks/redux'
+import { useOpenModalSearchParams } from '@/hooks/modal'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { getNpub, getProfileImage, getProfileName, isGuest } from '@/utils/helpers/prepare-data'
+import { ModalAccounts } from '../ModalAccounts/ModalAccounts'
 import {
   StyledViewAction,
   StyledViewAvatar,
   StyledViewAvatarSwitch,
   StyledViewAvatarWrapper,
   StyledViewBaner,
-  StyledViewModal,
   StyledViewName
 } from './styled'
 
 export const ProfileView = () => {
-  const [open, setOpen] = useState(false)
+  const { open, handleOpen, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEYS_PROFILE)
+  const { currentProfile, profiles } = useAppSelector((state) => state.profile)
+  const { keys, currentPubKey } = useAppSelector((state) => state.keys)
 
-  const handleOpen = () => {
-    setOpen(true)
-  }
+  const accounts = keys.map((key) => {
+    return {
+      pubkey: key,
+      ...profiles.find((profile) => {
+        if (profile.pubkey === key) {
+          return profile
+        }
+      })
+    }
+  })
 
-  const handleClose = () => {
-    setOpen(false)
-  }
+  const getCurrentPubKey = isGuest(currentPubKey) ? '' : getNpub(currentPubKey)
+
   return (
     <>
       <Container>
         <StyledViewBaner>
           <StyledViewAvatarWrapper onClick={handleOpen}>
-            <StyledViewAvatar src="https://i.pravatar.cc/150?img=3" />
+            <StyledViewAvatar src={getProfileImage(currentProfile)} />
             <StyledViewAvatarSwitch>
               <SyncAltOutlinedIcon fontSize="small" />
             </StyledViewAvatarSwitch>
           </StyledViewAvatarWrapper>
         </StyledViewBaner>
         <StyledViewName variant="h5" component="div">
-          ALex test
+          {getProfileName(currentProfile)}
         </StyledViewName>
         <StyledViewAction disableElevation color="secondary" variant="contained" size="large">
           Edit
         </StyledViewAction>
       </Container>
 
-      <StyledViewModal onClose={handleClose} open={open} fullWidth maxWidth="lg">
-        <List>
-          <ListItem secondaryAction={<CheckCircleOutlinedIcon htmlColor="#48ff91" />} disablePadding>
-            <ListItemButton>
-              <ListItemAvatar>
-                <Avatar src="https://i.pravatar.cc/150?img=3"></Avatar>
-              </ListItemAvatar>
-              <ListItemText primary="ALex test" />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </StyledViewModal>
+      <ModalAccounts currentPubKey={getCurrentPubKey} handleClose={handleClose} open={open} accounts={accounts} />
     </>
   )
 }
