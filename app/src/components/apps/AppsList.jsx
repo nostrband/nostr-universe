@@ -2,15 +2,16 @@ import React, { useContext } from "react";
 import { AppItem } from "./AppItem";
 import { AppContext } from "../../store/app-context";
 import { SectionTitle } from "../UI/SectionTitle";
+import { styled } from "@mui/material";
 
 export const AppsList = () => {
   const contextData = useContext(AppContext);
   const { apps, onOpenApp } = contextData || {};
 
   return (
-    <div className="mt-4">
+    <Container>
       <SectionTitle color="#A3B2E8">Popular Apps</SectionTitle>
-      <section className="container d-flex align-items-start">
+      <div className="container d-flex align-items-start">
         <div className="contentWrapper d-flex gap-4">
           {apps.map((app, index) => {
             return (
@@ -22,7 +23,11 @@ export const AppsList = () => {
             );
           })}
         </div>
-      </section>
-    </div>
+      </div>
+    </Container>
   );
 };
+
+const Container = styled("section")(() => ({
+  margin: "1.5rem 0 10rem",
+}));

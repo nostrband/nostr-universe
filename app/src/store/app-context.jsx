@@ -495,12 +495,14 @@ const AppContextProvider = ({ children }) => {
     setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
+    document.body.style.overflow = "initial";
   };
 
   const showTabMenu = () => {
     setIsShowDrawer(false);
     document.getElementById("tab-menu").classList.remove("d-none");
     document.getElementById("tab-menu").classList.add("d-flex");
+    document.body.style.overflow = "hidden";
   };
 
   const show = async (tab) => {
