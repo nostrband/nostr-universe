@@ -18,5 +18,6 @@ export const getTrendingNotesRequest = async () => {
     }
   });
 
+  if (notes.length > 30) notes.length = 30;
   return notes;
 };

@@ -92,7 +92,7 @@ const MainPage = () => {
         {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
         <TrendingProfiles onOpenProfile={setOpenAddr} />
-        <TrendingNotes />
+        <TrendingNotes onOpenNote={setOpenAddr} />
 
         <ContactList onOpenProfile={setContactOpenAddr} />
 

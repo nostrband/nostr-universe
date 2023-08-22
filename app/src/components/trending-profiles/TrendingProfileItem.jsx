@@ -19,7 +19,7 @@ export const TrendingProfileItem = (props) => {
     name,
     display_name,
     picture,
-    about,
+    about
   } = props.profile || {};
   const isShowSkeleton = name === null;
 

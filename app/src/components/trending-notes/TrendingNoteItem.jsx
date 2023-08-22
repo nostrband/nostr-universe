@@ -10,10 +10,12 @@ const getRenderedUsername = (profile, pubkey) => {
   );
 };
 
-export const TrendingNoteItem = ({ author, content }) => {
+export const TrendingNoteItem = ({ author, content, onClick }) => {
   const renderedName = getRenderedUsername(author, author.pubkey);
   return (
-    <Card>
+    <Card
+      onClick={() => onClick(content.id)}
+    >
       <Header>
         <StyledAvatar alt={renderedName} src={author.picture} />
         <span>{renderedName}</span>

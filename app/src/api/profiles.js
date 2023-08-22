@@ -17,6 +17,6 @@ export async function getTrendingProfilesRequest() {
     }
   });
 
-  if (tp.length > 10) tp.length = 10;
+  if (tp.length > 30) tp.length = 30;
   return tp;
 }
