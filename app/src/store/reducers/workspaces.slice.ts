@@ -16,7 +16,7 @@ export const workspacesSlice = createSlice({
   initialState,
   reducers: {
     setWorkspaces: (state, action: PayloadAction<IWorkSpaceState>) => {
-      state.workspaces = [...state.workspaces, ...action.payload.workspaces]
+      state.workspaces = action.payload.workspaces
     },
     setCurrentWorkspace: (state, action) => {
       state.currentWorkSpace = state.workspaces.find((w) => w.pubkey === action.payload.currentPubKey)

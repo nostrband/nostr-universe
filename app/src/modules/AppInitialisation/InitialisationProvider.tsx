@@ -2,18 +2,18 @@ import { useEffect, useCallback } from 'react'
 import { useAppDispatch } from '@/store/hooks/redux'
 import { setCurrentPubKey, setKeys } from '@/store/reducers/keys.slice'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
+import { setCurrentWorkspace, setWorkspaces } from '@/store/reducers/workspaces.slice'
+import { useUpdateProfile } from '@/hooks/profile'
+import { setProfiles } from '@/store/reducers/profile.slice'
+import { DEFAULT_PUBKEY } from '@/consts'
 import { IInitialisationProvider } from './types'
 import { connect, fetchApps } from '../nostr'
 import { createSomeWorkspaces, getKeys } from './utils'
-import { setCurrentWorkspace, setWorkspaces } from '@/store/reducers/workspaces.slice'
-import { useUpdateProfile } from '@/hooks/profile'
 import { dbi } from '../db'
-import { setProfiles } from '@/store/reducers/profile.slice'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
-  const DEFAULT_PUBKEY = 'anon'
 
   const initDevice = useCallback(async () => {
     try {

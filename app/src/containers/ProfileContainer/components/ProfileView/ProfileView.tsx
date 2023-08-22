@@ -3,6 +3,7 @@ import { Container } from '@/layout/Container/Conatiner'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useChangeAccount } from '@/hooks/workspaces'
 import { getNpub, getProfileImage, getProfileName, isGuest } from '@/utils/helpers/prepare-data'
 import { ModalAccounts } from '../ModalAccounts/ModalAccounts'
 import {
@@ -18,6 +19,7 @@ export const ProfileView = () => {
   const { open, handleOpen, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEYS_PROFILE)
   const { currentProfile, profiles } = useAppSelector((state) => state.profile)
   const { keys, currentPubKey } = useAppSelector((state) => state.keys)
+  const { changeAccount } = useChangeAccount()
 
   const accounts = keys.map((key) => {
     return {
@@ -29,6 +31,11 @@ export const ProfileView = () => {
       })
     }
   })
+
+  const handlechangeAccount = (pubkey: string) => {
+    changeAccount(pubkey)
+    handleClose()
+  }
 
   const getCurrentPubKey = isGuest(currentPubKey) ? '' : getNpub(currentPubKey)
 
@@ -51,7 +58,13 @@ export const ProfileView = () => {
         </StyledViewAction>
       </Container>
 
-      <ModalAccounts currentPubKey={getCurrentPubKey} handleClose={handleClose} open={open} accounts={accounts} />
+      <ModalAccounts
+        changeAccount={handlechangeAccount}
+        currentPubKey={getCurrentPubKey}
+        handleClose={handleClose}
+        open={open}
+        accounts={accounts}
+      />
     </>
   )
 }

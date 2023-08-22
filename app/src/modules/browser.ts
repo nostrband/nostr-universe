@@ -165,6 +165,9 @@ const nostrMenuConnect = () => {
     const t = e.target
     console.log('longtouch', t)
     try {
+      const sel = window.getSelection().toString()
+      if (sel) return await menu(sel)
+
       return (
         (await menuByAttr(t, 'href')) ||
         (await menuByAttr(t, 'id')) ||
@@ -238,7 +241,8 @@ export function open(params) {
   }
 
   const header = document.getElementById('header')
-  const topOffset = header.offsetHeight + header.offsetTop
+  const main = document.getElementById('main')
+  const topOffset = main.offsetTop
   const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)))
   const footer = document.getElementById('tab-menu')
   const bottomOffset = footer.offsetHeight - 1
@@ -248,7 +252,7 @@ export function open(params) {
   const hidden = params.hidden ? 'yes' : 'no'
   const geticon = params.geticon ? 'yes' : 'no'
 
-  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden},geticon=${geticon}`
+  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
   console.log('browser options', options)
 
   const ref = cordova.InAppBrowser.open(params.url, '_blank', options)
@@ -361,7 +365,8 @@ export function open(params) {
 
   ref.addEventListener('blank', async (event) => {
     console.log('blank', event.url)
-    if (API.onBlank) await API.onBlank(params.apiCtx, event.url)
+    if (event.url.startsWith('lightning:')) cordova.InAppBrowser.open(event.url, '_self')
+    else if (API.onBlank) await API.onBlank(params.apiCtx, event.url)
   })
 
   ref.addEventListener('beforeload', async (event, cb) => {
@@ -372,22 +377,34 @@ export function open(params) {
     else cb(event.url)
   })
 
+  ref.addEventListener('icon', async (event) => {
+    if (API.onIcon) await API.onIcon(params.apiCtx, event.icon)
+  })
+
   refs[params.id] = ref
 }
 
 const show = async (id) => {
-  refs[id]?.show()
+  await refs[id]?.show()
 }
 
 const hide = async (id) => {
-  refs[id]?.hide()
+  await refs[id]?.hide()
+}
+
+const stop = async (id) => {
+  await refs[id]?.stop()
+}
+
+const reload = async (id) => {
+  await refs[id]?.reload()
 }
 
 const close = async (id) => {
   if (!(id in refs)) return
 
   const ref = refs[id]
-  ref.close()
+  await ref.close()
   delete refs[id]
 }
 
@@ -435,6 +452,8 @@ export const browser = {
   show,
   close,
   hide,
+  stop,
+  reload,
   setAPI,
   showMenu
 }

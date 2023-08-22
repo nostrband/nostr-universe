@@ -1,6 +1,5 @@
 /* eslint-disable */
 // @ts-nocheck
-import { config } from './config'
 
 const dummy = {
   listKeys: async function () {
@@ -45,7 +44,7 @@ const dummy = {
 }
 
 const API = function (method) {
-  if (config.DEBUG)
+  if (import.meta.env.MODE === 'development')
     return function (...args) {
       return dummy[method](...args)
     }

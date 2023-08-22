@@ -4,16 +4,16 @@ import SearchIcon from '@mui/icons-material/Search'
 import { Header as HeaderLayout } from '@/layout/Header/Header'
 import { useAppSelector } from '@/store/hooks/redux'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
-import styles from './header.module.scss'
+import { StyledIconButton } from './styled'
 
 export const Header = () => {
   const { currentProfile } = useAppSelector((state) => state.profile)
 
   return (
     <HeaderLayout>
-      <IconButton className={styles.profileButton} component={Link} to="/profile">
+      <StyledIconButton component={Link} to="/profile">
         <Avatar src={getProfileImage(currentProfile)} />
-      </IconButton>
+      </StyledIconButton>
 
       <IconButton color="inherit" size="large">
         <SearchIcon />

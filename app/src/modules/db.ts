@@ -10,8 +10,9 @@ when pin is clicked for which a tab exists - tab is shown
  */
 
 import Dexie from 'dexie'
+import { DbSchema } from './types/db'
 
-export const db = new Dexie('nostrUniverseDB')
+export const db = new Dexie('nostrUniverseDB') as DbSchema
 
 db.version(6).stores({
   tabs: 'id,pubkey,url,appNaddr,order,title,icon',
@@ -89,6 +90,7 @@ export const dbi = {
       return await db.profiles.toArray()
     } catch (error) {
       console.log(`List profiles error: ${JSON.stringify(error)}`)
+      return []
     }
   },
   listLastContacts: async (pubkey) => {

@@ -10,10 +10,11 @@ export const StyledViewBaner = styled(Box)(({ theme }) => ({
   marginBottom: 50
 }))
 
-export const StyledViewAvatar = styled(Avatar)(() => ({
-  border: '3px solid #fff',
+export const StyledViewAvatar = styled(Avatar)(({ theme }) => ({
+  border: '3px solid',
   height: 70,
-  width: 70
+  width: 70,
+  borderColor: theme.palette.light.light
 }))
 
 export const StyledViewAvatarWrapper = styled(Box)(() => ({

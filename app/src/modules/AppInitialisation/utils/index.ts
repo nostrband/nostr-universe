@@ -198,7 +198,7 @@ const loadWorkspace = async (workspace) => {
   console.log('load pins', workspace.pins.length, 'tabs', workspace.tabs.length)
 }
 
-export const addWorkspace = async (pubkey, props) => {
+export const addWorkspace = async (pubkey) => {
   // ?? props
   await ensureBootstrapped(pubkey)
 
@@ -208,8 +208,8 @@ export const addWorkspace = async (pubkey, props) => {
     tabs: [],
     pins: [],
     currentTabId: '',
-    lastCurrentTabId: '',
-    ...props
+    lastCurrentTabId: ''
+    // ...props
   }
 
   await loadWorkspace(workspace)
