@@ -16,6 +16,7 @@ import { styled } from "@mui/material";
 import { AppContext } from "../store/app-context";
 import { stringToBech32 } from "../nostr";
 import { useSearchParams } from "react-router-dom";
+import { TrendingNotes } from "../components/trending-notes/TrendingNotes";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
@@ -62,7 +63,6 @@ const MainPage = () => {
 
   const onSearch = (str) => {
     clearLastCurrentTab();
-
     try {
       const url = new URL("/", str);
       if (url) {
@@ -88,10 +88,11 @@ const MainPage = () => {
         onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
         onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
-      <main>
+      <main id="main">
         {false && <button onClick={() => db.delete()}>Delete DB</button>}
 
         <TrendingProfiles onOpenProfile={setOpenAddr} />
+        <TrendingNotes />
 
         <ContactList onOpenProfile={setContactOpenAddr} />
 
@@ -116,7 +117,7 @@ const MainPage = () => {
         />
 
         <EventAppsModal
-          isOpen={openAddr != ""}
+          isOpen={openAddr !== ""}
           onClose={() => setOpenAddr("")}
           addr={openAddr}
           onSelect={onOpenedEvent}
@@ -158,7 +159,7 @@ const MainPage = () => {
 };
 
 const Container = styled("div")`
-  min-height: 100%;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
@@ -169,17 +170,26 @@ const Container = styled("div")`
 
   & > header {
     grid-area: header;
+    position: sticky;
+    background: #000;
+    z-index: 1199;
+    top: 0;
   }
 
   & > main {
     grid-area: main;
-    overflow: auto;
+    overflow: scroll;
+    max-height: 100%;
   }
 
   & > footer {
     grid-area: footer;
     overflow: auto;
     scrollbar-width: thin;
+    position: sticky;
+    background: #000;
+    z-index: 1199;
+    bottom: 0;
   }
 `;
 

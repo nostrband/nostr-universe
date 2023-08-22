@@ -19,7 +19,7 @@ export const TrendingProfileItem = (props) => {
     name,
     display_name,
     picture,
-    about
+    about,
   } = props.profile || {};
   const isShowSkeleton = name === null;
 
@@ -38,28 +38,29 @@ export const TrendingProfileItem = (props) => {
       onClick={() => props.onClick(pubkey)}
     >
       {isShowSkeleton ? (
-	<StyledSkeleton variant="circular" width={48} height={48} />
+        <StyledSkeleton variant="circular" width={48} height={48} />
       ) : (
-	<Avatar src={pictureSource} className="avatar">
+        <Avatar src={pictureSource} className="avatar">
           {renderedName}
-	</Avatar>
+        </Avatar>
       )}
       {isShowSkeleton ? (
-	<StyledSkeleton variant="text" className="text" />
+        <StyledSkeleton variant="text" className="text" />
       ) : (
-	<>
-	  <Typography className="username">{renderedName}</Typography>
-	  <Typography className="about">{about || ""}</Typography>
-	</>
+        <>
+          <Typography className="username">{renderedName}</Typography>
+          <Typography className="about">{about || ""}</Typography>
+        </>
       )}
 
-      {false && (<StyledIconButton
-		   disabled={isShowSkeleton}
-		   onClick={() => props.onClick(pubkey)}
-		   classes={{ disabled: "disabled" }}
-		 >
-	<PlusIcon />
-      </StyledIconButton>
+      {false && (
+        <StyledIconButton
+          disabled={isShowSkeleton}
+          onClick={() => props.onClick(pubkey)}
+          classes={{ disabled: "disabled" }}
+        >
+          <PlusIcon />
+        </StyledIconButton>
       )}
     </Card>
   );
@@ -76,6 +77,9 @@ const Card = styled("div")(() => ({
   alignItems: "center",
   gap: "5px",
   marginRight: "0.75rem",
+  "&:first-of-type": {
+    marginLeft: "0.75rem",
+  },
   "& .avatar": {
     width: "48px",
     height: "48px",
@@ -101,8 +105,8 @@ const Card = styled("div")(() => ({
     overflow: "hidden",
     textOverflow: "ellipsis",
     display: "-webkit-box",
-    "WebkitLineClamp": "2",
-    "WebkitBoxOrient": "vertical",
+    WebkitLineClamp: "2",
+    WebkitBoxOrient: "vertical",
   },
 }));
 

@@ -4,6 +4,7 @@ import { AppContext } from "../../store/app-context";
 import { nip19 } from "@nostrband/nostr-tools";
 import { styled } from "@mui/material";
 import { nostrbandRelay } from "../../nostr";
+import { SectionTitle } from "../UI/SectionTitle";
 
 function createDuplicateList() {
   return Array.from({ length: 10 }, () => {
@@ -21,7 +22,6 @@ const getRenderedProfiles = (profiles, isLoading) => {
 export const TrendingProfiles = ({ onOpenProfile }) => {
   const contextData = useContext(AppContext);
   const { currentWorkspace } = contextData || {};
-
   const trendingProfiles = currentWorkspace?.trendingProfiles || [];
 
   const onProfileClick = async (pubkey) => {
@@ -41,8 +41,8 @@ export const TrendingProfiles = ({ onOpenProfile }) => {
   );
 
   return (
-    <StyledContainer>
-      <h1>Trending profiles</h1>
+    <StyledSection>
+      <SectionTitle color="#E2E8A3">Trending profiles</SectionTitle>
       <TrendingProfilesContainer>
         {trendingProfiles.length > 0 &&
           renderedProfiles.map((p) => (
@@ -53,19 +53,13 @@ export const TrendingProfiles = ({ onOpenProfile }) => {
             />
           ))}
       </TrendingProfilesContainer>
-    </StyledContainer>
+    </StyledSection>
   );
 };
 
-const StyledContainer = styled("div")(() => ({
-  marginTop: "1rem",
-  paddingLeft: "1rem",
-  h1: {
-    fontSize: "20px",
-    fontWeight: 600,
-    color: "#E2E8A3",
-    marginBottom: "0.75rem",
-  },
+const StyledSection = styled("section")(() => ({
+  marginTop: "2.3rem",
+  minHeight: "5rem",
 }));
 
 const TrendingProfilesContainer = styled("div")(() => ({
