@@ -35,10 +35,11 @@ export const AccountsMenu = ({
       return (
         <AccountMenuItem
           key={index}
-          profileImage={account.profile?.picture || defaultUserImage}
-          username={getRenderedUsername(account, account.pubkey)}
+          profileImage={account.profile?.picture || ""}
+          username={getRenderedUsername(account.profile, account.pubkey)}
           isCurrentUser={checkIsCurrentUser(currentUserNpub, account)}
           onClick={() => onChangeAccount(index)}
+          pubkey={account.pubkey}
         />
       );
     });

@@ -1,6 +1,7 @@
 import React from "react";
 import { ListItemIcon, ListItemText, MenuItem, styled } from "@mui/material";
 import { CheckMarkIcon } from "../../../assets";
+import { useOptimizedMediaSource } from "../../../hooks/useOptimizedMediaSource";
 
 export const AccountMenuItem = ({
   username = "",
@@ -9,12 +10,17 @@ export const AccountMenuItem = ({
   onClick,
   centeredText = false,
   isCurrentUser = false,
+  pubkey,
   ...restProps
 }) => {
+  const profileImageSource = useOptimizedMediaSource({
+    pubkey: pubkey,
+    originalImage: profileImage,
+  });
   return (
     <StyledMenuItem disabled={disabled} onClick={onClick} {...restProps}>
       <ListItemIcon className="profile_image">
-        {profileImage && <img src={profileImage} alt={username} />}
+        {profileImageSource && <img src={profileImageSource} alt={username} />}
       </ListItemIcon>
       <ListItemText className={`username ${centeredText ? "centered" : ""}`}>
         {username}

@@ -26,8 +26,8 @@ export const isGuest = (pubkey) => {
 
 export const getRenderedUsername = (profile, pubkey) => {
   return (
-    profile?.profile?.display_name ||
-    profile?.profile?.name ||
+    profile?.display_name ||
+    profile?.name ||
     (isGuest(pubkey) ? "Guest" : getShortenText(getNpub(pubkey)))
   );
 };

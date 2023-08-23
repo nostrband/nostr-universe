@@ -1,23 +1,19 @@
 import React from "react";
 import { Avatar, styled } from "@mui/material";
-import { getNpub, getShortenText, isGuest } from "../../utils/helpers/general";
+import { getRenderedUsername } from "../../utils/helpers/general";
+import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 
-const getRenderedUsername = (profile, pubkey) => {
+export const TrendingNoteItem = ({ author = {}, content, onClick }) => {
+  const { pubkey, picture } = author;
+  const renderedName = getRenderedUsername(author, pubkey);
+  const authorAvatar = useOptimizedMediaSource({
+    pubkey: content?.pubkey,
+    originalImage: picture,
+  });
   return (
-    profile?.display_name ||
-    profile?.name ||
-    (isGuest(pubkey) ? "Guest" : getShortenText(getNpub(pubkey)))
-  );
-};
-
-export const TrendingNoteItem = ({ author, content, onClick }) => {
-  const renderedName = getRenderedUsername(author, author.pubkey);
-  return (
-    <Card
-      onClick={() => onClick(content.id)}
-    >
+    <Card onClick={() => onClick(content.id)}>
       <Header>
-        <StyledAvatar alt={renderedName} src={author.picture} />
+        <StyledAvatar alt={renderedName} src={authorAvatar} />
         <span>{renderedName}</span>
       </Header>
       <DescriptionText>{content.content}</DescriptionText>

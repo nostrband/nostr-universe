@@ -1,20 +1,18 @@
-import React from 'react'
+import React from "react";
 import { styled } from "@mui/material";
-import { IconButton } from '../UI/IconButton'
+import { IconButton } from "../UI/IconButton";
 
 export const AppItem = ({ app, onOpenApp }) => {
   return (
-    <Card
-      onClick={() => onOpenApp(app)}
-    >
+    <Card onClick={() => onOpenApp(app)}>
       <IconButton
-	key={app.url}
-	    data={{ ...app, title: app.name, img: app.picture }}
-	    size='big'
+        key={app.url}
+        data={{ ...app, title: app.name, img: app.picture }}
+        size="big"
       />
     </Card>
-  )
-}
+  );
+};
 
 // from TrendingProfileItem
 const Card = styled("div")(() => ({

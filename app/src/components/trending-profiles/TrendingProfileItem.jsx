@@ -6,6 +6,7 @@ import {
   styled,
 } from "@mui/material";
 import { PlusIcon } from "../../assets";
+import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 
 const crop = (s, n) => {
   if (s.length > n) return s.trim().substring(0, n - 1) + "...";
@@ -19,7 +20,7 @@ export const TrendingProfileItem = (props) => {
     name,
     display_name,
     picture,
-    about
+    about,
   } = props.profile || {};
   const isShowSkeleton = name === null;
 
@@ -27,9 +28,13 @@ export const TrendingProfileItem = (props) => {
     ? ""
     : crop(name || display_name || npub, 15);
 
-  const pictureSource = picture || "";
+  const originalImage = picture || "";
   // it’s not in design
   // const about = crop(props.profile?.about || "", 25);
+  const profileImageSource = useOptimizedMediaSource({
+    pubkey: pubkey,
+    originalImage,
+  });
 
   return (
     <Card
@@ -40,7 +45,7 @@ export const TrendingProfileItem = (props) => {
       {isShowSkeleton ? (
         <StyledSkeleton variant="circular" width={48} height={48} />
       ) : (
-        <Avatar src={pictureSource} className="avatar">
+        <Avatar src={profileImageSource} className="avatar">
           {renderedName}
         </Avatar>
       )}

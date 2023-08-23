@@ -22,11 +22,10 @@ const getRenderedProfiles = (profiles, isLoading) => {
 export const TrendingProfiles = ({ onOpenProfile, suggested }) => {
   const contextData = useContext(AppContext);
   const { currentWorkspace } = contextData || {};
-  const trendingProfiles = (
-    suggested
-    ? currentWorkspace?.suggestedProfiles
-    : currentWorkspace?.trendingProfiles
-  ) || [];
+  const trendingProfiles =
+    (suggested
+      ? currentWorkspace?.suggestedProfiles
+      : currentWorkspace?.trendingProfiles) || [];
 
   const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);
@@ -47,17 +46,17 @@ export const TrendingProfiles = ({ onOpenProfile, suggested }) => {
   return (
     <StyledSection>
       <SectionTitle color={suggested ? "#e8ada3" : "#E2E8A3"}>
-	{suggested ? <>Suggested profiles</> : <>Trending profiles</>}
+        {suggested ? "Suggested profiles" : "Trending profiles"}
       </SectionTitle>
       <TrendingProfilesContainer>
         {trendingProfiles.length > 0 &&
-         renderedProfiles.map((p) => (
-           <TrendingProfileItem
-             key={p.pubkey}
-             profile={p}
-             onClick={onProfileClick}
-           />
-        ))}
+          renderedProfiles.map((p) => (
+            <TrendingProfileItem
+              key={p.pubkey}
+              profile={p}
+              onClick={onProfileClick}
+            />
+          ))}
       </TrendingProfilesContainer>
     </StyledSection>
   );
