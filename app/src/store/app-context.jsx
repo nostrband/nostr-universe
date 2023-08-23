@@ -430,26 +430,25 @@ const AppContextProvider = ({ children }) => {
 
     // our first key?
     if (currentPubkey === DEFAULT_PUBKEY) {
+
       // reassign everything from default to the new key
       await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey });
       await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey });
-
       updateWorkspace({ pubkey }, DEFAULT_PUBKEY);
     } else {
-      // copy trending stuffbottom
-      const { trendingProfiles = [], trendingNotes = [] } =
-        workspaces.find((w) => w.pubkey === currentPubkey) || {};
 
+      // copy trending stuff
+      const { trendingProfiles = [], trendingNotes = [] } =
+	workspaces.find((w) => w.pubkey === currentPubkey) || {};
+      
       // init new workspace
       addWorkspace(pubkey, { trendingProfiles, trendingNotes });
-
-      // load suggested profiles
-      await getSuggestedProfilesRequest(pubkey).then((profiles) => {
-        updateWorkspace((ws) => {
-          return { ...ws, suggestedProfiles: profiles };
-        }, pubkey);
-      });
     }
+
+    // load suggested profiles for the new key
+    getSuggestedProfilesRequest(pubkey).then((profiles) => {
+      updateWorkspace((ws) => { return { ...ws, suggestedProfiles: profiles } }, pubkey);
+    });
 
     // make sure we have info on this new profile
     reloadProfiles(keys, pubkey, profiles);

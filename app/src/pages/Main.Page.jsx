@@ -29,6 +29,7 @@ const MainPage = () => {
     setOpenAddr,
     updateLastContact,
     currentTab,
+    currentWorkspace
   } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -91,7 +92,9 @@ const MainPage = () => {
       <main id="main">
         <TrendingProfiles onOpenProfile={setOpenAddr} />
         <TrendingNotes onOpenNote={setOpenAddr} />
-        <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+        {currentWorkspace?.suggestedProfiles.length > 0 && 
+	  <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+	}
         <AppsList />
         <ContactList onOpenProfile={setContactOpenAddr} />
 

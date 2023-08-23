@@ -24,9 +24,8 @@ const Card = styled("div")(() => ({
   padding: "0.5rem 0.75rem 0.75rem",
   borderRadius: "1rem",
   backgroundColor: "#222222",
-  minHeight: "116px",
   minWidth: "223px",
-  maxHeight: "116px",
+  maxHeight: "126px",
   maxWidth: "223px",
   display: "flex",
   flexDirection: "column",
@@ -59,9 +58,7 @@ const DescriptionText = styled("p")(() => ({
   WebkitBoxOrient: "vertical",
   fontSize: "0.8rem",
   fontWeight: 200,
-  lineHeight: "19.6px",
   color: "#C9C9C9",
-  minHeight: "60px",
 }));
 
 const StyledAvatar = styled(Avatar)(() => ({
