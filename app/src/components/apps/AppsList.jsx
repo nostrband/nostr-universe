@@ -9,25 +9,31 @@ export const AppsList = () => {
   const { apps, onOpenApp } = contextData || {};
 
   return (
-    <Container>
+    <StyledSection>
       <SectionTitle color="#a3e8c4">Popular Apps</SectionTitle>
-      <div className="container d-flex align-items-start">
-        <div className="contentWrapper d-flex gap-1">
-          {apps.map((app, index) => {
-            return (
-              <AppItem
-                app={app}
-                onOpenApp={onOpenApp}
-                key={app.name + "" + index}
-              />
-            );
-          })}
-        </div>
-      </div>
-    </Container>
+      <AppsContainer>
+        {apps.map((app, index) => {
+          return (
+	    <AppItem
+              app={app}
+              onOpenApp={onOpenApp}
+              key={app.name + "" + index}
+	    />
+          );
+        })}
+      </AppsContainer>
+    </StyledSection>
   );
 };
 
-const Container = styled("section")(() => ({
+const StyledSection = styled("section")(() => ({
   marginTop: "1rem",
+  minHeight: "5rem",
+}));
+
+const AppsContainer = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "nowrap",
+  overflow: "auto",
 }));

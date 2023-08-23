@@ -14,6 +14,7 @@ const TITLE_STYLES = {
     maxWidth: "80px",
     fontSize: "1rem",
     margin: "0",
+    whiteSpace: "nowrap",
   },
 };
 
