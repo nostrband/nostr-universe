@@ -6,6 +6,7 @@ const KIND_NOTE = 1;
 const KIND_CONTACT_LIST = 3;
 const KIND_LONG_NOTE = 30023;
 const KIND_APP = 31990;
+const KIND_LIVE_EVENT = 30311;
 
 // we only care about web apps
 const PLATFORMS = ["web"];
@@ -35,24 +36,24 @@ function fetchEventsRead(ndk, filter) {
   return ndk.fetchEvents(filter, NDKRelaySet.fromRelayUrls(readRelays, ndk));
 }
 
-function getTags(e, name) {
+export function getTags(e, name) {
   return e.tags.filter((t) => t.length > 0 && t[0] === name);
 }
 
-function getTag(e, name) {
+export function getTag(e, name) {
   const tags = getTags(e, name);
   if (tags.length === 0) return null;
   return tags[0];
 }
 
-function getTagValue(e, name, index, def) {
+export function getTagValue(e, name, index, def) {
   const tag = getTag(e, name);
   if (tag === null || !tag.length || (index && index >= tag.length))
     return def !== undefined ? def : '';
   return tag[1 + (index || 0)];
 }
 
-function getEventTagA(e) {
+export function getEventTagA(e) {
   let addr = e.kind + ':' + e.pubkey + ':';
   if (e.kind >= 30000 && e.kind < 40000) addr += getTagValue(e, 'd');
   return addr;
@@ -655,23 +656,33 @@ function rawEvent(e) {
   };
 }
 
+async function fetchMetas(pubkeys) {
+  let metas = await collectEvents(
+    fetchEventsRead(ndk, {
+      kinds: [KIND_META],
+      authors: pubkeys,
+    }),
+  );
+
+  // drop ndk stuff
+  metas = metas.map(m => rawEvent(m));
+  
+  // parse profiles
+  metas.forEach(e => {
+    e.profile = parseContentJson(e.content);
+    e.profile.pubkey = e.pubkey;
+    e.profile.npub = nip19.npubEncode(e.pubkey);
+  });
+
+  return metas;
+}
+
 async function augmentPrepareEvents(events, limit) {
   events = [...events.values()].map(e => rawEvent(e));
 
   if (events.length > 0) {
-    const metas = await collectEvents(
-      fetchEventsRead(ndk, {
-        kinds: [KIND_META],
-        authors: events.map(e => e.pubkey),
-      }),
-    );
-
-    // parse profiles
-    metas.forEach(e => {
-      e.profile = parseContentJson(e.content);
-      e.profile.pubkey = e.pubkey;
-      e.profile.npub = nip19.npubEncode(e.pubkey);
-    });
+    // profile infos
+    const metas = await fetchMetas(events.map(e => e.pubkey));
 
     // assign to notes
     events.forEach(e => e.author = metas.find(m => m.pubkey === e.pubkey));
@@ -686,10 +697,20 @@ async function augmentPrepareEvents(events, limit) {
   return events;
 }
 
-export async function searchNotes(q, limit = 30) {
+async function augmentLongNotes(events) {
+  events.forEach((e) => {
+    e.identifier = getTagValue(e, 'd');
+    e.title = getTagValue(e, 'title');
+    e.summary = getTagValue(e, 'summary');
+    e.published_at = Number(getTagValue(e, 'published_at'));
+  });
+  return events;
+}
+
+async function searchEvents(q, kind, limit = 30) {
   let events = await ndk.fetchEvents(
     {
-      kinds: [KIND_NOTE],
+      kinds: [kind],
       search: q,
       limit,
     },
@@ -701,6 +722,16 @@ export async function searchNotes(q, limit = 30) {
 
   console.log("notes prepared", events);
 
+  return events;
+}
+
+export async function searchNotes(q, limit = 30) {
+  return searchEvents(q, KIND_NOTE, limit);
+}
+
+export async function searchLongNotes(q, limit = 30) {
+  let events = await searchEvents(q, KIND_LONG_NOTE, limit);
+  events = await augmentLongNotes(events);
   return events;
 }
 
@@ -758,29 +789,113 @@ class PromiseQueue {
   }
 };
 
-async function fetchFollowedEvents(kind, contactPubkeys, limit = 30) {
+async function fetchPubkeyEvents(opts) {
 
-  const authors = [...contactPubkeys];
+  let { kind, pubkeys, tagged = false, augment = false, limit = 30 } = opts;
+
+  const authors = [...pubkeys];
   if (authors.length > 200)
     authors.length = 200;
-  
-  let events = await fetchEventsRead(
-    ndk,
-    {
-      kinds: [kind],
-      authors,
-      limit,
-    }
-  );
+
+  const filter = {
+    kinds: [kind],
+    limit,
+  };
+
+  if (tagged)
+    filter['#p'] = authors;
+  else
+    filter.authors = authors;
+	
+  let events = await fetchEventsRead(ndk, filter);
   console.log("kind", kind, "new events", events);
 
-  events = await augmentPrepareEvents(events, limit);
+  if (augment)
+    events = await augmentPrepareEvents(events, limit);
 
   return events;
 }
 
 export async function fetchFollowedLongNotes(contactPubkeys) {
-  return fetchFollowedEvents(KIND_LONG_NOTE, contactPubkeys);
+  let events = await fetchPubkeyEvents({
+    kind: KIND_LONG_NOTE,
+    pubkeys: contactPubkeys,
+    augment: true
+  });
+  events = await augmentLongNotes(events);
+  return events;
+}
+
+export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
+
+  let events = await fetchPubkeyEvents({
+    kind: KIND_LONG_NOTE,
+    pubkeys: contactPubkeys,
+    tagged: true
+  });
+
+  // convert to an array of raw events
+  events = [...events.values()].map(e => rawEvent(e));
+
+  const MAX_LIVE_TTL = 3600;
+  events.forEach(e => {
+    e.identifier = getTagValue(e, 'd');
+    e.title = getTagValue(e, 'title');
+    e.summary = getTagValue(e, 'summary');
+    e.starts = Number(getTagValue(e, 'starts'));
+    e.current_participants = Number(getTagValue(e, 'current_participants'));
+    e.status = getTagValue(e, 'status');
+
+    // NIP-53: Clients MAY choose to consider status=live events
+    // after 1hr without any update as ended.
+    if ((Date.now() / 1000 - e.created_at) > MAX_LIVE_TTL)
+      e.status = 'ended';
+
+    const ps = getTags(e, 'p');
+    e.host = ps.find(p => p.length >= 4 && (p[3] === 'host' || p[3] === 'Host'))?.[1];
+    e.members = ps
+      .filter(p => p.length >= 4 && contactPubkeys.includes(p[1]))
+      .map(p => p[1]);
+
+    // newest-first
+    e.order = e.starts;
+
+    // reverse order of all non-live events and make
+    // them go after live ones
+    if (e.status !== 'live')
+      e.order = -e.order; 
+  });
+
+  console.log("parsed live events", events);
+
+  // drop ended ones
+  events = events.filter(e => {
+    return !!e.host
+    // For now let's show live events where some of our following are participating
+    //	&& contactPubkeys.includes(e.host)
+	&& e.status !== 'ended';
+  });
+
+  if (events.length > 0) {
+    // profile infos
+    const metas = await fetchMetas(events.map(e => [e.pubkey, ...e.members]).flat());
+    
+    // assign to live events
+    events.forEach(e => {
+      e.author = metas.find(m => m.pubkey === e.pubkey); // provider
+      e.hostMeta = e.host ? metas.find(m => m.pubkey === e.host) : null; // host
+      e.membersMeta = metas.filter(m => e.members.includes(m.pubkey)); // all members: host, speakers, participants
+    });
+  }
+
+  // desc 
+  events.sort((a, b) => b.order - a.order);
+  
+  // crop
+  if (events.length > limit)
+    events.length = limit;
+
+  return events;
 }
 
 let profilesSub = null;
@@ -945,6 +1060,37 @@ export function stringToBech32(s, hex = false) {
   }
 
   return "";
+}
+
+export function createAddrOpener(cb) {
+  return (event) => {
+    let addr = event.id;
+
+    if (event.kind === KIND_META) {
+      // npub
+      addr = nip19.npubEncode(event.pubkey);
+    } else if (
+      (event.kind >= 10000 && event.kind < 20000)
+      || (event.kind >= 30000 && event.kind < 40000)
+    ) {
+      // naddr
+      addr = nip19.naddrEncode({
+	pubkey: event.pubkey,
+	kind: event.kind,
+	identifier: getTagValue(event, 'd'),
+	relays: [nostrbandRelay],
+      });
+    } else {
+      // nevent
+      addr = nip19.neventEncode({
+	id: event.id,
+	relays: [nostrbandRelay],
+      });
+    }
+
+    console.log("addr", addr);
+    cb(addr);
+  };
 }
 
 export function connect() {

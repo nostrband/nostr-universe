@@ -50,3 +50,24 @@ export const renderDefaultAppIcon = (title) => {
   const dataURL = canvas.toDataURL();
   return dataURL;
 };
+
+export const formatTime = (tm) => {
+  let o = Date.now() / 1000 - tm;
+
+  const future = o < 0;
+  
+  o = Math.abs (o);
+
+  let s = o + "s";
+  o /= 60;
+  if (o >= 1.0)
+    s = Math.round(o) + "m";
+  o /= 60;
+  if (o >= 1.0)
+    s = Math.round(o) + "h";
+  o /= 24;
+  if (o >= 1.0)
+    s = Math.round(o) + "d";
+
+  return (future ? "+" : "") + s;
+}

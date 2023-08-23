@@ -4,10 +4,18 @@ import { Modal } from "../UI/modal/Modal";
 import { CircularProgress, IconButton, InputBase, Typography, styled } from "@mui/material";
 import { Header } from "../../layout/Header";
 import { SearchIcon } from "../../assets";
-import { nostrbandRelay, searchProfiles, searchNotes } from "../../nostr";
+import {
+  nostrbandRelay,
+  searchProfiles,
+  searchNotes,
+  searchLongNotes,
+  getTagValue,
+  createAddrOpener
+} from "../../nostr";
 import { nip19 } from "@nostrband/nostr-tools";
 import { TrendingProfileItem } from "../trending-profiles/TrendingProfileItem";
 import { TrendingNoteItem } from "../trending-notes/TrendingNoteItem";
+import { LongNoteItem } from "../long-notes/LongNoteItem";
 import { ContactList } from "../contact-list/ContactList";
 
 export const SearchModal = ({
@@ -20,11 +28,13 @@ export const SearchModal = ({
   const [searchValue, setSearchValue] = useState("");
   const [profiles, setProfiles] = useState(null);
   const [notes, setNotes] = useState(null);
+  const [longNotes, setLongNotes] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setProfiles(null);
     setNotes(null);
+    setLongNotes(null);
     setIsLoading(false);
   }, [isOpen]);
 
@@ -40,6 +50,8 @@ export const SearchModal = ({
       .then(setProfiles)
       .then(() => searchNotes(searchValue))
       .then(setNotes)
+      .then(() => searchLongNotes(searchValue))
+      .then(setLongNotes)
       .finally(() => setIsLoading(false))
     ;
   };
@@ -71,78 +83,135 @@ export const SearchModal = ({
     open(nevent);
   };
 
+  const onAddrClick = async (event) => {
+    console.log("show", event);
+
+    const naddr = nip19.naddrEncode({
+      pubkey: event.pubkey,
+      kind: event.kind,
+      identifier: getTagValue(event, 'd'),
+      relays: [nostrbandRelay],
+    });
+
+    open(naddr);
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} direction="left">
       <Container>
-        <Header searchMode onClose={onClose} />
-        <Form onSubmit={submitHandler}>
-          <StyledInput
-            placeholder="Search"
-            endAdornment={
-              <StyledIconButton type="submit">
-                <SearchIcon />
-              </StyledIconButton>
-            }
-            onChange={({ target }) => setSearchValue(target.value)}
-            autoFocus={true}
-            inputProps={{
-              autoFocus: true,
-            }}
-          />
-        </Form>
+	<Header searchMode onClose={onClose} />
+	<main>
+	  <Form onSubmit={submitHandler}>
+	    <StyledInput
+	      placeholder="Search"
+	      endAdornment={
+		<StyledIconButton type="submit">
+		  <SearchIcon />
+		</StyledIconButton>
+	      }
+	      onChange={({ target }) => setSearchValue(target.value)}
+	      autoFocus={true}
+	      inputProps={{
+		autoFocus: true,
+	      }}
+	    />
+	  </Form>
 
-        {!searchValue && <ContactList onOpenProfile={onOpenContact} />}
+	  {!searchValue && <ContactList onOpenProfile={onOpenContact} />}
 
-        <div className="ms-3">
-          {isLoading && (
-            <SpinnerContainer>
-              <CircularProgress className="spinner" />
-            </SpinnerContainer>
-          )}
-        </div>
-        {profiles && (
-          <StyledContainer>
-            <h1>Profiles</h1>
-            <ProfilesContainer>
-              {profiles.map((e) => {
-                const p = e.profile;
-                return (
-                  <TrendingProfileItem
-                    key={p.pubkey}
-                    profile={p}
-                    onClick={onProfileClick}
-                  />
-                );
-              })}
-            </ProfilesContainer>
-          </StyledContainer>
-        )}
-        {notes && (
-          <StyledContainer>
-            <h1 style={{color:"#CBA3E8"}}>Notes</h1>
-            <ProfilesContainer>
-              {notes.map((note) => {
-		return (
-		  <TrendingNoteItem
-                    key={note.id}
-		    author={note.author.profile}
-		    content={note}
-		    onClick={onEventClick}
-		  />
-		)
-              })}
-            </ProfilesContainer>
-          </StyledContainer>
-        )}
+	  <div className="ms-3">
+	    {isLoading && (
+	      <SpinnerContainer>
+		<CircularProgress className="spinner" />
+	      </SpinnerContainer>
+	    )}
+	  </div>
+	  {profiles && (
+	    <StyledContainer>
+              <h1>Profiles</h1>
+              <EventsContainer>
+		{profiles.map((e) => {
+		  const p = e.profile;
+		  return (
+		    <TrendingProfileItem
+                      key={p.pubkey}
+                      profile={p}
+                      onClick={onProfileClick}
+		    />
+		  );
+		})}
+              </EventsContainer>
+	    </StyledContainer>
+	  )}
+	  {notes && (
+	    <StyledContainer>
+              <h1 style={{color:"#CBA3E8"}}>Notes</h1>
+              <EventsContainer>
+		{notes.map((note) => {
+		  return (
+		    <TrendingNoteItem
+                      key={note.id}
+		      author={note.author?.profile}
+		      content={note}
+		      onClick={onEventClick}
+		    />
+		  )
+		})}
+              </EventsContainer>
+	    </StyledContainer>
+	  )}
+	  {longNotes && (
+	    <StyledContainer>
+              <h1 style={{color:"#a3dfe8"}}>Long posts</h1>
+              <EventsContainer>
+		{longNotes.map((note) => {
+		  return (
+		    <LongNoteItem
+                      key={note.id}
+		      author={note.author?.profile}
+		      content={note}
+		      onClick={createAddrOpener(open)}
+		    />
+		  )
+		})}
+              </EventsContainer>
+	    </StyledContainer>
+	  )}
+	</main>
       </Container>
     </Modal>
   );
 };
 
-const Container = styled("div")(() => ({
+const Container1 = styled("div")(() => ({
   display: "flex",
   flexDirection: "column",
 }));
+
+const Container = styled("div")`
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header"
+    "main";
+
+  & > header {
+    grid-area: header;
+    position: sticky;
+    background: #000;
+    z-index: 1199;
+    top: 0;
+  }
+
+  & > main {
+    grid-area: main;
+    overflow: scroll;
+    max-height: 100%;
+    padding-bottom: 2rem;
+  }
+`;
 
 const Form = styled("form")(() => ({
   marginTop: "1rem",
@@ -186,7 +255,7 @@ const StyledContainer = styled("div")(() => ({
   },
 }));
 
-const ProfilesContainer = styled("div")(() => ({
+const EventsContainer = styled("div")(() => ({
   display: "flex",
   flexDirection: "row",
   flexWrap: "nowrap",

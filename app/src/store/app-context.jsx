@@ -9,6 +9,7 @@ import {
   subscribeProfiles,
   subscribeContactList,
   fetchFollowedLongNotes,
+  fetchFollowedLiveEvents,
   stringToBech32,
 } from "../nostr";
 import { browser } from "../browser";
@@ -30,6 +31,8 @@ function createWorkspace(pubkey, props = {}) {
     pubkey,
     trendingProfiles: [],
     trendingNotes: [],
+    longNotes: [],
+    liveEvents: [],
     suggestedProfiles: [],
     tabGroups: {},
     tabs: [],
@@ -180,8 +183,17 @@ const AppContextProvider = ({ children }) => {
 	if (lastCL) {
 	  const longNotes = await fetchFollowedLongNotes(lastCL.contactPubkeys);
 	  console.log("new long notes", longNotes);
+          updateWorkspace((ws) => {
+            return { ...ws, longNotes };
+          }, pubkey);
+
+	  const liveEvents = await fetchFollowedLiveEvents(lastCL.contactPubkeys);
+	  console.log("new live events", liveEvents);
+          updateWorkspace((ws) => {
+            return { ...ws, liveEvents };
+          }, pubkey);
 	}
-	  
+	
 	return;
       }
       
@@ -301,17 +313,18 @@ const AppContextProvider = ({ children }) => {
       connect().then(async () => {
         console.log("ndk connected", Date.now());
 
-        // update apps first
+        // start profile updater after we're done with apps,
+        // this should be the last of the initial loading
+        // operations
+        reloadProfile(keys, currentPubkey);
+
+        // update apps after we've subscribed to other stuff
         const apps = await fetchApps();
         if (apps.length) {
           setApps(apps);
           await db.apps.bulkPut(apps);
         }
 
-        // start profile updater after we're done with apps,
-        // this should be the last of the initial loading
-        // operations
-        reloadProfile(keys, currentPubkey);
       });
     }
 

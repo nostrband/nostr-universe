@@ -4,27 +4,33 @@ import { getRenderedUsername } from "../../utils/helpers/general";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 import { formatTime } from "../../utils/helpers/general"
 
-export const TrendingNoteItem = ({ author = {}, content, onClick }) => {
-  const { pubkey, picture } = author;
-  const renderedName = getRenderedUsername(author, pubkey);
+export const LiveEventItem = ({ host = {}, content, onClick }) => {
+  const { pubkey, picture } = host;
+  const renderedName = getRenderedUsername(host, pubkey);
   const authorAvatar = useOptimizedMediaSource({
-    pubkey: content?.pubkey,
+    pubkey: content.host,
     originalImage: picture,
   });
-  const tm = formatTime(content.created_at);
 
+  const title = content.title || '';
+  const summary = content.summary || content.content.substring(0, 300);
+  const live = content.status === 'live';  
+  const status = live ? "LIVE" : (content.starts ? formatTime(content.starts) : "");
+  
   return (
-    <Card onClick={() => onClick(content.id)}>
+    <Card onClick={() => onClick(content)}>
       <Header>
         <StyledAvatar alt={renderedName} src={authorAvatar} />
         <Username>{renderedName}</Username>
-        <Status>{tm}</Status>
+        <Status>{status}</Status>
       </Header>
-      <DescriptionText>{content.content}</DescriptionText>
+      <Body>
+	<TitleText>{title}</TitleText>
+	<DescriptionText>{summary}</DescriptionText>
+      </Body>
     </Card>
   );
 };
-
 const Card = styled("div")(() => ({
   padding: "0.5rem 0.75rem 0.75rem",
   borderRadius: "1rem",
@@ -67,13 +73,29 @@ const Status = styled("span")(() => ({
   textAlign: "end",
 }));
 
-const DescriptionText = styled("p")(() => ({
-  flex: "3",
+const Body = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+}));
+
+const TitleText = styled("p")(() => ({
   overflow: "hidden",
   margin: "0",
   textOverflow: "ellipsis",
   display: "-webkit-box",
-  WebkitLineClamp: "3",
+  WebkitLineClamp: "1",
+  WebkitBoxOrient: "vertical",
+  fontSize: "0.875rem",
+  fontWeight: 600,
+}));
+
+const DescriptionText = styled("p")(() => ({
+  overflow: "hidden",
+  margin: "0",
+  textOverflow: "ellipsis",
+  display: "-webkit-box",
+  WebkitLineClamp: "2",
   WebkitBoxOrient: "vertical",
   fontSize: "0.8rem",
   fontWeight: 200,

@@ -17,6 +17,8 @@ import { AppContext } from "../store/app-context";
 import { stringToBech32 } from "../nostr";
 import { useSearchParams } from "react-router-dom";
 import { TrendingNotes } from "../components/trending-notes/TrendingNotes";
+import { LongNotes } from "../components/long-notes/LongNotes";
+import { LiveEvents } from "../components/live-events/LiveEvents";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
@@ -93,7 +95,13 @@ const MainPage = () => {
         <TrendingProfiles onOpenProfile={setOpenAddr} />
         <TrendingNotes onOpenNote={setOpenAddr} />
         {currentWorkspace?.suggestedProfiles.length > 0 && 
-	  <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+	 <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+	}
+        {currentWorkspace?.longNotes.length > 0 && 
+	 <LongNotes onOpenAddr={setOpenAddr} />
+	}
+        {currentWorkspace?.liveEvents.length > 0 && 
+	 <LiveEvents onOpenAddr={setOpenAddr} />
 	}
         <AppsList />
         {false && <ContactList onOpenProfile={setContactOpenAddr} />}
