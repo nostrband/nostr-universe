@@ -96,7 +96,7 @@ const MainPage = () => {
 	  <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
 	}
         <AppsList />
-        <ContactList onOpenProfile={setContactOpenAddr} />
+        {false && <ContactList onOpenProfile={setContactOpenAddr} />}
 
         <EditKeyModal
           isOpen={isEditKeyModalVisible}
