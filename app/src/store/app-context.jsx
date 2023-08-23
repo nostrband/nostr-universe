@@ -137,6 +137,11 @@ const AppContextProvider = ({ children }) => {
     if (!keys || !keys.length) return;
 
     subscribeProfiles(keys, (profile) => {
+      if (!profile) {
+	// FIXME no stored events for the remaining non-filled profiles
+	return;
+      }
+
       if (profile.pubkey == currentPubkey) setProfile(profile);
       if (keys.find((k) => profile.pubkey)) {
         setProfiles((prev) => [
@@ -149,11 +154,13 @@ const AppContextProvider = ({ children }) => {
     });
 
     subscribeContactLists(keys, (cl) => {
-      if (
-        cl.pubkey == currentPubkey &&
-        (!contactList.pubkey || contactList.created_at < cl.created_at)
-      ) {
-        console.log("contact list update", cl);
+      if (!cl) {
+	// FIXME no stored cl for the remaining profiles
+	return;
+      }
+      
+      if (cl.pubkey == currentPubkey) {
+	console.log("contact list update", cl.created_at);
         setContacts(cl);
       }
     });

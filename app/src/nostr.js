@@ -642,29 +642,21 @@ export async function searchProfiles(q) {
   return events;
 }
 
-export async function searchNotes(q) {
-  // try to fetch best apps list from our relay
-  let events = await fetchEventsRead(
-    ndk,
-    {
-      kinds: [KIND_NOTE],
-      search: q,
-      limit: 30,
-    }
-  );
-  console.log("notes", events);
-
-  events = [...events.values()].map(e => { return {
+function rawEvent(e) {
+  return {
     id: e.id,
     pubkey: e.pubkey,
     created_at: e.created_at,
     kind: e.kind,
     tags: e.tags,
     content: e.content,
-
     order: e.created_at
-  }});
-  
+  };
+}
+
+async function augmentPrepareEvents(events) {
+  events = [...events.values()].map(e => rawEvent(e));
+
   if (events.length > 0) {
     const metas = await collectEvents(
       fetchEventsRead(ndk, {
@@ -672,7 +664,6 @@ export async function searchNotes(q) {
         authors: events.map(e => e.pubkey),
       }),
     );
-    //    console.log('metas', metas);
 
     // parse profiles
     metas.forEach(e => {
@@ -691,48 +682,111 @@ export async function searchNotes(q) {
   return events;
 }
 
-export async function subscribeProfiles(pubkeys, cb) {
-  return new Promise(async (ok) => {
-    
-    const sub = await ndk.subscribe(
-      {
-	authors: [...pubkeys],
-	kinds: [KIND_META],
-      },
-      {
-	// FIXME not great for privacy
-	// use of the same subId allows us to avoid sending
-	// close to cancel the last sub
-	subId: "profiles",
-      },
-      NDKRelaySet.fromRelayUrls(readRelays, ndk),
-      /* autoStart */ false
-    );
+export async function searchNotes(q) {
+  let events = await ndk.fetchEvents(
+    {
+      kinds: [KIND_NOTE],
+      search: q,
+      limit: 30,
+    },
+    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+  );
+  console.log("notes", events);
 
-    // call cb on each event
-    sub.on("event", (event) => {
-      const profile = {
-	id: event.id,
-	pubkey: event.pubkey,
-	kind: event.kind,
-	tags: event.tags,
-	created_at: event.created_at,
-	content: event.content,
-	profile: parseContentJson(event.content),
-      };
-      console.log("got profile", profile);
-      cb(profile);
-    });
+  events = await augmentPrepareEvents(events);
 
-    // notify that initial fetch is over
-    sub.on("eose", ok);
+  console.log("notes prepared", events);
 
-    // start
-    sub.start();
+  return events;
+}
+
+export async function fetchNewFollowedEvents(kind, contactPubkeys) {
+  let events = await fetchEventsRead(
+    ndk,
+    {
+      kinds: [kind],
+      authors: [contactPubkeys],
+      limit: 30,
+    }
+  );
+  console.log("kind", kind, "new events", events);
+
+  events = await augmentPrepareEvents(events);
+
+  return events;
+}
+
+function onUniqueEvent(sub, cb) {
+
+  // call cb on each event
+  const events = new Map();
+  sub.on("event", (event) => {
+
+    // dedup
+    const dedupKey = event.deduplicationKey();
+    const existingEvent = events.get(dedupKey);
+    if (existingEvent && existingEvent.created_at > event.created_at)
+      return;    
+    events.set(dedupKey, event);
+
+    cb(event);
   });
 }
 
+let profilesSub = null;
+
+export async function subscribeProfiles(pubkeys, cb) {
+
+  // gc
+  if (profilesSub) {
+    profilesSub.stop();
+    profilesSub = null;
+  }
+  
+  const sub = await ndk.subscribe(
+    {
+      authors: [...pubkeys],
+      kinds: [KIND_META],
+    },
+    {
+      // FIXME not great for privacy
+      // use of the same subId allows us to avoid sending
+      // close to cancel the last sub
+      subId: "profiles",
+    },
+    NDKRelaySet.fromRelayUrls(readRelays, ndk),
+    /* autoStart */ false
+  );
+
+  // call cb on each unique newer event
+  onUniqueEvent(sub, (event) => {
+    // convert to raw event
+    const profile = rawEvent(event);
+    profile.profile = parseContentJson(event.content);
+
+    console.log("got profile", profile);
+    cb(profile);
+  });
+
+  // notify that initial fetch is over
+  sub.on("eose", () => cb(null));
+
+  // start
+  sub.start();
+
+  // store
+  profilesSub = sub;
+}
+
+let clSub = null;
+
 export async function subscribeContactLists(pubkeys, cb) {
+
+  // gc
+  if (clSub) {
+    clSub.stop();
+    clSub = null;
+  }
   
   const sub = await ndk.subscribe(
     {
@@ -746,21 +800,17 @@ export async function subscribeContactLists(pubkeys, cb) {
     /* autoStart */ false
   );
 
-  sub.on("event", async (event) => {
+  // call cb on each unique newer event
+  onUniqueEvent(sub, async (event) => {
 
-    const contactList = {
-      id: event.id,
-      pubkey: event.pubkey,
-      kind: event.kind,
-      tags: event.tags,
-      created_at: event.created_at,
-      content: event.content,
-      contactPubkeys: event.tags.filter(t => t.length >= 2 && t[0] === 'p').map(t => t[1]),
-      contactEvents: [],
-    };
-
-    // dedup
-    contactList.contactPubkeys = [...new Set(contactList.contactPubkeys)];
+    const contactList = rawEvent(event);
+    // extract and dedup pubkeys
+    contactList.contactPubkeys = [...new Set(
+      event.tags
+	   .filter(t => t.length >= 2 && t[0] === 'p')
+	   .map(t => t[1])
+    )];
+    contactList.contactEvents = [];
 
     if (contactList.contactPubkeys.length) {
       contactList.contactEvents = await collectEvents(
@@ -785,7 +835,14 @@ export async function subscribeContactLists(pubkeys, cb) {
     cb(contactList);
   });
 
+  // notify that initial fetch is over
+  sub.on("eose", () => cb(null));
+
+  // start
   sub.start();
+
+  // store
+  clSub = sub;
 }
 
 export function stringToBech32(s, hex = false) {
