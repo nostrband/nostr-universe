@@ -7,7 +7,8 @@ import {
   connect,
   fetchApps,
   subscribeProfiles,
-  subscribeContactLists,
+  subscribeContactList,
+  fetchFollowedLongNotes,
   stringToBech32,
 } from "../nostr";
 import { browser } from "../browser";
@@ -126,23 +127,36 @@ const AppContextProvider = ({ children }) => {
     setContactList(cl);
   };
 
-  // helpers for initial loading w/ useEffect
-  const reloadProfiles = async (keys, currentPubkey, profiles) => {
-    console.log("reloadProfiles", keys, currentPubkey);
-    if (profiles && profile.pubkey !== currentPubkey) {
-      const p = profiles.find((p) => p.pubkey === currentPubkey);
+  // loads the per-profile data
+  const reloadProfile = async (keys, pubkey) => {
+    if (!keys || !keys.length) return;
+
+    console.log("reloadProfile", keys, pubkey);
+    
+    // reuse cached profile info?
+    if (pubkey !== currentPubkey) {
+      const p = profiles?.find((p) => p.pubkey === pubkey);
       setProfile(p || {});
       setContacts({});
     }
-    if (!keys || !keys.length) return;
 
+    // suggested profiles
+    if (pubkey !== DEFAULT_PUBKEY) {
+      getSuggestedProfilesRequest(pubkey).then((suggestedProfiles) => {
+        updateWorkspace((ws) => {
+          return { ...ws, suggestedProfiles };
+        }, pubkey);
+      });
+    }
+
+    // subscribe to new keys
     subscribeProfiles(keys, (profile) => {
       if (!profile) {
 	// FIXME no stored events for the remaining non-filled profiles
 	return;
       }
 
-      if (profile.pubkey == currentPubkey) setProfile(profile);
+      if (profile.pubkey == pubkey) setProfile(profile);
       if (keys.find((k) => profile.pubkey)) {
         setProfiles((prev) => [
           profile,
@@ -153,14 +167,26 @@ const AppContextProvider = ({ children }) => {
       }
     });
 
-    subscribeContactLists(keys, (cl) => {
+    // subscribe to new contact list
+    let lastCL = null;
+    subscribeContactList(pubkey, async (cl) => {
+      console.log("contact list update", cl?.created_at);
       if (!cl) {
-	// FIXME no stored cl for the remaining profiles
+	// FIXME no stored cl for the remaining profiles?
+
+	// FIXME ugly hack to emulate debounce of contactList state variable,
+	// we should move contactList to the workspace and also
+	// debounce it in a more general way
+	if (lastCL) {
+	  const longNotes = await fetchFollowedLongNotes(lastCL.contactPubkeys);
+	  console.log("new long notes", longNotes);
+	}
+	  
 	return;
       }
       
-      if (cl.pubkey == currentPubkey) {
-	console.log("contact list update", cl.created_at);
+      if (cl.pubkey == pubkey) {
+	lastCL = cl;
         setContacts(cl);
       }
     });
@@ -271,13 +297,6 @@ const AppContextProvider = ({ children }) => {
           prev.map((w) => ({ ...w, trendingNotes: notes }))
         );
       });
-      if (currentPubkey !== DEFAULT_PUBKEY) {
-        getSuggestedProfilesRequest(currentPubkey).then((profiles) => {
-          updateWorkspace((ws) => {
-            return { ...ws, suggestedProfiles: profiles };
-          }, currentPubkey);
-        });
-      }
 
       connect().then(async () => {
         console.log("ndk connected", Date.now());
@@ -292,14 +311,14 @@ const AppContextProvider = ({ children }) => {
         // start profile updater after we're done with apps,
         // this should be the last of the initial loading
         // operations
-        reloadProfiles(keys, currentPubkey, profiles);
+        reloadProfile(keys, currentPubkey);
       });
     }
 
     if (config.DEBUG) onDeviceReady();
     else document.addEventListener("deviceready", onDeviceReady, false);
   }, []);
-
+  
   const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
   const currentTab = currentWorkspace?.tabs.find(
     (t) => t.id === currentWorkspace.currentTabId
@@ -452,13 +471,8 @@ const AppContextProvider = ({ children }) => {
       addWorkspace(pubkey, { trendingProfiles, trendingNotes });
     }
 
-    // load suggested profiles for the new key
-    getSuggestedProfilesRequest(pubkey).then((profiles) => {
-      updateWorkspace((ws) => { return { ...ws, suggestedProfiles: profiles } }, pubkey);
-    });
-
     // make sure we have info on this new profile
-    reloadProfiles(keys, pubkey, profiles);
+    reloadProfile(keys, pubkey);
   };
 
   const createTabBrowser = async (tab) => {
@@ -665,15 +679,8 @@ const AppContextProvider = ({ children }) => {
       setCurrentPubkey(pubkey);
       setKeys(keys);
 
-      reloadProfiles(keys, pubkey, profiles);
+      reloadProfile(keys, pubkey);
     }
-  };
-
-  const editKey = async (keyInfoObj) => {
-    const keysList = await keystore.editKey(keyInfoObj);
-    // update some key infos? idk
-
-    reloadProfiles(keys, currentPubkey, profiles);
   };
 
   const openTabGroup = async (tg) => {
@@ -842,7 +849,6 @@ const AppContextProvider = ({ children }) => {
         setOpenKey,
         onCopyKey: copyKey,
         onShowKey: showKey,
-        onEditKey: editKey,
         keyProp: { publicKey: openKey },
         pinApp,
         onSavePin: savePin,

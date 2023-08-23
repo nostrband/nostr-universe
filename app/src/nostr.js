@@ -4,6 +4,7 @@ import { nip19 } from "@nostrband/nostr-tools";
 const KIND_META = 0;
 const KIND_NOTE = 1;
 const KIND_CONTACT_LIST = 3;
+const KIND_LONG_NOTE = 30023;
 const KIND_APP = 31990;
 
 // we only care about web apps
@@ -654,7 +655,7 @@ function rawEvent(e) {
   };
 }
 
-async function augmentPrepareEvents(events) {
+async function augmentPrepareEvents(events, limit) {
   events = [...events.values()].map(e => rawEvent(e));
 
   if (events.length > 0) {
@@ -679,39 +680,26 @@ async function augmentPrepareEvents(events) {
   // desc by tm
   events.sort((a, b) => b.order - a.order);
 
+  if (events.length > limit)
+    events.length = limit;
+
   return events;
 }
 
-export async function searchNotes(q) {
+export async function searchNotes(q, limit = 30) {
   let events = await ndk.fetchEvents(
     {
       kinds: [KIND_NOTE],
       search: q,
-      limit: 30,
+      limit,
     },
     NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
   );
   console.log("notes", events);
 
-  events = await augmentPrepareEvents(events);
+  events = await augmentPrepareEvents(events, limit);
 
   console.log("notes prepared", events);
-
-  return events;
-}
-
-export async function fetchNewFollowedEvents(kind, contactPubkeys) {
-  let events = await fetchEventsRead(
-    ndk,
-    {
-      kinds: [kind],
-      authors: [contactPubkeys],
-      limit: 30,
-    }
-  );
-  console.log("kind", kind, "new events", events);
-
-  events = await augmentPrepareEvents(events);
 
   return events;
 }
@@ -725,16 +713,77 @@ function onUniqueEvent(sub, cb) {
     // dedup
     const dedupKey = event.deduplicationKey();
     const existingEvent = events.get(dedupKey);
-    if (existingEvent && existingEvent.created_at > event.created_at)
-      return;    
+    // console.log("dedupKey", dedupKey, "existingEvent", existingEvent?.created_at, "event", event.created_at);
+    if (existingEvent?.created_at > event.created_at) {
+      return;
+    }
     events.set(dedupKey, event);
 
     cb(event);
   });
 }
 
-let profilesSub = null;
+// used for handling a sequence of events and an eose after them,
+// since each event-handling callback might be async we have to execute
+// them one by one through a queue to ensure eose marker comes last
+class PromiseQueue {
 
+  queue = [];
+  
+  constructor() {
+  }
+
+  appender(cb) {
+    return (...args) => {
+      this.queue.push([cb, [...args]]);
+      if (this.queue.length === 1)
+	this.execute();
+    }
+  }
+
+  async execute() {
+    // the next cb in the queue
+    const [cb, args] = this.queue[0];
+    console.log("pq execute args", args.length, "queue", this.queue.length);
+
+    // execute the next cb
+    await cb(...args);
+
+    // mark the last cb as done
+    this.queue.shift();
+
+    // have the next one? proceed
+    if (this.queue.length > 0)
+      this.execute();
+  }
+};
+
+async function fetchFollowedEvents(kind, contactPubkeys, limit = 30) {
+
+  const authors = [...contactPubkeys];
+  if (authors.length > 200)
+    authors.length = 200;
+  
+  let events = await fetchEventsRead(
+    ndk,
+    {
+      kinds: [kind],
+      authors,
+      limit,
+    }
+  );
+  console.log("kind", kind, "new events", events);
+
+  events = await augmentPrepareEvents(events, limit);
+
+  return events;
+}
+
+export async function fetchFollowedLongNotes(contactPubkeys) {
+  return fetchFollowedEvents(KIND_LONG_NOTE, contactPubkeys);
+}
+
+let profilesSub = null;
 export async function subscribeProfiles(pubkeys, cb) {
 
   // gc
@@ -748,28 +797,26 @@ export async function subscribeProfiles(pubkeys, cb) {
       authors: [...pubkeys],
       kinds: [KIND_META],
     },
-    {
-      // FIXME not great for privacy
-      // use of the same subId allows us to avoid sending
-      // close to cancel the last sub
-      subId: "profiles",
-    },
+    {},
     NDKRelaySet.fromRelayUrls(readRelays, ndk),
     /* autoStart */ false
   );
 
+  // ensure async callbacks are executed one by one
+  const pq = new PromiseQueue();
+  
   // call cb on each unique newer event
-  onUniqueEvent(sub, (event) => {
+  onUniqueEvent(sub, pq.appender(async (event) => {
     // convert to raw event
     const profile = rawEvent(event);
     profile.profile = parseContentJson(event.content);
 
     console.log("got profile", profile);
-    cb(profile);
-  });
+    await cb(profile);
+  }));
 
   // notify that initial fetch is over
-  sub.on("eose", () => cb(null));
+  sub.on("eose", pq.appender(async () => await cb(null)));
 
   // start
   sub.start();
@@ -779,8 +826,7 @@ export async function subscribeProfiles(pubkeys, cb) {
 }
 
 let clSub = null;
-
-export async function subscribeContactLists(pubkeys, cb) {
+export async function subscribeContactList(pubkey, cb) {
 
   // gc
   if (clSub) {
@@ -790,18 +836,24 @@ export async function subscribeContactLists(pubkeys, cb) {
   
   const sub = await ndk.subscribe(
     {
-      authors: [...pubkeys],
+      authors: [pubkey],
       kinds: [KIND_CONTACT_LIST],
     },
-    {
-      subId: "cl",
-    },
+    {},
     NDKRelaySet.fromRelayUrls(readRelays, ndk),
     /* autoStart */ false
   );
 
+  // ensure async callbacks are executed one by one
+  const pq = new PromiseQueue();
+  
   // call cb on each unique newer event
-  onUniqueEvent(sub, async (event) => {
+  let eose = false;
+  let lastCL = null;
+
+  const returnLastCL = async () => {
+    
+    const event = lastCL;
 
     const contactList = rawEvent(event);
     // extract and dedup pubkeys
@@ -832,11 +884,24 @@ export async function subscribeContactLists(pubkeys, cb) {
     }
     
     console.log("got contact list", contactList);
-    cb(contactList);
-  });
+    await cb(contactList);
+  };
+  
+  onUniqueEvent(sub, pq.appender(async (event) => {
+    lastCL = event;
+    if (eose)
+      await returnLastCL();
+  }));
 
   // notify that initial fetch is over
-  sub.on("eose", () => cb(null));
+  sub.on("eose", pq.appender(async () => {
+    eose = true;
+    if (lastCL)
+      await returnLastCL();
+
+    // notify about eose
+    await cb(null)
+  }));
 
   // start
   sub.start();
