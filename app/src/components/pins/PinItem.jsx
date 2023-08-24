@@ -1,13 +1,6 @@
+import React from "react";
 import { Avatar, styled } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
-
-function getRandomColor() {
-  const minBrightness = 50;
-  const randomBrightness =
-    Math.floor(Math.random() * (256 - minBrightness)) + minBrightness;
-  const purpleHex = randomBrightness.toString(16).padStart(2, "0");
-  return `#800080${purpleHex}`;
-}
+import { useErrorHandledImageURL } from "../../hooks/useErrorHandledImageURL";
 
 export const PinItem = ({
   image = "",
@@ -15,24 +8,21 @@ export const PinItem = ({
   isActive,
   onClick,
   withTitle,
-  active
+  active,
 }) => {
-  const [url, setUrl] = useState("");
-  const colorRef = useRef(getRandomColor());
-
-  useEffect(() => {
-    setUrl(image);
-  }, [image]);
-
-  const errorHandler = () => setUrl("");
+  const { backgroundOnError, onImageError, url } =
+    useErrorHandledImageURL(image);
 
   return (
     <Container className="item" onClick={onClick}>
-      <AvatarContainer background={url ? "black" : colorRef.current} active={active}>
+      <AvatarContainer
+        background={url ? "black" : backgroundOnError}
+        active={active}
+      >
         <Avatar
           className="pin_app_avatar"
           src={url}
-          imgProps={{ onError: errorHandler }}
+          imgProps={{ onError: onImageError }}
         >
           {(title || "?").toUpperCase()[0]}
         </Avatar>
@@ -65,8 +55,10 @@ const AvatarContainer = styled("div")(({ background, active }) => ({
     height: "auto",
     aspectRatio: "1",
     backgroundColor: background,
-    backgroundClip: "padding-box", 
-    border: active ? "4px solid rgba(255, 0, 255, 0.6)" : "4px solid rgba(255, 255, 255, 0.1)",
+    backgroundClip: "padding-box",
+    border: active
+      ? "4px solid rgba(255, 0, 255, 0.6)"
+      : "4px solid rgba(255, 255, 255, 0.1)",
     fontFamily: "Outfit",
     fontWeight: 600,
     borderRadius: "1rem",
