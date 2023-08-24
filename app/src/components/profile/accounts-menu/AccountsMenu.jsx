@@ -26,6 +26,7 @@ export const AccountsMenu = ({
   currentUserNpub = "",
   onChangeAccount,
   onAddKey,
+  onImportPubkey
 }) => {
   const renderMenuContent = () => {
     if (accounts.length === 0) {
@@ -38,8 +39,9 @@ export const AccountsMenu = ({
           profileImage={account.profile?.picture || ""}
           username={getRenderedUsername(account.profile, account.pubkey)}
           isCurrentUser={checkIsCurrentUser(currentUserNpub, account)}
-          onClick={() => onChangeAccount(index)}
+          onClick={() => onChangeAccount(account.pubkey)}
           pubkey={account.pubkey}
+	  readOnly={account.readOnly}
         />
       );
     });
@@ -54,12 +56,19 @@ export const AccountsMenu = ({
     >
       <MenuList className="menu">
         {renderMenuContent()}
-        <StyledDivider light sx={{ margin: 0 }} />
+        <StyledDivider light />
+        <AddKeyMenuItem disabled classes={{ disabled: "disabled" }}>
+          <StyledIconButton onClick={onImportPubkey}>
+            <PlusIcon />
+          </StyledIconButton>
+          <Typography className="add_key_label">Add read-only key</Typography>
+        </AddKeyMenuItem>
+        <StyledDivider light />
         <AddKeyMenuItem disabled classes={{ disabled: "disabled" }}>
           <StyledIconButton onClick={onAddKey}>
             <PlusIcon />
           </StyledIconButton>
-          <Typography className="add_key_label">Add keys</Typography>
+          <Typography className="add_key_label">Add private key</Typography>
         </AddKeyMenuItem>
       </MenuList>
     </StyledModal>
@@ -97,11 +106,11 @@ const AddKeyMenuItem = styled(MenuItem)(() => ({
     pointerEvents: "initial",
   },
   display: "flex",
-  justifyContent: "center",
-  padding: "1rem 0",
+//  justifyContent: "center",
+  padding: "0.8rem 1rem",
   "& .add_key_label": {
     fontFamily: "Outfit",
-    marginLeft: "0.5rem",
+    marginLeft: "1rem",
   },
 }));
 

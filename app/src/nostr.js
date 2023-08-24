@@ -181,8 +181,8 @@ export async function fetchApps() {
       };
     });
 
-    if (Object.keys(handlers).length == 0)
-      return;
+//    if (Object.keys(handlers).length == 0)
+//      return;
 
     const app = {
       naddr: nip19.naddrEncode({
@@ -826,6 +826,8 @@ async function searchEvents(q, kind, limit = 30) {
     },
     NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
   );
+  events = [...events.values()].map(e => rawEvent(e));  
+
   console.log("notes", events);
 
   events = await augmentPrepareEvents(events, limit);

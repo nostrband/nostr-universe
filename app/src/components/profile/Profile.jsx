@@ -12,12 +12,14 @@ import {
 import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
+import { ImportPubkeyModal } from "../onboarding/ImportPubkeyModal";
 
-const MODAL_SEARCH_PARAM = "change-account";
+const CHANGE_ACCOUNT_SEARCH_PARAM = "change-account";
+const IMPORT_ACCOUNT_SEARCH_PARAM = "import-account";
 
 export const Profile = () => {
   const contextData = useContext(AppContext);
-  const { currentPubkey, onSelectKey, profile, keys, profiles, onAddKey } =
+  const { currentPubkey, onSelectKey, profile, keys, readKeys, profiles, onAddKey, onImportPubkey } =
     contextData || {};
 
   const { profile: originalProfile = {} } = profile || {};
@@ -30,28 +32,53 @@ export const Profile = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const isChangeAccountModalOpen = Boolean(
-    searchParams.get(MODAL_SEARCH_PARAM)
+    searchParams.get(CHANGE_ACCOUNT_SEARCH_PARAM)
+  );
+  const isImportAccountModalOpen = Boolean(
+    searchParams.get(IMPORT_ACCOUNT_SEARCH_PARAM)
   );
 
   const openChangeAccountModalHandler = () => {
-    searchParams.set(MODAL_SEARCH_PARAM, true);
+    searchParams.set(CHANGE_ACCOUNT_SEARCH_PARAM, true);
     setSearchParams(searchParams);
   };
 
-  const closeModalHandler = () => {
-    searchParams.delete(MODAL_SEARCH_PARAM);
+  const openImportAccountModalHandler = () => {
+    searchParams.set(IMPORT_ACCOUNT_SEARCH_PARAM, true);
+    searchParams.delete(CHANGE_ACCOUNT_SEARCH_PARAM);
     setSearchParams(searchParams, { replace: true });
   };
 
-  const changeAccountHandler = (index) => {
-    onSelectKey(index);
-    closeModalHandler();
+  const closeChangeModalHandler = () => {
+    searchParams.delete(CHANGE_ACCOUNT_SEARCH_PARAM);
+    setSearchParams(searchParams, { replace: true });
   };
 
+  const closeImportModalHandler = () => {
+    searchParams.delete(IMPORT_ACCOUNT_SEARCH_PARAM);
+    searchParams.set(CHANGE_ACCOUNT_SEARCH_PARAM, true);
+    setSearchParams(searchParams, { replace: true });
+  };
+  
+  const changeAccountHandler = (pubkey) => {
+    onSelectKey(pubkey);
+    closeChangeModalHandler();
+  };
+
+  const importPubkeyHandler = (pubkey) => {
+    onImportPubkey(pubkey);
+    closeImportModalHandler();    
+    closeChangeModalHandler();
+  };
+  
   const currentUsername = getRenderedUsername(profile?.profile, currentPubkey);
 
   const accounts = keys.map((k) => {
-    return { pubkey: k, ...profiles?.find((p) => p.pubkey === k) };
+    return {
+      pubkey: k,
+      readOnly: readKeys.includes(k),
+      ...profiles?.find((p) => p.pubkey === k)
+    };
   });
 
   return (
@@ -69,12 +96,20 @@ export const Profile = () => {
 
       <AccountsMenu
         isOpen={isChangeAccountModalOpen}
-        onClose={closeModalHandler}
+        onClose={closeChangeModalHandler}
         accounts={accounts}
         currentUserNpub={isGuest(currentPubkey) ? "" : getNpub(currentPubkey)}
         onChangeAccount={changeAccountHandler}
         onAddKey={onAddKey}
+        onImportPubkey={openImportAccountModalHandler}
       />
+
+      <ImportPubkeyModal
+	isOpen={isImportAccountModalOpen}
+        onClose={closeImportModalHandler}
+	onSelect={importPubkeyHandler}
+      />
+
     </>
   );
 };

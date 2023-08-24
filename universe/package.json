@@ -28,8 +28,8 @@
       "cordova-plugin-device": {},
       "cordova-clipboard": {},
       "cordova-plugin-statusbar": {},
-      "nostr-keystore-cordova-plugin": {},
-      "cordova-plugin-inappbrowser": {}
+      "cordova-plugin-inappbrowser": {},
+      "nostr-keystore-cordova-plugin": {}
     }
   }
 }

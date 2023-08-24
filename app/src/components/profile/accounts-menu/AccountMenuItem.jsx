@@ -11,6 +11,7 @@ export const AccountMenuItem = ({
   centeredText = false,
   isCurrentUser = false,
   pubkey,
+  readOnly,
   ...restProps
 }) => {
   const profileImageSource = useOptimizedMediaSource({
@@ -25,6 +26,11 @@ export const AccountMenuItem = ({
       <ListItemText className={`username ${centeredText ? "centered" : ""}`}>
         {username}
       </ListItemText>
+      {readOnly && (
+	<ListItemText className="status">
+          read-only
+	</ListItemText>
+      )}
       {isCurrentUser && (
         <ListItemIcon>
           <CheckMarkIcon />
@@ -63,6 +69,18 @@ const StyledMenuItem = styled(MenuItem)(() => ({
       color: "#fff",
       fontSize: "17px",
       fontWeight: 600,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+    },
+  },
+  "& .status": {
+    textAlign: "right",
+    flexShrink: "0",
+    "& > span": {
+      fontFamily: "Outfit",
+      color: "#fff",
+      fontSize: "12px",
+      fontWeight: 400,
     },
   },
 }));

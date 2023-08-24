@@ -24,7 +24,11 @@ export const ProfileAvatar = ({ username, profileImage, onOpenChangeAccountModal
           <Avatar src={profileImage} alt={username} className="avatar" />
         </StyledBadge>
         <h2 className="username">{username || "..."}</h2>
-        <Button variant="contained" className="edit_button" onClick={isGuest ? onAddKey : undefined}>
+        <Button
+	  variant="contained"
+	  className="edit_button"
+	  onClick={isGuest ? onOpenChangeAccountModal : undefined}
+	>
           {isGuest && (<>Add keys</>)}
 	  {!isGuest && (<>LATER</>)}
         </Button>
