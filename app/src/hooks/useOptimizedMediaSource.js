@@ -18,7 +18,7 @@ export const useOptimizedMediaSource = ({
   const [isFailed, setIsFailed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const last4Chars = getPubkeyLast4Chars(pubkey);
+  const last4Chars = isGuest(pubkey) ? '' : getPubkeyLast4Chars(pubkey);
   const generatedURL = `${MEDIA_NOSTR_BAND_BASE_URL}/${last4Chars}/${pubkey}-${mediaType}-${size}`;
 
   useEffect(() => {

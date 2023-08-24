@@ -2,35 +2,37 @@ import React from "react";
 import { Avatar, styled } from "@mui/material";
 import { getRenderedUsername } from "../../utils/helpers/general";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
+import { nip19 } from "@nostrband/nostr-tools";
 import { formatTime } from "../../utils/helpers/general"
 
-export const LiveEventItem = ({ host = {}, content, onClick }) => {
-  const { pubkey, picture } = host;
-  const renderedName = getRenderedUsername(host, pubkey);
-  const authorAvatar = useOptimizedMediaSource({
-    pubkey: content.host,
+export const ZapItem = ({ targetMeta = {}, targetEvent = {}, content, onClick }) => {
+  const { pubkey = content.targetPubkey, picture } = targetMeta;
+  const renderedName = getRenderedUsername(targetMeta, content.targetPubkey);
+  const avatar = useOptimizedMediaSource({
+    pubkey: content.targetPubkey,
     originalImage: picture,
   });
+  const tm = formatTime(content.created_at);
 
-  const title = content.title || '';
-  const summary = content.summary || content.content.substring(0, 300);
-  const live = content.status === 'live';  
-  const status = live ? "LIVE" : (content.starts ? formatTime(content.starts) : "");
+  let subject = targetEvent;
+  if (!subject.id) {
+    // FIXME nevent? any better approach?
+    subject = nip19.noteEncode(content.targetEventId);
+  }
   
   return (
-    <Card onClick={() => onClick(content)}>
+    <Card onClick={() => onClick(subject)}>
       <Header>
-        <StyledAvatar alt={renderedName} src={authorAvatar} />
+        <StyledAvatar alt={renderedName} src={avatar} />
         <Username>{renderedName}</Username>
-        <Status>{status}</Status>
+        <Status>{tm}</Status>
       </Header>
-      <Body>
-	<TitleText>{title}</TitleText>
-	<DescriptionText>{summary}</DescriptionText>
-      </Body>
+      <TitleText>+{Math.round(content.amountMsat / 1000)} sats</TitleText>
+      <DescriptionText></DescriptionText>
     </Card>
   );
 };
+
 const Card = styled("div")(() => ({
   padding: "0.5rem 0.75rem 0.75rem",
   borderRadius: "1rem",
@@ -73,13 +75,6 @@ const Status = styled("span")(() => ({
   textAlign: "end",
 }));
 
-const Body = styled("div")(() => ({
-  display: "flex",
-  flexDirection: "column",
-  gap: "4px",
-  flexGrow: "1",
-}));
-
 const TitleText = styled("p")(() => ({
   overflow: "hidden",
   margin: "0",
@@ -92,11 +87,12 @@ const TitleText = styled("p")(() => ({
 }));
 
 const DescriptionText = styled("p")(() => ({
+  flex: "3",
   overflow: "hidden",
   margin: "0",
   textOverflow: "ellipsis",
   display: "-webkit-box",
-  WebkitLineClamp: "2",
+  WebkitLineClamp: "3",
   WebkitBoxOrient: "vertical",
   fontSize: "0.8rem",
   fontWeight: 200,

@@ -19,6 +19,8 @@ import { useSearchParams } from "react-router-dom";
 import { TrendingNotes } from "../components/trending-notes/TrendingNotes";
 import { LongNotes } from "../components/long-notes/LongNotes";
 import { LiveEvents } from "../components/live-events/LiveEvents";
+import { Zaps } from "../components/zaps/Zaps";
+import { Communities } from "../components/communities/Communities";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
@@ -92,16 +94,25 @@ const MainPage = () => {
         onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main id="main">
-        <TrendingProfiles onOpenProfile={setOpenAddr} />
         <TrendingNotes onOpenNote={setOpenAddr} />
-        {currentWorkspace?.suggestedProfiles.length > 0 && 
-	 <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+        <TrendingProfiles onOpenProfile={setOpenAddr} />
+        {currentWorkspace?.highlights.length > 0 &&
+	 <TrendingNotes onOpenNote={setOpenAddr} highlight />
+	}
+        {currentWorkspace?.bigZaps.length > 0 && 
+	 <Zaps onOpen={setOpenAddr} />
 	}
         {currentWorkspace?.longNotes.length > 0 && 
 	 <LongNotes onOpenAddr={setOpenAddr} />
 	}
         {currentWorkspace?.liveEvents.length > 0 && 
 	 <LiveEvents onOpenAddr={setOpenAddr} />
+	}
+        {currentWorkspace?.communities.length > 0 && 
+	 <Communities onOpen={setOpenAddr} />
+	}
+        {currentWorkspace?.suggestedProfiles.length > 0 && 
+	 <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
 	}
         <AppsList />
         {false && <ContactList onOpenProfile={setContactOpenAddr} />}

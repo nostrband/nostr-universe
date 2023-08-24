@@ -77,6 +77,7 @@ const Body = styled("div")(() => ({
   display: "flex",
   flexDirection: "column",
   gap: "4px",
+  flexGrow: "1",
 }));
 
 const TitleText = styled("p")(() => ({

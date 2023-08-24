@@ -4,29 +4,30 @@ import { getRenderedUsername } from "../../utils/helpers/general";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 import { formatTime } from "../../utils/helpers/general"
 
-export const LiveEventItem = ({ host = {}, content, onClick }) => {
-  const { pubkey, picture } = host;
-  const renderedName = getRenderedUsername(host, pubkey);
+export const CommunityItem = ({ author = {}, content, onClick }) => {
+  const { pubkey, picture } = author;
+  const renderedName = getRenderedUsername(author, pubkey);
   const authorAvatar = useOptimizedMediaSource({
-    pubkey: content.host,
+    pubkey: content.pubkey,
     originalImage: picture,
   });
 
-  const title = content.title || '';
-  const summary = content.summary || content.content.substring(0, 300);
-  const live = content.status === 'live';  
-  const status = live ? "LIVE" : (content.starts ? formatTime(content.starts) : "");
+  const avatar = content.image || authorAvatar;
+  const name = ("/" + content.name) || renderedName;
+  const title = "+" + content.posts + " posts";
+  const desc = content.description || '';
+  const tm = formatTime(content.last_post_tm);
   
   return (
     <Card onClick={() => onClick(content)}>
       <Header>
-        <StyledAvatar alt={renderedName} src={authorAvatar} />
-        <Username>{renderedName}</Username>
-        <Status>{status}</Status>
+        <StyledAvatar alt={name} src={avatar} variant="rounded" />
+        <Username>{name}</Username>
+        <Status>{tm}</Status>
       </Header>
       <Body>
 	<TitleText>{title}</TitleText>
-	<DescriptionText>{summary}</DescriptionText>
+	<DescriptionText>{desc}</DescriptionText>
       </Body>
     </Card>
   );

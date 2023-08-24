@@ -10,6 +10,9 @@ import {
   subscribeContactList,
   fetchFollowedLongNotes,
   fetchFollowedLiveEvents,
+  fetchFollowedCommunities,
+  fetchFollowedZaps,
+  fetchFollowedHighlights,
   stringToBech32,
 } from "../nostr";
 import { browser } from "../browser";
@@ -19,6 +22,8 @@ import { getTrendingProfilesRequest } from "../api/profiles";
 import { getTrendingNotesRequest } from "../api/notes";
 import { getSuggestedProfilesRequest } from "../api/suggested-profiles";
 import { DEFAULT_APPS, DEFAULT_PUBKEY } from "../utils/constants/general";
+
+const MIN_ZAP_AMOUNT = 1000;
 
 async function loadKeys() {
   const list = await keystore.listKeys();
@@ -31,8 +36,11 @@ function createWorkspace(pubkey, props = {}) {
     pubkey,
     trendingProfiles: [],
     trendingNotes: [],
+    highlights: [],
     longNotes: [],
     liveEvents: [],
+    bigZaps: [],
+    communities: [],
     suggestedProfiles: [],
     tabGroups: {},
     tabs: [],
@@ -64,6 +72,7 @@ function addToTabGroup(workspace, pt, isPin) {
       info: pt,
       tabs: [],
       lastTabId: "",
+      lastActive: 0,
     };
 
   const tg = workspace.tabGroups[id];
@@ -181,6 +190,19 @@ const AppContextProvider = ({ children }) => {
 	// we should move contactList to the workspace and also
 	// debounce it in a more general way
 	if (lastCL) {
+
+	  const highlights = await fetchFollowedHighlights(lastCL.contactPubkeys);
+	  console.log("new highlights", highlights);
+          updateWorkspace((ws) => {
+            return { ...ws, highlights };
+          }, pubkey);
+
+	  const bigZaps = await fetchFollowedZaps(lastCL.contactPubkeys, MIN_ZAP_AMOUNT);
+	  console.log("new zaps", bigZaps);
+          updateWorkspace((ws) => {
+            return { ...ws, bigZaps };
+          }, pubkey);
+	  
 	  const longNotes = await fetchFollowedLongNotes(lastCL.contactPubkeys);
 	  console.log("new long notes", longNotes);
           updateWorkspace((ws) => {
@@ -192,6 +214,13 @@ const AppContextProvider = ({ children }) => {
           updateWorkspace((ws) => {
             return { ...ws, liveEvents };
           }, pubkey);
+
+	  const communities = await fetchFollowedCommunities(lastCL.contactPubkeys);
+	  console.log("new communities", communities);
+          updateWorkspace((ws) => {
+            return { ...ws, communities };
+          }, pubkey);
+	  
 	}
 	
 	return;
@@ -567,6 +596,7 @@ const AppContextProvider = ({ children }) => {
         updateWorkspace((ws) => {
           const tg = ws.tabGroups[getTabGroupId(tab)];
           tg.lastTabId = tab.id;
+	  tg.lastActive = Date.now();
           return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
         });
         ok();
