@@ -98,19 +98,22 @@ export const SwipeableDrawer = () => {
         {/* Show this when items are loading */}
         {false && <Skeleton variant="rectangular" height="100%" />}
         <TabsContainer length={Object.keys(tabGroups).length}>
-	  {keys.map(id => {
-	    const tg = tabGroups[id];
+          {keys.map((id) => {
+            const tg = tabGroups[id];
             return (
               <PinItem
-		key={tg.info.id}
-		image={tg.info.icon}
-		{...tg.info}
-		onClick={() => onOpenTabGroup(tg)}
+                key={tg.info.id}
+                image={tg.info.icon}
+                {...tg.info}
+                onClick={() => {
+                  console.log("OPENED_TAB", tg);
+                  onOpenTabGroup(tg);
+                }}
                 withTitle
-		active={tg.tabs.length > 0}
+                active={tg.tabs.length > 0}
               />
-	    )
-	  })}
+            );
+          })}
         </TabsContainer>
       </ExpandedContent>
     </StyledSwipeableDrawer>

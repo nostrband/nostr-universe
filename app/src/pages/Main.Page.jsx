@@ -19,6 +19,7 @@ import { useSearchParams } from "react-router-dom";
 import { TrendingNotes } from "../components/trending-notes/TrendingNotes";
 import { LongNotes } from "../components/long-notes/LongNotes";
 import { LiveEvents } from "../components/live-events/LiveEvents";
+import { SortableTabsList } from "../components/sortable-tabs/SortableTabsList";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
@@ -31,7 +32,7 @@ const MainPage = () => {
     setOpenAddr,
     updateLastContact,
     currentTab,
-    currentWorkspace
+    currentWorkspace,
   } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -92,17 +93,18 @@ const MainPage = () => {
         onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main id="main">
+        <SortableTabsList />
         <TrendingProfiles onOpenProfile={setOpenAddr} />
         <TrendingNotes onOpenNote={setOpenAddr} />
-        {currentWorkspace?.suggestedProfiles.length > 0 && 
-	 <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
-	}
-        {currentWorkspace?.longNotes.length > 0 && 
-	 <LongNotes onOpenAddr={setOpenAddr} />
-	}
-        {currentWorkspace?.liveEvents.length > 0 && 
-	 <LiveEvents onOpenAddr={setOpenAddr} />
-	}
+        {currentWorkspace?.suggestedProfiles.length > 0 && (
+          <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+        )}
+        {currentWorkspace?.longNotes.length > 0 && (
+          <LongNotes onOpenAddr={setOpenAddr} />
+        )}
+        {currentWorkspace?.liveEvents.length > 0 && (
+          <LiveEvents onOpenAddr={setOpenAddr} />
+        )}
         <AppsList />
         {false && <ContactList onOpenProfile={setContactOpenAddr} />}
 

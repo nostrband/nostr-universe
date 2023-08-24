@@ -11,17 +11,20 @@ export const PinsList = ({ drawerBleeding }) => {
   const keys = Object.keys(tabGroups);
   return (
     <StyledContainer length={keys.length} bleeddingheight={drawerBleeding}>
-      {keys.map(id => {
-	const tg = tabGroups[id];
+      {keys.map((id) => {
+        const tg = tabGroups[id];
         return (
           <PinItem
             key={tg.info.id}
             image={tg.info.icon}
             {...tg.info}
-            onClick={() => onOpenTabGroup(tg)}
-	    active={tg.tabs.length > 0}
+            onClick={() => {
+              console.log("TAB", tg);
+              onOpenTabGroup(tg);
+            }}
+            active={tg.tabs.length > 0}
           />
-	)
+        );
       })}
     </StyledContainer>
   );
