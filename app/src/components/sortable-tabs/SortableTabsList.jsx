@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import {
   DndContext,
   MouseSensor,
@@ -6,29 +6,36 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { SortableContext, rectSwappingStrategy } from "@dnd-kit/sortable";
 import { SortableTabItem } from "./SortableTabItem";
 
-import { arrayMoveImmutable } from "array-move";
+import { styled } from "@mui/material";
+import { AppContext } from "../../store/app-context";
 
 export const SortableTabsList = () => {
   const [activeId, setActiveId] = useState(null);
 
-  const [items, setItems] = useState(() =>
-    [0, 1, 2, 3, 4, 5].map((id) => id + 1)
-  );
+  const contextData = useContext(AppContext);
+  const { currentWorkspace, onOpenTabGroup, swapTabs } = contextData || {};
+  const { tabGroups = {} } = currentWorkspace || {};
 
-  const onSortEnd = useCallback(
-    ({ oldIndex, newIndex }) => {
-      setItems((items) => arrayMoveImmutable(items, oldIndex, newIndex));
+  // @TODO change order property at pins and tabs
+  const keys = Object.keys(tabGroups).sort((a, b) => {
+    return tabGroups[a].info.order - tabGroups[b].info.order;
+  });
+  console.log(
+    {
+      keys,
+      tabGroups,
     },
-    [items]
+    "KEYS&TAB_GROUPS"
   );
 
-  const getIndex = (id) => items.indexOf(+id);
+  const onSortEnd = useCallback(({ from, to }) => {
+    swapTabs(from, to);
+  }, []);
+
+  // const getIndex = (id) => keys.indexOf(id);
 
   const mouseSensor = useSensor(MouseSensor, {
     // Require the mouse to move by 10 pixels before activating.
@@ -52,28 +59,62 @@ export const SortableTabsList = () => {
       sensors={sensors}
       autoScroll={false}
       onDragStart={({ active }) => {
+        // console.log(active, "onDragStart");
         if (active) {
           setActiveId(active.id);
         }
       }}
       onDragEnd={({ active, over }) => {
+        console.log(
+          {
+            active,
+            over,
+            from: tabGroups[active.id],
+            to: tabGroups[over.id],
+            tabGroups,
+          },
+          "onDragEnd"
+        );
         if (over && active.id !== over.id) {
           onSortEnd({
-            oldIndex: getIndex(active.id),
-            newIndex: getIndex(over.id),
+            from: active.id,
+            to: over.id,
           });
         }
         setActiveId(null);
       }}
       onDragCancel={() => setActiveId(null)}
     >
-      <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        <ul className="sortable-list">
-          {items.map((id, index) => (
-            <SortableTabItem key={`item-${id}`} id={id} activeId={activeId} />
-          ))}
-        </ul>
+      <SortableContext items={keys} strategy={rectSwappingStrategy}>
+        <TabsContainer>
+          {keys.map((id, index) => {
+            const tg = tabGroups[id];
+            return (
+              <SortableTabItem
+                image={tg.info.icon}
+                {...tg.info}
+                key={`item-${tg.info.id}`}
+                id={id}
+                activeId={activeId}
+                onClick={() => onOpenTabGroup(tg)}
+                isActive={tg.tabs.length > 0}
+              />
+            );
+          })}
+        </TabsContainer>
       </SortableContext>
     </DndContext>
   );
 };
+
+const TabsContainer = styled("div")(({ length }) => ({
+  display: "grid",
+  gridTemplateColumns: `repeat(auto-fill, minmax(56px, 1fr))`,
+  gap: "1rem",
+  padding: "1rem",
+  overflowY: "hidden",
+  "& > .item": {
+    width: "100%",
+    minHeight: "56px",
+  },
+}));

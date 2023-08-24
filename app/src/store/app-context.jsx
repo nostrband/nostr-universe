@@ -135,7 +135,7 @@ const AppContextProvider = ({ children }) => {
     if (!keys || !keys.length) return;
 
     console.log("reloadProfile", keys, pubkey);
-    
+
     // reuse cached profile info?
     if (pubkey !== currentPubkey) {
       const p = profiles?.find((p) => p.pubkey === pubkey);
@@ -155,8 +155,8 @@ const AppContextProvider = ({ children }) => {
     // subscribe to new keys
     subscribeProfiles(keys, (profile) => {
       if (!profile) {
-	// FIXME no stored events for the remaining non-filled profiles
-	return;
+        // FIXME no stored events for the remaining non-filled profiles
+        return;
       }
 
       if (profile.pubkey == pubkey) setProfile(profile);
@@ -175,30 +175,32 @@ const AppContextProvider = ({ children }) => {
     subscribeContactList(pubkey, async (cl) => {
       console.log("contact list update", cl?.created_at);
       if (!cl) {
-	// FIXME no stored cl for the remaining profiles?
+        // FIXME no stored cl for the remaining profiles?
 
-	// FIXME ugly hack to emulate debounce of contactList state variable,
-	// we should move contactList to the workspace and also
-	// debounce it in a more general way
-	if (lastCL) {
-	  const longNotes = await fetchFollowedLongNotes(lastCL.contactPubkeys);
-	  console.log("new long notes", longNotes);
+        // FIXME ugly hack to emulate debounce of contactList state variable,
+        // we should move contactList to the workspace and also
+        // debounce it in a more general way
+        if (lastCL) {
+          const longNotes = await fetchFollowedLongNotes(lastCL.contactPubkeys);
+          console.log("new long notes", longNotes);
           updateWorkspace((ws) => {
             return { ...ws, longNotes };
           }, pubkey);
 
-	  const liveEvents = await fetchFollowedLiveEvents(lastCL.contactPubkeys);
-	  console.log("new live events", liveEvents);
+          const liveEvents = await fetchFollowedLiveEvents(
+            lastCL.contactPubkeys
+          );
+          console.log("new live events", liveEvents);
           updateWorkspace((ws) => {
             return { ...ws, liveEvents };
           }, pubkey);
-	}
-	
-	return;
+        }
+
+        return;
       }
-      
+
       if (cl.pubkey == pubkey) {
-	lastCL = cl;
+        lastCL = cl;
         setContacts(cl);
       }
     });
@@ -324,15 +326,16 @@ const AppContextProvider = ({ children }) => {
           setApps(apps);
           await db.apps.bulkPut(apps);
         }
-
       });
     }
 
     if (config.DEBUG) onDeviceReady();
     else document.addEventListener("deviceready", onDeviceReady, false);
   }, []);
-  
+
   const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
+  console.log(currentWorkspace, "currentWorkspace");
+
   const currentTab = currentWorkspace?.tabs.find(
     (t) => t.id === currentWorkspace.currentTabId
   );
@@ -469,17 +472,15 @@ const AppContextProvider = ({ children }) => {
 
     // our first key?
     if (currentPubkey === DEFAULT_PUBKEY) {
-
       // reassign everything from default to the new key
       await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey });
       await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey });
       updateWorkspace({ pubkey }, DEFAULT_PUBKEY);
     } else {
-
       // copy trending stuff
       const { trendingProfiles = [], trendingNotes = [] } =
-	workspaces.find((w) => w.pubkey === currentPubkey) || {};
-      
+        workspaces.find((w) => w.pubkey === currentPubkey) || {};
+
       // init new workspace
       addWorkspace(pubkey, { trendingProfiles, trendingNotes });
     }
@@ -571,6 +572,66 @@ const AppContextProvider = ({ children }) => {
         });
         ok();
       }, 0);
+    });
+  };
+
+  const swapTabs = (fromTabId, toTabId) => {
+    updateWorkspace((ws) => {
+      const fromTab = ws.tabGroups[fromTabId];
+      const fromTabCopy = { ...fromTab };
+      const toTab = ws.tabGroups[toTabId];
+      return {
+        tabGroups: {
+          ...ws.tabGroups,
+          [fromTabId]: {
+            ...fromTab,
+            info: {
+              ...fromTab.info,
+              order: toTab.info.order,
+            },
+          },
+          [toTabId]: {
+            ...toTab,
+            info: {
+              ...toTab.info,
+              order: fromTabCopy.info.order,
+            },
+          },
+        },
+      };
+      // const swappedTabs = ws.tabs.map((tab) => {
+      //   console.log(
+      //     {
+      //       compareFROMTAB_ID: getTabGroupId(tab) === fromTabId,
+      //       compareTOTAB_ID: getTabGroupId(tab) === toTabId,
+      //     },
+      //     "COMPARE"
+      //   );
+
+      //   if (getTabGroupId(tab) === fromTabId) {
+      //     return { ...tab, order: toTab.info.order };
+      //   }
+      //   if (getTabGroupId(tab) === toTabId) {
+      //     return { ...tab, order: fromTab.info.order };
+      //   }
+      //   return tab;
+      // });
+
+      // swappedTabs.sort((a, b) => a.order - b.order);
+
+      // console.log({ fromTab, toTab, swappedTabs }, "SWAP");
+
+      // swappedTabs.forEach((t) => {
+      //   const isPin = "pin" in t;
+      //   console.log(
+      //     {
+      //       isPin,
+      //       t,
+      //     },
+      //     "IS_PINNED"
+      //   );
+      //   addToTabGroup(ws, t, isPin);
+      // });
     });
   };
 
@@ -882,6 +943,7 @@ const AppContextProvider = ({ children }) => {
         openAddr,
         setOpenAddr,
         updateLastContact,
+        swapTabs,
       }}
     >
       {children}

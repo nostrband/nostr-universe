@@ -1,5 +1,4 @@
 import React, { useState, useContext } from "react";
-import { db } from "../db";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
 import { ContactList } from "../components/contact-list/ContactList";
@@ -19,7 +18,6 @@ import { useSearchParams } from "react-router-dom";
 import { TrendingNotes } from "../components/trending-notes/TrendingNotes";
 import { LongNotes } from "../components/long-notes/LongNotes";
 import { LiveEvents } from "../components/live-events/LiveEvents";
-import { SortableTabsList } from "../components/sortable-tabs/SortableTabsList";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
@@ -93,7 +91,6 @@ const MainPage = () => {
         onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main id="main">
-        <SortableTabsList />
         <TrendingProfiles onOpenProfile={setOpenAddr} />
         <TrendingNotes onOpenNote={setOpenAddr} />
         {currentWorkspace?.suggestedProfiles.length > 0 && (

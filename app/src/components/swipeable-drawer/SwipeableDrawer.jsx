@@ -7,7 +7,7 @@ import { Divider, SwipeableDrawer as MuiSwipeableDrawer } from "@mui/material";
 
 import { PinsList } from "../pins/PinsList";
 import { AppContext } from "../../store/app-context";
-import { PinItem } from "../pins/PinItem";
+import { SortableTabsList } from "../sortable-tabs/SortableTabsList";
 
 const getInitialBleedingHeight = (windowInstance) => {
   if (windowInstance.innerHeight < 600) {
@@ -26,7 +26,7 @@ export const SwipeableDrawer = () => {
   );
 
   const contextData = useContext(AppContext);
-  const { currentWorkspace, onOpenTabGroup, currentTab } = contextData || {};
+  const { currentWorkspace, currentTab } = contextData || {};
   const { tabGroups = {} } = currentWorkspace || {};
 
   const toggleDrawer = (newOpen) => () => {
@@ -63,6 +63,19 @@ export const SwipeableDrawer = () => {
 
   const keys = Object.keys(tabGroups);
 
+  //@TODO remake bottom sheet component
+  const isAllowChildren = open
+    ? {}
+    : {
+        allowSwipeInChildren: (e, area, paper) => {
+          // @TODO find a better solution
+          setTimeout(() => {
+            paper.style.transform = `translate(0, ${paper.clientHeight}px)`;
+          }, 0);
+          return open ? false : true;
+        },
+      };
+
   return (
     <StyledSwipeableDrawer
       container={container}
@@ -75,19 +88,13 @@ export const SwipeableDrawer = () => {
       onOpen={toggleDrawer(true)}
       swipeAreaWidth={`${drawerBleeding}%`}
       disableSwipeToOpen={false}
-      allowSwipeInChildren={(e, area, paper) => {
-        // @TODO find a better solution
-        setTimeout(() => {
-          paper.style.transform = `translate(0, ${paper.clientHeight}px)`;
-        }, 0);
-        return true;
-      }}
       ModalProps={{
         keepMounted: true,
       }}
       transitionDuration={200}
       disablePortal
       // disableDiscovery
+      {...isAllowChildren}
     >
       <VisibleContent bleedingheight={drawerBleeding} open={open}>
         <Puller onClick={toggleDrawer} />
@@ -97,40 +104,11 @@ export const SwipeableDrawer = () => {
       <ExpandedContent>
         {/* Show this when items are loading */}
         {false && <Skeleton variant="rectangular" height="100%" />}
-        <TabsContainer length={Object.keys(tabGroups).length}>
-          {keys.map((id) => {
-            const tg = tabGroups[id];
-            return (
-              <PinItem
-                key={tg.info.id}
-                image={tg.info.icon}
-                {...tg.info}
-                onClick={() => {
-                  console.log("OPENED_TAB", tg);
-                  onOpenTabGroup(tg);
-                }}
-                withTitle
-                active={tg.tabs.length > 0}
-              />
-            );
-          })}
-        </TabsContainer>
+        <SortableTabsList />
       </ExpandedContent>
     </StyledSwipeableDrawer>
   );
 };
-
-const TabsContainer = styled("div")(({ length }) => ({
-  display: "grid",
-  gridTemplateColumns: `repeat(auto-fill, minmax(56px, 1fr))`,
-  gap: "1rem",
-  padding: "1rem",
-  overflowY: "hidden",
-  "& > .item": {
-    width: "100%",
-    minHeight: "56px",
-  },
-}));
 
 const StyledDivider = styled(Divider)(() => ({
   opacity: 1,
