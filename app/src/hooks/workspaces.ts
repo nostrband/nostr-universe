@@ -43,7 +43,7 @@ export const useAddKey = () => {
     } else {
       const workspace = await addWorkspace(currentPubKey)
 
-      dispatch(setWorkspaces({ workspaces: [...workspaces, workspace] }))
+      dispatch(setWorkspaces({ workspaces: [workspace] }))
     }
 
     await updateProfile(keys, currentPubKey)

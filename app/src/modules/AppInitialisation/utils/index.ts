@@ -191,28 +191,106 @@ const ensureBootstrapped = async (workspaceKey) => {
   }
 }
 
-const loadWorkspace = async (workspace) => {
-  console.log('workspaceKey', workspace.pubkey)
-  workspace.pins = await dbi.listPins(workspace.pubkey)
-  workspace.tabs = await dbi.listTabs(workspace.pubkey)
-  console.log('load pins', workspace.pins.length, 'tabs', workspace.tabs.length)
+function getOrigin(url) {
+  try {
+    return new URL(url).origin
+  } catch {
+    return url
+  }
 }
 
-export const addWorkspace = async (pubkey) => {
+export const getTabGroupId = (pt) => {
+  return pt.appNaddr || getOrigin(pt.url)
+}
+
+function test(workspace, pt, isPin) {
+  const id = getTabGroupId(pt)
+  if (!(id in workspace.tabGroups))
+    workspace.tabGroups[id] = {
+      id,
+      info: pt,
+      tabs: [],
+      lastTabId: '',
+      lastActive: 0
+    }
+
+  const tg = workspace.tabGroups[id]
+  if (isPin && !tg.pin) {
+    tg.pin = pt
+  }
+
+  if (!isPin) {
+    tg.tabs.push(pt.id)
+  }
+}
+
+export const addToTabGroup = (pins, tabs) => {
+  const groupTab = []
+
+  pins.forEach((pt) => {
+    const id = getTabGroupId(pt)
+    const tabIndex = groupTab.findIndex((tab) => tab.id === id)
+    console.log(tabIndex)
+
+    if (tabIndex === -1) {
+      groupTab.push({
+        id,
+        info: pt,
+        tabs: [],
+        pin: pt,
+        lastTabId: '',
+        lastActive: 0
+      })
+    }
+  })
+
+  tabs.forEach((pt) => {
+    const id = getTabGroupId(pt)
+    const tabIndex = groupTab.findIndex((tab) => tab.id === id)
+
+    if (tabIndex !== -1) {
+      groupTab[tabIndex].tabs.push(pt.id)
+    } else {
+      groupTab.push({
+        id,
+        info: pt,
+        tabs: [pt.id],
+        pin: pt,
+        lastTabId: '',
+        lastActive: 0
+      })
+    }
+  })
+
+  return groupTab
+}
+
+export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
   // ?? props
   await ensureBootstrapped(pubkey)
+
+  const pins = await dbi.listPins(pubkey)
+  const tabs = await dbi.listTabs(pubkey)
+
+  const pinsSort = pins.sort((a, b) => a.order - b.order)
+  const tabsSort = tabs.sort((a, b) => a.order - b.order)
+  const tabGroups = addToTabGroup(pinsSort, tabsSort)
 
   const workspace = {
     pubkey,
     trendingProfiles: [],
-    tabs: [],
-    pins: [],
+    trendingNotes: [],
+    longNotes: [],
+    liveEvents: [],
+    suggestedProfiles: [],
+    tabGroups: tabGroups,
+    tabs: tabsSort,
+    pins: pinsSort,
+    lastKindApps: {},
     currentTabId: '',
     lastCurrentTabId: ''
     // ...props
   }
-
-  await loadWorkspace(workspace)
 
   return workspace
 }

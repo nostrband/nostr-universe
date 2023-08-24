@@ -44,7 +44,7 @@ const dummy = {
 }
 
 const API = function (method) {
-  if (import.meta.env.MODE === 'development')
+  if (import.meta.env.DEV)
     return function (...args) {
       return dummy[method](...args)
     }

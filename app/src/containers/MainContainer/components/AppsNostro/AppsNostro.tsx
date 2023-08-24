@@ -5,7 +5,6 @@ import { useAppSelector } from '@/store/hooks/redux'
 
 export const AppsNostro = () => {
   const { apps, isLoading } = useAppSelector((state) => state.apps)
-  const data = apps.map((el) => ({ icon: el.picture, title: el.name }))
 
   return (
     <>
@@ -15,7 +14,7 @@ export const AppsNostro = () => {
         </StyledTitle>
       </Container>
 
-      <SliderAppsNostro data={data} isLoading={isLoading} />
+      <SliderAppsNostro data={apps} isLoading={isLoading} />
     </>
   )
 }

@@ -1,15 +1,16 @@
 import { StyledApp, StyledAppImg, StyledAppWraper, StyledAppName } from './styled'
 import { IAppNostro } from './types'
 
-export const AppNostro = ({ app, size, hideName }: IAppNostro) => (
-  <StyledAppWraper>
-    <StyledApp size={size}>
-      <StyledAppImg src={app.icon} />
+export const AppNostro = ({ app, size, hideName, onOpen, isActive, isPreviewTab }: IAppNostro) => (
+  <StyledAppWraper onClick={() => onOpen(app)}>
+    <StyledApp size={size} isActive={isActive} isPreviewTab={isPreviewTab}>
+      <StyledAppImg src={app.picture} />
     </StyledApp>
-    {!hideName && (
-      <StyledAppName size={size} component="div">
-        {app.title}
-      </StyledAppName>
-    )}
+    {isPreviewTab ||
+      (!hideName && (
+        <StyledAppName size={size} component="div">
+          {app.name}
+        </StyledAppName>
+      ))}
   </StyledAppWraper>
 )

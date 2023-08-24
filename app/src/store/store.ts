@@ -5,12 +5,14 @@ import { userService } from './services/user.service'
 import { appsSlice } from './reducers/apps.slice'
 import { workspacesSlice } from './reducers/workspaces.slice'
 import { profileSlice } from './reducers/profile.slice'
+import { tabSlice } from './reducers/tab.slice'
 
 export const rootReducer = combineReducers({
   userReducer,
   keys: keysSlice.reducer,
   apps: appsSlice.reducer,
   profile: profileSlice.reducer,
+  tab: tabSlice.reducer,
   workspaces: workspacesSlice.reducer,
   [userService.reducerPath]: userService.reducer
 })

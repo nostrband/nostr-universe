@@ -1,22 +1,26 @@
 import { Outlet, useLocation } from 'react-router-dom'
+import { AppPinMenu } from '@/components/AppPinMenu/AppPinMenu'
+import { useAppSelector } from '@/store/hooks/redux'
 import { Header } from './components/Header/Header'
 import { TrendingProfiles } from './components/TrendingProfiles/TrendingProfiles'
 import { AppsNostro } from './components/AppsNostro/AppsNostro'
-import { AppPinMenu } from '@/components/AppPinMenu/AppPinMenu'
+import { TabMenu } from './components/TabMenu/TabMenu'
 
 export const MainContainer = () => {
+  const { isOpen } = useAppSelector((state) => state.tab)
   const location = useLocation()
-
   const isShowAppPinMenu = location.pathname !== '/profile'
 
-  console.log(location.pathname)
   return (
     <>
       <Header />
-      <TrendingProfiles />
-      <AppsNostro />
+      <main id="main">
+        <TrendingProfiles />
+        <AppsNostro />
+      </main>
       <Outlet />
-      {isShowAppPinMenu && <AppPinMenu />}
+      {isShowAppPinMenu && !isOpen && <AppPinMenu />}
+      {isOpen && <TabMenu />}
     </>
   )
 }

@@ -26,10 +26,12 @@ db.version(6).stores({
 export const dbi = {
   addTab: async (tab) => {
     try {
-      const keys = Object.keys(tab).filter((k) => k != 'ref')
+      const keys = Object.keys(tab).filter((k) => k !== 'ref')
       const t = {}
       for (const k of keys) t[k] = tab[k]
-      await db.tabs.add(t)
+
+      const test = await db.tabs.add(t)
+      console.log({ test })
     } catch (error) {
       console.log(`Add tab to DB error: ${JSON.stringify(error)}`)
     }

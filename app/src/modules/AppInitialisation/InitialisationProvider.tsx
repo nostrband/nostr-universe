@@ -36,11 +36,6 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
 
       await connect()
 
-      dispatch(setLoading({ isLoading: true }))
-      const apps = await fetchApps()
-      dispatch(setApps({ apps }))
-      dispatch(setLoading({ isLoading: false }))
-
       const profiles = await dbi.listProfiles()
 
       if (profiles.length > 0) {
@@ -48,13 +43,18 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       }
 
       await updateProfile(keys, currentPubKey)
+
+      dispatch(setLoading({ isLoading: true }))
+      const apps = await fetchApps()
+      dispatch(setApps({ apps }))
+      dispatch(setLoading({ isLoading: false }))
     } catch (err) {
       console.log('error init app')
     }
   }, [dispatch, updateProfile])
 
   useEffect(() => {
-    if (import.meta.env.MODE === 'development') {
+    if (import.meta.env.DEV) {
       initDevice()
     } else {
       document.addEventListener('deviceready', initDevice, false)

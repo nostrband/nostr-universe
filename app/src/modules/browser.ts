@@ -245,7 +245,7 @@ export function open(params) {
   const topOffset = main.offsetTop
   const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)))
   const footer = document.getElementById('tab-menu')
-  const bottomOffset = footer.offsetHeight - 1
+  const bottomOffset = 50
   const bottom = Math.round(window.devicePixelRatio * (bottomOffset + (params.bottom || 0)))
   const loc = 'no' // params.menu ? "no" : "yes";
   const menu = params.menu ? 'no' : 'yes'
