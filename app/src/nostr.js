@@ -655,6 +655,8 @@ export async function searchProfiles(q) {
         ids: top.ids,
       }
     );
+
+    events = [...events.values()].map(e => rawEvent(e));  
   }
 
   events.forEach(e => {
