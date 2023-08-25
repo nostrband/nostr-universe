@@ -9,6 +9,7 @@ interface ITabState {
     picture: string
     name: string
     appNaddr: string
+    isOpened: boolean
   } | null
 }
 

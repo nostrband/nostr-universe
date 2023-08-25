@@ -49,7 +49,7 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       dispatch(setApps({ apps }))
       dispatch(setLoading({ isLoading: false }))
     } catch (err) {
-      console.log('error init app')
+      console.log('error init app', JSON.stringify(err))
     }
   }, [dispatch, updateProfile])
 

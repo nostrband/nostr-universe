@@ -48,6 +48,11 @@ interface Flag {
   value: string
 }
 
+interface ReadOnlyKey {
+  pubkey: string
+  current: boolean
+}
+
 export interface DbSchema extends Dexie {
   tabs: Dexie.Table<Tab, number>
   pins: Dexie.Table<Pin, number>
@@ -55,4 +60,5 @@ export interface DbSchema extends Dexie {
   profiles: Dexie.Table<Profile, number>
   lastContacts: Dexie.Table<LastContact, number>
   flags: Dexie.Table<Flag, number>
+  readOnlyKeys: Dexie.Table<ReadOnlyKey, number>
 }

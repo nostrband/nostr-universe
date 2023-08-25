@@ -10,7 +10,7 @@ export const MainContainer = () => {
   const { isOpen } = useAppSelector((state) => state.tab)
   const location = useLocation()
   const isShowAppPinMenu = location.pathname !== '/profile'
-
+  console.log({ isOpen })
   return (
     <>
       <Header />

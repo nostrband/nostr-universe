@@ -22,8 +22,6 @@ export const TabMenu = () => {
     })
     .filter((tab): tab is ITab => !!tab)
 
-  console.log({ currentWorkSpace })
-
   return (
     <StyledWrapper>
       {getTabs &&

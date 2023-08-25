@@ -4,7 +4,7 @@ import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setCurrentTab, setOpenTab } from '@/store/reducers/tab.slice'
-import { setTabsWorkspace } from '@/store/reducers/workspaces.slice'
+import { setOpenCurrentTabInWorkSpace, setTabsWorkspace } from '@/store/reducers/workspaces.slice'
 import { AppNostro } from '@/types/app-nostro'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -22,10 +22,27 @@ export const useOpenApp = () => {
   const { apps } = useAppSelector((state) => state.apps)
   const { currentPubKey } = useAppSelector((state) => state.keys)
 
+  const getTab = (id) => currentWorkSpace?.tabs.find((t) => t.id === id);
+
+  const hide = async (tab) => {
+    await browser.hide(tab.id);
+  }
+
+  const API = {
+    onHide: (tabId) => {
+      console.log("hide", tabId);
+
+      hide(getTab(tabId))
+    },
+
+  };
+
+  browser.setAPI(API);
+
+
   const createTabBrowser = async (tab) => {
-    // updateTab({ loading: true }, tab.id);
+    console.table('createTabBrowser tab id', JSON.stringify(tab))
     dispatch(setOpenTab({ isLoading: true }))
-    // updateWorkspace({ currentTabId: tab.id });
 
     const params = {
       id: tab.id,
@@ -34,37 +51,8 @@ export const useOpenApp = () => {
       apiCtx: tab.id
     }
 
-    console.log({ tab })
 
-    // updateTab({ opened: true }, tab.id);
     dispatch(setOpenTab({ isOpen: true }))
-
-    // const updateTab = (cbProps, tabId) => {
-    //   tabId = tabId || currentTab?.id;
-    //   updateWorkspace((ws) => {
-    //     return {
-    //       tabs: ws.tabs.map((t) =>
-    //         t.id === tabId
-    //           ? {
-    //               ...t,
-    //               ...(typeof cbProps === "function" ? cbProps(t) : cbProps),
-    //             }
-    //           : t
-    //       ),
-    //     };
-    //   });
-    // };
-    // open the browser
-    await browser.open(params)
-    dispatch(setOpenTab({ isLoading: false }))
-  }
-
-  const ensureBrowser = async (tab) => {
-    if (!tab.opened) await createTabBrowser(tab)
-  }
-
-  const show = async (tab) => {
-    // showTabMenu();
 
     dispatch(
       setCurrentTab({
@@ -72,13 +60,42 @@ export const useOpenApp = () => {
       })
     )
 
+    dispatch(
+      setOpenCurrentTabInWorkSpace({
+        tabID: tab.id,
+        isOpened: true
+      })
+    )
+
+    await browser.open(params)
+  }
+
+  const ensureBrowser = async (tab) => {
+    if (!tab.isOpened) {
+      await createTabBrowser(tab)
+    }
+
+    return
+  }
+
+  const show = async (tab) => {
+    // showTabMenu();
+    console.log({showTab: tab})
+
     return new Promise((ok) => {
       setTimeout(async () => {
         // schedule the open after task bar is changed
-        console.log('show', JSON.stringify(tab))
+
         await ensureBrowser(tab)
 
         await browser.show(tab.id)
+
+        dispatch(
+          setCurrentTab({
+            currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
+          })
+        )
+
         // updateWorkspace((ws) => {
         //   const tg = ws.tabGroups[getTabGroupId(tab)];
         //   tg.lastTabId = tab.id;
@@ -117,11 +134,11 @@ export const useOpenApp = () => {
     // // add to tab list
     dispatch(setTabsWorkspace({ tab }))
 
-    // dispatch(
-    //   setCurrentTab({
-    //     currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
-    //   })
-    // )
+    dispatch(
+      setCurrentTab({
+        currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
+      })
+    )
 
     // // add to db
     await dbi.addTab(tab)
@@ -132,19 +149,18 @@ export const useOpenApp = () => {
 
   const openBlank = async (entity: AppNostro) => {
     const tab = currentWorkSpace.tabs.find((tab) => tab.url === entity.url)
-    // console.log({ tab111111: tab })
-    // if (tab) {
-    //   await show(tab)
-    //   return
-    // }
 
-    // find an existing app for this url
+    if (tab) {
+      await show(tab)
+      return
+    }
+
+    // // find an existing app for this url
     const origin = getOrigin(entity.url)
     const app = entity.appNaddr
       ? apps.find((app) => app.naddr === entity.appNaddr)
       : apps.find((app) => app.url.startsWith(origin))
 
-    console.log({ app, entity })
 
     if (app) {
       await open({
