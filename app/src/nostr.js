@@ -23,7 +23,8 @@ export const nostrbandRelayCounts = "wss://relay.nostr.band/all";
 
 const readRelays = [
   nostrbandRelay,
-  "wss://relay.damus.io",
+  //  "wss://relay.damus.io", // too slow
+  "wss://eden.nostr.land",
   "wss://nos.lol",
   "wss://relay.nostr.bg",
   "wss://nostr.mom",
@@ -38,7 +39,7 @@ const kindApps = {};
 const profileCache = [];
 
 function fetchEventsRead(ndk, filter) {
-  return ndk.fetchEvents(filter, NDKRelaySet.fromRelayUrls(readRelays, ndk));
+  return ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk));
 }
 
 export function getTags(e, name) {
@@ -71,6 +72,23 @@ function parseContentJson(c) {
     console.log("Bad json: ", c, e);
     return {};
   }
+}
+
+function isWeb(e) {
+  for (const t of e.tags) {
+    if (t[0] === "web")
+      return true;
+
+    if (t[0] === "android"
+	|| t[0] === "ios"
+	|| t[0] === "windows"
+	|| t[0] === "macos"
+	|| t[0] === "linux"
+    )
+      return false;
+  }
+
+  return true;
 }
 
 function findHandlerUrl(e, k) {
@@ -181,9 +199,12 @@ export async function fetchApps() {
       };
     });
 
-//    if (Object.keys(handlers).length == 0)
-//      return;
-
+    if (!isWeb(e))
+      return;
+    
+    //    if (Object.keys(handlers).length == 0)
+    //      return;
+    
     const app = {
       naddr: nip19.naddrEncode({
         pubkey: e.pubkey,
@@ -625,7 +646,7 @@ export async function searchProfiles(q) {
   );
   console.log("top profiles", top?.ids.length);
 
-  let events = null;
+  let events = [];
   if (top.ids.length) {
     // fetch the app events themselves from the list
     events = await fetchEventsRead(
@@ -635,7 +656,6 @@ export async function searchProfiles(q) {
       }
     );
   }
-  events = [...events.values()];
 
   events.forEach(e => {
     e.profile = parseContentJson(e.content);
@@ -714,6 +734,7 @@ async function fetchEventsByIds(opts) {
       ids,
       kinds,
     },
+    {}, // opts
     NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
   );
   console.log("ids", ids, "kinds", kinds, "events", events);
@@ -824,6 +845,7 @@ async function searchEvents(q, kind, limit = 30) {
       search: q,
       limit,
     },
+    {}, // opts
     NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
   );
   events = [...events.values()].map(e => rawEvent(e));  

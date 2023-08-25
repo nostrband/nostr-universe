@@ -74,7 +74,7 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
   return (
     <div className="d-flex flex-column">
       <div className="d-flex justify-content-between align-items-center p-3">
-        <h2 className="m-0">Context Menu</h2>
+        <h2 className="m-0">Context Menu (WIP)</h2>
         <AiOutlineClose color="white" size={30} onClick={onClose} />
       </div>
       <hr className="m-0" />
@@ -83,15 +83,19 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	  {!id && ("Loading...")}
 	  {id && (
 	    <div style={{maxWidth:"100%"}}>
-	      {!event && (<>Id: {id}</>)}
+	      {!event && (
+		<div style={{overflowWrap: "break-word", width:"100%"}}>
+		  Id: {id}
+		</div>
+	      )}
 	      {event && (
-		<div>
+		<>
 		  <div style={{overflowWrap: "break-word", width:"100%"}}>
 		    Event: {id}
 		  </div>
-
+		
 		  <Tools tools={tools} />
-		</div>
+		</>
 	      )}
 	    </div>
 	  )}
