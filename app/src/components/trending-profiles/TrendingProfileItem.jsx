@@ -1,53 +1,134 @@
-import Card from "react-bootstrap/Card";
-import Button from "react-bootstrap/Button";
-import { BsFillPersonFill } from "react-icons/bs";
+import {
+  Avatar,
+  IconButton,
+  Skeleton,
+  Typography,
+  styled,
+} from "@mui/material";
+import { PlusIcon } from "../../assets";
+import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
+
+const crop = (s, n) => {
+  if (s.length > n) return s.trim().substring(0, n - 1) + "...";
+  return s.trim();
+};
 
 export const TrendingProfileItem = (props) => {
-  const { npub, pubkey } = props.profile;
+  const {
+    npub = "",
+    pubkey = "",
+    name,
+    display_name,
+    picture,
+    about,
+  } = props.profile || {};
+  const isShowSkeleton = name === null;
 
-  const crop = (s, n) => {
-    if (s.length > n) return s.trim().substring(0, n - 1) + "...";
-    return s.trim();
-  };
+  const renderedName = isShowSkeleton
+    ? ""
+    : crop(name || display_name || npub, 15);
 
-  const name = crop(
-    props.profile?.name || props.profile?.display_name || npub,
-    15
-  );
-  const about = crop(props.profile?.about || "", 25);
-  const picture = props.profile?.picture || "";
+  const originalImage = picture || "";
+  // it’s not in design
+  // const about = crop(props.profile?.about || "", 25);
+  const profileImageSource = useOptimizedMediaSource({
+    pubkey: pubkey,
+    originalImage,
+  });
 
   return (
-    <Card style={{ minWidth: "40%", marginRight: "5px" }}>
-      <Card.Body style={{ padding: "6px" }}>
-        <center>
-          {picture ? (
-            <img
-              src={picture}
-              style={{
-                borderRadius: "50%",
-                width: "60%",
-                aspectRatio: "1 / 1",
-                objectFit: "cover",
-              }}
-              alt={name}
-            />
-          ) : (
-            <BsFillPersonFill color="black" size={55} />
-          )}
-          <Card.Title style={{ marginBottom: "3px" }}>{name}</Card.Title>
-          <small>{crop(npub, 13)}</small>
-          <Card.Text
-            style={{
-              marginBottom: "3px",
-              overflowWrap: "break-word",
-            }}
-          >
-            {about}
-          </Card.Text>
-          <Button onClick={() => props.onClick(pubkey)}>View</Button>
-        </center>
-      </Card.Body>
+    <Card
+      classes={{ disabled: "disabled" }}
+      disabled={isShowSkeleton}
+      onClick={() => props.onClick(pubkey)}
+    >
+      {isShowSkeleton ? (
+        <StyledSkeleton variant="circular" width={48} height={48} />
+      ) : (
+        <Avatar src={profileImageSource} className="avatar">
+          {renderedName}
+        </Avatar>
+      )}
+      {isShowSkeleton ? (
+        <StyledSkeleton variant="text" className="text" />
+      ) : (
+        <>
+          <Typography className="username">{renderedName}</Typography>
+          <Typography className="about">{about || ""}</Typography>
+        </>
+      )}
+
+      {false && (
+        <StyledIconButton
+          disabled={isShowSkeleton}
+          onClick={() => props.onClick(pubkey)}
+          classes={{ disabled: "disabled" }}
+        >
+          <PlusIcon />
+        </StyledIconButton>
+      )}
     </Card>
   );
 };
+
+const Card = styled("div")(() => ({
+  padding: "0.75rem 0",
+  borderRadius: "24px",
+  backgroundColor: "#222222",
+  minHeight: "148px",
+  minWidth: "145px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "5px",
+  marginRight: "0.75rem",
+  "&:first-of-type": {
+    marginLeft: "0.75rem",
+  },
+  "& .avatar": {
+    width: "48px",
+    height: "48px",
+  },
+  "& .username": {
+    fontFamily: "Outfit",
+    fontSize: "1rem",
+    fontWeight: 600,
+    color: "#fff",
+    width: "86%",
+    whiteSpace: "nowrap",
+    textAlign: "center",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  "& .about": {
+    fontFamily: "Outfit",
+    fontSize: "0.8rem",
+    fontWeight: 200,
+    color: "#fff",
+    width: "86%",
+    textAlign: "center",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    display: "-webkit-box",
+    WebkitLineClamp: "2",
+    WebkitBoxOrient: "vertical",
+    color: "#C9C9C9",
+  },
+}));
+
+const StyledIconButton = styled(IconButton)(() => ({
+  "&, &:hover, &:active": {
+    background: "#CF82FF",
+  },
+  "&.disabled": {
+    background: "#cf82ffc8",
+  },
+}));
+
+const StyledSkeleton = styled(Skeleton)(() => ({
+  background: "rgba(255,255,255,0.3)",
+  "&.text": {
+    width: "70%",
+    fontSize: "1rem",
+  },
+}));

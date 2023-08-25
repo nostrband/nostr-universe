@@ -1,92 +1,88 @@
 import React, { useContext } from "react";
 
-import Button from "react-bootstrap/esm/Button";
 import { AppContext } from "../store/app-context";
-import { IconButton } from "../components/UI/IconButton";
+import { SwipeableDrawer } from "../components/swipeable-drawer/SwipeableDrawer";
+import { IconButton, styled } from "@mui/material";
+import { homeIcon, stopIcon, reloadIcon } from "../assets";
+import { PinItem } from "../components/pins/PinItem";
 
 export const Footer = ({ onOpenPinModal }) => {
   const contextData = useContext(AppContext);
   const {
-    tabs,
-    onToggleTab,
-    onCloseTab,
-    onPinTab,
-    onHideTab,
-    onShowTabs,
-    pins,
-    onTogglePin,
-    open: onOpenPin,
+    currentWorkspace,
     currentTab,
-    prevTab,
-    onSwitchTabs,
+    currentTabGroup,
+    getTab,
+    onOpenTab,
+    onHideTab,
+    onStopTab,
+    onReloadTab,
+    isShowDrawer,
   } = contextData || {};
 
-  const toggleTabHandler = (t) => {
-    onToggleTab(t);
-    onOpenPinModal();
+  const switchTab = async (tab) => {
+    await onHideTab();
+    onOpenTab(tab);
+  };
+
+  const onStopReload = async () => {
+    currentTab.loading ? onStopTab() : onReloadTab();
   };
 
   return (
     <footer id="footer">
-      <hr className="m-0" />
-      <div id="pins" className="container d-flex align-items-center gap-2 p-1">
-        {pins.map((p) => (
-          <IconButton
-            key={Math.random()}
-            data={{ ...p, img: p.icon }}
-            size="small"
-            onClick={() => onOpenPin(p.url, p)}
-          />
-        ))}
-        {tabs.map((t) => (
-          <IconButton
-            key={t.id}
-            data={{ ...t, img: t.icon }}
-            size="small"
-            onClick={() => toggleTabHandler(t)}
-          />
-        ))}
-      </div>
-      <div id="tab-menu" className="container d-none justify-content-end gap-1">
-        <div>
-          <Button variant="secondary" size="small" onClick={onCloseTab}>
-            Close
-          </Button>
-        </div>
-        {currentTab && currentTab.appNaddr && (
-          <div>
-            <Button
-              variant="secondary"
-              size="small"
-              onClick={() => {
-                onTogglePin();
-                onOpenPinModal();
-              }}
+      {isShowDrawer && <SwipeableDrawer />}
+      <>
+        {currentWorkspace && (
+          <div
+            id="tab-menu"
+            className="container d-none justify-content-between align-items-center gap-1"
+            style={{ position: "relative", zIndex: 1200, background: "#000" }}
+          >
+            <div
+              className="me-0 d-flex justify-content-start align-items-center"
+              style={{ overflowX: "scroll" }}
             >
-              {currentTab && currentTab.pinned ? "Unpin" : "Pin"}
-            </Button>
+              {currentTabGroup &&
+                currentTabGroup.tabs.map((id) => {
+                  const tab = getTab(id);
+                  return (
+                    <div style={{ width: "34px", minWidth: "34px" }}>
+                      <PinItem
+                        image={tab.icon}
+                        title={tab.title}
+                        active={tab.id === currentTab.id}
+                        onClick={() => switchTab(tab)}
+                      />
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="flex-shrink-0">
+              <StyledIconButton onClick={onStopReload} disabled={!currentTab}>
+                <img
+                  src={
+                    currentTab && !currentTab.loading ? reloadIcon : stopIcon
+                  }
+                  width={"24px"}
+                  height={"24px"}
+                />
+              </StyledIconButton>
+              <StyledIconButton onClick={onHideTab} disabled={!currentTab}>
+                <img src={homeIcon} width={"24px"} height={"24px"} />
+              </StyledIconButton>
+            </div>
           </div>
         )}
-        {false && (
-          <div>
-            <Button variant="secondary" size="small" onClick={onShowTabs}>
-              Tabs
-            </Button>
-          </div>
-        )}
-        {false && prevTab && (
-          <div>
-            <Button variant="secondary" size="small" onClick={onSwitchTabs}>
-              Switch
-            </Button>
-          </div>
-        )}
-        <div>
-          <Button variant="secondary" size="small" onClick={onHideTab}>
-            Hide
-          </Button>
-        </div>
-      </div>
+      </>
     </footer>
   );
 };
+
+const StyledIconButton = styled(IconButton)(() => ({
+  width: "44px",
+  height: "44px",
+  "&:hover": {
+    backgroundColor: "rgba(251, 251, 251, 0.08)",
+  },
+}));

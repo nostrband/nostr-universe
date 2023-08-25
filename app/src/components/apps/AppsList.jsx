@@ -1,23 +1,39 @@
 import React, { useContext } from "react";
 import { AppItem } from "./AppItem";
 import { AppContext } from "../../store/app-context";
+import { SectionTitle } from "../UI/SectionTitle";
+import { styled } from "@mui/material";
 
 export const AppsList = () => {
   const contextData = useContext(AppContext);
   const { apps, onOpenApp } = contextData || {};
 
   return (
-    <div>
-      <h3 className="ps-3">Apps</h3>
-      <section className="container d-flex align-items-start">
-        <div className="contentWrapper d-flex gap-4">
-          {apps.map((app, index) => {
-            return (
-              <AppItem app={app} onOpenApp={onOpenApp} key={app.name + index} />
-            );
-          })}
-        </div>
-      </section>
-    </div>
+    <StyledSection>
+      <SectionTitle color="#a3e8c4">Apps</SectionTitle>
+      <AppsContainer>
+        {apps.map((app, index) => {
+          return (
+	    <AppItem
+              app={app}
+              onOpenApp={onOpenApp}
+              key={app.name + "" + index}
+	    />
+          );
+        })}
+      </AppsContainer>
+    </StyledSection>
   );
 };
+
+const StyledSection = styled("section")(() => ({
+  marginTop: "1rem",
+  minHeight: "5rem",
+}));
+
+const AppsContainer = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "nowrap",
+  overflow: "auto",
+}));

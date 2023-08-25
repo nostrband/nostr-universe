@@ -1,48 +1,75 @@
 import React, { useContext } from "react";
 import { TrendingProfileItem } from "./TrendingProfileItem";
 import { AppContext } from "../../store/app-context";
-import { nip19 } from "nostr-tools";
+import { nip19 } from "@nostrband/nostr-tools";
+import { styled } from "@mui/material";
+import { nostrbandRelay } from "../../nostr";
+import { SectionTitle } from "../UI/SectionTitle";
 
-export const TrendingProfiles = () => {
+function createDuplicateList() {
+  return Array.from({ length: 10 }, () => {
+    return { pubkey: "", name: null, picture: null, about: null };
+  });
+}
+
+const getRenderedProfiles = (profiles, isLoading) => {
+  if (!isLoading) {
+    return createDuplicateList();
+  }
+  return profiles;
+};
+
+export const TrendingProfiles = ({ onOpenProfile, suggested }) => {
   const contextData = useContext(AppContext);
-  const { trendingProfiles = [], apps, pins, open } = contextData || {};
+  const { currentWorkspace } = contextData || {};
+  const trendingProfiles =
+    (suggested
+      ? currentWorkspace?.suggestedProfiles
+      : currentWorkspace?.trendingProfiles) || [];
 
-  const renderedProfiles =
-    trendingProfiles && trendingProfiles?.length ? trendingProfiles : [];
-
-  const onProfileClick = (pubkey) => {
+  const onProfileClick = async (pubkey) => {
     console.log("show", pubkey);
 
     const nprofile = nip19.nprofileEncode({
       pubkey,
-      relays: ["wss://relay.nostr.band"],
+      relays: [nostrbandRelay],
     });
-    const pin = pins.find(
-      (p) => p.perms && p.perms.find((k) => k == 0) !== undefined
-    );
-    console.log("pin", JSON.stringify(pin));
-    const app = apps.find((a) => a.naddr == pin.appNaddr);
-    console.log("app", JSON.stringify(app));
-    const handler = app.handlers[0];
-    const url = handler.url.replace("<bech32>", nprofile);
 
-    console.log("profile app", app, pin, url);
-
-    open(url, pin);
+    onOpenProfile(nprofile);
   };
 
+  const renderedProfiles = getRenderedProfiles(
+    trendingProfiles,
+    trendingProfiles.length > 0
+  );
+
   return (
-    <div className="container-fluid p-1">
-      <h3>Trending profiles</h3>
-      <div className="d-flex flex-row flex-nowrap overflow-auto">
-        {renderedProfiles.map((p) => (
-          <TrendingProfileItem
-            key={p.npub}
-            profile={p}
-            onClick={onProfileClick}
-          />
-        ))}
-      </div>
-    </div>
+    <StyledSection>
+      <SectionTitle color={suggested ? "#e8ada3" : "#E2E8A3"}>
+        {suggested ? "Suggested profiles" : "Trending profiles"}
+      </SectionTitle>
+      <TrendingProfilesContainer>
+        {trendingProfiles.length > 0 &&
+          renderedProfiles.map((p) => (
+            <TrendingProfileItem
+              key={p.pubkey}
+              profile={p}
+              onClick={onProfileClick}
+            />
+          ))}
+      </TrendingProfilesContainer>
+    </StyledSection>
   );
 };
+
+const StyledSection = styled("section")(() => ({
+  marginTop: "1rem",
+  minHeight: "5rem",
+}));
+
+const TrendingProfilesContainer = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "nowrap",
+  overflow: "auto",
+}));

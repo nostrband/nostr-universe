@@ -10,31 +10,31 @@ import { ToolItem } from "./ToolItem";
 
 const DUMMY_TOOLS = [
   {
-    title: "Settings",
+    title: "LATER",
     id: "e1",
     Icon: SettingsIcon,
   },
   {
-    title: "Key Vault",
+    title: "LATER",
     id: "e2",
     Icon: SafeIcon,
   },
   {
-    title: "Contacts",
+    title: "LATER",
     id: "e3",
     Icon: ContactsIcon,
   },
   {
-    title: "Wallet Connect",
+    title: "LATER",
     id: "e4",
     Icon: WalletToolIcon,
   },
 ];
 
-export const ToolsList = () => {
+export const ToolsList = ({tools}) => {
   return (
     <StyledList>
-      {DUMMY_TOOLS.map((tool) => (
+      {(tools || DUMMY_TOOLS).map((tool) => (
         <ToolItem {...tool} key={tool.id} />
       ))}
     </StyledList>

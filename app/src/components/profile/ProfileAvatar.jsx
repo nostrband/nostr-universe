@@ -1,12 +1,8 @@
-import { Avatar, Badge, Button, IconButton, styled } from "@mui/material";
 import React from "react";
+import { Avatar, Badge, Button, IconButton, styled } from "@mui/material";
 import { SwitchIcon } from "../../assets";
 
-export const ProfileAvatar = ({ username, profileImage }) => {
-  // @TODO accounts list on modal view for change account ogic
-  const changeAccountHandler = () => {
-    console.log("is working");
-  };
+export const ProfileAvatar = ({ username, profileImage, onOpenChangeAccountModal, isGuest, onAddKey }) => {
   return (
     <>
       <ProfileBanner />
@@ -21,15 +17,20 @@ export const ProfileAvatar = ({ username, profileImage }) => {
           }
           componentsProps={{
             badge: {
-              onClick: changeAccountHandler,
+              onClick: onOpenChangeAccountModal,
             },
           }}
         >
           <Avatar src={profileImage} alt={username} className="avatar" />
         </StyledBadge>
-        <h2 className="username">{username}</h2>
-        <Button variant="contained" className="edit_button">
-          Edit
+        <h2 className="username">{username || "..."}</h2>
+        <Button
+	  variant="contained"
+	  className="edit_button"
+	  onClick={isGuest ? onOpenChangeAccountModal : undefined}
+	>
+          {isGuest && (<>Add keys</>)}
+	  {!isGuest && (<>LATER</>)}
         </Button>
       </AvatarContainer>
     </>
@@ -51,6 +52,7 @@ const AvatarContainer = styled("div")(() => ({
   "& .username": {
     fontWeight: 600,
     fontSize: "28px",
+    minHeight: "2rem",
   },
   "& .edit_button": {
     background: "#363636",

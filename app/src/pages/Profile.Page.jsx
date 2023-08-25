@@ -1,29 +1,26 @@
 import React from "react";
 import { Container, IconButton, styled } from "@mui/material";
 import { CloseIcon } from "../assets";
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AppContext } from "../store/app-context";
 import { Profile } from "../components/profile/Profile";
-
-const ANIMATION_VARIANTS = {
-  initial: { x: "-100%", opacity: 0 },
-  mount: { x: 0, opacity: 1 },
-  exit: { x: "-100%", opacity: 0 },
-};
+import { AnimatedContainer } from "../components/UI/AnimatedContainer";
 
 const ProfilePage = () => {
+
+  const contextData = useContext(AppContext);
+  const { onModalClose } = contextData || {};
+
   const navigate = useNavigate();
 
-  const navigateBackToMain = () => navigate("/");
+  const navigateBackToMain = async () => {
+    navigate("/", { replace: true })
+    onModalClose();
+  };
+
   return (
-    <motion.div
-      initial="initial"
-      animate="mount"
-      exit={"exit"}
-      variants={ANIMATION_VARIANTS}
-      transition={{ duration: 0.2 }}
-      style={{ height: "100%" }}
-    >
+    <AnimatedContainer>
       <StyledContainer>
         <StyledHeader>
           <h1>My Profile</h1>
@@ -33,7 +30,7 @@ const ProfilePage = () => {
         </StyledHeader>
         <Profile />
       </StyledContainer>
-    </motion.div>
+    </AnimatedContainer>
   );
 };
 

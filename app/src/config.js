@@ -1,5 +1,5 @@
-const DEBUG = true
+const DEBUG = false;
 
 export const config = {
-	DEBUG,
-}
+  DEBUG,
+};

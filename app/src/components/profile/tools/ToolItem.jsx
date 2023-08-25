@@ -6,9 +6,9 @@ import {
 } from "@mui/material";
 import React from "react";
 
-export const ToolItem = ({ onClick, Icon, title }) => {
+export const ToolItem = ({ id, onClick, Icon, title }) => {
   return (
-    <StyledListItem onClick={onClick}>
+    <StyledListItem onClick={() => onClick && onClick(id)}>
       <ListItemIcon className="list-item_icon">
         <Icon />
       </ListItemIcon>
