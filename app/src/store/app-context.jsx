@@ -511,9 +511,9 @@ const AppContextProvider = ({ children }) => {
       updateTab({ loading: false }, tabId);
     },
     onGetPubkey: (tabId, pubkey) => {
-      if (pubkey !== currentPubkey) {
-        setCurrentPubkey(pubkey);
-        // FIXME bootstrap etc, just remove it and start onboarding?
+      // FIXME never happens now, remove?
+      if (currentPubkey === DEFAULT_PUBKEY && pubkey !== currentPubkey) {
+	addImportKey('reload');
       }
     },
     onClick: (tabId, x, y) => {
@@ -571,7 +571,9 @@ const AppContextProvider = ({ children }) => {
 
   const addImportKey = async (importPubkey) => {
 
-    if (importPubkey) {
+    if (importPubkey === 'reload') {
+      // noop - keys were added by the plugin and we need to reload keys
+    } else if (importPubkey) {
       await dbi.putReadOnlyKey(importPubkey);
       await writeCurrentPubkey(importPubkey);
     } else {     
