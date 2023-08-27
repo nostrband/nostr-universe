@@ -18,11 +18,11 @@ export const Header = () => {
       </StyledIconButton>
 
       <div>
-        <IconButton color="inherit" size="large">
+        <IconButton color="inherit" size="medium">
           <SearchIcon />
         </IconButton>
         {isOpen && (
-          <IconButton color="inherit" size="large">
+          <IconButton color="inherit" size="medium">
             <MoreVertIcon />
           </IconButton>
         )}

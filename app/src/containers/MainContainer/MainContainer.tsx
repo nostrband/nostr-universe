@@ -7,10 +7,10 @@ import { AppsNostro } from './components/AppsNostro/AppsNostro'
 import { TabMenu } from './components/TabMenu/TabMenu'
 
 export const MainContainer = () => {
-  const { isOpen } = useAppSelector((state) => state.tab)
+  const { isOpen, currentTab } = useAppSelector((state) => state.tab)
   const location = useLocation()
   const isShowAppPinMenu = location.pathname !== '/profile'
-  console.log({ isOpen })
+  console.log({ currentTab })
   return (
     <>
       <Header />

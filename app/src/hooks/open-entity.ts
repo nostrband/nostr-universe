@@ -22,23 +22,21 @@ export const useOpenApp = () => {
   const { apps } = useAppSelector((state) => state.apps)
   const { currentPubKey } = useAppSelector((state) => state.keys)
 
-  const getTab = (id) => currentWorkSpace?.tabs.find((t) => t.id === id);
+  const getTab = (id) => currentWorkSpace?.tabs.find((t) => t.id === id)
 
   const hide = async (tab) => {
-    await browser.hide(tab.id);
+    await browser.hide(tab.id)
   }
 
   const API = {
     onHide: (tabId) => {
-      console.log("hide", tabId);
+      console.log('hide', tabId)
 
       hide(getTab(tabId))
-    },
+    }
+  }
 
-  };
-
-  browser.setAPI(API);
-
+  browser.setAPI(API)
 
   const createTabBrowser = async (tab) => {
     console.table('createTabBrowser tab id', JSON.stringify(tab))
@@ -50,7 +48,6 @@ export const useOpenApp = () => {
       hidden: true,
       apiCtx: tab.id
     }
-
 
     dispatch(setOpenTab({ isOpen: true }))
 
@@ -80,7 +77,7 @@ export const useOpenApp = () => {
 
   const show = async (tab) => {
     // showTabMenu();
-    console.log({showTab: tab})
+    console.log({ showTab: tab })
 
     return new Promise((ok) => {
       setTimeout(async () => {
@@ -160,7 +157,6 @@ export const useOpenApp = () => {
     const app = entity.appNaddr
       ? apps.find((app) => app.naddr === entity.appNaddr)
       : apps.find((app) => app.url.startsWith(origin))
-
 
     if (app) {
       await open({
