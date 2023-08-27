@@ -64,6 +64,7 @@ function addToTabGroup(workspace, pt, isPin) {
       info: pt,
       tabs: [],
       lastTabId: "",
+      order: pt.order,
     };
 
   const tg = workspace.tabGroups[id];
@@ -580,58 +581,27 @@ const AppContextProvider = ({ children }) => {
       const fromTab = ws.tabGroups[fromTabId];
       const fromTabCopy = { ...fromTab };
       const toTab = ws.tabGroups[toTabId];
-      return {
-        tabGroups: {
-          ...ws.tabGroups,
-          [fromTabId]: {
-            ...fromTab,
-            info: {
-              ...fromTab.info,
-              order: toTab.info.order,
-            },
-          },
-          [toTabId]: {
-            ...toTab,
-            info: {
-              ...toTab.info,
-              order: fromTabCopy.info.order,
-            },
-          },
-        },
-      };
-      // const swappedTabs = ws.tabs.map((tab) => {
-      //   console.log(
-      //     {
-      //       compareFROMTAB_ID: getTabGroupId(tab) === fromTabId,
-      //       compareTOTAB_ID: getTabGroupId(tab) === toTabId,
-      //     },
-      //     "COMPARE"
-      //   );
+      fromTab.order = toTab.order;
+      toTab.order = fromTabCopy.order;
 
-      //   if (getTabGroupId(tab) === fromTabId) {
-      //     return { ...tab, order: toTab.info.order };
-      //   }
-      //   if (getTabGroupId(tab) === toTabId) {
-      //     return { ...tab, order: fromTab.info.order };
-      //   }
-      //   return tab;
-      // });
+      const swappedTabs = ws.tabs.map((tab) => {
+        if (getTabGroupId(tab) === fromTabId) {
+          dbi.updateTab({ ...tab, order: toTab.info.order });
+          return { ...tab, order: toTab.info.order };
+        }
+        if (getTabGroupId(tab) === toTabId) {
+          dbi.updateTab({ ...tab, order: fromTabCopy.info.order });
+          return { ...tab, order: fromTabCopy.info.order };
+        }
+        return tab;
+      });
 
-      // swappedTabs.sort((a, b) => a.order - b.order);
-
-      // console.log({ fromTab, toTab, swappedTabs }, "SWAP");
-
-      // swappedTabs.forEach((t) => {
-      //   const isPin = "pin" in t;
-      //   console.log(
-      //     {
-      //       isPin,
-      //       t,
-      //     },
-      //     "IS_PINNED"
-      //   );
-      //   addToTabGroup(ws, t, isPin);
-      // });
+      swappedTabs.forEach((t) => {
+        console.log("TAB", t);
+        const isPin = "pin" in t;
+        addToTabGroup(ws, t, isPin);
+      });
+      return { tabs: swappedTabs, tabGroups: { ...ws.tabGroups } };
     });
   };
 

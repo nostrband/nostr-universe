@@ -26,8 +26,7 @@ export const SwipeableDrawer = () => {
   );
 
   const contextData = useContext(AppContext);
-  const { currentWorkspace, currentTab } = contextData || {};
-  const { tabGroups = {} } = currentWorkspace || {};
+  const { currentTab } = contextData || {};
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
@@ -61,21 +60,6 @@ export const SwipeableDrawer = () => {
     };
   }, []);
 
-  const keys = Object.keys(tabGroups);
-
-  //@TODO remake bottom sheet component
-  const isAllowChildren = open
-    ? {}
-    : {
-        allowSwipeInChildren: (e, area, paper) => {
-          // @TODO find a better solution
-          setTimeout(() => {
-            paper.style.transform = `translate(0, ${paper.clientHeight}px)`;
-          }, 0);
-          return open ? false : true;
-        },
-      };
-
   return (
     <StyledSwipeableDrawer
       container={container}
@@ -94,14 +78,20 @@ export const SwipeableDrawer = () => {
       transitionDuration={200}
       disablePortal
       // disableDiscovery
-      {...isAllowChildren}
+      allowSwipeInChildren={(e, area, paper) => {
+        // @TODO find a better solution
+        setTimeout(() => {
+          paper.style.transform = `translate(0, ${paper.clientHeight}px)`;
+        }, 0);
+        return open ? false : true;
+      }}
     >
       <VisibleContent bleedingheight={drawerBleeding} open={open}>
         <Puller onClick={toggleDrawer} />
         {!open && <PinsList drawerBleeding={drawerBleeding} />}
       </VisibleContent>
       {false && <StyledDivider />}
-      <ExpandedContent>
+      <ExpandedContent onTouchMove={(e) => e.stopPropagation()}>
         {/* Show this when items are loading */}
         {false && <Skeleton variant="rectangular" height="100%" />}
         <SortableTabsList />
