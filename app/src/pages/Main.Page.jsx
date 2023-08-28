@@ -9,6 +9,8 @@ import { PinAppModal } from "../components/pin-app-modal/PinAppModal";
 import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
 import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
 import { ContextMenuModal } from "../components/context-menu-modal/ContextMenuModal";
+import { ImportPubkeyModal } from "../components/onboarding/ImportPubkeyModal";
+import { WelcomeWidget } from "../components/onboarding/WelcomeWidget";
 import { IconButton } from "../components/UI/IconButton";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
@@ -18,11 +20,15 @@ import { useSearchParams } from "react-router-dom";
 import { TrendingNotes } from "../components/trending-notes/TrendingNotes";
 import { LongNotes } from "../components/long-notes/LongNotes";
 import { LiveEvents } from "../components/live-events/LiveEvents";
+import { Zaps } from "../components/zaps/Zaps";
+import { Communities } from "../components/communities/Communities";
 
 const MainPage = () => {
   const contextData = useContext(AppContext);
   const {
     onOpenBlank,
+    onAddKey,
+    onImportPubkey,
     contextInput,
     setContextInput,
     clearLastCurrentTab,
@@ -31,9 +37,15 @@ const MainPage = () => {
     updateLastContact,
     currentTab,
     currentWorkspace,
+    keys,
   } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isEditKeyModalVisible, setIsEditKeyModalVisible] = useState(false);
+  const [isPinModalVisible, setIsPinModalVisible] = useState(false);
+  const [showTabMenu, setShowTabMenu] = useState(false);
+  const [showImportPubkey, setShowImportPubkey] = useState(false);
+
   const isSearchModalVisible = Boolean(searchParams.get("search"));
 
   const toggleSearchModalVisibility = () => {
@@ -43,11 +55,8 @@ const MainPage = () => {
     }
     searchParams.delete("search");
     return setSearchParams(searchParams, { replace: true });
-  };
+  };  
 
-  const [isEditKeyModalVisible, setIsEditKeyModalVisible] = useState(false);
-
-  const [isPinModalVisible, setIsPinModalVisible] = useState(false);
   const togglePinModalVisibility = () => {
     setIsPinModalVisible((prevState) => !prevState);
   };
@@ -61,7 +70,6 @@ const MainPage = () => {
     setOpenAddr(addr);
   };
 
-  const [showTabMenu, setShowTabMenu] = useState(false);
 
   const onSearch = (str) => {
     clearLastCurrentTab();
@@ -83,6 +91,10 @@ const MainPage = () => {
     return false;
   };
 
+  const onImportKey = () => {
+    setShowImportPubkey(true);
+  };
+  
   return (
     <Container>
       <Header
@@ -91,17 +103,31 @@ const MainPage = () => {
         onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main id="main">
-        <TrendingProfiles onOpenProfile={setOpenAddr} />
+
+	{keys?.length === 0 && (
+	  <WelcomeWidget onAdd={onAddKey} onImport={onImportKey} />
+	)}
+	
         <TrendingNotes onOpenNote={setOpenAddr} />
-        {currentWorkspace?.suggestedProfiles.length > 0 && (
-          <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
-        )}
-        {currentWorkspace?.longNotes.length > 0 && (
-          <LongNotes onOpenAddr={setOpenAddr} />
-        )}
-        {currentWorkspace?.liveEvents.length > 0 && (
-          <LiveEvents onOpenAddr={setOpenAddr} />
-        )}
+        <TrendingProfiles onOpenProfile={setOpenAddr} />
+        {currentWorkspace?.highlights.length > 0 &&
+	 <TrendingNotes onOpenNote={setOpenAddr} highlight />
+	}
+        {currentWorkspace?.bigZaps.length > 0 && 
+	 <Zaps onOpen={setOpenAddr} />
+	}
+        {currentWorkspace?.longNotes.length > 0 && 
+	 <LongNotes onOpenAddr={setOpenAddr} />
+	}
+        {currentWorkspace?.liveEvents.length > 0 && 
+	 <LiveEvents onOpenAddr={setOpenAddr} />
+	}
+        {currentWorkspace?.communities.length > 0 && 
+	 <Communities onOpen={setOpenAddr} />
+	}
+        {currentWorkspace?.suggestedProfiles.length > 0 && 
+	 <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+	}
         <AppsList />
         {false && <ContactList onOpenProfile={setContactOpenAddr} />}
 
@@ -147,6 +173,12 @@ const MainPage = () => {
           }}
         />
 
+	<ImportPubkeyModal
+	  isOpen={showImportPubkey}
+          onClose={() => setShowImportPubkey(false)}
+	  onSelect={onImportPubkey}
+	/>
+	
         {currentTab && (
           <TabBackground className="d-flex flex-column justify-content-center align-items-center">
             <div>

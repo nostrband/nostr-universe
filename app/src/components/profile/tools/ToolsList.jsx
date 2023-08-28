@@ -10,22 +10,22 @@ import { ToolItem } from "./ToolItem";
 
 const DUMMY_TOOLS = [
   {
-    title: "Settings",
+    title: "LATER",
     id: "e1",
     Icon: SettingsIcon,
   },
   {
-    title: "Key Vault",
+    title: "LATER",
     id: "e2",
     Icon: SafeIcon,
   },
   {
-    title: "Contacts",
+    title: "LATER",
     id: "e3",
     Icon: ContactsIcon,
   },
   {
-    title: "Wallet Connect",
+    title: "LATER",
     id: "e4",
     Icon: WalletToolIcon,
   },

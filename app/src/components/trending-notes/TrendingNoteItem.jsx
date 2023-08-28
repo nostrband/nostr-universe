@@ -4,7 +4,7 @@ import { getRenderedUsername } from "../../utils/helpers/general";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 import { formatTime } from "../../utils/helpers/general"
 
-export const TrendingNoteItem = ({ author = {}, content, onClick }) => {
+export const TrendingNoteItem = ({ author = {}, content, onClick, highlight }) => {
   const { pubkey, picture } = author;
   const renderedName = getRenderedUsername(author, pubkey);
   const authorAvatar = useOptimizedMediaSource({
@@ -14,13 +14,13 @@ export const TrendingNoteItem = ({ author = {}, content, onClick }) => {
   const tm = formatTime(content.created_at);
 
   return (
-    <Card onClick={() => onClick(content.id)}>
+    <Card onClick={() => onClick(content)}>
       <Header>
         <StyledAvatar alt={renderedName} src={authorAvatar} />
         <Username>{renderedName}</Username>
         <Status>{tm}</Status>
       </Header>
-      <DescriptionText>{content.content}</DescriptionText>
+      <DescriptionText>{highlight ? <em>{content.content}</em> : content.content}</DescriptionText>
     </Card>
   );
 };

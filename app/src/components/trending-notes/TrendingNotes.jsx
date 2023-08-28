@@ -6,16 +6,18 @@ import { nip19 } from "@nostrband/nostr-tools";
 import { nostrbandRelay } from "../../nostr";
 import { TrendingNoteItem } from "./TrendingNoteItem";
 
-export const TrendingNotes = ({ onOpenNote }) => {
+export const TrendingNotes = ({ onOpenNote, highlight }) => {
   const contextData = useContext(AppContext);
   const { currentWorkspace } = contextData || {};
-  const notes = currentWorkspace?.trendingNotes || [];
+  const notes = highlight
+	      ? currentWorkspace?.highlights || [] 
+	      : currentWorkspace?.trendingNotes || [];
 
-  const onNoteClick = async (id) => {
-    console.log("show", id);
+  const onNoteClick = async (event) => {
+    console.log("show", event);
 
     const nevent = nip19.neventEncode({
-      id,
+      id: event.id,
       relays: [nostrbandRelay],
     });
 
@@ -24,14 +26,18 @@ export const TrendingNotes = ({ onOpenNote }) => {
 
   return (
     <StyledSection>
-      <SectionTitle color="#CBA3E8">Trending notes</SectionTitle>
+      <SectionTitle color={highlight ? "#e8ada3" : "#CBA3E8"}>
+	{highlight ? "Highlights" : "Trending notes"}
+      </SectionTitle>
       <NotesContainer>
         {notes.map((note) => {
           return (
             <TrendingNoteItem
-              author={note.author.profile}
+	      key={note.id}
+              author={note.author?.profile}
               content={note}
               onClick={onNoteClick}
+	      highlight={highlight}
             />
           );
         })}

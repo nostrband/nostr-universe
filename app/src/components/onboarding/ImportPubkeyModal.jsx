@@ -1,110 +1,68 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "../UI/modal/Modal";
-
 import { CircularProgress, IconButton, InputBase, Typography, styled } from "@mui/material";
-import { Header } from "../../layout/Header";
-import { SearchIcon } from "../../assets";
-import {
-  nostrbandRelay,
-  searchProfiles,
-  searchNotes,
-  searchLongNotes,
-  getTagValue,
-  createAddrOpener
-} from "../../nostr";
+import { CloseIcon, SearchIcon } from "../../assets";
+import { searchProfiles } from "../../nostr";
 import { nip19 } from "@nostrband/nostr-tools";
 import { TrendingProfileItem } from "../trending-profiles/TrendingProfileItem";
-import { TrendingNoteItem } from "../trending-notes/TrendingNoteItem";
-import { LongNoteItem } from "../long-notes/LongNoteItem";
-import { ContactList } from "../contact-list/ContactList";
 
-export const SearchModal = ({
+export const ImportPubkeyModal = ({
   isOpen,
   onClose,
-  onSearch,
-  onOpenEvent,
-  onOpenContact,
+  onSelect
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [profiles, setProfiles] = useState(null);
-  const [notes, setNotes] = useState(null);
-  const [longNotes, setLongNotes] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setSearchValue("");
     setProfiles(null);
-    setNotes(null);
-    setLongNotes(null);
     setIsLoading(false);
   }, [isOpen]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    if (onSearch(searchValue)) {
-      onClose();
-    }
-
+    try {
+      const { type, data } = nip19.decode(searchValue);
+      if (type === 'npub') {
+	select(data);
+	return;
+      }      
+    } catch {}
+	  
     setIsLoading(true);
     searchProfiles(searchValue)
       .then(setProfiles)
-      .then(() => searchNotes(searchValue))
-      .then(setNotes)
-      .then(() => searchLongNotes(searchValue))
-      .then(setLongNotes)
       .finally(() => setIsLoading(false))
     ;
   };
 
-  const open = (addr) => {
-    onOpenEvent(addr);
+  const select = (pubkey) => {
+    onSelect(pubkey);
     onClose();
   };
   
   const onProfileClick = async (pubkey) => {
-    console.log("show", pubkey);
-
-    const nprofile = nip19.nprofileEncode({
-      pubkey,
-      relays: [nostrbandRelay],
-    });
-
-    open(nprofile);
-  };
-
-  const onEventClick = async (id) => {
-    console.log("show", id);
-
-    const nevent = nip19.neventEncode({
-      id,
-      relays: [nostrbandRelay],
-    });
-
-    open(nevent);
-  };
-
-  const onAddrClick = async (event) => {
-    console.log("show", event);
-
-    const naddr = nip19.naddrEncode({
-      pubkey: event.pubkey,
-      kind: event.kind,
-      identifier: getTagValue(event, 'd'),
-      relays: [nostrbandRelay],
-    });
-
-    open(naddr);
+    console.log("select", pubkey);
+    select(pubkey);
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} direction="left">
       <Container>
-	<Header searchMode onClose={onClose} />
+	<header>
+          <h2>Add read-only keys</h2>
+          <IconButton onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
+	  <hr className="m-0" />	
+	</header>
 	<main>
 	  <Form onSubmit={submitHandler}>
 	    <StyledInput
-	      placeholder="Search"
+	      placeholder="Enter npub or a username"
 	      endAdornment={
 		<StyledIconButton type="submit">
 		  <SearchIcon />
@@ -117,8 +75,6 @@ export const SearchModal = ({
 	      }}
 	    />
 	  </Form>
-
-	  {!searchValue && <ContactList onOpenProfile={onOpenContact} />}
 
 	  <div className="ms-3">
 	    {isLoading && (
@@ -144,50 +100,15 @@ export const SearchModal = ({
               </EventsContainer>
 	    </StyledContainer>
 	  )}
-	  {notes && (
-	    <StyledContainer>
-              <h1 style={{color:"#CBA3E8"}}>Notes</h1>
-              <EventsContainer>
-		{notes.map((note) => {
-		  return (
-		    <TrendingNoteItem
-                      key={note.id}
-		      author={note.author?.profile}
-		      content={note}
-		      onClick={onEventClick}
-		    />
-		  )
-		})}
-              </EventsContainer>
-	    </StyledContainer>
-	  )}
-	  {longNotes && (
-	    <StyledContainer>
-              <h1 style={{color:"#a3dfe8"}}>Long posts</h1>
-              <EventsContainer>
-		{longNotes.map((note) => {
-		  return (
-		    <LongNoteItem
-                      key={note.id}
-		      author={note.author?.profile}
-		      content={note}
-		      onClick={createAddrOpener(open)}
-		    />
-		  )
-		})}
-              </EventsContainer>
-	    </StyledContainer>
-	  )}
+
+	  <Hint>Paste an npub of some existing user to log in.</Hint>
+	  <Hint>Or type something to search for matching profiles, then click on one to import it.</Hint>
+	  
 	</main>
       </Container>
     </Modal>
   );
 };
-
-const Container1 = styled("div")(() => ({
-  display: "flex",
-  flexDirection: "column",
-}));
 
 const Container = styled("div")`
   min-height: 100dvh;
@@ -204,6 +125,15 @@ const Container = styled("div")`
     background: #000;
     z-index: 1199;
     top: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+
+    & > h2 {
+      flex-grow: 1;
+    }
   }
 
   & > main {
@@ -272,4 +202,11 @@ const SpinnerContainer = styled("div")(() => ({
   "& .spinner": {
     color: "#fff",
   },
+}));
+
+const Hint = styled("p")(() => ({
+  margin: "0",
+  fontSize: "0.875rem",
+  fontWeight: 500,
+  margin: "1rem",
 }));

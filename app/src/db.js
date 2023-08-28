@@ -10,13 +10,14 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('nostrUniverseDB');
 
-db.version(6).stores({
+db.version(7).stores({
   tabs: 'id,pubkey,url,appNaddr,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
   profiles: '&id,pubkey,kind,created_at',
   lastContacts: '[pubkey+contactPubkey],tm',
   flags: 'id,pubkey,name,value',
+  readOnlyKeys: '&pubkey,current',
 });
 
 export const dbi = {
@@ -94,6 +95,21 @@ export const dbi = {
       return await db.lastContacts.where('pubkey').equals(pubkey).toArray();
     } catch (error) {
       console.log(`List lastContacts error: ${JSON.stringify(error)}`);
+    }
+  },
+  listReadOnlyKeys: async () => {
+    try {
+      return (await db.readOnlyKeys.toCollection().toArray()).map(k => k.pubkey);
+    } catch (error) {
+      console.log(`List readOnlyKeys error: ${JSON.stringify(error)}`);
+      return [];
+    }
+  },
+  putReadOnlyKey: async (pubkey) => {
+    try {
+      await db.readOnlyKeys.put({ pubkey })
+    } catch (error) {
+      console.log(`Put readOnlyKey to DB error: ${JSON.stringify(error)}`)
     }
   },
   putProfile: async (p) => {

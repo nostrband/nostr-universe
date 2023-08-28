@@ -9,6 +9,10 @@ export const PinsList = ({ drawerBleeding }) => {
   const { tabGroups = {} } = currentWorkspace || {};
 
   const keys = Object.keys(tabGroups);
+  keys.sort((ai, bi) => {
+    // desc
+    return tabGroups[bi].lastActive - tabGroups[ai].lastActive;
+  });
   return (
     <StyledContainer length={keys.length} bleeddingheight={drawerBleeding}>
       {keys.map((id) => {

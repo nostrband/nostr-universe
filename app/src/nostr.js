@@ -1,12 +1,17 @@
 import NDK, { NDKRelaySet } from "@nostrband/ndk";
 import { nip19 } from "@nostrband/nostr-tools";
+import { decode as bolt11Decode } from "light-bolt11-decoder";
 
 const KIND_META = 0;
 const KIND_NOTE = 1;
 const KIND_CONTACT_LIST = 3;
+const KIND_COMMUNITY_APPROVAL = 4550;
+const KIND_ZAP = 9735;
+const KIND_HIGHLIGHT = 9802;
 const KIND_LONG_NOTE = 30023;
 const KIND_APP = 31990;
 const KIND_LIVE_EVENT = 30311;
+const KIND_COMMUNITY = 34550;
 
 // we only care about web apps
 const PLATFORMS = ["web"];
@@ -18,7 +23,8 @@ export const nostrbandRelayCounts = "wss://relay.nostr.band/all";
 
 const readRelays = [
   nostrbandRelay,
-  "wss://relay.damus.io",
+  //  "wss://relay.damus.io", // too slow
+  "wss://eden.nostr.land",
   "wss://nos.lol",
   "wss://relay.nostr.bg",
   "wss://nostr.mom",
@@ -33,7 +39,7 @@ const kindApps = {};
 const profileCache = [];
 
 function fetchEventsRead(ndk, filter) {
-  return ndk.fetchEvents(filter, NDKRelaySet.fromRelayUrls(readRelays, ndk));
+  return ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk));
 }
 
 export function getTags(e, name) {
@@ -66,6 +72,23 @@ function parseContentJson(c) {
     console.log("Bad json: ", c, e);
     return {};
   }
+}
+
+function isWeb(e) {
+  for (const t of e.tags) {
+    if (t[0] === "web")
+      return true;
+
+    if (t[0] === "android"
+	|| t[0] === "ios"
+	|| t[0] === "windows"
+	|| t[0] === "macos"
+	|| t[0] === "linux"
+    )
+      return false;
+  }
+
+  return true;
 }
 
 function findHandlerUrl(e, k) {
@@ -176,9 +199,12 @@ export async function fetchApps() {
       };
     });
 
-    if (Object.keys(handlers).length == 0)
+    if (!isWeb(e))
       return;
-
+    
+    //    if (Object.keys(handlers).length == 0)
+    //      return;
+    
     const app = {
       naddr: nip19.naddrEncode({
         pubkey: e.pubkey,
@@ -189,12 +215,12 @@ export async function fetchApps() {
       url: (profile && profile.website) || "",
       picture: (profile && profile.picture) || "",
       about: (profile && profile.about) || "",
-//      author,
       kinds,
       handlers,
     };
 
-    apps.push(app);
+    if (app.name && app.url)
+      apps.push(app);
   });
 
   return apps;
@@ -620,7 +646,7 @@ export async function searchProfiles(q) {
   );
   console.log("top profiles", top?.ids.length);
 
-  let events = null;
+  let events = [];
   if (top.ids.length) {
     // fetch the app events themselves from the list
     events = await fetchEventsRead(
@@ -629,8 +655,9 @@ export async function searchProfiles(q) {
         ids: top.ids,
       }
     );
+
+    events = [...events.values()].map(e => rawEvent(e));  
   }
-  events = [...events.values()];
 
   events.forEach(e => {
     e.profile = parseContentJson(e.content);
@@ -652,6 +679,7 @@ function rawEvent(e) {
     kind: e.kind,
     tags: e.tags,
     content: e.content,
+    identifier: getTagValue(e, 'd'),
     order: e.created_at
   };
 }
@@ -678,7 +706,6 @@ async function fetchMetas(pubkeys) {
 }
 
 async function augmentPrepareEvents(events, limit) {
-  events = [...events.values()].map(e => rawEvent(e));
 
   if (events.length > 0) {
     // profile infos
@@ -697,13 +724,119 @@ async function augmentPrepareEvents(events, limit) {
   return events;
 }
 
+async function fetchEventsByIds(opts) {
+
+  const {ids, kinds, augment} = opts;
+  
+  if (!ids.length)
+    return [];
+
+  let events = await ndk.fetchEvents(
+    {
+      ids,
+      kinds,
+    },
+    {}, // opts
+    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+  );
+  console.log("ids", ids, "kinds", kinds, "events", events);
+
+  events = [...events.values()].map(e => rawEvent(e));  
+  if (augment)
+    events = await augmentPrepareEvents(events, events.length);
+
+  console.log("events by ids prepared", events);
+
+  return events;
+}
+
 async function augmentLongNotes(events) {
   events.forEach((e) => {
-    e.identifier = getTagValue(e, 'd');
     e.title = getTagValue(e, 'title');
     e.summary = getTagValue(e, 'summary');
     e.published_at = Number(getTagValue(e, 'published_at'));
   });
+  return events;
+}
+
+async function augmentZaps(events, minZap) {
+
+  events.forEach((e) => {
+    e.description = parseContentJson(getTagValue(e, "description"));
+    try {
+      e.bolt11 = bolt11Decode(getTagValue(e, "bolt11"));      
+    } catch {
+      e.bolt11 = {};
+    };
+    e.amountMsat = Number(e.bolt11?.sections.find(s => s.name === 'amount').value);
+    e.targetEventId = getTagValue(e, 'e');
+    e.targetAddr = getTagValue(e, 'a');
+    e.targetPubkey = getTagValue(e, 'p');
+    e.providerPubkey = e.pubkey;
+    e.senderPubkey = e.description?.pubkey;
+  });
+
+  // drop zaps w/o a target event
+  events = events.filter(e => !!e.targetEventId);
+  
+  if (minZap) {
+    events = events.filter(e => e.amountMsat / 1000 >= minZap);
+  }
+
+  if (events.length > 0) {
+    // target event infos
+    const ids = events.map(e => e.targetEventId).filter(id => !!id);
+    let targets = await fetchEventsByIds({
+      ids,
+      kinds: [KIND_NOTE, KIND_LONG_NOTE, KIND_COMMUNITY, KIND_LIVE_EVENT, KIND_APP],
+      augment: false
+    });
+
+    // profile infos
+    const pubkeys = new Set();
+    events.forEach(e => {
+      pubkeys.add(e.providerPubkey);
+      if (e.targetPubkey)
+	pubkeys.add(e.targetPubkey);
+      if (e.senderPubkey)
+	pubkeys.add(e.senderPubkey);
+    });
+    console.log("zap meta pubkeys", pubkeys);
+    const metas = await fetchMetas([...pubkeys.values()]);
+    
+    // assign to zaps
+    events.forEach(e => {
+      e.targetEvent = targets.find(t => t.id === e.targetEventId);
+      e.targetMeta = metas.find(m => m.pubkey === e.targetPubkey);
+      e.providerMeta = metas.find(m => m.pubkey === e.providerPubkey);
+      e.senderMeta = metas.find(m => m.pubkey === e.senderPubkey);
+    });
+  }
+
+  // desc 
+  events.sort((a, b) => b.order - a.order);
+  
+  return events;
+}
+
+async function augmentCommunities(events, addrs) {
+  events.forEach((e) => {
+    e.name = e.identifier;
+    e.description = getTagValue(e, 'description');
+    e.image = getTagValue(e, 'image');
+    e.moderators = getTags(e, 'p')
+      .filter(p => p.length >= 4 && p[3] === 'moderator')
+      .map(p => p[1]);
+
+    const apprs = addrs.filter(a => a.pubkey === e.pubkey && a.identifier === e.identifier);
+    e.last_post_tm = apprs[0].tm;
+    e.order = apprs[0].tm;
+    e.posts = apprs.length;
+  });
+
+  // desc
+  events.sort((a, b) => b.order - a.order);
+  
   return events;
 }
 
@@ -714,8 +847,11 @@ async function searchEvents(q, kind, limit = 30) {
       search: q,
       limit,
     },
+    {}, // opts
     NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
   );
+  events = [...events.values()].map(e => rawEvent(e));  
+
   console.log("notes", events);
 
   events = await augmentPrepareEvents(events, limit);
@@ -775,7 +911,6 @@ class PromiseQueue {
   async execute() {
     // the next cb in the queue
     const [cb, args] = this.queue[0];
-    console.log("pq execute args", args.length, "queue", this.queue.length);
 
     // execute the next cb
     await cb(...args);
@@ -806,10 +941,14 @@ async function fetchPubkeyEvents(opts) {
     filter['#p'] = authors;
   else
     filter.authors = authors;
-	
+
+  if (opts.identifiers)
+    filter['#d'] = opts.identifiers;
+  
   let events = await fetchEventsRead(ndk, filter);
   console.log("kind", kind, "new events", events);
 
+  events = [...events.values()].map(e => rawEvent(e));  
   if (augment)
     events = await augmentPrepareEvents(events, limit);
 
@@ -826,20 +965,61 @@ export async function fetchFollowedLongNotes(contactPubkeys) {
   return events;
 }
 
-export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
-
+export async function fetchFollowedHighlights(contactPubkeys) {
   let events = await fetchPubkeyEvents({
-    kind: KIND_LONG_NOTE,
+    kind: KIND_HIGHLIGHT,
     pubkeys: contactPubkeys,
-    tagged: true
+    augment: true
+  });
+//  events = await augmentLongNotes(events);
+  return events;
+}
+
+export async function fetchFollowedZaps(contactPubkeys, minZap) {
+  let events = await fetchPubkeyEvents({
+    kind: KIND_ZAP,
+    pubkeys: contactPubkeys,
+    tagged: true,
+    limit: 200,
+  });
+  events = await augmentZaps(events, minZap);
+  return events;
+}
+
+export async function fetchFollowedCommunities(contactPubkeys) {
+  const approvals = await fetchPubkeyEvents({
+    kind: KIND_COMMUNITY_APPROVAL,
+    pubkeys: contactPubkeys,
+    limit: 100
   });
 
+  // desc
+  approvals.sort((a, b) => b.order - a.order);
+//  console.log("approvals", approvals);  
+
+  const addrs = approvals.map(e => { return { tm: e.created_at, p: getTagValue(e, 'a').split(':') } } )
+    .filter(a => a.p.length == 3 && Number(a.p[0]) === KIND_COMMUNITY)
+    .map(a => { return { tm: a.tm, pubkey: a.p[1], identifier: a.p[2] } });
+//  console.log("addrs", addrs);
+
+  let events = await fetchPubkeyEvents({
+    kind: KIND_COMMUNITY,
+    pubkeys: [... new Set(addrs.map(a => a.pubkey))],
+    identifiers: [... new Set(addrs.map(a => a.identifier))],
+    augment: true,
+  });
+  
+  events = await augmentCommunities(events, addrs);
+  console.log("communities", events);
+  return events;
+}
+
+async function augmentLiveEvents(events, contactPubkeys, limit) {
+
   // convert to an array of raw events
-  events = [...events.values()].map(e => rawEvent(e));
 
   const MAX_LIVE_TTL = 3600;
   events.forEach(e => {
-    e.identifier = getTagValue(e, 'd');
     e.title = getTagValue(e, 'title');
     e.summary = getTagValue(e, 'summary');
     e.starts = Number(getTagValue(e, 'starts'));
@@ -865,8 +1045,6 @@ export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
     if (e.status !== 'live')
       e.order = -e.order; 
   });
-
-  console.log("parsed live events", events);
 
   // drop ended ones
   events = events.filter(e => {
@@ -895,6 +1073,19 @@ export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
   if (events.length > limit)
     events.length = limit;
 
+  return events;
+}
+
+export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
+
+  let events = await fetchPubkeyEvents({
+    kind: KIND_LONG_NOTE,
+    pubkeys: contactPubkeys,
+    tagged: true
+  });
+
+  events = await augmentLiveEvents(events, contactPubkeys, limit);
+  
   return events;
 }
 

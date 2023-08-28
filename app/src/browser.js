@@ -312,20 +312,9 @@ export function open(params) {
     const method = msg.data.method;
     let target = null;
     let targetArgs = msg.data.params;
-    switch (method) {
-      case "encrypt":
-      case "decrypt":
-        target = window.nostr.nip04;
-        break;
-      case "getPublicKey":
-      case "signEvent":
-        target = window.nostr;
-        break;
-      default:
-        if (method in API) target = API;
-        if (params.apiCtx !== undefined)
-          targetArgs = [params.apiCtx, ...targetArgs];
-    }
+    if (method in API) target = API;
+    if (params.apiCtx !== undefined)
+      targetArgs = [params.apiCtx, ...targetArgs];
 
     let err = null;
     let reply = null;

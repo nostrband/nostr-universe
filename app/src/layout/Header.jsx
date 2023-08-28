@@ -34,7 +34,7 @@ export const Header = ({
             <ServerIcon />
           </StyledIconButton>
           <StyledIconButton>
-            <WalletIcon />
+            <WalletIcon onClick />
           </StyledIconButton> */}
           {!searchMode && (
             <StyledIconButton onClick={onSearchClick}>

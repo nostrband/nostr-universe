@@ -58,8 +58,8 @@ export const formatTime = (tm) => {
   
   o = Math.abs (o);
 
-  let s = o + "s";
-  o /= 60;
+  let s = Math.round(o) + "s";
+  o = o / 60;
   if (o >= 1.0)
     s = Math.round(o) + "m";
   o /= 60;

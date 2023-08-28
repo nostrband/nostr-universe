@@ -18,6 +18,7 @@ const ProfilePage = () => {
     navigate("/", { replace: true })
     onModalClose();
   };
+
   return (
     <AnimatedContainer>
       <StyledContainer>

@@ -10,7 +10,7 @@ export const AppsList = () => {
 
   return (
     <StyledSection>
-      <SectionTitle color="#a3e8c4">Popular Apps</SectionTitle>
+      <SectionTitle color="#a3e8c4">Apps</SectionTitle>
       <AppsContainer>
         {apps.map((app, index) => {
           return (

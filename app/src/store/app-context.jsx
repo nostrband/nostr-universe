@@ -10,6 +10,9 @@ import {
   subscribeContactList,
   fetchFollowedLongNotes,
   fetchFollowedLiveEvents,
+  fetchFollowedCommunities,
+  fetchFollowedZaps,
+  fetchFollowedHighlights,
   stringToBech32,
 } from "../nostr";
 import { browser } from "../browser";
@@ -20,10 +23,10 @@ import { getTrendingNotesRequest } from "../api/notes";
 import { getSuggestedProfilesRequest } from "../api/suggested-profiles";
 import { DEFAULT_APPS, DEFAULT_PUBKEY } from "../utils/constants/general";
 
-async function loadKeys() {
-  const list = await keystore.listKeys();
-  const keys = Object.keys(list).filter((key) => key !== "currentAlias");
-  return [keys, list.currentAlias];
+const MIN_ZAP_AMOUNT = 1000;
+
+async function writeCurrentPubkey(pubkey) {
+  await dbi.setFlag("", "currentPubkey", pubkey);
 }
 
 function createWorkspace(pubkey, props = {}) {
@@ -31,8 +34,11 @@ function createWorkspace(pubkey, props = {}) {
     pubkey,
     trendingProfiles: [],
     trendingNotes: [],
+    highlights: [],
     longNotes: [],
     liveEvents: [],
+    bigZaps: [],
+    communities: [],
     suggestedProfiles: [],
     tabGroups: {},
     tabs: [],
@@ -65,6 +71,7 @@ function addToTabGroup(workspace, pt, isPin) {
       tabs: [],
       lastTabId: "",
       order: pt.order,
+      lastActive: 0,
     };
 
   const tg = workspace.tabGroups[id];
@@ -91,11 +98,16 @@ function deleteFromTabGroup(workspace, pt, isPin) {
 const AppContext = React.createContext();
 
 const AppContextProvider = ({ children }) => {
-  // keys & profiles
+  // keys
   const [keys, setKeys] = useState();
+  const [readKeys, setReadKeys] = useState();
   const [currentPubkey, setCurrentPubkey] = useState();
+
+  // profiles
   const [profile, setProfile] = useState({});
   const [profiles, setProfiles] = useState([]);
+
+  // current contact list
   const [contactList, setContactList] = useState({});
 
   // global list of top apps from the network
@@ -182,6 +194,23 @@ const AppContextProvider = ({ children }) => {
         // we should move contactList to the workspace and also
         // debounce it in a more general way
         if (lastCL) {
+          const highlights = await fetchFollowedHighlights(
+            lastCL.contactPubkeys
+          );
+          console.log("new highlights", highlights);
+          updateWorkspace((ws) => {
+            return { ...ws, highlights };
+          }, pubkey);
+
+          const bigZaps = await fetchFollowedZaps(
+            lastCL.contactPubkeys,
+            MIN_ZAP_AMOUNT
+          );
+          console.log("new zaps", bigZaps);
+          updateWorkspace((ws) => {
+            return { ...ws, bigZaps };
+          }, pubkey);
+
           const longNotes = await fetchFollowedLongNotes(lastCL.contactPubkeys);
           console.log("new long notes", longNotes);
           updateWorkspace((ws) => {
@@ -194,6 +223,14 @@ const AppContextProvider = ({ children }) => {
           console.log("new live events", liveEvents);
           updateWorkspace((ws) => {
             return { ...ws, liveEvents };
+          }, pubkey);
+
+          const communities = await fetchFollowedCommunities(
+            lastCL.contactPubkeys
+          );
+          console.log("new communities", communities);
+          updateWorkspace((ws) => {
+            return { ...ws, communities };
           }, pubkey);
         }
 
@@ -272,13 +309,48 @@ const AppContextProvider = ({ children }) => {
     );
   };
 
+  const reloadKeys = async () => {
+    // can be writeKey or readKey
+    let currentPubkey = await dbi.getFlag("", "currentPubkey");
+    console.log("currentPubkey", currentPubkey);
+
+    // write-keys from native plugin
+    const list = await keystore.listKeys();
+    console.log("listKeys", list);
+
+    // ensure
+    if (list.currentAlias && !currentPubkey) {
+      await writeCurrentPubkey(list.currentAlias);
+      currentPubkey = list.currentAlias;
+    }
+
+    const writeKeys = Object.keys(list).filter((key) => key !== "currentAlias");
+    const readKeys = (await dbi.listReadOnlyKeys()).filter(
+      (k) => !writeKeys.includes(k)
+    );
+
+    const keys = [...new Set([...writeKeys, ...readKeys])];
+    console.log(
+      "load keys cur",
+      currentPubkey,
+      "writeKeys",
+      writeKeys,
+      "readKeys",
+      readKeys
+    );
+
+    setCurrentPubkey(currentPubkey);
+    setKeys(keys);
+    setReadKeys(readKeys);
+
+    return [keys, currentPubkey, readKeys];
+  };
+
   useEffect(() => {
     async function onDeviceReady() {
       console.log("device ready", Date.now());
 
-      const [keys, currentPubkey] = await loadKeys();
-      setCurrentPubkey(currentPubkey);
-      setKeys(keys);
+      const [keys, currentPubkey] = await reloadKeys();
 
       // add existing workspaces from db
       for (const pubkey of keys) addWorkspace(pubkey);
@@ -330,8 +402,23 @@ const AppContextProvider = ({ children }) => {
       });
     }
 
-    if (config.DEBUG) onDeviceReady();
-    else document.addEventListener("deviceready", onDeviceReady, false);
+    if (config.DEBUG) {
+      onDeviceReady();
+    } else {
+      document.addEventListener("deviceready", onDeviceReady, false);
+      document.addEventListener("backbutton", (e) => {
+        console.log("back pressed", e);
+        if (
+          !window.history ||
+          JSON.stringify(window.history.state) === "null"
+        ) {
+          e.preventDefault();
+          navigator.app.exitApp();
+        } else {
+          window.history.back();
+        }
+      });
+    }
   }, []);
 
   const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
@@ -347,6 +434,8 @@ const AppContextProvider = ({ children }) => {
     (t) => t.id === currentWorkspace.lastCurrentTabId
   );
   const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
+  const isReadOnly = () =>
+    currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey);
 
   const updateTab = (cbProps, tabId) => {
     tabId = tabId || currentTab?.id;
@@ -365,6 +454,34 @@ const AppContextProvider = ({ children }) => {
   };
 
   const API = {
+    // NIP-01
+    getPublicKey: async function (tabId) {
+      const tab = getTab(tabId);
+      if (!tab) throw new Error("Inactive tab");
+      if (currentPubkey !== DEFAULT_PUBKEY) return currentPubkey;
+      throw new Error("No pubkey");
+    },
+    signEvent: async function (tabId, event) {
+      const tab = getTab(tabId);
+      if (!tab) throw new Error("Inactive tab");
+      if (isReadOnly()) throw new Error("No pubkey");
+      return await window.nostr.signEvent(event);
+    },
+
+    // NIP-04
+    encrypt: async function (tabId, pubkey, plainText) {
+      const tab = getTab(tabId);
+      if (!tab) throw new Error("Inactive tab");
+      if (isReadOnly()) throw new Error("No pubkey");
+      return await window.nostr.nip04.encrypt(pubkey, plainText);
+    },
+    decrypt: async function (tabId, pubkey, cipherText) {
+      const tab = getTab(tabId);
+      if (!tab) throw new Error("Inactive tab");
+      if (isReadOnly()) throw new Error("No pubkey");
+      return await window.nostr.nip04.decrypt(pubkey, cipherText);
+    },
+
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
@@ -414,9 +531,9 @@ const AppContextProvider = ({ children }) => {
       updateTab({ loading: false }, tabId);
     },
     onGetPubkey: (tabId, pubkey) => {
-      if (pubkey !== currentPubkey) {
-        setCurrentPubkey(pubkey);
-        // FIXME bootstrap etc, just remove it and start onboarding?
+      // FIXME never happens now, remove?
+      if (currentPubkey === DEFAULT_PUBKEY && pubkey !== currentPubkey) {
+        addImportKey("reload");
       }
     },
     onClick: (tabId, x, y) => {
@@ -463,13 +580,28 @@ const AppContextProvider = ({ children }) => {
   // update on every rerender to capture new callbacks
   browser.setAPI(API);
 
+  const importPubkey = async (pubkey) => {
+    console.log("importPubkey", pubkey);
+    await addImportKey(pubkey);
+  };
+
   const addKey = async () => {
-    await keystore.addKey();
+    return addImportKey();
+  };
+
+  const addImportKey = async (importPubkey) => {
+    if (importPubkey === "reload") {
+      // noop - keys were added by the plugin and we need to reload keys
+    } else if (importPubkey) {
+      await dbi.putReadOnlyKey(importPubkey);
+      await writeCurrentPubkey(importPubkey);
+    } else {
+      const r = await keystore.addKey();
+      await writeCurrentPubkey(r.pubkey);
+    }
 
     // reload the list
-    const [keys, pubkey] = await loadKeys();
-    setCurrentPubkey(pubkey);
-    setKeys(keys);
+    const [keys, pubkey, readKeys] = await reloadKeys();
 
     // our first key?
     if (currentPubkey === DEFAULT_PUBKEY) {
@@ -569,6 +701,7 @@ const AppContextProvider = ({ children }) => {
         updateWorkspace((ws) => {
           const tg = ws.tabGroups[getTabGroupId(tab)];
           tg.lastTabId = tab.id;
+          tg.lastActive = Date.now();
           return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
         });
         ok();
@@ -713,16 +846,26 @@ const AppContextProvider = ({ children }) => {
     await keystore.showKey({ publicKey: openKey });
   };
 
-  const selectKey = async (ind) => {
-    const key = keys[ind];
+  const selectKey = async (selectPubkey) => {
+    console.log("selectKey res", selectPubkey);
 
-    const res = await keystore.selectKey({ publicKey: key });
+    let pubkey = "";
+    if (readKeys.includes(selectPubkey)) {
+      // read?
+      pubkey = selectPubkey;
+    } else if (keys.includes(selectPubkey)) {
+      // write?
+      const res = await keystore.selectKey({ publicKey: selectPubkey });
+      pubkey = res?.currentAlias;
+    }
 
-    if (res && res.currentAlias !== currentPubkey) {
-      const [keys, pubkey] = await loadKeys();
-      setCurrentPubkey(pubkey);
-      setKeys(keys);
+    if (!pubkey) throw new Error("Unknown pubkey");
 
+    await writeCurrentPubkey(pubkey);
+
+    // actual switch?
+    if (pubkey !== currentPubkey) {
+      const [keys, pubkey] = await reloadKeys();
       reloadProfile(keys, pubkey);
     }
   };
@@ -876,6 +1019,7 @@ const AppContextProvider = ({ children }) => {
       value={{
         currentPubkey,
         keys,
+        readKeys,
         profile,
         profiles,
         contactList,
@@ -890,6 +1034,7 @@ const AppContextProvider = ({ children }) => {
         onHideTab: hideTab,
         onStopTab: stopTab,
         onReloadTab: reloadTab,
+        onImportPubkey: importPubkey,
         setOpenKey,
         onCopyKey: copyKey,
         onShowKey: showKey,

@@ -112,7 +112,7 @@ export const TabMenu = ({ onClose, onOpenWith, onOpenPinAppModal }) => {
   return (
     <div className="d-flex flex-column">
       <div className="d-flex justify-content-between align-items-center p-3">
-        <h2 className="m-0">Tab Menu</h2>
+        <h2 className="m-0">Tab Menu (WIP)</h2>
         <AiOutlineClose color="white" size={30} onClick={onClose} />
       </div>
       <hr className="m-0" />

@@ -4,7 +4,7 @@ import { getRenderedUsername } from "../../utils/helpers/general";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 import { formatTime } from "../../utils/helpers/general"
 
-export const LongNoteItem = ({ author = {}, content, onClick }) => {
+export const CommunityItem = ({ author = {}, content, onClick }) => {
   const { pubkey, picture } = author;
   const renderedName = getRenderedUsername(author, pubkey);
   const authorAvatar = useOptimizedMediaSource({
@@ -12,26 +12,26 @@ export const LongNoteItem = ({ author = {}, content, onClick }) => {
     originalImage: picture,
   });
 
-  const title = content.title || '';
-  // FIXME use markdown
-  const summary = content.summary || content.content.substring(0, 300);
-  const tm = formatTime(content.created_at);
+  const avatar = content.image || authorAvatar;
+  const name = ("/" + content.name) || renderedName;
+  const title = "+" + content.posts + " posts";
+  const desc = content.description || '';
+  const tm = formatTime(content.last_post_tm);
   
   return (
     <Card onClick={() => onClick(content)}>
       <Header>
-        <StyledAvatar alt={renderedName} src={authorAvatar} />
-        <Username>{renderedName}</Username>
+        <StyledAvatar alt={name} src={avatar} variant="rounded" />
+        <Username>{name}</Username>
         <Status>{tm}</Status>
       </Header>
       <Body>
 	<TitleText>{title}</TitleText>
-	<DescriptionText>{summary}</DescriptionText>
+	<DescriptionText>{desc}</DescriptionText>
       </Body>
     </Card>
   );
 };
-
 const Card = styled("div")(() => ({
   padding: "0.5rem 0.75rem 0.75rem",
   borderRadius: "1rem",
