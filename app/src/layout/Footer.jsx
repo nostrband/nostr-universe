@@ -5,6 +5,7 @@ import { SwipeableDrawer } from "../components/swipeable-drawer/SwipeableDrawer"
 import { IconButton, styled } from "@mui/material";
 import { homeIcon, stopIcon, reloadIcon } from "../assets";
 import { PinItem } from "../components/pins/PinItem";
+import { BottomSheet } from "../components/UI/bottom-sheet/BottomSheet";
 
 export const Footer = ({ onOpenPinModal }) => {
   const contextData = useContext(AppContext);
@@ -31,7 +32,8 @@ export const Footer = ({ onOpenPinModal }) => {
 
   return (
     <footer id="footer">
-      {isShowDrawer && <SwipeableDrawer />}
+      {/* {isShowDrawer && <SwipeableDrawer />} */}
+      <BottomSheet />
       <>
         {currentWorkspace && (
           <div

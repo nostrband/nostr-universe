@@ -24,6 +24,7 @@
     "react-dom": "^18.2.0",
     "react-icons": "^4.10.1",
     "react-router-dom": "^6.14.2",
+    "react-spring-bottom-sheet": "^3.4.1",
     "use-debounce": "^9.0.4",
     "vite-plugin-svgr": "^3.2.0"
   },

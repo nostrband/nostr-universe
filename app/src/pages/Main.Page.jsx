@@ -1,5 +1,4 @@
 import React, { useState, useContext } from "react";
-import { db } from "../db";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
 import { ContactList } from "../components/contact-list/ContactList";
@@ -56,7 +55,7 @@ const MainPage = () => {
     }
     searchParams.delete("search");
     return setSearchParams(searchParams, { replace: true });
-  };  
+  };
 
   const togglePinModalVisibility = () => {
     setIsPinModalVisible((prevState) => !prevState);
@@ -70,7 +69,6 @@ const MainPage = () => {
     updateLastContact(addr);
     setOpenAddr(addr);
   };
-
 
   const onSearch = (str) => {
     clearLastCurrentTab();
@@ -95,7 +93,7 @@ const MainPage = () => {
   const onImportKey = () => {
     setShowImportPubkey(true);
   };
-  
+
   return (
     <Container>
       <Header
@@ -104,31 +102,28 @@ const MainPage = () => {
         onOpenTabMenuModal={() => setShowTabMenu(true)}
       />
       <main id="main">
+        {keys?.length === 0 && (
+          <WelcomeWidget onAdd={onAddKey} onImport={onImportKey} />
+        )}
 
-	{keys?.length === 0 && (
-	  <WelcomeWidget onAdd={onAddKey} onImport={onImportKey} />
-	)}
-	
         <TrendingNotes onOpenNote={setOpenAddr} />
         <TrendingProfiles onOpenProfile={setOpenAddr} />
-        {currentWorkspace?.highlights.length > 0 &&
-	 <TrendingNotes onOpenNote={setOpenAddr} highlight />
-	}
-        {currentWorkspace?.bigZaps.length > 0 && 
-	 <Zaps onOpen={setOpenAddr} />
-	}
-        {currentWorkspace?.longNotes.length > 0 && 
-	 <LongNotes onOpenAddr={setOpenAddr} />
-	}
-        {currentWorkspace?.liveEvents.length > 0 && 
-	 <LiveEvents onOpenAddr={setOpenAddr} />
-	}
-        {currentWorkspace?.communities.length > 0 && 
-	 <Communities onOpen={setOpenAddr} />
-	}
-        {currentWorkspace?.suggestedProfiles.length > 0 && 
-	 <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
-	}
+        {currentWorkspace?.highlights.length > 0 && (
+          <TrendingNotes onOpenNote={setOpenAddr} highlight />
+        )}
+        {currentWorkspace?.bigZaps.length > 0 && <Zaps onOpen={setOpenAddr} />}
+        {currentWorkspace?.longNotes.length > 0 && (
+          <LongNotes onOpenAddr={setOpenAddr} />
+        )}
+        {currentWorkspace?.liveEvents.length > 0 && (
+          <LiveEvents onOpenAddr={setOpenAddr} />
+        )}
+        {currentWorkspace?.communities.length > 0 && (
+          <Communities onOpen={setOpenAddr} />
+        )}
+        {currentWorkspace?.suggestedProfiles.length > 0 && (
+          <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
+        )}
         <AppsList />
         {false && <ContactList onOpenProfile={setContactOpenAddr} />}
 
@@ -174,12 +169,12 @@ const MainPage = () => {
           }}
         />
 
-	<ImportPubkeyModal
-	  isOpen={showImportPubkey}
+        <ImportPubkeyModal
+          isOpen={showImportPubkey}
           onClose={() => setShowImportPubkey(false)}
-	  onSelect={onImportPubkey}
-	/>
-	
+          onSelect={onImportPubkey}
+        />
+
         {currentTab && (
           <TabBackground className="d-flex flex-column justify-content-center align-items-center">
             <div>
