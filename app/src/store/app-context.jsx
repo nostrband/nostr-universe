@@ -461,7 +461,6 @@ const AppContextProvider = ({ children }) => {
       if (isReadOnly()) throw new Error("No pubkey");
       return await window.nostr.nip04.decrypt(pubkey, cipherText);
     },
-    
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
@@ -493,6 +492,12 @@ const AppContextProvider = ({ children }) => {
 
         dbi.updateTab(tab);
       }
+    },
+    clipboardWriteText: async function (tabId, text) {
+      return await window.cordova.plugins.clipboard.copy(text);
+    },
+    share: async function (tabId, data) {
+      return await window.navigator.share(data);
     },
     showContextMenu: async function (tabId, id) {
       console.log("event menu", id);
