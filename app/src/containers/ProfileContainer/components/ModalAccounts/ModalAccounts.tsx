@@ -1,24 +1,30 @@
-import { List, ListItemButton, ListItemAvatar, Avatar, ListItem } from '@mui/material'
+import { ListItemButton, ListItemAvatar, Avatar, ListItem } from '@mui/material'
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 import AddIcon from '@mui/icons-material/Add'
 import { getProfileImage, getProfileName } from '@/utils/helpers/prepare-data'
 import { checkIsCurrentUser } from '@/utils/helpers/general'
-import { StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledViewModal } from './styled'
+import {
+  StyledItemButton,
+  StyledItemIconAvatar,
+  StyledItemText,
+  StyledList,
+  StyledListItem,
+  StyledViewModal
+} from './styled'
 import { IModalAccounts } from './types'
 import { useAddKey } from '@/hooks/workspaces'
-import { useAppSelector } from '@/store/hooks/redux'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, currentPubKey }: IModalAccounts) => {
   const { addKey } = useAddKey()
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-
-  console.log({ currentWorkSpace })
+  const { handleOpen: handleOpenKeyImport } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEY_IMPORT)
 
   return (
     <StyledViewModal onClose={handleClose} open={open} fullWidth maxWidth="lg">
-      <List>
+      <StyledList>
         {accounts.map((account, i) => (
-          <ListItem
+          <StyledListItem
             key={i}
             secondaryAction={
               checkIsCurrentUser(currentPubKey, account) ? <CheckCircleOutlinedIcon htmlColor="#48ff91" /> : ''
@@ -31,9 +37,19 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
               </ListItemAvatar>
               <StyledItemText primary={getProfileName(account)} />
             </ListItemButton>
-          </ListItem>
+          </StyledListItem>
         ))}
 
+        <ListItem disablePadding>
+          <StyledItemButton alignItems="center" onClick={() => handleOpenKeyImport()}>
+            <ListItemAvatar>
+              <StyledItemIconAvatar>
+                <AddIcon />
+              </StyledItemIconAvatar>
+            </ListItemAvatar>
+            <StyledItemText primary="Add read-only key" />
+          </StyledItemButton>
+        </ListItem>
         <ListItem disablePadding>
           <StyledItemButton alignItems="center" onClick={addKey}>
             <ListItemAvatar>
@@ -41,10 +57,10 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
                 <AddIcon />
               </StyledItemIconAvatar>
             </ListItemAvatar>
-            <StyledItemText primary={'Add key'} />
+            <StyledItemText primary="Add private key" />
           </StyledItemButton>
         </ListItem>
-      </List>
+      </StyledList>
     </StyledViewModal>
   )
 }

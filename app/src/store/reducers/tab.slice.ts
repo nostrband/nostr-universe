@@ -1,22 +1,25 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+interface ICurrentTab {
+  id: string
+  url: string
+  picture: string
+  name: string
+  appNaddr: string
+}
+
 interface ITabState {
-  isOpen: boolean
+  isOpenTabWindow: boolean
   isLoading: boolean
-  currentTab: {
-    id: string
-    url: string
-    picture: string
-    name: string
-    appNaddr: string
-    isOpened: boolean
-  } | null
+  currentTab: ICurrentTab | null
+  openedTabs: ICurrentTab[]
 }
 
 const initialState: ITabState = {
-  isOpen: false,
+  isOpenTabWindow: false,
   isLoading: false,
-  currentTab: null
+  currentTab: null,
+  openedTabs: []
 }
 
 export const tabSlice = createSlice({
@@ -24,17 +27,24 @@ export const tabSlice = createSlice({
   initialState,
   reducers: {
     setOpenTab: (state, action) => {
-      state.isOpen = action.payload.isOpen
+      state.openedTabs = [...state.openedTabs, action.payload.tab]
+      state.isLoading = true
+      state.isOpenTabWindow = true
     },
 
     setCurrentTab: (state, action) => {
       state.currentTab = action.payload.currentTab
+      state.isOpenTabWindow = true
     },
 
     setLoadingTab: (state, action) => {
       state.isLoading = action.payload.isLoading
+    },
+
+    setCloseTabWindow: (state, action) => {
+      state.isOpenTabWindow = action.payload.isLoading
     }
   }
 })
 
-export const { setOpenTab, setCurrentTab, setLoadingTab } = tabSlice.actions
+export const { setOpenTab, setCurrentTab, setLoadingTab, setCloseTabWindow } = tabSlice.actions

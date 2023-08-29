@@ -7,10 +7,15 @@ export type AppNostro = {
   name: string
   pinned?: boolean
   kinds?: number[]
+  order: number
   handlers?: {
     [key: string]: {
       url: string
       type: string
     }
   }
+}
+
+export interface IOpenAppNostro extends AppNostro {
+  kind?: string
 }

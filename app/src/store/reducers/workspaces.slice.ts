@@ -36,19 +36,6 @@ export const workspacesSlice = createSlice({
       state.currentWorkSpace =
         state.workspaces.find((w) => w.pubkey === action.payload.currentPubKey) || initialState.currentWorkSpace
     },
-    setOpenCurrentTabInWorkSpace: (state, action) => {
-      const tabs = state.currentWorkSpace.tabs.map((tab) => {
-        if (tab.id === action.payload.tabID) {
-          return {
-            ...tab,
-            isOpened: action.payload.isOpened
-          }
-        }
-
-        return tab
-      })
-      state.currentWorkSpace = { ...state.currentWorkSpace, tabs }
-    },
     setTabsWorkspace: (state, action) => {
       const tabGroups = [...state.currentWorkSpace.tabGroups]
       const tab = action.payload.tab
@@ -75,9 +62,20 @@ export const workspacesSlice = createSlice({
         tabGroups: tabGroups,
         lastCurrentTabId: ''
       }
+
+      state.workspaces = state.workspaces.map((workspace) => {
+        if (workspace.pubkey === state.currentWorkSpace.pubkey) {
+          return {
+            ...workspace,
+            tabs: [...state.currentWorkSpace.tabs, action.payload.tab],
+            tabGroups: tabGroups
+          }
+        }
+
+        return workspace
+      })
     }
   }
 })
 
-export const { setWorkspaces, setCurrentWorkspace, setTabsWorkspace, setOpenCurrentTabInWorkSpace } =
-  workspacesSlice.actions
+export const { setWorkspaces, setCurrentWorkspace, setTabsWorkspace } = workspacesSlice.actions

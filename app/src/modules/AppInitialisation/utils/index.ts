@@ -160,12 +160,6 @@ const defaultApps = [
   }
 ]
 
-export const getKeys = async () => {
-  const list = await keystore.listKeys()
-  const keys = Object.keys(list).filter((key) => key !== 'currentAlias')
-  return [keys, list.currentAlias]
-}
-
 const bootstrap = async (pubkey) => {
   console.log('new workspace', pubkey, ' bootstrapping')
   let pins = []

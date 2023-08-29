@@ -1,1 +1,1 @@
-export const drawerbleeding = 100
+export const drawerbleeding = 90

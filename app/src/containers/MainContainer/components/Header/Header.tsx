@@ -9,7 +9,7 @@ import { StyledIconButton } from './styled'
 
 export const Header = () => {
   const { currentProfile } = useAppSelector((state) => state.profile)
-  const { isOpen } = useAppSelector((state) => state.tab)
+  const { isOpenTabWindow } = useAppSelector((state) => state.tab)
 
   return (
     <HeaderLayout>
@@ -21,7 +21,7 @@ export const Header = () => {
         <IconButton color="inherit" size="medium">
           <SearchIcon />
         </IconButton>
-        {isOpen && (
+        {isOpenTabWindow && (
           <IconButton color="inherit" size="medium">
             <MoreVertIcon />
           </IconButton>

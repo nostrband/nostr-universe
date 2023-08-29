@@ -1,5 +1,5 @@
 import { styled } from '@mui/material/styles'
-import { Dialog, ListItemText, ListItemButton, Avatar } from '@mui/material'
+import { Dialog, ListItemText, ListItemButton, Avatar, List, ListItem } from '@mui/material'
 
 export const StyledViewModal = styled(Dialog)(() => ({
   '.MuiDialog-paper': {
@@ -15,11 +15,22 @@ export const StyledItemText = styled(ListItemText)(({ theme }) => ({
   flex: 'none'
 }))
 
-export const StyledItemButton = styled(ListItemButton)(() => ({
-  justifyContent: 'center'
+export const StyledItemButton = styled(ListItemButton)(({ theme }) => ({
+  borderTop: '1px solid',
+  borderColor: theme.palette.secondary.light
+}))
+
+export const StyledListItem = styled(ListItem)(({ theme }) => ({
+  '&:nth-of-type(even)': {
+    backgroundColor: theme.palette.secondary.light
+  }
 }))
 
 export const StyledItemIconAvatar = styled(Avatar)(({ theme }) => ({
   background: theme.palette.decorate.main,
   color: theme.palette.light.light
+}))
+
+export const StyledList = styled(List)(() => ({
+  padding: 0
 }))

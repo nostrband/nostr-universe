@@ -13,6 +13,7 @@ export interface IAppNostro {
   isPreviewTab?: boolean
   hideName?: boolean
   isActive?: boolean
+  disabled?: boolean
   onOpen: (app: AppNostro) => void
 }
 

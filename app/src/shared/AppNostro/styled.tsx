@@ -18,9 +18,10 @@ const getVariantApp = (isPreviewTab: boolean, size: AppNostroSize) => {
 
 export const StyledApp = styled(
   forwardRef<HTMLAnchorElement, IBoxStyled>(function BoxDisplayName(props, ref) {
-    const { isActive, isPreviewTab, ...rest } = props
-    console.log(isActive, isPreviewTab)
-    return <Box ref={ref} {...rest} />
+    const exclude = new Set(['isActive', 'isPreviewTab'])
+    const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
+
+    return <Box ref={ref} {...omitProps} />
   })
 )(({ theme, size = APP_NOSTRO_SIZE.MEDIUM, isActive = false, isPreviewTab = false }) => ({
   position: 'relative',

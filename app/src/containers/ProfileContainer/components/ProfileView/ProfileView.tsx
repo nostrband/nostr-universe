@@ -43,7 +43,7 @@ export const ProfileView = () => {
     <>
       <Container>
         <StyledViewBaner>
-          <StyledViewAvatarWrapper onClick={handleOpen}>
+          <StyledViewAvatarWrapper onClick={() => handleOpen()}>
             <StyledViewAvatar src={getProfileImage(currentProfile)} />
             <StyledViewAvatarSwitch>
               <SyncAltOutlinedIcon fontSize="small" />
@@ -53,7 +53,13 @@ export const ProfileView = () => {
         <StyledViewName variant="h5" component="div">
           {getProfileName(currentProfile)}
         </StyledViewName>
-        <StyledViewAction disableElevation color="secondary" variant="contained" size="large">
+        <StyledViewAction
+          // onClick={handleOpenKeyImport}
+          disableElevation
+          color="secondary"
+          variant="contained"
+          size="large"
+        >
           Edit
         </StyledViewAction>
       </Container>

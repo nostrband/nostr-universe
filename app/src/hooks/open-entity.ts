@@ -3,10 +3,14 @@
 import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setCurrentTab, setOpenTab } from '@/store/reducers/tab.slice'
-import { setOpenCurrentTabInWorkSpace, setTabsWorkspace } from '@/store/reducers/workspaces.slice'
-import { AppNostro } from '@/types/app-nostro'
+import { setCloseTabWindow, setCurrentTab, setLoadingTab, setOpenTab } from '@/store/reducers/tab.slice'
+import { setCurrentWorkspace, setTabsWorkspace, setWorkspaces } from '@/store/reducers/workspaces.slice'
+import { AppNostro, IOpenAppNostro } from '@/types/app-nostro'
+import { getKeys, writeCurrentPubkey } from '@/utils/keys'
 import { v4 as uuidv4 } from 'uuid'
+import { useUpdateProfile } from './profile'
+import { setCurrentPubKey, setKeys } from '@/store/reducers/keys.slice'
+import { addWorkspace } from '@/modules/AppInitialisation/utils'
 
 function getOrigin(url) {
   try {
@@ -18,9 +22,11 @@ function getOrigin(url) {
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
+  const updateProfile = useUpdateProfile()
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
   const { apps } = useAppSelector((state) => state.apps)
   const { currentPubKey } = useAppSelector((state) => state.keys)
+  const { currentTab, openedTabs } = useAppSelector((state) => state.tab)
 
   const getTab = (id) => currentWorkSpace?.tabs.find((t) => t.id === id)
 
@@ -28,62 +34,110 @@ export const useOpenApp = () => {
     await browser.hide(tab.id)
   }
 
+  const onHideTabInBrowser = async () => {
+    await hide(currentTab)
+  }
+
+  const onHideTab = async () => {
+    await hide(currentTab)
+
+    dispatch(
+      setCloseTabWindow({
+        isOpenTabWindow: false
+      })
+    )
+  }
+
+  const onSwitchTab = async (tab) => {
+    await openBlank(tab)
+  }
+
+  const onStopLoadTab = async () => {
+    dispatch(
+      setLoadingTab({
+        isLoading: false
+      })
+    )
+
+    await browser.stop(currentTab.id)
+  }
+
+  const onReloadTab = async () => {
+    console.log('onReloadTab')
+    dispatch(
+      setLoadingTab({
+        isLoading: true
+      })
+    )
+
+    await browser.reload(currentTab.id).finally(() => {
+      dispatch(
+        setLoadingTab({
+          isLoading: false
+        })
+      )
+    })
+  }
+
   const API = {
     onHide: (tabId) => {
-      console.log('hide', tabId)
-
       hide(getTab(tabId))
+    },
+    onClick: (tabId, x, y) => {
+      console.log('click', x, y)
+      let e = document.elementFromPoint(x, y)
+      // SVG doesn't have 'click'
+      while (e && !e.click) e = e.parentNode
+      console.log('click on ', e)
+      if (e) e.click()
     }
   }
 
   browser.setAPI(API)
 
   const createTabBrowser = async (tab) => {
-    console.table('createTabBrowser tab id', JSON.stringify(tab))
-    dispatch(setOpenTab({ isLoading: true }))
+    const openTab = {
+      id: tab.id,
+      name: tab.title,
+      url: tab.url,
+      picture: tab.icon,
+      appNaddr: tab.appNaddr
+    }
 
-    const params = {
+    dispatch(setOpenTab({ tab: openTab }))
+
+    dispatch(
+      setCurrentTab({
+        currentTab: openTab
+      })
+    )
+
+    const dataTabForOpen = {
       id: tab.id,
       url: tab.url,
       hidden: true,
       apiCtx: tab.id
     }
 
-    dispatch(setOpenTab({ isOpen: true }))
+    await browser.open(dataTabForOpen)
 
     dispatch(
-      setCurrentTab({
-        currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
+      setLoadingTab({
+        isLoading: false
       })
     )
-
-    dispatch(
-      setOpenCurrentTabInWorkSpace({
-        tabID: tab.id,
-        isOpened: true
-      })
-    )
-
-    await browser.open(params)
-  }
-
-  const ensureBrowser = async (tab) => {
-    if (!tab.isOpened) {
-      await createTabBrowser(tab)
-    }
 
     return
   }
 
   const show = async (tab) => {
-    // showTabMenu();
-    console.log({ showTab: tab })
-
     return new Promise((ok) => {
       setTimeout(async () => {
-        // schedule the open after task bar is changed
+        const getOpenedTab = openedTabs.find((openedTab) => tab.id === openedTab.id)
 
-        await ensureBrowser(tab)
+        if (!getOpenedTab) {
+          await createTabBrowser(tab)
+        }
 
         await browser.show(tab.id)
 
@@ -93,11 +147,6 @@ export const useOpenApp = () => {
           })
         )
 
-        // updateWorkspace((ws) => {
-        //   const tg = ws.tabGroups[getTabGroupId(tab)];
-        //   tg.lastTabId = tab.id;
-        //   return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
-        // });
         ok()
       }, 0)
     })
@@ -138,6 +187,7 @@ export const useOpenApp = () => {
     )
 
     // // add to db
+
     await dbi.addTab(tab)
 
     // it creates the tab and sets as current
@@ -174,7 +224,7 @@ export const useOpenApp = () => {
     // await open(params);
   }
 
-  const openApp = async (app: AppNostro) => {
+  const openApp = async (app: IOpenAppNostro) => {
     // if (params.kind !== undefined) {
     //   updateWorkspace((ws) => {
     //     ws.lastKindApps[params.kind] = params.naddr;
@@ -194,7 +244,36 @@ export const useOpenApp = () => {
     })
   }
 
+  const onImportKey = async (importPubkey) => {
+    if (importPubkey) {
+      await dbi.putReadOnlyKey(importPubkey)
+      await writeCurrentPubkey(importPubkey)
+    } else {
+      const r = await keystore.addKey()
+      await writeCurrentPubkey(r.pubkey)
+    }
+
+    // // reload the list
+    const [keys, pubkey] = await getKeys()
+    dispatch(setKeys({ keys }))
+    dispatch(setCurrentPubKey({ currentPubKey: pubkey }))
+
+    const workspace = await addWorkspace(pubkey)
+
+    dispatch(setWorkspaces({ workspaces: [workspace] }))
+
+    dispatch(setCurrentWorkspace({ currentPubKey: pubkey }))
+
+    await updateProfile(keys, pubkey)
+  }
+
   return {
-    openApp
+    openApp,
+    onStopLoadTab,
+    onReloadTab,
+    onHideTab,
+    onSwitchTab,
+    onHideTabInBrowser,
+    onImportKey
   }
 }

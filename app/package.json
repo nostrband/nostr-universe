@@ -17,7 +17,7 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.3",
     "@mui/material": "^5.14.4",
-    "@nostrband/ndk": "^0.8.15",
+    "@nostrband/ndk": "^0.8.17",
     "@nostrband/nostr-tools": "^1.14.2",
     "@reduxjs/toolkit": "^1.9.5",
     "@types/react-redux": "^7.1.25",

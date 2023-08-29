@@ -1,20 +1,40 @@
 /* eslint-disable */
 // @ts-nocheck
 
-const dummy = {
-  listKeys: async function () {
-    return {
-      currentAlias: '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd',
-      '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd': {
-        publicKey: '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd',
-        name: 'main'
-      },
-      '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bd1': {
-        publicKey: '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bd1',
-        name: 'main1'
-      }
-    }
+const keys = {
+  '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd': {
+    publicKey: '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd',
+    name: 'brugeman'
   },
+  '3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24': {
+    publicKey: '3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24',
+    name: 'DerekRoss'
+  },
+  '460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c': {
+    publicKey: '460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c',
+    name: 'Vitor Pamplona'
+  },
+  eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f: {
+    publicKey: 'eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f',
+    name: 'Lyn Alren'
+  },
+  '82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2': {
+    publicKey: '82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2',
+    name: 'Jack'
+  }
+}
+
+let currentPubkey = '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd'
+
+const listKeysStub = () => {
+  return {
+    currentAlias: currentPubkey,
+    ...keys
+  }
+}
+
+const dummy = {
+  listKeys: listKeysStub,
 
   addKey: async function () {
     console.log('ADD KEY')

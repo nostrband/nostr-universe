@@ -1,12 +1,21 @@
 /* eslint-disable */
 // @ts-nocheck
+
+import { ReturnProfile } from '@/types/trending-profiles'
 import NDK, { NDKRelaySet } from '@nostrband/ndk'
 import { nip19 } from '@nostrband/nostr-tools'
+import { decode as bolt11Decode } from 'light-bolt11-decoder'
 
 const KIND_META = 0
 const KIND_NOTE = 1
 const KIND_CONTACT_LIST = 3
+const KIND_COMMUNITY_APPROVAL = 4550
+const KIND_ZAP = 9735
+const KIND_HIGHLIGHT = 9802
+const KIND_LONG_NOTE = 30023
 const KIND_APP = 31990
+const KIND_LIVE_EVENT = 30311
+const KIND_COMMUNITY = 34550
 
 // we only care about web apps
 const PLATFORMS = ['web']
@@ -16,7 +25,14 @@ const ADDR_TYPES = ['', 'npub', 'note', 'nevent', 'nprofile', 'naddr']
 export const nostrbandRelay = 'wss://relay.nostr.band/'
 export const nostrbandRelayCounts = 'wss://relay.nostr.band/all'
 
-const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.bg', 'wss://nostr.mom']
+const readRelays = [
+  nostrbandRelay,
+  //  "wss://relay.damus.io", // too slow
+  'wss://eden.nostr.land',
+  'wss://nos.lol',
+  'wss://relay.nostr.bg',
+  'wss://nostr.mom'
+]
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 export const allRelays = [nostrbandRelayCounts, ...writeRelays]
 
@@ -27,26 +43,26 @@ const kindApps = {}
 const profileCache = []
 
 function fetchEventsRead(ndk, filter) {
-  return ndk.fetchEvents(filter, NDKRelaySet.fromRelayUrls(readRelays, ndk))
+  return ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
 }
 
-function getTags(e, name) {
+export function getTags(e, name) {
   return e.tags.filter((t) => t.length > 0 && t[0] === name)
 }
 
-function getTag(e, name) {
+export function getTag(e, name) {
   const tags = getTags(e, name)
   if (tags.length === 0) return null
   return tags[0]
 }
 
-function getTagValue(e, name, index, def) {
+export function getTagValue(e, name, index, def) {
   const tag = getTag(e, name)
   if (tag === null || !tag.length || (index && index >= tag.length)) return def !== undefined ? def : ''
   return tag[1 + (index || 0)]
 }
 
-function getEventTagA(e) {
+export function getEventTagA(e) {
   let addr = e.kind + ':' + e.pubkey + ':'
   if (e.kind >= 30000 && e.kind < 40000) addr += getTagValue(e, 'd')
   return addr
@@ -59,6 +75,16 @@ function parseContentJson(c) {
     console.log('Bad json: ', c, e)
     return {}
   }
+}
+
+function isWeb(e) {
+  for (const t of e.tags) {
+    if (t[0] === 'web') return true
+
+    if (t[0] === 'android' || t[0] === 'ios' || t[0] === 'windows' || t[0] === 'macos' || t[0] === 'linux') return false
+  }
+
+  return true
 }
 
 function findHandlerUrl(e, k) {
@@ -160,7 +186,10 @@ export async function fetchApps() {
       }
     })
 
-    if (Object.keys(handlers).length == 0) return
+    if (!isWeb(e)) return
+
+    //    if (Object.keys(handlers).length == 0)
+    //      return;
 
     const app = {
       naddr: nip19.naddrEncode({
@@ -172,12 +201,11 @@ export async function fetchApps() {
       url: (profile && profile.website) || '',
       picture: (profile && profile.picture) || '',
       about: (profile && profile.about) || '',
-      //      author,
       kinds,
       handlers
     }
 
-    apps.push(app)
+    if (app.name && app.url) apps.push(app)
   })
 
   return apps
@@ -497,7 +525,7 @@ function getUrl(app, ad) {
   return url
 }
 
-export async function fetchAppsForEvent(id, event) {
+export async function fetchAppsForEvent(id, event?: any) {
   const addr = parseAddr(id)
   if (!addr) throw new Error('Bad address')
 
@@ -546,7 +574,7 @@ export async function fetchEventByBech32(b32) {
   return await fetchEventByAddr(ndk, addr)
 }
 
-export async function searchProfiles(q) {
+export async function searchProfiles(q): Promise<ReturnProfile[]> {
   // try to fetch best profiles from our relay
   const top = await ndk.fetchTop(
     {
@@ -558,14 +586,15 @@ export async function searchProfiles(q) {
   )
   console.log('top profiles', top?.ids.length)
 
-  let events = null
+  let events = []
   if (top.ids.length) {
     // fetch the app events themselves from the list
     events = await fetchEventsRead(ndk, {
       ids: top.ids
     })
+
+    events = [...events.values()].map((e) => rawEvent(e))
   }
-  events = [...events.values()]
 
   events.forEach((e) => {
     e.profile = parseContentJson(e.content)
@@ -579,43 +608,44 @@ export async function searchProfiles(q) {
   return events
 }
 
-export async function searchNotes(q) {
-  // try to fetch best apps list from our relay
-  let events = await fetchEventsRead(ndk, {
-    kinds: [KIND_NOTE],
-    search: q,
-    limit: 30
-  })
-  console.log('notes', events)
+function rawEvent(e) {
+  return {
+    id: e.id,
+    pubkey: e.pubkey,
+    created_at: e.created_at,
+    kind: e.kind,
+    tags: e.tags,
+    content: e.content,
+    identifier: getTagValue(e, 'd'),
+    order: e.created_at
+  }
+}
 
-  events = [...events.values()].map((e) => {
-    return {
-      id: e.id,
-      pubkey: e.pubkey,
-      created_at: e.created_at,
-      kind: e.kind,
-      tags: e.tags,
-      content: e.content,
-
-      order: e.created_at
-    }
-  })
-
-  if (events.length > 0) {
-    const metas = await collectEvents(
-      fetchEventsRead(ndk, {
-        kinds: [KIND_META],
-        authors: events.map((e) => e.pubkey)
-      })
-    )
-    //    console.log('metas', metas);
-
-    // parse profiles
-    metas.forEach((e) => {
-      e.profile = parseContentJson(e.content)
-      e.profile.pubkey = e.pubkey
-      e.profile.npub = nip19.npubEncode(e.pubkey)
+async function fetchMetas(pubkeys) {
+  let metas = await collectEvents(
+    fetchEventsRead(ndk, {
+      kinds: [KIND_META],
+      authors: pubkeys
     })
+  )
+
+  // drop ndk stuff
+  metas = metas.map((m) => rawEvent(m))
+
+  // parse profiles
+  metas.forEach((e) => {
+    e.profile = parseContentJson(e.content)
+    e.profile.pubkey = e.pubkey
+    e.profile.npub = nip19.npubEncode(e.pubkey)
+  })
+
+  return metas
+}
+
+async function augmentPrepareEvents(events, limit) {
+  if (events.length > 0) {
+    // profile infos
+    const metas = await fetchMetas(events.map((e) => e.pubkey))
 
     // assign to notes
     events.forEach((e) => (e.author = metas.find((m) => m.pubkey === e.pubkey)))
@@ -624,76 +654,437 @@ export async function searchNotes(q) {
   // desc by tm
   events.sort((a, b) => b.order - a.order)
 
+  if (events.length > limit) events.length = limit
+
   return events
 }
 
-export async function subscribeProfiles(pubkeys, cb) {
-  return new Promise(async (ok) => {
-    const sub = await ndk.subscribe(
-      {
-        authors: [...pubkeys],
-        kinds: [KIND_META]
-      },
-      {
-        // FIXME not great for privacy
-        // use of the same subId allows us to avoid sending
-        // close to cancel the last sub
-        subId: 'profiles'
-      },
-      NDKRelaySet.fromRelayUrls(readRelays, ndk),
-      /* autoStart */ false
-    )
+async function fetchEventsByIds(opts) {
+  const { ids, kinds, augment } = opts
 
-    // call cb on each event
-    sub.on('event', (event) => {
-      const profile = {
-        id: event.id,
-        pubkey: event.pubkey,
-        kind: event.kind,
-        tags: event.tags,
-        created_at: event.created_at,
-        content: event.content,
-        profile: parseContentJson(event.content)
-      }
-      console.log('got profile', profile)
-      cb(profile)
+  if (!ids.length) return []
+
+  let events = await ndk.fetchEvents(
+    {
+      ids,
+      kinds
+    },
+    {}, // opts
+    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+  )
+  console.log('ids', ids, 'kinds', kinds, 'events', events)
+
+  events = [...events.values()].map((e) => rawEvent(e))
+  if (augment) events = await augmentPrepareEvents(events, events.length)
+
+  console.log('events by ids prepared', events)
+
+  return events
+}
+
+async function augmentLongNotes(events) {
+  events.forEach((e) => {
+    e.title = getTagValue(e, 'title')
+    e.summary = getTagValue(e, 'summary')
+    e.published_at = Number(getTagValue(e, 'published_at'))
+  })
+  return events
+}
+
+async function augmentZaps(events, minZap) {
+  events.forEach((e) => {
+    e.description = parseContentJson(getTagValue(e, 'description'))
+    try {
+      e.bolt11 = bolt11Decode(getTagValue(e, 'bolt11'))
+    } catch {
+      e.bolt11 = {}
+    }
+    e.amountMsat = Number(e.bolt11?.sections.find((s) => s.name === 'amount').value)
+    e.targetEventId = getTagValue(e, 'e')
+    e.targetAddr = getTagValue(e, 'a')
+    e.targetPubkey = getTagValue(e, 'p')
+    e.providerPubkey = e.pubkey
+    e.senderPubkey = e.description?.pubkey
+  })
+
+  // drop zaps w/o a target event
+  events = events.filter((e) => !!e.targetEventId)
+
+  if (minZap) {
+    events = events.filter((e) => e.amountMsat / 1000 >= minZap)
+  }
+
+  if (events.length > 0) {
+    // target event infos
+    const ids = events.map((e) => e.targetEventId).filter((id) => !!id)
+    let targets = await fetchEventsByIds({
+      ids,
+      kinds: [KIND_NOTE, KIND_LONG_NOTE, KIND_COMMUNITY, KIND_LIVE_EVENT, KIND_APP],
+      augment: false
     })
 
-    // notify that initial fetch is over
-    sub.on('eose', ok)
+    // profile infos
+    const pubkeys = new Set()
+    events.forEach((e) => {
+      pubkeys.add(e.providerPubkey)
+      if (e.targetPubkey) pubkeys.add(e.targetPubkey)
+      if (e.senderPubkey) pubkeys.add(e.senderPubkey)
+    })
+    console.log('zap meta pubkeys', pubkeys)
+    const metas = await fetchMetas([...pubkeys.values()])
 
-    // start
-    sub.start()
+    // assign to zaps
+    events.forEach((e) => {
+      e.targetEvent = targets.find((t) => t.id === e.targetEventId)
+      e.targetMeta = metas.find((m) => m.pubkey === e.targetPubkey)
+      e.providerMeta = metas.find((m) => m.pubkey === e.providerPubkey)
+      e.senderMeta = metas.find((m) => m.pubkey === e.senderPubkey)
+    })
+  }
+
+  // desc
+  events.sort((a, b) => b.order - a.order)
+
+  return events
+}
+
+async function augmentCommunities(events, addrs) {
+  events.forEach((e) => {
+    e.name = e.identifier
+    e.description = getTagValue(e, 'description')
+    e.image = getTagValue(e, 'image')
+    e.moderators = getTags(e, 'p')
+      .filter((p) => p.length >= 4 && p[3] === 'moderator')
+      .map((p) => p[1])
+
+    const apprs = addrs.filter((a) => a.pubkey === e.pubkey && a.identifier === e.identifier)
+    e.last_post_tm = apprs[0].tm
+    e.order = apprs[0].tm
+    e.posts = apprs.length
+  })
+
+  // desc
+  events.sort((a, b) => b.order - a.order)
+
+  return events
+}
+
+async function searchEvents(q, kind, limit = 30) {
+  let events = await ndk.fetchEvents(
+    {
+      kinds: [kind],
+      search: q,
+      limit
+    },
+    {}, // opts
+    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+  )
+  events = [...events.values()].map((e) => rawEvent(e))
+
+  console.log('notes', events)
+
+  events = await augmentPrepareEvents(events, limit)
+
+  console.log('notes prepared', events)
+
+  return events
+}
+
+export async function searchNotes(q, limit = 30) {
+  return searchEvents(q, KIND_NOTE, limit)
+}
+
+export async function searchLongNotes(q, limit = 30) {
+  let events = await searchEvents(q, KIND_LONG_NOTE, limit)
+  events = await augmentLongNotes(events)
+  return events
+}
+
+function onUniqueEvent(sub, cb) {
+  // call cb on each event
+  const events = new Map()
+  sub.on('event', (event) => {
+    // dedup
+    const dedupKey = event.deduplicationKey()
+    const existingEvent = events.get(dedupKey)
+    // console.log("dedupKey", dedupKey, "existingEvent", existingEvent?.created_at, "event", event.created_at);
+    if (existingEvent?.created_at > event.created_at) {
+      return
+    }
+    events.set(dedupKey, event)
+
+    cb(event)
   })
 }
 
-export async function subscribeContactLists(pubkeys, cb) {
+// used for handling a sequence of events and an eose after them,
+// since each event-handling callback might be async we have to execute
+// them one by one through a queue to ensure eose marker comes last
+class PromiseQueue {
+  queue = []
+
+  constructor() {}
+
+  appender(cb) {
+    return (...args) => {
+      this.queue.push([cb, [...args]])
+      if (this.queue.length === 1) this.execute()
+    }
+  }
+
+  async execute() {
+    // the next cb in the queue
+    const [cb, args] = this.queue[0]
+
+    // execute the next cb
+    await cb(...args)
+
+    // mark the last cb as done
+    this.queue.shift()
+
+    // have the next one? proceed
+    if (this.queue.length > 0) this.execute()
+  }
+}
+
+async function fetchPubkeyEvents(opts) {
+  let { kind, pubkeys, tagged = false, augment = false, limit = 30 } = opts
+
+  const authors = [...pubkeys]
+  if (authors.length > 200) authors.length = 200
+
+  const filter = {
+    kinds: [kind],
+    limit
+  }
+
+  if (tagged) filter['#p'] = authors
+  else filter.authors = authors
+
+  if (opts.identifiers) filter['#d'] = opts.identifiers
+
+  let events = await fetchEventsRead(ndk, filter)
+  console.log('kind', kind, 'new events', events)
+
+  events = [...events.values()].map((e) => rawEvent(e))
+  if (augment) events = await augmentPrepareEvents(events, limit)
+
+  return events
+}
+
+export async function fetchFollowedLongNotes(contactPubkeys) {
+  let events = await fetchPubkeyEvents({
+    kind: KIND_LONG_NOTE,
+    pubkeys: contactPubkeys,
+    augment: true
+  })
+  events = await augmentLongNotes(events)
+  return events
+}
+
+export async function fetchFollowedHighlights(contactPubkeys) {
+  let events = await fetchPubkeyEvents({
+    kind: KIND_HIGHLIGHT,
+    pubkeys: contactPubkeys,
+    augment: true
+  })
+  //  events = await augmentLongNotes(events);
+  return events
+}
+
+export async function fetchFollowedZaps(contactPubkeys, minZap) {
+  let events = await fetchPubkeyEvents({
+    kind: KIND_ZAP,
+    pubkeys: contactPubkeys,
+    tagged: true,
+    limit: 200
+  })
+  events = await augmentZaps(events, minZap)
+  return events
+}
+
+export async function fetchFollowedCommunities(contactPubkeys) {
+  const approvals = await fetchPubkeyEvents({
+    kind: KIND_COMMUNITY_APPROVAL,
+    pubkeys: contactPubkeys,
+    limit: 100
+  })
+
+  // desc
+  approvals.sort((a, b) => b.order - a.order)
+  //  console.log("approvals", approvals);
+
+  const addrs = approvals
+    .map((e) => {
+      return { tm: e.created_at, p: getTagValue(e, 'a').split(':') }
+    })
+    .filter((a) => a.p.length == 3 && Number(a.p[0]) === KIND_COMMUNITY)
+    .map((a) => {
+      return { tm: a.tm, pubkey: a.p[1], identifier: a.p[2] }
+    })
+  //  console.log("addrs", addrs);
+
+  let events = await fetchPubkeyEvents({
+    kind: KIND_COMMUNITY,
+    pubkeys: [...new Set(addrs.map((a) => a.pubkey))],
+    identifiers: [...new Set(addrs.map((a) => a.identifier))],
+    augment: true
+  })
+
+  events = await augmentCommunities(events, addrs)
+  console.log('communities', events)
+  return events
+}
+
+async function augmentLiveEvents(events, contactPubkeys, limit) {
+  // convert to an array of raw events
+
+  const MAX_LIVE_TTL = 3600
+  events.forEach((e) => {
+    e.title = getTagValue(e, 'title')
+    e.summary = getTagValue(e, 'summary')
+    e.starts = Number(getTagValue(e, 'starts'))
+    e.current_participants = Number(getTagValue(e, 'current_participants'))
+    e.status = getTagValue(e, 'status')
+
+    // NIP-53: Clients MAY choose to consider status=live events
+    // after 1hr without any update as ended.
+    if (Date.now() / 1000 - e.created_at > MAX_LIVE_TTL) e.status = 'ended'
+
+    const ps = getTags(e, 'p')
+    e.host = ps.find((p) => p.length >= 4 && (p[3] === 'host' || p[3] === 'Host'))?.[1]
+    e.members = ps.filter((p) => p.length >= 4 && contactPubkeys.includes(p[1])).map((p) => p[1])
+
+    // newest-first
+    e.order = e.starts
+
+    // reverse order of all non-live events and make
+    // them go after live ones
+    if (e.status !== 'live') e.order = -e.order
+  })
+
+  // drop ended ones
+  events = events.filter((e) => {
+    return (
+      !!e.host &&
+      // For now let's show live events where some of our following are participating
+      //	&& contactPubkeys.includes(e.host)
+      e.status !== 'ended'
+    )
+  })
+
+  if (events.length > 0) {
+    // profile infos
+    const metas = await fetchMetas(events.map((e) => [e.pubkey, ...e.members]).flat())
+
+    // assign to live events
+    events.forEach((e) => {
+      e.author = metas.find((m) => m.pubkey === e.pubkey) // provider
+      e.hostMeta = e.host ? metas.find((m) => m.pubkey === e.host) : null // host
+      e.membersMeta = metas.filter((m) => e.members.includes(m.pubkey)) // all members: host, speakers, participants
+    })
+  }
+
+  // desc
+  events.sort((a, b) => b.order - a.order)
+
+  // crop
+  if (events.length > limit) events.length = limit
+
+  return events
+}
+
+export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
+  let events = await fetchPubkeyEvents({
+    kind: KIND_LONG_NOTE,
+    pubkeys: contactPubkeys,
+    tagged: true
+  })
+
+  events = await augmentLiveEvents(events, contactPubkeys, limit)
+
+  return events
+}
+
+let profilesSub = null
+export async function subscribeProfiles(pubkeys, cb) {
+  // gc
+  if (profilesSub) {
+    profilesSub.stop()
+    profilesSub = null
+  }
+
   const sub = await ndk.subscribe(
     {
       authors: [...pubkeys],
-      kinds: [KIND_CONTACT_LIST]
+      kinds: [KIND_META]
     },
-    {
-      subId: 'cl'
-    },
+    {},
     NDKRelaySet.fromRelayUrls(readRelays, ndk),
     /* autoStart */ false
   )
 
-  sub.on('event', async (event) => {
-    const contactList = {
-      id: event.id,
-      pubkey: event.pubkey,
-      kind: event.kind,
-      tags: event.tags,
-      created_at: event.created_at,
-      content: event.content,
-      contactPubkeys: event.tags.filter((t) => t.length >= 2 && t[0] === 'p').map((t) => t[1]),
-      contactEvents: []
-    }
+  // ensure async callbacks are executed one by one
+  const pq = new PromiseQueue()
 
-    // dedup
-    contactList.contactPubkeys = [...new Set(contactList.contactPubkeys)]
+  // call cb on each unique newer event
+  onUniqueEvent(
+    sub,
+    pq.appender(async (event) => {
+      // convert to raw event
+      const profile = rawEvent(event)
+      profile.profile = parseContentJson(event.content)
+
+      console.log('got profile', profile)
+      await cb(profile)
+    })
+  )
+
+  // notify that initial fetch is over
+  sub.on(
+    'eose',
+    pq.appender(async () => await cb(null))
+  )
+
+  // start
+  sub.start()
+
+  // store
+  profilesSub = sub
+}
+
+let clSub = null
+export async function subscribeContactList(pubkey, cb) {
+  // gc
+  if (clSub) {
+    clSub.stop()
+    clSub = null
+  }
+
+  const sub = await ndk.subscribe(
+    {
+      authors: [pubkey],
+      kinds: [KIND_CONTACT_LIST]
+    },
+    {},
+    NDKRelaySet.fromRelayUrls(readRelays, ndk),
+    /* autoStart */ false
+  )
+
+  // ensure async callbacks are executed one by one
+  const pq = new PromiseQueue()
+
+  // call cb on each unique newer event
+  let eose = false
+  let lastCL = null
+
+  const returnLastCL = async () => {
+    const event = lastCL
+
+    const contactList = rawEvent(event)
+    // extract and dedup pubkeys
+    contactList.contactPubkeys = [...new Set(event.tags.filter((t) => t.length >= 2 && t[0] === 'p').map((t) => t[1]))]
+    contactList.contactEvents = []
 
     if (contactList.contactPubkeys.length) {
       contactList.contactEvents = await collectEvents(
@@ -715,10 +1106,34 @@ export async function subscribeContactLists(pubkeys, cb) {
     }
 
     console.log('got contact list', contactList)
-    cb(contactList)
-  })
+    await cb(contactList)
+  }
 
+  onUniqueEvent(
+    sub,
+    pq.appender(async (event) => {
+      lastCL = event
+      if (eose) await returnLastCL()
+    })
+  )
+
+  // notify that initial fetch is over
+  sub.on(
+    'eose',
+    pq.appender(async () => {
+      eose = true
+      if (lastCL) await returnLastCL()
+
+      // notify about eose
+      await cb(null)
+    })
+  )
+
+  // start
   sub.start()
+
+  // store
+  clSub = sub
 }
 
 export function stringToBech32(s, hex = false) {
@@ -752,6 +1167,34 @@ export function stringToBech32(s, hex = false) {
   }
 
   return ''
+}
+
+export function createAddrOpener(cb) {
+  return (event) => {
+    let addr = event.id
+
+    if (event.kind === KIND_META) {
+      // npub
+      addr = nip19.npubEncode(event.pubkey)
+    } else if ((event.kind >= 10000 && event.kind < 20000) || (event.kind >= 30000 && event.kind < 40000)) {
+      // naddr
+      addr = nip19.naddrEncode({
+        pubkey: event.pubkey,
+        kind: event.kind,
+        identifier: getTagValue(event, 'd'),
+        relays: [nostrbandRelay]
+      })
+    } else {
+      // nevent
+      addr = nip19.neventEncode({
+        id: event.id,
+        relays: [nostrbandRelay]
+      })
+    }
+
+    console.log('addr', addr)
+    cb(addr)
+  }
 }
 
 export function connect() {

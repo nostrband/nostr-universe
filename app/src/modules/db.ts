@@ -98,6 +98,7 @@ export const dbi = {
     try {
       return await db.lastContacts.where('pubkey').equals(pubkey).toArray()
     } catch (error) {
+      return []
       console.log(`List lastContacts error: ${JSON.stringify(error)}`)
     }
   },

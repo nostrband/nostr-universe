@@ -10,12 +10,26 @@ import ReplayOutlinedIcon from '@mui/icons-material/ReplayOutlined'
 import { StyledTabsActions, StyledWrapper } from './styled'
 
 export const TabMenu = () => {
-  const { openApp } = useOpenApp()
-  const { currentTab } = useAppSelector((state) => state.tab)
+  const { onSwitchTab, onHideTabInBrowser, onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
+  const { currentTab, isLoading } = useAppSelector((state) => state.tab)
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
 
-  const handleOpenApp = async (app: AppNostroType) => {
-    await openApp(app)
+  // const handleOpenApp = async (app: AppNostroType) => {
+  //   await openApp(app)
+  // }
+
+  const handleSwitchTab = async (tab: AppNostroType) => {
+    console.log({ handleSwitchTab: tab })
+    await onHideTabInBrowser()
+    await onSwitchTab(tab)
+  }
+
+  const handleStopReloadTab = async () => {
+    if (isLoading) {
+      await onStopLoadTab()
+    } else {
+      await onReloadTab()
+    }
   }
 
   const getTabsFromCurrentWorkSpace = currentWorkSpace.tabGroups.find((tab) => tab.id === currentTab?.appNaddr)
@@ -25,6 +39,8 @@ export const TabMenu = () => {
       return currentWorkSpace.tabs.find(({ id }) => id === tab)
     })
     .filter((tab): tab is ITab => !!tab)
+
+  console.log({ getTabs })
 
   return (
     <StyledWrapper>
@@ -36,24 +52,31 @@ export const TabMenu = () => {
               picture: tab.icon,
               name: tab.title,
               naddr: tab.appNaddr,
-              url: tab.url
+              url: tab.url,
+              order: tab.order
             }
 
             const isActive = currentTab.id === tab.id
-            return <AppNostro key={tab.id} isPreviewTab app={app} isActive={isActive} hideName onOpen={handleOpenApp} />
+            return (
+              <AppNostro
+                key={tab.id}
+                isPreviewTab
+                app={app}
+                disabled={isActive}
+                isActive={isActive}
+                hideName
+                onOpen={handleSwitchTab}
+              />
+            )
           })}
       </StyledTabsActions>
 
       <StyledTabsActions>
-        <IconButton color="inherit" size="medium">
-          <CloseOutlinedIcon />
+        <IconButton color="inherit" size="medium" onClick={handleStopReloadTab}>
+          {isLoading ? <CloseOutlinedIcon /> : <ReplayOutlinedIcon />}
         </IconButton>
 
-        <IconButton color="inherit" size="medium">
-          <ReplayOutlinedIcon />
-        </IconButton>
-
-        <IconButton color="inherit" size="medium">
+        <IconButton color="inherit" size="medium" onClick={onHideTab}>
           <HomeOutlinedIcon />
         </IconButton>
       </StyledTabsActions>

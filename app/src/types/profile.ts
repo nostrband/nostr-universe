@@ -14,5 +14,7 @@ export type ReturnProfileType = {
     lud16: string
     display_name: string
     website: string
+    pubkey: string
+    npub: string
   }
 }

@@ -242,7 +242,7 @@ export function open(params) {
   }
 
   const header = document.getElementById('header')
-  const main = document.getElementById('main')
+  // const main = document.getElementById('main')
   const topOffset = 50
   const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)))
   const footer = document.getElementById('tab-menu')

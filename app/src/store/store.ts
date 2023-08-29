@@ -6,6 +6,7 @@ import { appsSlice } from './reducers/apps.slice'
 import { workspacesSlice } from './reducers/workspaces.slice'
 import { profileSlice } from './reducers/profile.slice'
 import { tabSlice } from './reducers/tab.slice'
+import { contentWorkSpaceSlice } from './reducers/contentWorkspace'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -13,6 +14,7 @@ export const rootReducer = combineReducers({
   apps: appsSlice.reducer,
   profile: profileSlice.reducer,
   tab: tabSlice.reducer,
+  contentWorkSpace: contentWorkSpaceSlice.reducer,
   workspaces: workspacesSlice.reducer,
   [userService.reducerPath]: userService.reducer
 })

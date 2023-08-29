@@ -19,16 +19,29 @@ export type TrendingProfile = {
   name: string
   about: string
   picture: string
-  username: string
+  username?: string
   display_name: string
-  displayName: string
-  banner: string
+  displayName?: string
+  banner?: string
   website: string
   nip05: string
-  lud16: string
-  lud06: string
+  lud16?: string
+  lud06?: string
   npub: string
   pubkey: string
 }
 
 export type ITrendingProfiles = TrendingProfile[]
+
+export type ReturnProfile = {
+  content: string
+  created_at: number
+  id: string
+  kind: number
+  pubkey: string
+  sig: string
+  tags: string[]
+  order: number
+  identifier: string
+  profile: TrendingProfile
+}

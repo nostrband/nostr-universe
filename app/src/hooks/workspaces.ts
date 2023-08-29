@@ -1,12 +1,13 @@
 import { keystore } from '@/modules/keystore'
-import { addWorkspace, getKeys } from '@/modules/AppInitialisation/utils'
+import { addWorkspace } from '@/modules/AppInitialisation/utils'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setCurrentPubKey, setKeys } from '@/store/reducers/keys.slice'
+import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { db } from '@/modules/db'
-import { setWorkspaces } from '@/store/reducers/workspaces.slice'
+import { setCurrentWorkspace, setWorkspaces } from '@/store/reducers/workspaces.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { WorkSpace } from '@/types/workspace'
+import { writeCurrentPubkey, getKeys } from '@/utils/keys'
 
 const updateWorkspace = (workspaces: WorkSpace[], cbProps: { pubkey: string }, pubkey: string) => {
   const updateWorkspaces = workspaces.map((workspace) =>
@@ -24,10 +25,11 @@ export const useAddKey = () => {
   const addKey = async () => {
     await keystore.addKey()
 
-    const [keys, currentPubKey] = await getKeys()
+    const [keys, currentPubKey, readKeys] = await getKeys()
 
     dispatch(setKeys({ keys }))
     dispatch(setCurrentPubKey({ currentPubKey }))
+    dispatch(setReadKeys({ readKeys }))
 
     if (currentPubKey === DEFAULT_PUBKEY) {
       await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubKey })
@@ -60,14 +62,16 @@ export const useChangeAccount = () => {
   const { currentPubKey } = useAppSelector((state) => state.keys)
 
   const changeAccount = async (publicKey: string) => {
-    const res = await keystore.selectKey({ publicKey })
+    await writeCurrentPubkey(publicKey)
 
-    if (res && res.currentAlias !== currentPubKey) {
+    if (publicKey !== currentPubKey) {
       const [keys, pubkey] = await getKeys()
       dispatch(setKeys({ keys }))
       dispatch(setCurrentPubKey({ currentPubKey: pubkey }))
 
-      await updateProfile(keys, currentPubKey)
+      dispatch(setCurrentWorkspace({ currentPubKey: pubkey }))
+
+      updateProfile(keys, pubkey)
     }
   }
 

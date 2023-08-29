@@ -11,8 +11,8 @@ import { IAppPinMenu } from './types'
 import { drawerbleeding } from './const'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { FreeMode } from 'swiper/modules'
-import styles from './slider.module.scss'
 import 'swiper/css'
+import styles from './slider.module.scss'
 
 export const AppPinMenu = (props: IAppPinMenu) => {
   const { openApp } = useOpenApp()
@@ -85,7 +85,8 @@ export const AppPinMenu = (props: IAppPinMenu) => {
                   picture: tab.info.icon,
                   name: tab.info.title,
                   naddr: tab.info.appNaddr,
-                  url: tab.info.url
+                  url: tab.info.url,
+                  order: tab.info.order
                 }
 
                 const isActive = Boolean(tab.tabs.length)
@@ -106,7 +107,8 @@ export const AppPinMenu = (props: IAppPinMenu) => {
                   picture: tab.info.icon,
                   name: tab.info.title,
                   naddr: tab.info.appNaddr,
-                  url: tab.info.url
+                  url: tab.info.url,
+                  order: tab.info.order
                 }
 
                 const isActive = Boolean(tab.tabs.length)

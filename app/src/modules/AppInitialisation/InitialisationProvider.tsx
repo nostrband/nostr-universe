@@ -6,9 +6,10 @@ import { setCurrentWorkspace, setWorkspaces } from '@/store/reducers/workspaces.
 import { useUpdateProfile } from '@/hooks/profile'
 import { setProfiles } from '@/store/reducers/profile.slice'
 import { DEFAULT_PUBKEY } from '@/consts'
+import { getKeys } from '@/utils/keys'
 import { IInitialisationProvider } from './types'
 import { connect, fetchApps } from '../nostr'
-import { createSomeWorkspaces, getKeys } from './utils'
+import { createSomeWorkspaces } from './utils'
 import { dbi } from '../db'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
@@ -37,9 +38,8 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       await connect()
 
       const profiles = await dbi.listProfiles()
-
       if (profiles.length > 0) {
-        setProfiles(profiles)
+        dispatch(setProfiles({ profiles }))
       }
 
       await updateProfile(keys, currentPubKey)
