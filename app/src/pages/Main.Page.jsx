@@ -11,6 +11,7 @@ import { EventAppsModal } from "../components/event-apps-modal/EventAppsModal";
 import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
 import { ContextMenuModal } from "../components/context-menu-modal/ContextMenuModal";
 import { ImportPubkeyModal } from "../components/onboarding/ImportPubkeyModal";
+import { TabsModal } from "../components/tabs/TabsModal";
 import { WelcomeWidget } from "../components/onboarding/WelcomeWidget";
 import { IconButton } from "../components/UI/IconButton";
 import { Footer } from "../layout/Footer";
@@ -46,6 +47,7 @@ const MainPage = () => {
   const [isPinModalVisible, setIsPinModalVisible] = useState(false);
   const [showTabMenu, setShowTabMenu] = useState(false);
   const [showImportPubkey, setShowImportPubkey] = useState(false);
+  const [showTabs, setShowTabs] = useState(false);
 
   const isSearchModalVisible = Boolean(searchParams.get("search"));
 
@@ -129,71 +131,77 @@ const MainPage = () => {
         {currentWorkspace?.suggestedProfiles.length > 0 && 
 	 <TrendingProfiles onOpenProfile={setOpenAddr} suggested />
 	}
-        <AppsList />
+
+	<AppsList />
         {false && <ContactList onOpenProfile={setContactOpenAddr} />}
 
-        <EditKeyModal
-          isOpen={isEditKeyModalVisible}
-          onClose={() => setIsEditKeyModalVisible(false)}
-        />
+	<EditKeyModal
+	  isOpen={isEditKeyModalVisible}
+	  onClose={() => setIsEditKeyModalVisible(false)}
+	/>
 
-        <SearchModal
-          isOpen={isSearchModalVisible}
-          onSearch={onSearch}
-          onClose={toggleSearchModalVisibility}
-          onOpenEvent={setOpenAddr}
-          onOpenContact={setContactOpenAddr}
-        />
+	<SearchModal
+	  isOpen={isSearchModalVisible}
+	  onSearch={onSearch}
+	  onClose={toggleSearchModalVisibility}
+	  onOpenEvent={setOpenAddr}
+	  onOpenContact={setContactOpenAddr}
+	/>
 
-        <PinAppModal
-          isOpen={isPinModalVisible}
-          onClose={togglePinModalVisibility}
-        />
+	<PinAppModal
+	  isOpen={isPinModalVisible}
+	  onClose={togglePinModalVisibility}
+	/>
 
-        <EventAppsModal
-          isOpen={openAddr !== ""}
-          onClose={() => setOpenAddr("")}
-          addr={openAddr}
-          onSelect={onOpenedEvent}
-        />
+	<EventAppsModal
+	  isOpen={openAddr !== ""}
+	  onClose={() => setOpenAddr("")}
+	  addr={openAddr}
+	  onSelect={onOpenedEvent}
+	/>
 
-        <TabMenuModal
-          isOpen={showTabMenu}
-          onClose={() => setShowTabMenu(false)}
-          onOpenWith={setOpenAddr}
-          onOpenPinAppModal={togglePinModalVisibility}
-        />
+	<TabMenuModal
+	  isOpen={showTabMenu}
+	  onClose={() => setShowTabMenu(false)}
+	  onOpenWith={setOpenAddr}
+	  onOpenPinAppModal={togglePinModalVisibility}
+	/>
 
-        <ContextMenuModal
-          isOpen={!!contextInput}
-          onClose={() => setContextInput("")}
-          input={contextInput}
-          onOpenWith={(id) => {
+	<ContextMenuModal
+	  isOpen={!!contextInput}
+	  onClose={() => setContextInput("")}
+	  input={contextInput}
+	  onOpenWith={(id) => {
             setContextInput("");
             setTimeout(() => setOpenAddr(id), 0);
-          }}
-        />
+	  }}
+	/>
 
 	<ImportPubkeyModal
 	  isOpen={showImportPubkey}
-          onClose={() => setShowImportPubkey(false)}
+	  onClose={() => setShowImportPubkey(false)}
 	  onSelect={onImportPubkey}
 	/>
+
+	<TabsModal
+	  isOpen={showTabs}
+	  onClose={() => setShowTabs(false)}
+	/>
 	
-        {currentTab && (
-          <TabBackground className="d-flex flex-column justify-content-center align-items-center">
+	{currentTab && (
+	  <TabBackground className="d-flex flex-column justify-content-center align-items-center">
             <div>
               <IconButton
-                data={{ title: currentTab.title, img: currentTab.icon }}
-                size="big"
+		data={{ title: currentTab.title, img: currentTab.icon }}
+		size="big"
               />
             </div>
             <div className="mt-2">Loading...</div>
-          </TabBackground>
-        )}
+	  </TabBackground>
+	)}
       </main>
 
-      <Footer onOpenPinModal={togglePinModalVisibility} />
+      <Footer onOpenPinModal={togglePinModalVisibility} onTabs={() => setShowTabs(true)} />
     </Container>
   );
 };

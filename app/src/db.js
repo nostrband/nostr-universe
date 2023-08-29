@@ -34,7 +34,20 @@ export const dbi = {
   },
   updateTab: async (tab) => {
     try {
-      await db.tabs.where('id').equals(tab.id).modify({url: tab.url, icon: tab.icon});
+      await db.tabs.where('id').equals(tab.id).modify({
+	url: tab.url,
+	icon: tab.icon,
+	lastActive: tab.lastActive,
+      });
+    } catch (error) {
+      console.log(`Update tab in DB error: ${JSON.stringify(error)}`);
+    }
+  },
+  updateTabScreenshot: async (tab) => {
+    try {
+      await db.tabs.where('id').equals(tab.id).modify({
+	screenshot: tab.screenshot,
+      });
     } catch (error) {
       console.log(`Update tab in DB error: ${JSON.stringify(error)}`);
     }
