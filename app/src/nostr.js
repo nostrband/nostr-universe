@@ -1103,7 +1103,9 @@ export async function subscribeProfiles(pubkeys, cb) {
       authors: [...pubkeys],
       kinds: [KIND_META],
     },
-    {},
+    {
+      closeOnEose: false,
+    },
     NDKRelaySet.fromRelayUrls(readRelays, ndk),
     /* autoStart */ false
   );
@@ -1145,7 +1147,9 @@ export async function subscribeContactList(pubkey, cb) {
       authors: [pubkey],
       kinds: [KIND_CONTACT_LIST],
     },
-    {},
+    {
+      closeOnEose: false,
+    },
     NDKRelaySet.fromRelayUrls(readRelays, ndk),
     /* autoStart */ false
   );
@@ -1194,6 +1198,7 @@ export async function subscribeContactList(pubkey, cb) {
   };
   
   onUniqueEvent(sub, pq.appender(async (event) => {
+    console.log("got cl event", event);
     lastCL = event;
     if (eose)
       await returnLastCL();
@@ -1204,9 +1209,6 @@ export async function subscribeContactList(pubkey, cb) {
     eose = true;
     if (lastCL)
       await returnLastCL();
-
-    // notify about eose
-    await cb(null)
   }));
 
   // start
@@ -1288,6 +1290,14 @@ export function connect() {
   
   ndk = new NDK({ explicitRelayUrls: allRelays });
 
+  const scheduleStats = () => {
+    setTimeout(() => {
+      console.log("ndk stats", JSON.stringify(ndk.pool.stats()));
+      scheduleStats();
+    }, 5000);
+  };
+  scheduleStats();
+  
   return ndk.connect(/* timeoutMs */ 1000, /* minConns */ 3);
 }
 
