@@ -13,9 +13,8 @@ export const Highlights = () => {
   const { highlights } = useAppSelector((state) => state.contentWorkSpace)
 
   const handleOpenHighlight = (highlight: ReturnTypeHighlight) => {
-    console.log({ highlight })
-    const nprofile = nip19.nprofileEncode({
-      pubkey: highlight.id,
+    const nprofile = nip19.neventEncode({
+      id: highlight.id,
       relays: [nostrbandRelay]
     })
 

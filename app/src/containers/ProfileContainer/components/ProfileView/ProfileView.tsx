@@ -4,7 +4,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useChangeAccount } from '@/hooks/workspaces'
-import { getNpub, getProfileImage, getProfileName, isGuest } from '@/utils/helpers/prepare-data'
+import { getNpub, getProfileImage, isGuest } from '@/utils/helpers/prepare-data'
 import { ModalAccounts } from '../ModalAccounts/ModalAccounts'
 import {
   StyledViewAction,
@@ -15,6 +15,7 @@ import {
   StyledViewName
 } from './styled'
 import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
+import { getRenderedUsername } from '@/utils/helpers/general'
 
 export const ProfileView = () => {
   const { open, handleOpen, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEYS_PROFILE)
@@ -40,6 +41,8 @@ export const ProfileView = () => {
 
   const getCurrentPubKey = isGuest(currentPubKey) ? '' : getNpub(currentPubKey)
 
+  console.log({ currentProfileGETObject: currentPubKey })
+
   return (
     <>
       <Container>
@@ -52,7 +55,7 @@ export const ProfileView = () => {
           </StyledViewAvatarWrapper>
         </StyledViewBaner>
         <StyledViewName variant="h5" component="div">
-          {getProfileName(currentProfile)}
+          {getRenderedUsername(currentProfile, currentPubKey)}
         </StyledViewName>
         <StyledViewAction
           // onClick={handleOpenKeyImport}

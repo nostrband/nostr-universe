@@ -18,7 +18,7 @@ export const SliderBigZaps = ({ data, isLoading, handleClickEntity = () => {} }:
                 time={bigZap.created_at}
                 subtitle={`+${Math.round(bigZap.amountMsat / 1000)} sats`}
                 name={cropName(getRenderedUsername(bigZap.targetMeta, bigZap.targetPubkey), 11)}
-                picture={bigZap.targetMeta.profile.picture}
+                picture={bigZap.targetMeta?.profile.picture}
               />
             </SwiperSlide>
           ))}

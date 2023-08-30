@@ -23,12 +23,13 @@ export const useAddKey = () => {
   const { workspaces } = useAppSelector((state) => state.workspaces)
 
   const addKey = async () => {
-    await keystore.addKey()
+    const r = await keystore.addKey()
+
+    await writeCurrentPubkey(r.pubkey)
 
     const [keys, currentPubKey, readKeys] = await getKeys()
 
     dispatch(setKeys({ keys }))
-    dispatch(setCurrentPubKey({ currentPubKey }))
     dispatch(setReadKeys({ readKeys }))
 
     if (currentPubKey === DEFAULT_PUBKEY) {
@@ -47,6 +48,7 @@ export const useAddKey = () => {
 
       dispatch(setWorkspaces({ workspaces: [workspace] }))
     }
+    dispatch(setCurrentPubKey({ currentPubKey }))
 
     await updateProfile(keys, currentPubKey)
   }
@@ -59,9 +61,13 @@ export const useAddKey = () => {
 export const useChangeAccount = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
-  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const { currentPubKey, readKeys } = useAppSelector((state) => state.keys)
 
   const changeAccount = async (publicKey: string) => {
+    if (!readKeys.includes(publicKey)) {
+      await keystore.selectKey({ publicKey })
+    }
+
     await writeCurrentPubkey(publicKey)
 
     if (publicKey !== currentPubKey) {

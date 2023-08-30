@@ -15,14 +15,14 @@ export const BigZaps = () => {
   const handleOpenHighlight = (bigZap: BigZap) => {
     let addr = ''
     if (typeof bigZap.targetEvent !== 'string') {
-      if (bigZap.targetEvent.kind === 0) {
+      if (bigZap.targetEvent?.kind === 0) {
         addr = nip19.nprofileEncode({
           pubkey: bigZap.targetEvent.pubkey,
           relays: [nostrbandRelay]
         })
       } else if (
-        (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000) ||
-        (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000)
+        (bigZap.targetEvent?.kind >= 10000 && bigZap.targetEvent?.kind < 20000) ||
+        (bigZap.targetEvent?.kind >= 10000 && bigZap.targetEvent?.kind < 20000)
       ) {
         addr = nip19.neventEncode({
           id: bigZap.targetEvent.pubkey,
@@ -32,7 +32,7 @@ export const BigZaps = () => {
         })
       } else {
         addr = nip19.neventEncode({
-          id: bigZap.targetEvent.id,
+          id: bigZap.targetMeta?.id,
           relays: [nostrbandRelay]
         })
       }

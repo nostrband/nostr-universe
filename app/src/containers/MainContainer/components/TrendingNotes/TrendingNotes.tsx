@@ -25,7 +25,7 @@ export const TrendingNotes = () => {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Trending Profiles
+          Trending Notes
         </StyledTitle>
       </Container>
 

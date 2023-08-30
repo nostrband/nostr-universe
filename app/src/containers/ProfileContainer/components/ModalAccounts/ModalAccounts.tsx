@@ -12,12 +12,13 @@ import {
   StyledViewModal
 } from './styled'
 import { IModalAccounts } from './types'
-import { useAddKey } from '@/hooks/workspaces'
+// import { useAddKey } from '@/hooks/workspaces'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { useOpenApp } from '@/hooks/open-entity'
 
 export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, currentPubKey }: IModalAccounts) => {
-  const { addKey } = useAddKey()
+  const { onImportKey } = useOpenApp()
   const { handleOpen: handleOpenKeyImport } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEY_IMPORT)
 
   return (
@@ -51,7 +52,7 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
           </StyledItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <StyledItemButton alignItems="center" onClick={addKey}>
+          <StyledItemButton alignItems="center" onClick={() => onImportKey()}>
             <ListItemAvatar>
               <StyledItemIconAvatar>
                 <AddIcon />

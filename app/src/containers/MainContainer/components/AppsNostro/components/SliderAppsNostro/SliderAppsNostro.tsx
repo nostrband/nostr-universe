@@ -4,7 +4,6 @@ import { AppNostro } from '@/shared/AppNostro/AppNostro'
 import { AppNostro as AppNostroType } from '@/types/app-nostro'
 import { useOpenApp } from '@/hooks/open-entity'
 import { ISliderAppsNostro } from './types'
-import { StyledSlideWrapper } from './styled'
 import styles from './slider.module.scss'
 import 'swiper/css'
 
@@ -21,9 +20,7 @@ export const SliderAppsNostro = ({ data, isLoading }: ISliderAppsNostro) => {
         ? 'Loading'
         : data.map((app, i) => (
             <SwiperSlide className={styles.slide} key={i}>
-              <StyledSlideWrapper>
-                <AppNostro app={app} onOpen={handleOpenApp} />
-              </StyledSlideWrapper>
+              <AppNostro app={app} onOpen={handleOpenApp} />
             </SwiperSlide>
           ))}
     </Swiper>

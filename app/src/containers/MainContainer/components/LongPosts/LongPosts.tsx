@@ -23,6 +23,8 @@ export const LongPosts = () => {
     handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
   }
 
+  console.log({ longPosts })
+
   return (
     <StyledWrapper>
       <Container>

@@ -14,8 +14,9 @@ import { AppNostro, IOpenAppNostro } from '@/types/app-nostro'
 import { getKeys, writeCurrentPubkey } from '@/utils/keys'
 import { v4 as uuidv4 } from 'uuid'
 import { useUpdateProfile } from './profile'
-import { setCurrentPubKey, setKeys } from '@/store/reducers/keys.slice'
+import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import { addWorkspace } from '@/modules/AppInitialisation/utils'
+import { keystore } from '@/modules/keystore'
 
 function getOrigin(url) {
   try {
@@ -270,18 +271,20 @@ export const useOpenApp = () => {
     })
   }
 
-  const onImportKey = async (importPubkey) => {
+  const onImportKey = async (importPubkey?: string) => {
     if (importPubkey) {
       await dbi.putReadOnlyKey(importPubkey)
       await writeCurrentPubkey(importPubkey)
     } else {
       const r = await keystore.addKey()
+
       await writeCurrentPubkey(r.pubkey)
     }
 
     // // reload the list
-    const [keys, pubkey] = await getKeys()
+    const [keys, pubkey, readKeys] = await getKeys()
     dispatch(setKeys({ keys }))
+    dispatch(setReadKeys({ readKeys }))
     dispatch(setCurrentPubKey({ currentPubKey: pubkey }))
 
     const workspace = await addWorkspace(pubkey)

@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import { useAppDispatch } from '@/store/hooks/redux'
-import { setCurrentPubKey, setKeys } from '@/store/reducers/keys.slice'
+import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { setCurrentWorkspace, setWorkspaces } from '@/store/reducers/workspaces.slice'
 import { useUpdateProfile } from '@/hooks/profile'
@@ -18,9 +18,12 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
 
   const initDevice = useCallback(async () => {
     try {
-      const [keys, currentPubKey] = await getKeys()
+      const [keys, currentPubKey, readKeys] = await getKeys()
+
+      console.log({ currentPubKeyGetForTesr: currentPubKey })
 
       dispatch(setKeys({ keys }))
+      dispatch(setReadKeys({ readKeys }))
 
       if (!currentPubKey) {
         dispatch(setCurrentPubKey({ currentPubKey: DEFAULT_PUBKEY }))

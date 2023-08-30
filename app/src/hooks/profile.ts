@@ -7,7 +7,7 @@ import {
   subscribeContactList,
   subscribeProfiles
 } from '@/modules/nostr'
-import { useAppDispatch } from '@/store/hooks/redux'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setCurrentProfile, setProfiles } from '@/store/reducers/profile.slice'
 import { ReturnProfileType } from '@/types/profile'
 import {
@@ -23,6 +23,7 @@ import { MIN_ZAP_AMOUNT } from '@/consts'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
+  const { profiles } = useAppSelector((state) => state.profile)
 
   const setContacts = useCallback(
     async (contactList: ReturnTypeContactList) => {
@@ -38,6 +39,14 @@ export const useUpdateProfile = () => {
 
   return useCallback(
     async (keys: string[], currentPubKey?: string) => {
+      const getProfile = profiles.find((profile) => profile.pubkey === currentPubKey)
+
+      if (getProfile) {
+        dispatch(setCurrentProfile({ profile: getProfile }))
+      } else {
+        dispatch(setCurrentProfile({ profile: null }))
+      }
+
       subscribeProfiles(keys, (profile: ReturnProfileType) => {
         if (profile) {
           if (profile.pubkey === currentPubKey) {
@@ -65,7 +74,7 @@ export const useUpdateProfile = () => {
 
           const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys)
           console.log('new long notes', longPosts)
-          dispatch(setLongPosts({ bigZaps }))
+          dispatch(setLongPosts({ longPosts }))
 
           const communities = await fetchFollowedCommunities(contactList.contactPubkeys)
           console.log('new communities', communities)
@@ -77,17 +86,8 @@ export const useUpdateProfile = () => {
         //   //     updateWorkspace((ws) => {
         //   //       return { ...ws, liveEvents };
         //   //     }, pubkey);
-
-        //   //   }
-
-        //   //   return;
-        //   // }
-
-        //   if (cl.pubkey === currentPubKey) {
-        //     setContacts(cl);
-        //   }
       })
     },
-    [dispatch, setContacts]
+    [dispatch, setContacts, profiles]
   )
 }
