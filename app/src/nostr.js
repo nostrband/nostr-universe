@@ -610,9 +610,11 @@ export async function fetchAppsForEvent(id, event) {
   console.log('resolved addr', addr);
   
   // now fetch the apps for event kind
-  const info = addr.kind in kindApps
-	     ? {...kindApps[addr.kind]}
-	     : await fetchAppsByKinds(ndk, [addr.kind]);
+  let info = [];
+  if (addr.kind in kindApps)
+    info = {...kindApps[addr.kind]};
+  if (!info.length)
+    info = await fetchAppsByKinds(ndk, [addr.kind]);
   info.addr = addr;
 
   // put to cache
