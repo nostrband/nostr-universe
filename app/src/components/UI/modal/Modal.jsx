@@ -33,7 +33,7 @@ export const Modal = ({
     };
     cb();
   }, [isOpen]);
-
+  
   return (
     <Dialog
       fullScreen={fullScreen}

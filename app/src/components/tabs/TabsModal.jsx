@@ -20,7 +20,7 @@ export const TabsModal = ({ isOpen, onClose }) => {
   if (!currentWorkspace)
     return;
   
-  const tgs = Object.values(currentWorkspace.tabGroups);
+  const tgs = Object.values(currentWorkspace.tabGroups).filter(tg => tg.tabs.length > 0);
   tgs.sort((a, b) => b.lastActive - a.lastActive);
   
   return (
@@ -34,17 +34,13 @@ export const TabsModal = ({ isOpen, onClose }) => {
 	</header>
 	<main>
 	  {tgs.map(tg => {
-	    if (!tg.tabs.length)
-	      return;
-
 	    const tabs = tg.tabs.map(id => getTab(id));
 	    tabs.sort((a, b) => b.lastActive - a.lastActive);
 	    
 	    return (
-	      <TabGroup>
+	      <TabGroup key={tg.id}>
 		<Title>
 		  <IconButton
-		    key={tg.id}
 		    data={{ title: "", img: tg.info.icon }}
 		    size="small"
 		  />

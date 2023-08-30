@@ -13,14 +13,27 @@ import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 import { ImportPubkeyModal } from "../onboarding/ImportPubkeyModal";
+import {
+  SafeIcon,
+} from "../../assets";
+
 
 const CHANGE_ACCOUNT_SEARCH_PARAM = "change-account";
 const IMPORT_ACCOUNT_SEARCH_PARAM = "import-account";
 
 export const Profile = () => {
   const contextData = useContext(AppContext);
-  const { currentPubkey, onSelectKey, profile, keys, readKeys, profiles, onAddKey, onImportPubkey } =
-    contextData || {};
+  const {
+    currentPubkey,
+    onSelectKey,
+    profile,
+    keys,
+    readKeys,
+    profiles,
+    onAddKey,
+    onImportPubkey,
+    deletePerms
+  } = contextData || {};
 
   const { profile: originalProfile = {} } = profile || {};
   const { picture } = originalProfile || {};
@@ -81,6 +94,15 @@ export const Profile = () => {
     };
   });
 
+  const tools = [
+    {
+      title: "Delete key permissions",
+      id: "delete-perms",
+      Icon: SafeIcon,
+      onClick: () => deletePerms(),
+    },
+  ];
+  
   return (
     <>
       <Container>
@@ -91,7 +113,7 @@ export const Profile = () => {
           onAddKey={onAddKey}
           isGuest={isGuest(currentPubkey)}
         />
-        <Tools />
+        <Tools tools={tools} />
       </Container>
 
       <AccountsMenu
@@ -107,7 +129,7 @@ export const Profile = () => {
       <ImportPubkeyModal
 	isOpen={isImportAccountModalOpen}
         onClose={closeImportModalHandler}
-	onSelect={importPubkeyHandler}
+	       onSelect={importPubkeyHandler}
       />
 
     </>

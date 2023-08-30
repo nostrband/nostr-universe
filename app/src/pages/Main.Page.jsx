@@ -12,6 +12,7 @@ import { TabMenuModal } from "../components/tab-menu-modal/TabMenuModal";
 import { ContextMenuModal } from "../components/context-menu-modal/ContextMenuModal";
 import { ImportPubkeyModal } from "../components/onboarding/ImportPubkeyModal";
 import { TabsModal } from "../components/tabs/TabsModal";
+import { PermRequestModal } from "../components/perms/PermRequestModal";
 import { WelcomeWidget } from "../components/onboarding/WelcomeWidget";
 import { IconButton } from "../components/UI/IconButton";
 import { Footer } from "../layout/Footer";
@@ -40,6 +41,8 @@ const MainPage = () => {
     currentTab,
     currentWorkspace,
     keys,
+    currentPermRequest,
+    replyCurrentPermRequest,
   } = contextData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -186,6 +189,11 @@ const MainPage = () => {
 	<TabsModal
 	  isOpen={showTabs}
 	  onClose={() => setShowTabs(false)}
+	/>
+
+	<PermRequestModal
+	  isOpen={currentPermRequest != null}
+	  onClose={() => replyCurrentPermRequest(false, false)}
 	/>
 	
 	{currentTab && (

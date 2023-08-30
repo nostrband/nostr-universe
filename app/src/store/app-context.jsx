@@ -43,6 +43,7 @@ function createWorkspace(pubkey, props = {}) {
     tabGroups: {},
     tabs: [],
     pins: [],
+    perms: [],
     lastKindApps: {},
     currentTabId: "",
     lastCurrentTabId: "",
@@ -96,6 +97,8 @@ function deleteFromTabGroup(workspace, pt, isPin) {
 
 const AppContext = React.createContext();
 
+const PermRequests = [];
+
 const AppContextProvider = ({ children }) => {
   // keys
   const [keys, setKeys] = useState();
@@ -122,6 +125,8 @@ const AppContextProvider = ({ children }) => {
   const [openAddr, setOpenAddr] = useState("");
   const [contextInput, setContextInput] = useState("");
 
+  const [currentPermRequest, setCurrentPermRequest] = useState(null);
+  
   const [isShowDrawer, setIsShowDrawer] = useState(true);
 
   const setContacts = async (cl) => {
@@ -183,56 +188,41 @@ const AppContextProvider = ({ children }) => {
     });
 
     // subscribe to new contact list
-    let lastCL = null;
     subscribeContactList(pubkey, async (cl) => {
       console.log("contact list update", cl?.created_at);
-      if (!cl) {
-	// FIXME no stored cl for the remaining profiles?
 
-	// FIXME ugly hack to emulate debounce of contactList state variable,
-	// we should move contactList to the workspace and also
-	// debounce it in a more general way
-	if (lastCL) {
-
-	  const highlights = await fetchFollowedHighlights(lastCL.contactPubkeys);
-	  console.log("new highlights", highlights);
-          updateWorkspace((ws) => {
-            return { ...ws, highlights };
-          }, pubkey);
-
-	  const bigZaps = await fetchFollowedZaps(lastCL.contactPubkeys, MIN_ZAP_AMOUNT);
-	  console.log("new zaps", bigZaps);
-          updateWorkspace((ws) => {
-            return { ...ws, bigZaps };
-          }, pubkey);
-	  
-	  const longNotes = await fetchFollowedLongNotes(lastCL.contactPubkeys);
-	  console.log("new long notes", longNotes);
-          updateWorkspace((ws) => {
-            return { ...ws, longNotes };
-          }, pubkey);
-
-	  const liveEvents = await fetchFollowedLiveEvents(lastCL.contactPubkeys);
-	  console.log("new live events", liveEvents);
-          updateWorkspace((ws) => {
-            return { ...ws, liveEvents };
-          }, pubkey);
-
-	  const communities = await fetchFollowedCommunities(lastCL.contactPubkeys);
-	  console.log("new communities", communities);
-          updateWorkspace((ws) => {
-            return { ...ws, communities };
-          }, pubkey);
-	  
-	}
-	
-	return;
-      }
+      setContacts(cl);
       
-      if (cl.pubkey == pubkey) {
-	lastCL = cl;
-        setContacts(cl);
-      }
+      const highlights = await fetchFollowedHighlights(cl.contactPubkeys);
+      console.log("new highlights", highlights);
+      updateWorkspace((ws) => {
+        return { ...ws, highlights };
+      }, pubkey);
+      
+      const bigZaps = await fetchFollowedZaps(cl.contactPubkeys, MIN_ZAP_AMOUNT);
+      console.log("new zaps", bigZaps);
+      updateWorkspace((ws) => {
+        return { ...ws, bigZaps };
+      }, pubkey);
+	  
+      const longNotes = await fetchFollowedLongNotes(cl.contactPubkeys);
+      console.log("new long notes", longNotes);
+      updateWorkspace((ws) => {
+        return { ...ws, longNotes };
+      }, pubkey);
+
+      const liveEvents = await fetchFollowedLiveEvents(cl.contactPubkeys);
+      console.log("new live events", liveEvents);
+      updateWorkspace((ws) => {
+        return { ...ws, liveEvents };
+      }, pubkey);
+
+      const communities = await fetchFollowedCommunities(cl.contactPubkeys);
+      console.log("new communities", communities);
+      updateWorkspace((ws) => {
+        return { ...ws, communities };
+      }, pubkey);
+
     });
   };
 
@@ -265,6 +255,10 @@ const AppContextProvider = ({ children }) => {
     console.log("workspaceKey", workspace.pubkey);
     workspace.pins = await dbi.listPins(workspace.pubkey);
     workspace.tabs = await dbi.listTabs(workspace.pubkey);
+    workspace.perms = await dbi.listPerms(workspace.pubkey);
+    console.log("perms", JSON.stringify(workspace.perms));
+
+    // sort properly
     workspace.pins.sort((a, b) => a.order - b.order);
     workspace.tabs.sort((a, b) => a.order - b.order);
 
@@ -282,7 +276,6 @@ const AppContextProvider = ({ children }) => {
       "tabGroups",
       Object.keys(workspace.tabGroups).length
     );
-    //workspace.tabs.forEach(t => console.log("tab", t.id, "screenshot", t.screenshot?.length));
   };
 
   const addWorkspace = async (pubkey, props) => {
@@ -415,8 +408,16 @@ const AppContextProvider = ({ children }) => {
     (t) => t.id === currentWorkspace.lastCurrentTabId
   );
   const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
+  const getTabAny = (id) => workspaces?.map(ws => ws.tabs.find((t) => t.id === id))
+				       .find(t => t !== undefined);
   const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY
 		      || readKeys.includes(currentPubkey);
+  const hasPerm = (tab, name, value) => {
+    const app = getTabGroupId(tab);
+    return workspaces.find(
+      ws => ws.pubkey === tab.pubkey)?.perms.find(
+	p => p.app === app && p.name === name)?.value === value;
+  };
 
   const updateTab = (cbProps, tabId) => {
     tabId = tabId || currentTab?.id;
@@ -433,41 +434,93 @@ const AppContextProvider = ({ children }) => {
       };
     });
   };
+
+  const requestPerm = (tab, req, cb) => {
+    const r = {
+      ...req,
+      id: ""+Math.random(),
+      tabId: tab.id,
+      cb
+    };
+    PermRequests.push(r);
+
+    if (currentTab?.id === tab.id && PermRequests.length === 1) {
+      // show request perm modal right now
+      setCurrentPermRequest(r);
+    }
+  };
   
   const API = {
     // NIP-01
     getPublicKey: async function (tabId) {
-      const tab = getTab(tabId);
+      const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
-      if (currentPubkey !== DEFAULT_PUBKEY) return currentPubkey;
-      throw new Error("No pubkey");
+      if (currentPubkey === DEFAULT_PUBKEY) throw new Error("No pubkey");
+      if (hasPerm(tab, "pubkey", "0")) throw new Error("Pubkey perm disallowed");
+      if (hasPerm(tab, "pubkey", "1")) return currentPubkey;
+      return new Promise((ok, err) => {
+	requestPerm(tab, {perm: "pubkey"}, (allowed) => {
+	  if (allowed) ok(currentPubkey);
+	  else err("Pubkey perm disallowed");
+	});
+      });
     },
     signEvent: async function (tabId, event) {
-      const tab = getTab(tabId);
+      const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (isReadOnly()) throw new Error("No pubkey");
-      return await window.nostr.signEvent(event);
+      const kindPerm = "sign:" + event.kind;
+      const allPerm = "sign";
+      const exec = async () => await window.nostr.signEvent(event);
+      // allowed this kind or all kinds (if not kind-0)?
+      if (hasPerm(tab, kindPerm, "1") || (event.kind != 0 && hasPerm(tab, allPerm, "1")))
+	return await exec ();
+      // disallowed this kind or all kinds
+      if (hasPerm(tab, kindPerm, "0") || hasPerm(tab, allPerm, "0"))
+	throw new Error("Sign kind "+event.kind+" perm disallowed");
+      return new Promise((ok, err) => {
+	requestPerm(tab, {perm: kindPerm, event}, async (allowed) => {
+	  if (allowed) ok(await exec ());
+	  else err("Sign kind "+event.kind+" disallowed");
+	});
+      });
     },
 
     // NIP-04
     encrypt: async function (tabId, pubkey, plainText) {
-      const tab = getTab(tabId);
+      const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (isReadOnly()) throw new Error("No pubkey");
-      return await window.nostr.nip04.encrypt(pubkey, plainText);
+      if (hasPerm(tab, "encrypt", "0")) throw new Error("Encrypt perm disallowed");
+      const exec = async () => await window.nostr.nip04.encrypt(pubkey, plainText);
+      if (hasPerm(tab, "encrypt", "1")) return await exec();
+      return new Promise((ok, err) => {
+	requestPerm(tab, {perm: "encrypt", pubkey, plainText}, async (allowed) => {
+	  if (allowed) ok(await exec ());
+	  else err("Encrypt disallowed");
+	});
+      });
     },
     decrypt: async function (tabId, pubkey, cipherText) {
-      const tab = getTab(tabId);
+      const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (isReadOnly()) throw new Error("No pubkey");
-      return await window.nostr.nip04.decrypt(pubkey, cipherText);
+      if (hasPerm(tab, "decrypt", "0")) throw new Error("Decrypt perm disallowed");
+      const exec = async () => await window.nostr.nip04.decrypt(pubkey, cipherText);
+      if (hasPerm(tab, "decrypt", "1")) return await exec();
+      return new Promise((ok, err) => {
+	requestPerm(tab, {perm: "decrypt", pubkey, cipherText}, async (allowed) => {
+	  if (allowed) ok(await exec ());
+	  else err("Decrypt disallowed");
+	});
+      });
     },
     
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
 
-      const tab = getTab(tabId);
+      const tab = getTabAny(tabId);
       if (tab) {
         // save old tab to reuse in state update
         const wasTab = { ...tab };
@@ -526,7 +579,7 @@ const AppContextProvider = ({ children }) => {
       if (e) e.click();
     },
     onBlank: async (tabId, url) => {
-      const tab = getTab(tabId);
+      const tab = getTabAny(tabId);
       if (tab) await hide(tab);
       if (url.startsWith("nostr:")) {
         const b32 = stringToBech32(url);
@@ -550,7 +603,7 @@ const AppContextProvider = ({ children }) => {
     },
     onIcon: async (tabId, icon) => {
       updateTab({ icon }, tabId);
-      const tab = getTab(tabId);
+      const tab = getTabAny(tabId);
       if (tab) {
         tab.icon = icon;
         dbi.updateTab(tab);
@@ -703,8 +756,15 @@ const AppContextProvider = ({ children }) => {
         });
 
 	updateTab({ lastActive: tab.lastActive }, tab.id);
-
+	
         ok();
+
+	const reqs = PermRequests.filter(pr => pr.tabId === tab.id);
+	console.log("shown tab "+tab.id+" has perm requests", JSON.stringify(reqs));
+	if (reqs.length > 0) {
+	  setCurrentPermRequest(reqs[0]);
+	}
+	
       }, 0);
     });
   };
@@ -984,6 +1044,48 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
+  const replyCurrentPermRequest = async (allow, remember) => {
+
+    const tab = getTab(currentPermRequest.tabId);
+    
+    if (remember) {
+      const perm = {
+	pubkey: tab.pubkey,
+	app: getTabGroupId(tab),
+	name: currentPermRequest.perm,
+	value: allow ? "1" : "0",
+      };
+      updateWorkspace(ws => { return { perms: [...ws.perms, perm] } });
+      await dbi.updatePerm(perm);
+    }
+
+    // execute
+    await currentPermRequest.cb(allow);
+
+    // drop executed request
+    const i = PermRequests.findIndex(pr => pr.id === currentPermRequest.id);
+    if (i >= 0)
+      PermRequests.splice(i, 1);
+    else
+      throw new Error("Perm request not found");
+
+    // more reqs?
+    const reqs = PermRequests.filter(pr => pr.tabId === currentPermRequest.tabId);
+    if (reqs.length > 0)
+      setCurrentPermRequest(reqs[0]);
+    else
+      setCurrentPermRequest(null);
+  };
+
+  const deletePerms = async (app) => {
+    if (app)
+      updateWorkspace(ws => { return { perms: ws.perms.filter(p => p.add != app) } });
+    else
+      updateWorkspace(ws => { return { perms: [] } });
+
+    await dbi.deletePerms(currentPubkey, app);
+  };
+  
   return (
     <AppContext.Provider
       value={{
@@ -1028,6 +1130,9 @@ const AppContextProvider = ({ children }) => {
         openAddr,
         setOpenAddr,
         updateLastContact,
+	currentPermRequest,
+	replyCurrentPermRequest,
+	deletePerms
       }}
     >
       {children}
