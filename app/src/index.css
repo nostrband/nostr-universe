@@ -37,3 +37,31 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+/* Bottom Sheet Styles */
+/* Don't touch anything */
+:root {
+  --rsbs-backdrop-bg: rgba(0, 0, 0, 0.6);
+  --rsbs-bg: #111111;
+  --rsbs-handle-bg: #ffffff26;
+  --rsbs-max-w: auto;
+  --rsbs-ml: env(safe-area-inset-left);
+  --rsbs-mr: env(safe-area-inset-right);
+  --rsbs-overlay-rounded: 16px;
+}
+
+[data-rsbs-header]::before {
+  width: 64px !important;
+  height: 4px !important;
+}
+
+[data-rsbs-has-header="false"] [data-rsbs-header] {
+  padding-top: calc(10px + env(safe-area-inset-top)) !important;
+}
+[data-rsbs-overlay] {
+  height: calc(10px + var(--rsbs-overlay-h, 0px)) !important;
+}
+.sheet {
+  z-index: 1210;
+  position: relative;
+}

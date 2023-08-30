@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { AppContext } from "../../store/app-context";
-import { styled } from "@mui/material";
+import { Button, InputBase, TextField, styled } from "@mui/material";
 import { PinItem } from "./PinItem";
 
 export const PinsList = ({ drawerBleeding }) => {
@@ -15,17 +15,17 @@ export const PinsList = ({ drawerBleeding }) => {
   });
   return (
     <StyledContainer length={keys.length} bleeddingheight={drawerBleeding}>
-      {keys.map(id => {
-	const tg = tabGroups[id];
+      {keys.map((id) => {
+        const tg = tabGroups[id];
         return (
           <PinItem
             key={tg.info.id}
             image={tg.info.icon}
             {...tg.info}
             onClick={() => onOpenTabGroup(tg)}
-	    active={tg.tabs.length > 0}
+            active={tg.tabs.length > 0}
           />
-	)
+        );
       })}
     </StyledContainer>
   );
@@ -36,7 +36,6 @@ const StyledContainer = styled("div")(({ length, bleeddingheight }) => ({
   flexDirection: "row",
   justifyContent: "flex-start",
   alignItems: "flex-start",
-  padding: "0 0 1rem",
   margin: "0 1rem",
   rowGap: "2rem",
   columnGap: "0.5rem",

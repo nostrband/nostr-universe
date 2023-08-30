@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 
 import { AppContext } from "../store/app-context";
-import { SwipeableDrawer } from "../components/swipeable-drawer/SwipeableDrawer";
+// import { SwipeableDrawer } from "../components/swipeable-drawer/SwipeableDrawer";
 import { IconButton, styled } from "@mui/material";
 import { homeIcon, stopIcon, reloadIcon } from "../assets";
 import { PinItem } from "../components/pins/PinItem";
@@ -33,7 +33,7 @@ export const Footer = ({ onOpenPinModal }) => {
   return (
     <footer id="footer">
       {/* {isShowDrawer && <SwipeableDrawer />} */}
-      <BottomSheet />
+      {isShowDrawer && <BottomSheet />}
       <>
         {currentWorkspace && (
           <div

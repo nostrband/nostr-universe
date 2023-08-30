@@ -1,19 +1,19 @@
-import { forwardRef, useEffect } from 'react'
+import { forwardRef, useEffect } from "react";
 
 export const Input = forwardRef(
-  ({ type = 'text', onChange, ...props }, ref) => {
+  ({ type = "text", onChange, ...props }, ref) => {
     useEffect(() => {
-      ref.current.focus()
-    }, [ref])
+      ref.current.focus();
+    }, [ref]);
 
     return (
       <input
-	type={type}
-	onChange={onChange}
-	ref={ref}
-	className='fs-2 col'
-	     {...props}
+        type={type}
+        onChange={onChange}
+        ref={ref}
+        className="fs-2 col"
+        {...props}
       />
-    )
-  },
-)
+    );
+  }
+);
