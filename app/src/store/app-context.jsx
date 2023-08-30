@@ -282,6 +282,7 @@ const AppContextProvider = ({ children }) => {
       "tabGroups",
       Object.keys(workspace.tabGroups).length
     );
+    //workspace.tabs.forEach(t => console.log("tab", t.id, "screenshot", t.screenshot?.length));
   };
 
   const addWorkspace = async (pubkey, props) => {
@@ -653,10 +654,18 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  const hide = async (tab) => {
+  const hide = async (tab, noScreenshot = false) => {
     if (tab) {
       updateWorkspace({ currentTabId: "" });
-      await browser.hide(tab.id);
+      await browser.hide(tab.id);      
+
+      if (!noScreenshot) {
+	const screenshot = await browser.screenshot(tab.id);
+	updateTab({ screenshot }, tab.id);
+
+        tab.screenshot = screenshot;
+        await dbi.updateTabScreenshot(tab);
+      }
     }
     setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
@@ -681,12 +690,20 @@ const AppContextProvider = ({ children }) => {
         await ensureBrowser(tab);
 
         await browser.show(tab.id);
-        updateWorkspace((ws) => {
-          const tg = ws.tabGroups[getTabGroupId(tab)];
+
+	tab.lastActive = Date.now();
+
+        dbi.updateTab(tab);
+	
+	updateWorkspace((ws) => {
+	  const tg = ws.tabGroups[getTabGroupId(tab)];
           tg.lastTabId = tab.id;
-	  tg.lastActive = Date.now();
+	  tg.lastActive = tab.lastActive;
           return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
         });
+
+	updateTab({ lastActive: tab.lastActive }, tab.id);
+
         ok();
       }, 0);
     });
@@ -838,7 +855,7 @@ const AppContextProvider = ({ children }) => {
     if (!tab) return;
 
     // hide first
-    await hide(tab);
+    await hide(tab, /* no_screenshot */true);
 
     // get tab group of the closed tab
     const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];

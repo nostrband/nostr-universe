@@ -33,3 +33,4 @@ export { default as pinIcon } from "./icons/pin.svg";
 export { default as closeIcon } from "./icons/close.svg";
 export { default as stopIcon } from "./icons/stop.svg";
 export { default as reloadIcon } from "./icons/reload.svg";
+export { default as tabsIcon } from "./icons/tabs.svg";
