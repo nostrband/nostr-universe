@@ -8,6 +8,7 @@ const KIND_CONTACT_LIST = 3;
 const KIND_COMMUNITY_APPROVAL = 4550;
 const KIND_ZAP = 9735;
 const KIND_HIGHLIGHT = 9802;
+const KIND_BOOKMARKS = 30001;
 const KIND_LONG_NOTE = 30023;
 const KIND_APP = 31990;
 const KIND_LIVE_EVENT = 30311;
@@ -109,6 +110,9 @@ function findHandlerUrl(e, k) {
   return null;
 }
 
+const sortAsc = (arr) => arr.sort((a, b) => a.order - b.order);
+const sortDesc = (arr) => arr.sort((a, b) => b.order - a.order);
+
 export async function fetchApps() {
   // try to fetch best apps list from our relay
   const top = await ndk.fetchTop(
@@ -164,7 +168,7 @@ export async function fetchApps() {
   else events.forEach((e, i) => (e.order = Number(getTagValue(e, "published_at"))));
 
   // sort events by order desc
-  events.sort((a, b) => b.order - a.order);
+  sortDesc(events);
 
   // convert to a convenient app object
   const apps = [];
@@ -666,7 +670,7 @@ export async function searchProfiles(q) {
     e.order = top.ids.findIndex(i => e.id === i);
   });
 
-  events.sort((a, b) => a.order - b.order);
+  sortAsc(events);
 
   return events;
 }
@@ -685,21 +689,17 @@ function rawEvent(e) {
 }
 
 async function fetchMetas(pubkeys) {
-  let metas = await collectEvents(
-    fetchEventsRead(ndk, {
-      kinds: [KIND_META],
-      authors: pubkeys,
-    }),
-  );
+  let metas = await fetchEventsRead(ndk, {
+    kinds: [KIND_META],
+    authors: pubkeys,
+  });
 
   // drop ndk stuff
-  metas = metas.map(m => rawEvent(m));
+  metas = [...metas.values()].map(e => rawEvent(e));  
   
   // parse profiles
   metas.forEach(e => {
-    e.profile = parseContentJson(e.content);
-    e.profile.pubkey = e.pubkey;
-    e.profile.npub = nip19.npubEncode(e.pubkey);
+    e.profile = parseProfileJson(e);
   });
 
   return metas;
@@ -716,7 +716,7 @@ async function augmentPrepareEvents(events, limit) {
   }
 
   // desc by tm
-  events.sort((a, b) => b.order - a.order);
+  sortDesc(events);
 
   if (events.length > limit)
     events.length = limit;
@@ -814,7 +814,7 @@ async function augmentZaps(events, minZap) {
   }
 
   // desc 
-  events.sort((a, b) => b.order - a.order);
+  sortDesc(events);
   
   return events;
 }
@@ -835,7 +835,7 @@ async function augmentCommunities(events, addrs) {
   });
 
   // desc
-  events.sort((a, b) => b.order - a.order);
+  sortDesc(events);
   
   return events;
 }
@@ -869,25 +869,6 @@ export async function searchLongNotes(q, limit = 30) {
   let events = await searchEvents(q, KIND_LONG_NOTE, limit);
   events = await augmentLongNotes(events);
   return events;
-}
-
-function onUniqueEvent(sub, cb) {
-
-  // call cb on each event
-  const events = new Map();
-  sub.on("event", (event) => {
-
-    // dedup
-    const dedupKey = event.deduplicationKey();
-    const existingEvent = events.get(dedupKey);
-    // console.log("dedupKey", dedupKey, "existingEvent", existingEvent?.created_at, "event", event.created_at);
-    if (existingEvent?.created_at > event.created_at) {
-      return;
-    }
-    events.set(dedupKey, event);
-
-    cb(event);
-  });
 }
 
 // used for handling a sequence of events and an eose after them,
@@ -994,7 +975,7 @@ export async function fetchFollowedCommunities(contactPubkeys) {
   });
 
   // desc
-  approvals.sort((a, b) => b.order - a.order);
+  sortDesc(approvals);
 //  console.log("approvals", approvals);  
 
   const addrs = approvals.map(e => { return { tm: e.created_at, p: getTagValue(e, 'a').split(':') } } )
@@ -1067,7 +1048,7 @@ async function augmentLiveEvents(events, contactPubkeys, limit) {
   }
 
   // desc 
-  events.sort((a, b) => b.order - a.order);
+  sortDesc(events);
   
   // crop
   if (events.length > limit)
@@ -1089,133 +1070,161 @@ export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
   return events;
 }
 
-let profilesSub = null;
-export async function subscribeProfiles(pubkeys, cb) {
+class Subscription {
 
-  // gc
-  if (profilesSub) {
-    profilesSub.stop();
-    profilesSub = null;
+  lastSub = null;
+  
+  constructor(label, onEvent) {
+    this.label = label;
+    this.onEvent = onEvent;
   }
-  
-  const sub = await ndk.subscribe(
-    {
-      authors: [...pubkeys],
-      kinds: [KIND_META],
-    },
-    {
-      closeOnEose: false,
-    },
-    NDKRelaySet.fromRelayUrls(readRelays, ndk),
-    /* autoStart */ false
-  );
 
-  // ensure async callbacks are executed one by one
-  const pq = new PromiseQueue();
-  
-  // call cb on each unique newer event
-  onUniqueEvent(sub, pq.appender(async (event) => {
-    // convert to raw event
-    const profile = rawEvent(event);
-    profile.profile = parseContentJson(event.content);
+  async restart(filter, cb) {
 
-    console.log("got profile", profile);
-    await cb(profile);
-  }));
+    // gc
+    if (this.lastSub) {
+      this.lastSub.stop();
+      this.lastSub = null;
+    }
 
-  // notify that initial fetch is over
-  sub.on("eose", pq.appender(async () => await cb(null)));
+    const events = new Map();
+    let eose = false;
+    
+    const sub = await ndk.subscribe(
+      filter, { closeOnEose: false },
+      NDKRelaySet.fromRelayUrls(readRelays, ndk),
+      /* autoStart */ false
+    );
 
-  // start
-  sub.start();
+    // ensure async callbacks are executed one by one
+    const pq = new PromiseQueue();
+    
+    // helper to transform and return the event
+    const returnEvent = async (event) => {
+      const e = await this.onEvent(rawEvent(event));
+      console.log("returning", this.label, e);
+      await cb(e);
+    };
 
-  // store
-  profilesSub = sub;
+    // call cb on each event
+    sub.on("event", (event) => {
+
+      // dedup
+      const dedupKey = event.deduplicationKey();
+      const existingEvent = events.get(dedupKey);
+      // console.log("dedupKey", dedupKey, "existingEvent", existingEvent?.created_at, "event", event.created_at);
+      if (existingEvent?.created_at > event.created_at) {
+	// ignore old event
+	return;
+      }
+      events.set(dedupKey, event);
+
+      pq.appender(async (event) => {
+	console.log("got new", this.label, "event", event);
+	if (eose)
+	  await returnEvent(event);
+      }) (event);
+    });
+
+    // notify that initial fetch is over
+    sub.on("eose", pq.appender(() => {
+      eose = true;
+      pq.appender(() => {
+	[...events.values()].forEach(async (e) => { await returnEvent(e) });
+      }) ();
+    }));
+
+    // start
+    sub.start();
+
+    // store
+    this.lastSub = sub;
+  }
 }
 
-let clSub = null;
-export async function subscribeContactList(pubkey, cb) {
+const parseProfileJson = (e) => {
+  const profile = parseContentJson(e.content);
+  profile.pubkey = e.pubkey;
+  profile.npub = nip19.npubEncode(e.pubkey);
+  return profile;
+}
 
-  // gc
-  if (clSub) {
-    clSub.stop();
-    clSub = null;
+const profileSub = new Subscription("profile", (p) => {
+  p.profile = parseProfileJson(p);
+  return p;
+});
+
+export async function subscribeProfiles(pubkeys, cb) {
+  profileSub.restart({
+    authors: [...pubkeys],
+    kinds: [KIND_META],
+  }, cb);
+}
+
+const contactListSub = new Subscription("contact list", async (contactList) => {
+
+  contactList.contactPubkeys = [...new Set(
+    contactList.tags
+	       .filter(t => t.length >= 2 && t[0] === 'p')
+	       .map(t => t[1])
+  )];
+  contactList.contactEvents = [];
+
+  if (contactList.contactPubkeys.length) {
+
+    // profiles
+    contactList.contactEvents = await fetchMetas(contactList.contactPubkeys);
+
+    // assign order
+    contactList.contactEvents.forEach(p => {
+      p.order = contactList.contactPubkeys.findIndex(pk => pk == p.pubkey);
+    });
+
+    // order by recently-added-first
+    sortDesc(contactList.contactEvents);
   }
   
-  const sub = await ndk.subscribe(
-    {
-      authors: [pubkey],
-      kinds: [KIND_CONTACT_LIST],
-    },
-    {
-      closeOnEose: false,
-    },
-    NDKRelaySet.fromRelayUrls(readRelays, ndk),
-    /* autoStart */ false
-  );
+  return contactList;
+});
 
-  // ensure async callbacks are executed one by one
-  const pq = new PromiseQueue();
-  
-  // call cb on each unique newer event
-  let eose = false;
-  let lastCL = null;
+export async function subscribeContactList(pubkey, cb) {
+  contactListSub.restart({
+    authors: [pubkey],
+    kinds: [KIND_CONTACT_LIST],
+  }, cb);
+}
 
-  const returnLastCL = async () => {
+const bookmarkListSub = new Subscription("bookmark list", async (bookmarkList) => {
+
+  bookmarkList.bookmarkEventIds = [...new Set(
+    bookmarkList.tags
+		.filter(t => t.length >= 2 && t[0] === 'e')
+		.map(t => t[1])
+  )];
+  bookmarkList.bookmarkEvents = [];
+
+  if (bookmarkList.bookmarkEventIds.length) {
+    bookmarkList.bookmarkEvents = await fetchEventsByIds({
+      ids: bookmarkList.bookmarkEventIds,
+      kinds: [KIND_NOTE, KIND_LONG_NOTE],
+      augment: true
+    });
     
-    const event = lastCL;
+    bookmarkList.bookmarkEvents.forEach(e => {
+      e.order = bookmarkList.bookmarkEventIds.findIndex(id => id == e.id);
+    });
 
-    const contactList = rawEvent(event);
-    // extract and dedup pubkeys
-    contactList.contactPubkeys = [...new Set(
-      event.tags
-	   .filter(t => t.length >= 2 && t[0] === 'p')
-	   .map(t => t[1])
-    )];
-    contactList.contactEvents = [];
-
-    if (contactList.contactPubkeys.length) {
-      contactList.contactEvents = await collectEvents(
-	fetchEventsRead(ndk, {
-          kinds: [KIND_META],
-          authors: contactList.contactPubkeys,
-	}),
-      );
-
-      contactList.contactEvents.forEach(p => {
-	p.profile = parseContentJson(p.content);
-	p.profile.pubkey = p.pubkey;
-	p.profile.npub = nip19.npubEncode(p.pubkey);
-	p.order = contactList.contactPubkeys.findIndex(pk => pk == p.pubkey);
-      });
-
-      // desc
-      contactList.contactEvents.sort((a, b) => b.order - a.order);
-    }
-    
-    console.log("got contact list", contactList);
-    await cb(contactList);
-  };
+    sortDesc(bookmarkList.bookmarkEvents);
+  }
   
-  onUniqueEvent(sub, pq.appender(async (event) => {
-    console.log("got cl event", event);
-    lastCL = event;
-    if (eose)
-      await returnLastCL();
-  }));
+  return bookmarkList;
+});
 
-  // notify that initial fetch is over
-  sub.on("eose", pq.appender(async () => {
-    eose = true;
-    if (lastCL)
-      await returnLastCL();
-  }));
-
-  // start
-  sub.start();
-
-  // store
-  clSub = sub;
+export async function subscribeBookmarkList(pubkey, cb) {
+  bookmarkListSub.restart({
+    authors: [pubkey],
+    kinds: [KIND_BOOKMARKS],
+  }, cb);
 }
 
 export function stringToBech32(s, hex = false) {
