@@ -157,6 +157,17 @@ export const dbi = {
       console.log(`Put perms to DB error: ${JSON.stringify(error)}`)
     }
   },
+  deletePerms: async (pubkey, app) => {
+    try {
+      // Delete tab in DB by ID
+      const req = {pubkey};
+      if (app)
+	req.app = app;
+      await db.perms.where(req).delete();
+    } catch (error) {
+      console.log(`Delete perms in DB error: ${JSON.stringify(error)}`);
+    }
+  },
   getFlag: async (pubkey, name) => {
     try {
       const id = pubkey+name;

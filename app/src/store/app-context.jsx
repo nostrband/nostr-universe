@@ -444,7 +444,7 @@ const AppContextProvider = ({ children }) => {
     };
     PermRequests.push(r);
 
-    if (currentTab.id === tab.id && PermRequests.length === 1) {
+    if (currentTab?.id === tab.id && PermRequests.length === 1) {
       // show request perm modal right now
       setCurrentPermRequest(r);
     }
@@ -756,8 +756,15 @@ const AppContextProvider = ({ children }) => {
         });
 
 	updateTab({ lastActive: tab.lastActive }, tab.id);
-
+	
         ok();
+
+	const reqs = PermRequests.filter(pr => pr.tabId === tab.id);
+	console.log("shown tab "+tab.id+" has perm requests", JSON.stringify(reqs));
+	if (reqs.length > 0) {
+	  setCurrentPermRequest(reqs[0]);
+	}
+	
       }, 0);
     });
   };
@@ -1069,6 +1076,15 @@ const AppContextProvider = ({ children }) => {
     else
       setCurrentPermRequest(null);
   };
+
+  const deletePerms = async (app) => {
+    if (app)
+      updateWorkspace(ws => { return { perms: ws.perms.filter(p => p.add != app) } });
+    else
+      updateWorkspace(ws => { return { perms: [] } });
+
+    await dbi.deletePerms(currentPubkey, app);
+  };
   
   return (
     <AppContext.Provider
@@ -1116,6 +1132,7 @@ const AppContextProvider = ({ children }) => {
         updateLastContact,
 	currentPermRequest,
 	replyCurrentPermRequest,
+	deletePerms
       }}
     >
       {children}
