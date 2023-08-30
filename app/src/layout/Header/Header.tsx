@@ -4,6 +4,6 @@ import { IHeader } from './types'
 
 export const Header = ({ children }: IHeader) => (
   <Container>
-    <StyledHeader>{children} </StyledHeader>
+    <StyledHeader>{children}</StyledHeader>
   </Container>
 )

@@ -8,5 +8,5 @@ export const StyledWrapper = styled(Box)(() => ({
   height: '100%',
   width: '100%',
   background: '#000',
-  zIndex: 1
+  zIndex: 2
 }))

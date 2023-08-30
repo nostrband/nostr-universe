@@ -56,7 +56,7 @@ export function getTag(e, name) {
   return tags[0]
 }
 
-export function getTagValue(e, name, index, def) {
+export function getTagValue(e, name, index?: any, def?: any) {
   const tag = getTag(e, name)
   if (tag === null || !tag.length || (index && index >= tag.length)) return def !== undefined ? def : ''
   return tag[1 + (index || 0)]

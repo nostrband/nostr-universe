@@ -14,6 +14,7 @@ import {
   StyledViewBaner,
   StyledViewName
 } from './styled'
+import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
 
 export const ProfileView = () => {
   const { open, handleOpen, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEYS_PROFILE)
@@ -71,6 +72,8 @@ export const ProfileView = () => {
         open={open}
         accounts={accounts}
       />
+
+      <ModalImportKey />
     </>
   )
 }

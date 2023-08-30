@@ -5,28 +5,34 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Header as HeaderLayout } from '@/layout/Header/Header'
 import { useAppSelector } from '@/store/hooks/redux'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
-import { StyledIconButton } from './styled'
+import { StyledIconButton, StyledWrapper } from './styled'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 export const Header = () => {
+  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SEARCH_MODAL)
+  const { handleOpen: handleOpenContextMenu } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.CONTEXT_MENU)
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { isOpenTabWindow } = useAppSelector((state) => state.tab)
 
   return (
-    <HeaderLayout>
-      <StyledIconButton component={Link} to="/profile">
-        <Avatar src={getProfileImage(currentProfile)} />
-      </StyledIconButton>
+    <StyledWrapper>
+      <HeaderLayout>
+        <StyledIconButton component={Link} to="/profile">
+          <Avatar src={getProfileImage(currentProfile)} />
+        </StyledIconButton>
 
-      <div>
-        <IconButton color="inherit" size="medium">
-          <SearchIcon />
-        </IconButton>
-        {isOpenTabWindow && (
-          <IconButton color="inherit" size="medium">
-            <MoreVertIcon />
+        <div>
+          <IconButton color="inherit" size="medium" onClick={() => handleOpen()}>
+            <SearchIcon />
           </IconButton>
-        )}
-      </div>
-    </HeaderLayout>
+          {isOpenTabWindow && (
+            <IconButton color="inherit" size="medium" onClick={() => handleOpenContextMenu()}>
+              <MoreVertIcon />
+            </IconButton>
+          )}
+        </div>
+      </HeaderLayout>
+    </StyledWrapper>
   )
 }

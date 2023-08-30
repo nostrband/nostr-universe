@@ -4,7 +4,7 @@ import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
-import { SliderContacts } from '@/components/SliderContacts/SliderContacts'
+import { SliderContacts } from '@/components/Slider/SliderContacts/SliderContacts'
 import { useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 

@@ -1,0 +1,10 @@
+.slide {
+  width: 225px;
+  padding-right: 8px;
+  height: auto;
+  display: flex;
+
+  &:first-child {
+    padding-left: 8px;
+  }
+}

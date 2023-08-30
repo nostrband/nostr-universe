@@ -1,11 +1,25 @@
 import { useCallback } from 'react'
-import { fetchFollowedHighlights, subscribeContactList, subscribeProfiles } from '@/modules/nostr'
+import {
+  fetchFollowedCommunities,
+  fetchFollowedHighlights,
+  fetchFollowedLongNotes,
+  fetchFollowedZaps,
+  subscribeContactList,
+  subscribeProfiles
+} from '@/modules/nostr'
 import { useAppDispatch } from '@/store/hooks/redux'
 import { setCurrentProfile, setProfiles } from '@/store/reducers/profile.slice'
 import { ReturnProfileType } from '@/types/profile'
-import { setContactList } from '@/store/reducers/contentWorkspace'
+import {
+  setBigZaps,
+  setCommunities,
+  setContactList,
+  setHighlights,
+  setLongPosts
+} from '@/store/reducers/contentWorkspace'
 import { ReturnTypeContactList } from '@/types/contentWorkSpace'
 import { dbi } from '@/modules/db'
+import { MIN_ZAP_AMOUNT } from '@/consts'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
@@ -15,15 +29,6 @@ export const useUpdateProfile = () => {
       if (contactList?.contactEvents) {
         const lastContacts = await dbi.listLastContacts(contactList.pubkey)
         console.log('lastContacts', lastContacts)
-        // lastContacts.forEach((lc) => {
-        //   const c = contactList.contactEvents.find((ce) => ce.pubkey === lc.contactPubkey)
-        //   if (c) {
-        //     c.order = lc.tm
-        //     console.log('lastContact', lc.contactPubkey, 'tm', lc.tm)
-        //   }
-        // })
-
-        // contactList.contactEvents.sort((a, b) => b.order - a.order)
       }
 
       dispatch(setContactList({ contactList }))
@@ -51,34 +56,26 @@ export const useUpdateProfile = () => {
           setContacts(contactList)
 
           const highlights = await fetchFollowedHighlights(contactList.contactPubkeys)
-          console.log('new highlights', { highlights })
+          console.log('new highlights', highlights)
+          dispatch(setHighlights({ highlights }))
+
+          const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT)
+          console.log('new zaps', bigZaps)
+          dispatch(setBigZaps({ bigZaps }))
+
+          const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys)
+          console.log('new long notes', longPosts)
+          dispatch(setLongPosts({ bigZaps }))
+
+          const communities = await fetchFollowedCommunities(contactList.contactPubkeys)
+          console.log('new communities', communities)
+          dispatch(setCommunities({ communities }))
         }
-        // updateWorkspace((ws) => {
-        //   return { ...ws, highlights };
-        // }, pubkey);
-
-        //   //     const bigZaps = await fetchFollowedZaps(lastCL.contactPubkeys, MIN_ZAP_AMOUNT);
-        //   //     console.log("new zaps", bigZaps);
-        //   //     updateWorkspace((ws) => {
-        //   //       return { ...ws, bigZaps };
-        //   //     }, pubkey);
-
-        //   //     const longNotes = await fetchFollowedLongNotes(lastCL.contactPubkeys);
-        //   //     console.log("new long notes", longNotes);
-        //   //     updateWorkspace((ws) => {
-        //   //       return { ...ws, longNotes };
-        //   //     }, pubkey);
 
         //   //     const liveEvents = await fetchFollowedLiveEvents(lastCL.contactPubkeys);
         //   //     console.log("new live events", liveEvents);
         //   //     updateWorkspace((ws) => {
         //   //       return { ...ws, liveEvents };
-        //   //     }, pubkey);
-
-        //   //     const communities = await fetchFollowedCommunities(lastCL.contactPubkeys);
-        //   //     console.log("new communities", communities);
-        //   //     updateWorkspace((ws) => {
-        //   //       return { ...ws, communities };
         //   //     }, pubkey);
 
         //   //   }

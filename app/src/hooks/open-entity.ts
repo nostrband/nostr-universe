@@ -4,7 +4,12 @@ import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setCloseTabWindow, setCurrentTab, setLoadingTab, setOpenTab } from '@/store/reducers/tab.slice'
-import { setCurrentWorkspace, setTabsWorkspace, setWorkspaces } from '@/store/reducers/workspaces.slice'
+import {
+  removeTabFromTabs,
+  setCurrentWorkspace,
+  setTabsWorkspace,
+  setWorkspaces
+} from '@/store/reducers/workspaces.slice'
 import { AppNostro, IOpenAppNostro } from '@/types/app-nostro'
 import { getKeys, writeCurrentPubkey } from '@/utils/keys'
 import { v4 as uuidv4 } from 'uuid'
@@ -34,6 +39,11 @@ export const useOpenApp = () => {
     await browser.hide(tab.id)
   }
 
+  const close = async (tab) => {
+    await dbi.deleteTab(tab.id)
+    await browser.close(tab.id)
+  }
+
   const onHideTabInBrowser = async () => {
     await hide(currentTab)
   }
@@ -44,6 +54,22 @@ export const useOpenApp = () => {
     dispatch(
       setCloseTabWindow({
         isOpenTabWindow: false
+      })
+    )
+  }
+
+  const onCloseTab = async () => {
+    await close(currentTab)
+
+    dispatch(
+      setCloseTabWindow({
+        isOpenTabWindow: false
+      })
+    )
+
+    dispatch(
+      removeTabFromTabs({
+        currentTab
       })
     )
   }
@@ -274,6 +300,7 @@ export const useOpenApp = () => {
     onHideTab,
     onSwitchTab,
     onHideTabInBrowser,
-    onImportKey
+    onImportKey,
+    onCloseTab
   }
 }

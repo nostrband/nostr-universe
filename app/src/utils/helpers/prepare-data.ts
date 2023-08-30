@@ -42,3 +42,21 @@ export const getProfileName = (profile: ReturnProfileType | null) => {
 
   return 'Guest'
 }
+
+export const formatTime = (tm: number) => {
+  let o = Date.now() / 1000 - tm
+
+  const future = o < 0
+
+  o = Math.abs(o)
+
+  let s = Math.round(o) + 's'
+  o = o / 60
+  if (o >= 1.0) s = Math.round(o) + 'm'
+  o /= 60
+  if (o >= 1.0) s = Math.round(o) + 'h'
+  o /= 24
+  if (o >= 1.0) s = Math.round(o) + 'd'
+
+  return (future ? '+' : '') + s
+}

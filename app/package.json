@@ -21,6 +21,7 @@
     "@nostrband/nostr-tools": "^1.14.2",
     "@reduxjs/toolkit": "^1.9.5",
     "@types/react-redux": "^7.1.25",
+    "date-fns": "^2.30.0",
     "dexie": "^3.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

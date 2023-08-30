@@ -7,7 +7,7 @@ import { Container } from '@/layout/Container/Conatiner'
 import { IconButton } from '@mui/material'
 import { searchProfiles } from '@/modules/nostr'
 import { ITrendingProfiles, TrendingProfile } from '@/types/trending-profiles'
-import { SliderProfiles } from '@/components/SliderProfiles/SliderProfiles'
+import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
 import { useOpenApp } from '@/hooks/open-entity'
 import { StyledForm, StyledHint, StyledInput, StyledSlider } from './styled'
 

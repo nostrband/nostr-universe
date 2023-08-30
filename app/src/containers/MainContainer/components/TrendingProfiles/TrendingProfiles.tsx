@@ -1,4 +1,4 @@
-import { SliderProfiles } from '@/components/SliderProfiles/SliderProfiles'
+import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
 import { userService } from '@/store/services/user.service'
