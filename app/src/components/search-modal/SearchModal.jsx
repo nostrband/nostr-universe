@@ -9,6 +9,8 @@ import {
   searchProfiles,
   searchNotes,
   searchLongNotes,
+  searchLiveEvents,
+  searchCommunities,
   getTagValue,
   createAddrOpener
 } from "../../nostr";
@@ -16,6 +18,8 @@ import { nip19 } from "@nostrband/nostr-tools";
 import { TrendingProfileItem } from "../trending-profiles/TrendingProfileItem";
 import { TrendingNoteItem } from "../trending-notes/TrendingNoteItem";
 import { LongNoteItem } from "../long-notes/LongNoteItem";
+import { LiveEventItem } from "../live-events/LiveEventItem";
+import { CommunityItem } from "../communities/CommunityItem";
 import { ContactList } from "../contact-list/ContactList";
 
 export const SearchModal = ({
@@ -29,6 +33,8 @@ export const SearchModal = ({
   const [profiles, setProfiles] = useState(null);
   const [notes, setNotes] = useState(null);
   const [longNotes, setLongNotes] = useState(null);
+  const [liveEvents, setLiveEvents] = useState(null);
+  const [communities, setCommunities] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -36,6 +42,8 @@ export const SearchModal = ({
     setProfiles(null);
     setNotes(null);
     setLongNotes(null);
+    setLiveEvents(null);
+    setCommunities(null);
     setIsLoading(false);
   }, [isOpen]);
 
@@ -53,6 +61,10 @@ export const SearchModal = ({
       .then(setNotes)
       .then(() => searchLongNotes(searchValue))
       .then(setLongNotes)
+      .then(() => searchLiveEvents(searchValue))
+      .then(setLiveEvents)
+      .then(() => searchCommunities(searchValue))
+      .then(setCommunities)
       .finally(() => setIsLoading(false))
     ;
   };
@@ -168,6 +180,40 @@ export const SearchModal = ({
 		{longNotes.map((note) => {
 		  return (
 		    <LongNoteItem
+                      key={note.id}
+		      author={note.author?.profile}
+		      content={note}
+		      onClick={createAddrOpener(open)}
+		    />
+		  )
+		})}
+              </EventsContainer>
+	    </StyledContainer>
+	  )}
+	  {liveEvents && (
+	    <StyledContainer>
+              <h1 style={{color:"#daa3e8"}}>Live events</h1>
+              <EventsContainer>
+		{liveEvents.map((note) => {
+		  return (
+		    <LiveEventItem
+                      key={note.id}
+		      host={note.hostMeta?.profile}
+		      content={note}
+		      onClick={createAddrOpener(open)}
+		    />
+		  )
+		})}
+              </EventsContainer>
+	    </StyledContainer>
+	  )}
+	  {communities && (
+	    <StyledContainer>
+              <h1 style={{color:"#CBA3E8"}}>Communities</h1>
+              <EventsContainer>
+		{communities.map((note) => {
+		  return (
+		    <CommunityItem
                       key={note.id}
 		      author={note.author?.profile}
 		      content={note}

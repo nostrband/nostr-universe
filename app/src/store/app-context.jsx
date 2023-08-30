@@ -192,6 +192,9 @@ const AppContextProvider = ({ children }) => {
       console.log("contact list update", cl?.created_at);
 
       setContacts(cl);
+
+      // FIXME note we should be able to cancel this chain of loadings
+      // if contactList changes. How?
       
       const highlights = await fetchFollowedHighlights(cl.contactPubkeys);
       console.log("new highlights", highlights);
@@ -451,6 +454,7 @@ const AppContextProvider = ({ children }) => {
   };
   
   const API = {
+
     // NIP-01
     getPublicKey: async function (tabId) {
       const tab = getTabAny(tabId);

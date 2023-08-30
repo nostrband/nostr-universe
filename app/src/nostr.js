@@ -20,7 +20,7 @@ const PLATFORMS = ["web"];
 const ADDR_TYPES = ['', 'npub', 'note', 'nevent', 'nprofile', 'naddr'];
 
 export const nostrbandRelay = "wss://relay.nostr.band/";
-export const nostrbandRelayCounts = "wss://relay.nostr.band/all";
+export const nostrbandRelayAll = "wss://relay.nostr.band/all";
 
 const readRelays = [
   nostrbandRelay,
@@ -31,13 +31,13 @@ const readRelays = [
   "wss://nostr.mom",
 ];
 const writeRelays = [...readRelays, "wss://nostr.mutinywallet.com"]; // for broadcasting
-export const allRelays = [nostrbandRelayCounts, ...writeRelays];
+export const allRelays = [nostrbandRelayAll, ...writeRelays];
 
 // global ndk instance for now
 let ndk = null;
 
 const kindApps = {};
-const profileCache = [];
+const metaCache = [];
 
 function fetchEventsRead(ndk, filter) {
   return ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk));
@@ -120,7 +120,8 @@ export async function fetchApps() {
       kinds: [KIND_APP],
       limit: 50,
     },
-    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+    // note: send to this separate endpoint bcs this req might be slow
+    NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk)
   );
   console.log("top apps", top?.ids.length);
 
@@ -469,7 +470,7 @@ async function fetchAppsByKinds(ndk, kinds) {
 //  let events = await collectEvents(fetchEventsRead(ndk, filter));
 //  console.log('events', events);
 
-  const top = await ndk.fetchTop(filter, NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk))
+  const top = await ndk.fetchTop(filter, NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk))
   console.log("top kind apps", top?.ids.length);
 
   let events = null;
@@ -646,7 +647,7 @@ export async function searchProfiles(q) {
       search: q,
       limit: 30,
     },
-    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+    NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk)
   );
   console.log("top profiles", top?.ids.length);
 
@@ -664,9 +665,7 @@ export async function searchProfiles(q) {
   }
 
   events.forEach(e => {
-    e.profile = parseContentJson(e.content);
-    e.profile.pubkey = e.pubkey;
-    e.profile.npub = nip19.npubEncode(e.pubkey);
+    e.profile = parseProfileJson(e);
     e.order = top.ids.findIndex(i => e.id === i);
   });
 
@@ -689,23 +688,42 @@ function rawEvent(e) {
 }
 
 async function fetchMetas(pubkeys) {
-  let metas = await fetchEventsRead(ndk, {
-    kinds: [KIND_META],
-    authors: pubkeys,
-  });
-
-  // drop ndk stuff
-  metas = [...metas.values()].map(e => rawEvent(e));  
   
-  // parse profiles
-  metas.forEach(e => {
-    e.profile = parseProfileJson(e);
-  });
+  let metas = [];
+  let reqPubkeys = [];
+  pubkeys.forEach(p => {
+    if (p in metaCache)
+      metas.push(metaCache[p]);
+    else
+      reqPubkeys.push(p);
+  });  
 
+  if (reqPubkeys.length > 0) {
+    let events = await fetchEventsRead(ndk, {
+      kinds: [KIND_META],
+      authors: reqPubkeys,
+    });
+
+    // drop ndk stuff
+    events = [...events.values()].map(e => rawEvent(e));
+
+    // parse profiles
+    events.forEach(e => {
+      e.profile = parseProfileJson(e);
+    });
+
+    // put to cache
+    events.forEach(e => metaCache[e.pubkey] = e);
+    
+    // merge with cached results
+    metas = [...metas, ...events];
+  }
+
+  console.log("meta cache", Object.keys(metaCache).length);
   return metas;
 }
 
-async function augmentPrepareEvents(events, limit) {
+async function augmentEventAuthors(events) {
 
   if (events.length > 0) {
     // profile infos
@@ -715,19 +733,11 @@ async function augmentPrepareEvents(events, limit) {
     events.forEach(e => e.author = metas.find(m => m.pubkey === e.pubkey));
   }
 
-  // desc by tm
-  sortDesc(events);
-
-  if (events.length > limit)
-    events.length = limit;
-
   return events;
 }
 
-async function fetchEventsByIds(opts) {
+async function fetchEventsByIds({ ids, kinds, authors }) {
 
-  const {ids, kinds, augment} = opts;
-  
   if (!ids.length)
     return [];
 
@@ -742,9 +752,12 @@ async function fetchEventsByIds(opts) {
   console.log("ids", ids, "kinds", kinds, "events", events);
 
   events = [...events.values()].map(e => rawEvent(e));  
-  if (augment)
-    events = await augmentPrepareEvents(events, events.length);
+  if (authors)
+    events = await augmentEventAuthors(events);
 
+  // desc by tm
+  sortDesc(events);
+  
   console.log("events by ids prepared", events);
 
   return events;
@@ -768,7 +781,7 @@ async function augmentZaps(events, minZap) {
     } catch {
       e.bolt11 = {};
     };
-    e.amountMsat = Number(e.bolt11?.sections.find(s => s.name === 'amount').value);
+    e.amountMsat = Number(e.bolt11?.sections?.find(s => s.name === 'amount').value);
     e.targetEventId = getTagValue(e, 'e');
     e.targetAddr = getTagValue(e, 'a');
     e.targetPubkey = getTagValue(e, 'p');
@@ -789,7 +802,7 @@ async function augmentZaps(events, minZap) {
     let targets = await fetchEventsByIds({
       ids,
       kinds: [KIND_NOTE, KIND_LONG_NOTE, KIND_COMMUNITY, KIND_LIVE_EVENT, KIND_APP],
-      augment: false
+      authors: false
     });
 
     // profile infos
@@ -820,6 +833,8 @@ async function augmentZaps(events, minZap) {
 }
 
 async function augmentCommunities(events, addrs) {
+
+  const pubkeys = new Set();
   events.forEach((e) => {
     e.name = e.identifier;
     e.description = getTagValue(e, 'description');
@@ -828,19 +843,33 @@ async function augmentCommunities(events, addrs) {
       .filter(p => p.length >= 4 && p[3] === 'moderator')
       .map(p => p[1]);
 
-    const apprs = addrs.filter(a => a.pubkey === e.pubkey && a.identifier === e.identifier);
-    e.last_post_tm = apprs[0].tm;
-    e.order = apprs[0].tm;
-    e.posts = apprs.length;
+    if (addrs) {
+      const apprs = addrs.filter(a => a.pubkey === e.pubkey && a.identifier === e.identifier);
+      e.last_post_tm = apprs[0].tm;
+      e.order = apprs[0].tm;
+      e.posts = apprs.length;
+    }
+
+    pubkeys.add(e.pubkey);
+    e.moderators.forEach(m => pubkeys.add(m));
   });
 
+  console.log("communities meta pubkeys", pubkeys);
+  const metas = await fetchMetas([...pubkeys.values()]);
+    
+  // assign to events
+  events.forEach(e => {
+    e.author = metas.find(m => m.pubkey === e.pubkey);
+    e.moderatorsMetas = metas.filter(m => e.moderators.includes(m.pubkey));
+  });  
+  
   // desc
   sortDesc(events);
   
   return events;
 }
 
-async function searchEvents(q, kind, limit = 30) {
+async function searchEvents({ q, kind, limit = 30, authors = false }) {
   let events = await ndk.fetchEvents(
     {
       kinds: [kind],
@@ -851,23 +880,58 @@ async function searchEvents(q, kind, limit = 30) {
     NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
   );
   events = [...events.values()].map(e => rawEvent(e));  
+  if (authors)
+    events = await augmentEventAuthors(events);
 
-  console.log("notes", events);
+  // desc by tm
+  sortDesc(events);
 
-  events = await augmentPrepareEvents(events, limit);
-
-  console.log("notes prepared", events);
+  if (events.length > limit)
+    events.length = limit;
+  
+  console.log("search events prepared", events);
 
   return events;
 }
 
 export async function searchNotes(q, limit = 30) {
-  return searchEvents(q, KIND_NOTE, limit);
+  return searchEvents({
+    q,
+    kind: KIND_NOTE,
+    limit,
+    authors: true,
+  });
 }
 
 export async function searchLongNotes(q, limit = 30) {
-  let events = await searchEvents(q, KIND_LONG_NOTE, limit);
+  let events = await searchEvents({
+    q,
+    kind: KIND_LONG_NOTE,
+    limit,
+    authors: true,
+  });
   events = await augmentLongNotes(events);
+  return events;
+}
+
+export async function searchLiveEvents(q, limit = 30) {
+  let events = await searchEvents({
+    q,
+    kind: KIND_LIVE_EVENT,
+    limit,
+  });
+  events = await augmentLiveEvents({ events, limit, ended: true });
+  return events;
+}
+
+export async function searchCommunities(q, limit = 30) {
+  let events = await searchEvents({
+    q,
+    kind: KIND_COMMUNITY,
+    limit
+  });
+  events = await augmentCommunities(events);
+  console.log("search comms", events);
   return events;
 }
 
@@ -905,13 +969,12 @@ class PromiseQueue {
   }
 };
 
-async function fetchPubkeyEvents(opts) {
+async function fetchPubkeyEvents(
+  { kind, pubkeys, tagged = false, authors = false, limit = 30, identifiers = null }) {
 
-  let { kind, pubkeys, tagged = false, augment = false, limit = 30 } = opts;
-
-  const authors = [...pubkeys];
-  if (authors.length > 200)
-    authors.length = 200;
+  const pks = [...pubkeys];
+  if (pks.length > 200)
+    pks.length = 200;
 
   const filter = {
     kinds: [kind],
@@ -919,20 +982,24 @@ async function fetchPubkeyEvents(opts) {
   };
 
   if (tagged)
-    filter['#p'] = authors;
+    filter['#p'] = pks;
   else
-    filter.authors = authors;
+    filter.authors = pks;
 
-  if (opts.identifiers)
-    filter['#d'] = opts.identifiers;
+  if (identifiers)
+    filter['#d'] = identifiers;
   
   let events = await fetchEventsRead(ndk, filter);
-  console.log("kind", kind, "new events", events);
-
   events = [...events.values()].map(e => rawEvent(e));  
-  if (augment)
-    events = await augmentPrepareEvents(events, limit);
+  if (authors)
+    events = await augmentEventAuthors(events);
 
+  // desc by tm
+  sortDesc(events);
+
+  if (events.length > limit)
+    events.length = limit;
+  
   return events;
 }
 
@@ -940,7 +1007,7 @@ export async function fetchFollowedLongNotes(contactPubkeys) {
   let events = await fetchPubkeyEvents({
     kind: KIND_LONG_NOTE,
     pubkeys: contactPubkeys,
-    augment: true
+    authors: true
   });
   events = await augmentLongNotes(events);
   return events;
@@ -950,9 +1017,8 @@ export async function fetchFollowedHighlights(contactPubkeys) {
   let events = await fetchPubkeyEvents({
     kind: KIND_HIGHLIGHT,
     pubkeys: contactPubkeys,
-    augment: true
+    authors: true
   });
-//  events = await augmentLongNotes(events);
   return events;
 }
 
@@ -987,7 +1053,7 @@ export async function fetchFollowedCommunities(contactPubkeys) {
     kind: KIND_COMMUNITY,
     pubkeys: [... new Set(addrs.map(a => a.pubkey))],
     identifiers: [... new Set(addrs.map(a => a.identifier))],
-    augment: true,
+    authors: true,
   });
   
   events = await augmentCommunities(events, addrs);
@@ -995,7 +1061,7 @@ export async function fetchFollowedCommunities(contactPubkeys) {
   return events;
 }
 
-async function augmentLiveEvents(events, contactPubkeys, limit) {
+async function augmentLiveEvents({ events, contactPubkeys, limit, ended = false }) {
 
   // convert to an array of raw events
 
@@ -1015,7 +1081,7 @@ async function augmentLiveEvents(events, contactPubkeys, limit) {
     const ps = getTags(e, 'p');
     e.host = ps.find(p => p.length >= 4 && (p[3] === 'host' || p[3] === 'Host'))?.[1];
     e.members = ps
-      .filter(p => p.length >= 4 && contactPubkeys.includes(p[1]))
+      .filter(p => p.length >= 4 && (!contactPubkeys || contactPubkeys.includes(p[1])))
       .map(p => p[1]);
 
     // newest-first
@@ -1032,7 +1098,7 @@ async function augmentLiveEvents(events, contactPubkeys, limit) {
     return !!e.host
     // For now let's show live events where some of our following are participating
     //	&& contactPubkeys.includes(e.host)
-	&& e.status !== 'ended';
+	&& (ended || e.status !== 'ended');
   });
 
   if (events.length > 0) {
@@ -1065,7 +1131,7 @@ export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
     tagged: true
   });
 
-  events = await augmentLiveEvents(events, contactPubkeys, limit);
+  events = await augmentLiveEvents({events, contactPubkeys, limit});
   
   return events;
 }
@@ -1119,22 +1185,29 @@ class Subscription {
       }
       events.set(dedupKey, event);
 
+      // add to promise queue
       pq.appender(async (event) => {
-	console.log("got new", this.label, "event", event);
-	if (eose)
+	console.log("got new", this.label, "event", event, "from", event.relay.url);
+
+	// we've reached the end and this is still the newest event?
+	if (eose && events.get(dedupKey) == event)
 	  await returnEvent(event);
+
       }) (event);
     });
 
     // notify that initial fetch is over
-    sub.on("eose", pq.appender(() => {
+    sub.on("eose", pq.appender((sub, reason) => {
+      console.log("eose was", eose, this.label, "events", events.size, "reason", reason, "at", Date.now());
+      if (eose)
+	return; // WTF second one?
+      
       eose = true;
-      pq.appender(() => {
-	[...events.values()].forEach(async (e) => { await returnEvent(e) });
-      }) ();
+      [...events.values()].forEach(async (e) => { await returnEvent(e) });
     }));
 
     // start
+    console.log("start", this.label, "at", Date.now());
     sub.start();
 
     // store
@@ -1207,7 +1280,7 @@ const bookmarkListSub = new Subscription("bookmark list", async (bookmarkList) =
     bookmarkList.bookmarkEvents = await fetchEventsByIds({
       ids: bookmarkList.bookmarkEventIds,
       kinds: [KIND_NOTE, KIND_LONG_NOTE],
-      augment: true
+      authors: true
     });
     
     bookmarkList.bookmarkEvents.forEach(e => {
