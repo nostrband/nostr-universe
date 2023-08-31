@@ -47,6 +47,15 @@ export const dbi = {
       console.log(`Update tab in DB error: ${JSON.stringify(error)}`);
     }
   },
+  updatePin: async (pin) => {
+    try {
+      await db.pins.where("id").equals(pin.id).modify({
+        order: pin.order,
+      });
+    } catch (error) {
+      console.log(`Update pin in DB error: ${JSON.stringify(error)}`);
+    }
+  },
   updateTabScreenshot: async (tab) => {
     try {
       await db.tabs.where("id").equals(tab.id).modify({

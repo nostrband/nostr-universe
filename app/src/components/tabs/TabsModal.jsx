@@ -49,7 +49,7 @@ export const TabsModal = ({ isOpen, onClose }) => {
 		</Title>
 		<TabsContainer>
 		  {tabs.map(tab => (
-		    <Card onClick={() => onClick(tab)}>
+		    <Card key={tab.id} onClick={() => onClick(tab)}>
 		      <img src={tab.screenshot || ""} alt={tab.title} width="150" />
 		    </Card>
 		  ))}
