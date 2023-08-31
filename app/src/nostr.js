@@ -36,8 +36,9 @@ export const allRelays = [nostrbandRelayAll, ...writeRelays];
 // global ndk instance for now
 let ndk = null;
 
-const kindApps = {};
+const kindAppsCache = {};
 const metaCache = [];
+const eventCache = [];
 
 function fetchEventsRead(ndk, filter) {
   return ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk));
@@ -610,15 +611,15 @@ export async function fetchAppsForEvent(id, event) {
   console.log('resolved addr', addr);
   
   // now fetch the apps for event kind
-  let info = [];
-  if (addr.kind in kindApps)
-    info = {...kindApps[addr.kind]};
-  if (!info.length)
+  let info = null;
+  if (addr.kind in kindAppsCache && kindAppsCache[addr.kind].apps.length > 0)
+    info = kindAppsCache[addr.kind];
+  if (!info)
     info = await fetchAppsByKinds(ndk, [addr.kind]);
   info.addr = addr;
 
   // put to cache
-  kindApps[addr.kind] = info;
+  kindAppsCache[addr.kind] = info;
 
   // init convenient url property for each handler
   // to redirect to this event
@@ -740,29 +741,46 @@ async function augmentEventAuthors(events) {
 
 async function fetchEventsByIds({ ids, kinds, authors }) {
 
-  if (!ids.length)
-    return [];
+  let results = [];
+  let reqIds = [];
+  ids.forEach(id => {
+    if (id in eventCache) {
+      // make sure kinds match
+      if (kinds.includes(eventCache[id].kind))
+	results.push(eventCache[id]);
+    } else {
+      reqIds.push(id);
+    }
+  });  
+  
+  if (reqIds.length > 0) {
+    let events = await ndk.fetchEvents(
+      {
+	reqIds,
+	kinds,
+      },
+      {}, // opts
+      NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
+    );
+    console.log("ids", ids, "kinds", kinds, "events", events);
 
-  let events = await ndk.fetchEvents(
-    {
-      ids,
-      kinds,
-    },
-    {}, // opts
-    NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
-  );
-  console.log("ids", ids, "kinds", kinds, "events", events);
+    events = [...events.values()].map(e => rawEvent(e));
 
-  events = [...events.values()].map(e => rawEvent(e));  
+    events.forEach(e => eventCache[e.id] = e);
+
+    results = [...results, ...events];
+
+    console.log("event cache", Object.keys(eventCache).length);
+  }
+  
   if (authors)
-    events = await augmentEventAuthors(events);
+    results = await augmentEventAuthors(results);
 
   // desc by tm
-  sortDesc(events);
+  sortDesc(results);
   
-  console.log("events by ids prepared", events);
-
-  return events;
+  console.log("events by ids prepared", results);
+  return results;
 }
 
 async function augmentLongNotes(events) {

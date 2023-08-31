@@ -71,33 +71,36 @@ export const TabMenu = ({ onClose, onOpenWith, onOpenPinAppModal }) => {
           onClick: () => onClick(() => pinTab(onOpenPinAppModal)),
         });
       }
-
       setTools(tools);
-
+      
       // Event:
       if (id) {
+
+        tools.push({
+          title: "Open with",
+          id: "open-with",
+          Icon: () => <img width={23} height={23} src={openWithIcon} />,
+          onClick: () => onClick(() => { console.log("open-with", id); onOpenWith(id); }),
+        });
+	setTools(tools);
+	
         const getEvent = async () => {
           const event = await fetchEventByBech32(id);
-          console.log("id", id, "event", event);
-          setEvent(event);
+	  if (event) {
+            console.log("id", id, "event", event);
+            setEvent(event);
 
-          tools.push({
-            title: "Open with",
-            id: "open-with",
-            Icon: () => <img width={23} height={23} src={openWithIcon} />,
-            onClick: () => onClick(() => onOpenWith(id)),
-          });
+            if (event.kind == 0 || event.kind == 1) {
+              tools = [...tools, {
+		title: "Zap",
+		id: "zap",
+		Icon: () => <img width={23} height={23} src={zapIcon} />,
+		onClick: () => launchZapDialog(id, event),
+              }];
+            }
 
-          if (event.kind == 0 || event.kind == 1) {
-            tools.push({
-              title: "Zap",
-              id: "zap",
-              Icon: () => <img width={23} height={23} src={zapIcon} />,
-              onClick: () => launchZapDialog(id, event),
-            });
-          }
-
-          setTools(tools);
+            setTools(tools);
+	  }
         };
 
         // async load

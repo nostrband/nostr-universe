@@ -22,7 +22,16 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
     const load = async () => {
       console.log("addr", addr);
       setIsLoading(true);
-      const info = await fetchAppsForEvent(addr);
+      let info = null;
+      try {
+	info = await fetchAppsForEvent(addr);
+      } catch (e) {
+	console.log("fetch error", e);
+	setIsLoading(false);
+	setApps([]);
+	return;
+      }
+
       console.log("info", info);
 
       // save event kind
@@ -86,8 +95,8 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
 
   const searchValueChangeHandler = (e) => setEnteredSearch(e.target.value);
 
-  const renderedApps = apps.filter((app) => {
-    return app.name.toLowerCase().includes(enteredSearch.toLowerCase());
+  const renderedApps = apps.filter((app) => {    
+    return !enteredSearch || app.name?.toLowerCase().includes(enteredSearch.toLowerCase());
   });
 
   const renderSearchInput = () => {

@@ -20,48 +20,59 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 
       const id = stringToBech32(input);
       setId(id);
+      if (!id)
+	return;
+
+      let event = null;
+      
+      const onAction = (action) => {
+	console.log("context action", action, "id", id);
+	if (!id)
+	  return;
+	
+	switch (action) {
+	  case "open-with":
+	    onOpenWith(id);
+	    break;
+	  case "zap":
+	    launchZapDialog(id, event);
+	    break;
+	}
+      }
+      
+      const tools = [
+	{
+	  title: "Open with",
+	  id: "open-with",
+	  Icon: () => (<img width={23} height={23} src={openWithIcon} />),
+	  onClick: onAction,
+	},
+      ];
+      setTools(tools);
 
       // Event:
-      if (id) {
-	const event = await fetchEventByBech32(id);
-	console.log("id", id, "event", event);
-	setEvent(event);
+      const getEvent = async () => {
+	event = await fetchEventByBech32(id);
+	
+	if (event) {
+	  console.log("id", id, "event", event);
+	  setEvent(event);
 
-	const onAction = (action) => {
-	  console.log("context action", action, "id", id);
-	  if (!id)
-	    return;
-
-	  switch (action) {
-	    case "open-with":
-	      onOpenWith(id, event);
-	      break;
-	    case "zap":
-	      launchZapDialog(id, event);
-	      break;
+	  if (event.kind == 0 || event.kind == 1) {
+	    tools = [...tools, {
+	      title: "Zap",
+	      id: "zap",
+	      Icon: () => (<img width={23} height={23} src={zapIcon} />),
+	      onClick: onAction,
+	    }];
 	  }
+
+	  setTools(tools);	    
 	}
-
-	const tools = [
-	  {
-	    title: "Open with",
-	    id: "open-with",
-	    Icon: () => (<img width={23} height={23} src={openWithIcon} />),
-	    onClick: onAction,
-	  },
-	];
-
-	if (event.kind == 0 || event.kind == 1) {
-	  tools.push({
-	    title: "Zap",
-	    id: "zap",
-	    Icon: () => (<img width={23} height={23} src={zapIcon} />),
-	    onClick: onAction,
-	  });
-	}
-
-	setTools(tools);
       }
+
+      // async event load
+      getEvent();
     };
 
     if (input)

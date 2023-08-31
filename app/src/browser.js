@@ -367,7 +367,6 @@ export function open(params) {
   });
 
   ref.addEventListener("blank", async (event) => {
-    console.log("blank", event.url);
     if (event.url.startsWith("lightning:"))
       cordova.InAppBrowser.open(event.url, "_self");
     else if (API.onBlank) await API.onBlank(params.apiCtx, event.url);
@@ -375,11 +374,12 @@ export function open(params) {
 
   ref.addEventListener("beforeload", async (event, cb) => {
     console.log("beforeload", JSON.stringify(event));
-    if (event.url.startsWith("lightning:"))
-      cordova.InAppBrowser.open(event.url, "_self");
-    else if (API.onBeforeLoad) await API.onBeforeLoad(params.apiCtx, event.url);
-    // FIXME new domain?
-    else cb(event.url);
+    if (API.onBeforeLoad) {
+      // handled by our code?
+      if (await API.onBeforeLoad(params.apiCtx, event.url))
+	return;
+    }
+    cb(event.url);
   });
 
   ref.addEventListener("icon", async (event) => {

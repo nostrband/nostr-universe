@@ -18,7 +18,7 @@ export const PermsModal = ({ isOpen, onClose }) => {
   const contextData = useContext(AppContext);
   const { currentWorkspace, apps: appList, deletePerms } = contextData || {};
 
-  const perms = currentWorkspace.perms;
+  const perms = currentWorkspace?.perms || [];
   const apps = [...new Set(perms.map(p => p.app))].map(id => {
     const app = appList.find(app => app.naddr === id);
     console.log("app", id, app);

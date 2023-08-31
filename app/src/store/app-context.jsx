@@ -80,6 +80,10 @@ function addToTabGroup(workspace, pt, isPin) {
     tg.pin = pt;
   }
 
+  // FIXME info and pin aren't updated if their objects are modified elsewhere,
+  // in particular a change in tab icon won't propagate to the tab group bcs
+  // we're copying a tab, but not re-assigning it to the tab group
+  
   if (!isPin) {
     tg.tabs.push(pt.id);
   }
@@ -495,6 +499,46 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
+  const requestPermExec = (tab, perm, exec, error) => {
+    return new Promise((ok, err) => {
+      requestPerm(tab, perm, async (allowed) => {
+	try {
+          if (allowed) ok(await exec());
+          else err(error);
+	} catch (e) {
+	  err(e)
+	};
+      });
+    });
+  };
+
+  const handleCustomUrl = async (tab, url) => {
+    if (url.startsWith("lightning:")) {
+      // just open some outside app for now
+      window.cordova.InAppBrowser.open(url, "_self");
+      return true;
+    }
+
+    if (url.startsWith("nostr:")) {
+      const b32 = stringToBech32(url);
+      if (b32) {
+
+	// hide it
+	if (tab) await hide(tab);
+	
+        // offer to choose an app to show the event
+        setOpenAddr(b32);
+      } else {
+        // try some external app that might know this type of nostr: link
+        window.cordova.InAppBrowser.open(url, "_self");
+      }
+
+      return true;
+    }
+
+    return false;
+  };
+    
   const API = {
     // NIP-01
     getPublicKey: async function (tabId) {
@@ -504,12 +548,8 @@ const AppContextProvider = ({ children }) => {
       if (hasPerm(tab, "pubkey", "0"))
         throw new Error("Pubkey perm disallowed");
       if (hasPerm(tab, "pubkey", "1")) return currentPubkey;
-      return new Promise((ok, err) => {
-        requestPerm(tab, { perm: "pubkey" }, (allowed) => {
-          if (allowed) ok(currentPubkey);
-          else err("Pubkey perm disallowed");
-        });
-      });
+      const exec = () => currentPubkey;
+      return requestPermExec(tab, { perm: "pubkey" }, exec, "Pubkey perm disallowed");
     },
     signEvent: async function (tabId, event) {
       const tab = getTabAny(tabId);
@@ -527,12 +567,8 @@ const AppContextProvider = ({ children }) => {
       // disallowed this kind or all kinds
       if (hasPerm(tab, kindPerm, "0") || hasPerm(tab, allPerm, "0"))
         throw new Error("Sign kind " + event.kind + " perm disallowed");
-      return new Promise((ok, err) => {
-        requestPerm(tab, { perm: kindPerm, event }, async (allowed) => {
-          if (allowed) ok(await exec());
-          else err("Sign kind " + event.kind + " disallowed");
-        });
-      });
+      return requestPermExec(tab, { perm: kindPerm, event },
+			     exec, "Sign kind " + event.kind + " disallowed");
     },
 
     // NIP-04
@@ -545,16 +581,8 @@ const AppContextProvider = ({ children }) => {
       const exec = async () =>
         await window.nostr.nip04.encrypt(pubkey, plainText);
       if (hasPerm(tab, "encrypt", "1")) return await exec();
-      return new Promise((ok, err) => {
-        requestPerm(
-          tab,
-          { perm: "encrypt", pubkey, plainText },
-          async (allowed) => {
-            if (allowed) ok(await exec());
-            else err("Encrypt disallowed");
-          }
-        );
-      });
+      return requestPermExec(tab, { perm: "encrypt", pubkey, plainText },
+			     exec, "Encrypt disallowed");
     },
     decrypt: async function (tabId, pubkey, cipherText) {
       const tab = getTabAny(tabId);
@@ -565,16 +593,7 @@ const AppContextProvider = ({ children }) => {
       const exec = async () =>
         await window.nostr.nip04.decrypt(pubkey, cipherText);
       if (hasPerm(tab, "decrypt", "1")) return await exec();
-      return new Promise((ok, err) => {
-        requestPerm(
-          tab,
-          { perm: "decrypt", pubkey, cipherText },
-          async (allowed) => {
-            if (allowed) ok(await exec());
-            else err("Decrypt disallowed");
-          }
-        );
-      });
+      return requestPermExec(tab, { perm: "decrypt", pubkey, cipherText }, exec, "Decrypt disallowed");
     },
 
     setUrl: async function (tabId, url) {
@@ -589,6 +608,9 @@ const AppContextProvider = ({ children }) => {
         // set new url
         tab.url = url;
 
+	// NOTE: if we don't do this, an url change that causes
+	// group-id change will make this tab not-belong to the tab group
+	// that still thinks it owns this tab...
         // need to switch tab group?
         const tgid = getTabGroupId(tab);
         if (tgid !== getTabGroupId(wasTab)) {
@@ -635,22 +657,23 @@ const AppContextProvider = ({ children }) => {
     },
     onBlank: async (tabId, url) => {
       const tab = getTabAny(tabId);
+      console.log("onBlank", tabId, tab?.url, url);
+
+      // some special scheme?
+      if (await handleCustomUrl(tab, url))
+	return;
+
+      // new tab coming, hide current one
       if (tab) await hide(tab);
-      if (url.startsWith("nostr:")) {
-        const b32 = stringToBech32(url);
-        if (b32) {
-          // offer to choose an app to show the event
-          setOpenAddr(b32);
-        } else {
-          // try some external app that might know this type of nostr: link
-          window.cordova.InAppBrowser.open(url, "_self");
-        }
-      } else {
-        openBlank({ url });
-      }
+      
+      // just open another tab
+      openBlank({ url });
     },
     onBeforeLoad: async (tabId, url) => {
-      await API.onBlank(tabId, url);
+      const tab = getTabAny(tabId);
+      console.log("onBeforeLoad", tabId, tab?.url, url);
+      // intercept lightning: and nostr: links
+      return await handleCustomUrl(tab, url);
     },
     onHide: (tabId) => {
       console.log("hide", tabId);
@@ -895,6 +918,7 @@ const AppContextProvider = ({ children }) => {
 
     const pin = currentWorkspace.pins.find((p) => p.appNaddr == params.naddr);
 
+    console.log("openApp", JSON.stringify(params));
     await openBlank({
       url: params.url,
       pinned: !!pin,
@@ -1033,13 +1057,13 @@ const AppContextProvider = ({ children }) => {
     await hide(tab, /* no_screenshot */ true);
 
     // get tab group of the closed tab
-    const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];
+//    const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];
 
     // switch to previous one of the group
-    const index = tg.tabs.findIndex((id) => id === tab.id);
-    const next = index ? index - 1 : index + 1;
-    console.log("next", next);
-    if (next < tg.tabs.length) await show(getTab(tg.tabs[next]));
+//    const index = tg.tabs.findIndex((id) => id === tab.id);
+//    const next = index ? index - 1 : index + 1;
+//    console.log("next", next);
+//    if (next < tg.tabs.length) await show(getTab(tg.tabs[next]));
 
     // close in bg after that
     await close(tab);
