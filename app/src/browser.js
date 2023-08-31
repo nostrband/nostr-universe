@@ -413,6 +413,18 @@ const close = async (id) => {
   delete refs[id];
 };
 
+const screenshot = async (id) => {
+  if (!(id in refs)) return;
+
+  const ref = refs[id];
+  return new Promise((ok) => {
+    ref.screenshot((s) => {
+      console.log("screenshot", id, s.length);
+      ok(s);
+    }, 0.4 / window.devicePixelRatio, 1.0);
+  });
+}
+
 const generateMenu = () => {
   document.body.innerHTML =
     "<div style='border: 1px solid #000; width: 100%, height: 100%; background-color: white;'><button onclick='javascript:parent.nostrCordovaPlugin.setUrl(\"test1\")'>test</button><br><button onclick='javascript:parent.nostrCordovaPlugin.setUrl(\"test2\")'>test2</button></div>";
@@ -459,6 +471,7 @@ export const browser = {
   hide,
   stop,
   reload,
+  screenshot,
   setAPI,
   showMenu,
 };
