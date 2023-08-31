@@ -71,9 +71,10 @@ function addToTabGroup(workspace, pt, isPin) {
       info: pt,
       tabs: [],
       lastTabId: "",
+      order: pt.order,
       lastActive: 0,
     };
-
+  
   const tg = workspace.tabGroups[id];
   if (isPin && !tg.pin) {
     tg.pin = pt;
@@ -82,6 +83,9 @@ function addToTabGroup(workspace, pt, isPin) {
   if (!isPin) {
     tg.tabs.push(pt.id);
   }
+
+  if (tg.lastActive < pt.lastActive)
+    tg.lastActive = pt.lastActive;
 }
 
 function deleteFromTabGroup(workspace, pt, isPin) {
@@ -126,7 +130,7 @@ const AppContextProvider = ({ children }) => {
   const [contextInput, setContextInput] = useState("");
 
   const [currentPermRequest, setCurrentPermRequest] = useState(null);
-  
+
   const [isShowDrawer, setIsShowDrawer] = useState(true);
 
   const setContacts = async (cl) => {
@@ -152,7 +156,7 @@ const AppContextProvider = ({ children }) => {
     if (!keys || !keys.length) return;
 
     console.log("reloadProfile", keys, pubkey);
-    
+
     // reuse cached profile info?
     if (pubkey !== currentPubkey) {
       const p = profiles?.find((p) => p.pubkey === pubkey);
@@ -172,8 +176,8 @@ const AppContextProvider = ({ children }) => {
     // subscribe to new keys
     subscribeProfiles(keys, (profile) => {
       if (!profile) {
-	// FIXME no stored events for the remaining non-filled profiles
-	return;
+        // FIXME no stored events for the remaining non-filled profiles
+        return;
       }
 
       if (profile.pubkey == pubkey) setProfile(profile);
@@ -195,19 +199,22 @@ const AppContextProvider = ({ children }) => {
 
       // FIXME note we should be able to cancel this chain of loadings
       // if contactList changes. How?
-      
+
       const highlights = await fetchFollowedHighlights(cl.contactPubkeys);
       console.log("new highlights", highlights);
       updateWorkspace((ws) => {
         return { ...ws, highlights };
       }, pubkey);
-      
-      const bigZaps = await fetchFollowedZaps(cl.contactPubkeys, MIN_ZAP_AMOUNT);
+
+      const bigZaps = await fetchFollowedZaps(
+        cl.contactPubkeys,
+        MIN_ZAP_AMOUNT
+      );
       console.log("new zaps", bigZaps);
       updateWorkspace((ws) => {
         return { ...ws, bigZaps };
       }, pubkey);
-	  
+
       const longNotes = await fetchFollowedLongNotes(cl.contactPubkeys);
       console.log("new long notes", longNotes);
       updateWorkspace((ws) => {
@@ -225,7 +232,6 @@ const AppContextProvider = ({ children }) => {
       updateWorkspace((ws) => {
         return { ...ws, communities };
       }, pubkey);
-
     });
   };
 
@@ -299,7 +305,6 @@ const AppContextProvider = ({ children }) => {
   };
 
   const reloadKeys = async () => {
-
     // can be writeKey or readKey
     let currentPubkey = await dbi.getFlag("", "currentPubkey");
     console.log("currentPubkey", currentPubkey);
@@ -313,12 +318,21 @@ const AppContextProvider = ({ children }) => {
       await writeCurrentPubkey(list.currentAlias);
       currentPubkey = list.currentAlias;
     }
-    
-    const writeKeys = Object.keys(list).filter((key) => key !== "currentAlias");
-    const readKeys = (await dbi.listReadOnlyKeys()).filter(k => !writeKeys.includes(k));
 
-    const keys = [...new Set([...writeKeys, ...readKeys])]
-    console.log("load keys cur", currentPubkey, "writeKeys", writeKeys, "readKeys", readKeys);
+    const writeKeys = Object.keys(list).filter((key) => key !== "currentAlias");
+    const readKeys = (await dbi.listReadOnlyKeys()).filter(
+      (k) => !writeKeys.includes(k)
+    );
+
+    const keys = [...new Set([...writeKeys, ...readKeys])];
+    console.log(
+      "load keys cur",
+      currentPubkey,
+      "writeKeys",
+      writeKeys,
+      "readKeys",
+      readKeys
+    );
 
     setCurrentPubkey(currentPubkey);
     setKeys(keys);
@@ -326,7 +340,7 @@ const AppContextProvider = ({ children }) => {
 
     return [keys, currentPubkey, readKeys];
   };
-  
+
   useEffect(() => {
     async function onDeviceReady() {
       console.log("device ready", Date.now());
@@ -380,7 +394,6 @@ const AppContextProvider = ({ children }) => {
           setApps(apps);
           await db.apps.bulkPut(apps);
         }
-
       });
     }
 
@@ -389,8 +402,11 @@ const AppContextProvider = ({ children }) => {
     } else {
       document.addEventListener("deviceready", onDeviceReady, false);
       document.addEventListener("backbutton", (e) => {
-	console.log("back pressed", e);
-        if (!window.history || JSON.stringify(window.history.state) === 'null') {
+        console.log("back pressed", e);
+        if (
+          !window.history ||
+          JSON.stringify(window.history.state) === "null"
+        ) {
           e.preventDefault();
           navigator.app.exitApp();
         } else {
@@ -399,8 +415,9 @@ const AppContextProvider = ({ children }) => {
       });
     }
   }, []);
-  
+
   const currentWorkspace = workspaces.find((w) => w.pubkey === currentPubkey);
+
   const currentTab = currentWorkspace?.tabs.find(
     (t) => t.id === currentWorkspace.currentTabId
   );
@@ -411,15 +428,19 @@ const AppContextProvider = ({ children }) => {
     (t) => t.id === currentWorkspace.lastCurrentTabId
   );
   const getTab = (id) => currentWorkspace?.tabs.find((t) => t.id === id);
-  const getTabAny = (id) => workspaces?.map(ws => ws.tabs.find((t) => t.id === id))
-				       .find(t => t !== undefined);
-  const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY
-		      || readKeys.includes(currentPubkey);
+  const getTabAny = (id) =>
+    workspaces
+      ?.map((ws) => ws.tabs.find((t) => t.id === id))
+      .find((t) => t !== undefined);
+  const isReadOnly = () =>
+    currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey);
   const hasPerm = (tab, name, value) => {
     const app = getTabGroupId(tab);
-    return workspaces.find(
-      ws => ws.pubkey === tab.pubkey)?.perms.find(
-	p => p.app === app && p.name === name)?.value === value;
+    return (
+      workspaces
+        .find((ws) => ws.pubkey === tab.pubkey)
+        ?.perms.find((p) => p.app === app && p.name === name)?.value === value
+    );
   };
 
   const updateTab = (cbProps, tabId) => {
@@ -441,9 +462,9 @@ const AppContextProvider = ({ children }) => {
   const requestPerm = (tab, req, cb) => {
     const r = {
       ...req,
-      id: ""+Math.random(),
+      id: "" + Math.random(),
       tabId: tab.id,
-      cb
+      cb,
     };
     PermRequests.push(r);
 
@@ -452,21 +473,21 @@ const AppContextProvider = ({ children }) => {
       setCurrentPermRequest(r);
     }
   };
-  
-  const API = {
 
+  const API = {
     // NIP-01
     getPublicKey: async function (tabId) {
       const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (currentPubkey === DEFAULT_PUBKEY) throw new Error("No pubkey");
-      if (hasPerm(tab, "pubkey", "0")) throw new Error("Pubkey perm disallowed");
+      if (hasPerm(tab, "pubkey", "0"))
+        throw new Error("Pubkey perm disallowed");
       if (hasPerm(tab, "pubkey", "1")) return currentPubkey;
       return new Promise((ok, err) => {
-	requestPerm(tab, {perm: "pubkey"}, (allowed) => {
-	  if (allowed) ok(currentPubkey);
-	  else err("Pubkey perm disallowed");
-	});
+        requestPerm(tab, { perm: "pubkey" }, (allowed) => {
+          if (allowed) ok(currentPubkey);
+          else err("Pubkey perm disallowed");
+        });
       });
     },
     signEvent: async function (tabId, event) {
@@ -477,16 +498,19 @@ const AppContextProvider = ({ children }) => {
       const allPerm = "sign";
       const exec = async () => await window.nostr.signEvent(event);
       // allowed this kind or all kinds (if not kind-0)?
-      if (hasPerm(tab, kindPerm, "1") || (event.kind != 0 && hasPerm(tab, allPerm, "1")))
-	return await exec ();
+      if (
+        hasPerm(tab, kindPerm, "1") ||
+        (event.kind != 0 && hasPerm(tab, allPerm, "1"))
+      )
+        return await exec();
       // disallowed this kind or all kinds
       if (hasPerm(tab, kindPerm, "0") || hasPerm(tab, allPerm, "0"))
-	throw new Error("Sign kind "+event.kind+" perm disallowed");
+        throw new Error("Sign kind " + event.kind + " perm disallowed");
       return new Promise((ok, err) => {
-	requestPerm(tab, {perm: kindPerm, event}, async (allowed) => {
-	  if (allowed) ok(await exec ());
-	  else err("Sign kind "+event.kind+" disallowed");
-	});
+        requestPerm(tab, { perm: kindPerm, event }, async (allowed) => {
+          if (allowed) ok(await exec());
+          else err("Sign kind " + event.kind + " disallowed");
+        });
       });
     },
 
@@ -495,31 +519,43 @@ const AppContextProvider = ({ children }) => {
       const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (isReadOnly()) throw new Error("No pubkey");
-      if (hasPerm(tab, "encrypt", "0")) throw new Error("Encrypt perm disallowed");
-      const exec = async () => await window.nostr.nip04.encrypt(pubkey, plainText);
+      if (hasPerm(tab, "encrypt", "0"))
+        throw new Error("Encrypt perm disallowed");
+      const exec = async () =>
+        await window.nostr.nip04.encrypt(pubkey, plainText);
       if (hasPerm(tab, "encrypt", "1")) return await exec();
       return new Promise((ok, err) => {
-	requestPerm(tab, {perm: "encrypt", pubkey, plainText}, async (allowed) => {
-	  if (allowed) ok(await exec ());
-	  else err("Encrypt disallowed");
-	});
+        requestPerm(
+          tab,
+          { perm: "encrypt", pubkey, plainText },
+          async (allowed) => {
+            if (allowed) ok(await exec());
+            else err("Encrypt disallowed");
+          }
+        );
       });
     },
     decrypt: async function (tabId, pubkey, cipherText) {
       const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (isReadOnly()) throw new Error("No pubkey");
-      if (hasPerm(tab, "decrypt", "0")) throw new Error("Decrypt perm disallowed");
-      const exec = async () => await window.nostr.nip04.decrypt(pubkey, cipherText);
+      if (hasPerm(tab, "decrypt", "0"))
+        throw new Error("Decrypt perm disallowed");
+      const exec = async () =>
+        await window.nostr.nip04.decrypt(pubkey, cipherText);
       if (hasPerm(tab, "decrypt", "1")) return await exec();
       return new Promise((ok, err) => {
-	requestPerm(tab, {perm: "decrypt", pubkey, cipherText}, async (allowed) => {
-	  if (allowed) ok(await exec ());
-	  else err("Decrypt disallowed");
-	});
+        requestPerm(
+          tab,
+          { perm: "decrypt", pubkey, cipherText },
+          async (allowed) => {
+            if (allowed) ok(await exec());
+            else err("Decrypt disallowed");
+          }
+        );
       });
     },
-    
+
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
@@ -568,12 +604,6 @@ const AppContextProvider = ({ children }) => {
       API.setUrl(tabId, event.url);
       updateTab({ loading: false }, tabId);
     },
-    onGetPubkey: (tabId, pubkey) => {
-      // FIXME never happens now, remove?
-      if (currentPubkey === DEFAULT_PUBKEY && pubkey !== currentPubkey) {
-	addImportKey('reload');
-      }
-    },
     onClick: (tabId, x, y) => {
       console.log("click", x, y);
       let e = document.elementFromPoint(x, y);
@@ -620,7 +650,7 @@ const AppContextProvider = ({ children }) => {
 
   const importPubkey = async (pubkey) => {
     console.log("importPubkey", pubkey);
-    await addImportKey(pubkey);    
+    await addImportKey(pubkey);
   };
 
   const addKey = async () => {
@@ -628,37 +658,32 @@ const AppContextProvider = ({ children }) => {
   };
 
   const addImportKey = async (importPubkey) => {
-
-    if (importPubkey === 'reload') {
-      // noop - keys were added by the plugin and we need to reload keys
-    } else if (importPubkey) {
+    if (importPubkey) {
       await dbi.putReadOnlyKey(importPubkey);
       await writeCurrentPubkey(importPubkey);
-    } else {     
+    } else {
       const r = await keystore.addKey();
       await writeCurrentPubkey(r.pubkey);
     }
 
     // reload the list
     const [keys, pubkey, readKeys] = await reloadKeys();
-    
+
     // our first key?
     if (currentPubkey === DEFAULT_PUBKEY) {
-
       // reassign everything from default to the new key
       await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey });
       await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey });
       updateWorkspace({ pubkey }, DEFAULT_PUBKEY);
     } else {
-
       // copy trending stuff
       const { trendingProfiles = [], trendingNotes = [] } =
-	workspaces.find((w) => w.pubkey === currentPubkey) || {};
-      
+        workspaces.find((w) => w.pubkey === currentPubkey) || {};
+
       // init new workspace
       addWorkspace(pubkey, { trendingProfiles, trendingNotes });
     }
-    
+
     // make sure we have info on this new profile
     reloadProfile(keys, pubkey);
   };
@@ -714,11 +739,11 @@ const AppContextProvider = ({ children }) => {
   const hide = async (tab, noScreenshot = false) => {
     if (tab) {
       updateWorkspace({ currentTabId: "" });
-      await browser.hide(tab.id);      
+      await browser.hide(tab.id);
 
       if (!noScreenshot) {
-	const screenshot = await browser.screenshot(tab.id);
-	updateTab({ screenshot }, tab.id);
+        const screenshot = await browser.screenshot(tab.id);
+        updateTab({ screenshot }, tab.id);
 
         tab.screenshot = screenshot;
         await dbi.updateTabScreenshot(tab);
@@ -748,28 +773,92 @@ const AppContextProvider = ({ children }) => {
 
         await browser.show(tab.id);
 
-	tab.lastActive = Date.now();
+        tab.lastActive = Date.now();
 
         dbi.updateTab(tab);
-	
-	updateWorkspace((ws) => {
-	  const tg = ws.tabGroups[getTabGroupId(tab)];
+
+        updateWorkspace((ws) => {
+          const tg = ws.tabGroups[getTabGroupId(tab)];
           tg.lastTabId = tab.id;
-	  tg.lastActive = tab.lastActive;
+          tg.lastActive = tab.lastActive;
           return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
         });
 
-	updateTab({ lastActive: tab.lastActive }, tab.id);
-	
+        updateTab({ lastActive: tab.lastActive }, tab.id);
+
         ok();
 
-	const reqs = PermRequests.filter(pr => pr.tabId === tab.id);
-	console.log("shown tab "+tab.id+" has perm requests", JSON.stringify(reqs));
-	if (reqs.length > 0) {
-	  setCurrentPermRequest(reqs[0]);
-	}
-	
+        const reqs = PermRequests.filter((pr) => pr.tabId === tab.id);
+        console.log(
+          "shown tab " + tab.id + " has perm requests",
+          JSON.stringify(reqs)
+        );
+        if (reqs.length > 0) {
+          setCurrentPermRequest(reqs[0]);
+        }
       }, 0);
+    });
+  };
+
+  const swapTabs = (fromTabGroupId, toTabGroupId) => {
+    updateWorkspace((ws) => {
+      const fromTabGroup = ws.tabGroups[fromTabGroupId];
+      const toTabGroup = ws.tabGroups[toTabGroupId];
+
+      const fromOrder = fromTabGroup.order;
+      const toOrder = toTabGroup.order;
+
+      // swap the order of tab groups themselves
+      const setOrder = (tg, order) => {
+	tg.order = order;
+	tg.info.order = order;
+	if (tg.pin)
+	  tg.pin.order = order;
+      };
+
+      setOrder(fromTabGroup, toOrder);
+      setOrder(toTabGroup, fromOrder);
+
+      const updateTabsPins = (tabsPins, pins) => {
+
+	return tabsPins.map((tabPin) => {
+	  let newTabPin = null;
+	  const tgId = getTabGroupId(tabPin);
+          if (tgId === fromTabGroupId) {
+	    console.log("order for fromTabPin", tabPin.id, toOrder);
+	    newTabPin = { ...tabPin, order: toOrder };
+          }
+          if (tgId === toTabGroupId) {
+	    console.log("order for toTabPin", tabPin.id, fromOrder);
+	    newTabPin = { ...tabPin, order: fromOrder };
+          }
+
+	  if (newTabPin != null) {
+	    if (pins)
+              dbi.updatePin(newTabPin);
+	    else
+              dbi.updateTab(newTabPin);
+            return newTabPin;
+	  }
+          return tabPin;
+	});
+
+      };
+
+      const swappedTabs = updateTabsPins(ws.tabs, false);
+      const swappedPins = updateTabsPins(ws.pins, true);
+
+      //      swappedTabs.forEach((t) => {
+      //        console.log("TAB", t);
+      //        const isPin = "pin" in t;
+      //        addToTabGroup(ws, t, isPin);
+      //      });
+
+      const swappedTabGroups = { ...ws.tabGroups };
+      swappedTabGroups[fromTabGroup.id] = {...fromTabGroup};
+      swappedTabGroups[toTabGroup.id] = {...toTabGroup};
+
+      return { tabs: swappedTabs, pins: swappedPins, tabGroups: swappedTabGroups };
     });
   };
 
@@ -884,17 +973,18 @@ const AppContextProvider = ({ children }) => {
   const selectKey = async (selectPubkey) => {
     console.log("selectKey res", selectPubkey);
 
-    let pubkey = '';
-    if (readKeys.includes(selectPubkey)) { // read?
+    let pubkey = "";
+    if (readKeys.includes(selectPubkey)) {
+      // read?
       pubkey = selectPubkey;
-    } else if (keys.includes(selectPubkey)) { // write?
+    } else if (keys.includes(selectPubkey)) {
+      // write?
       const res = await keystore.selectKey({ publicKey: selectPubkey });
       pubkey = res?.currentAlias;
     }
 
-    if (!pubkey)
-      throw new Error("Unknown pubkey");
-    
+    if (!pubkey) throw new Error("Unknown pubkey");
+
     await writeCurrentPubkey(pubkey);
 
     // actual switch?
@@ -919,7 +1009,7 @@ const AppContextProvider = ({ children }) => {
     if (!tab) return;
 
     // hide first
-    await hide(tab, /* no_screenshot */true);
+    await hide(tab, /* no_screenshot */ true);
 
     // get tab group of the closed tab
     const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];
@@ -1049,17 +1139,18 @@ const AppContextProvider = ({ children }) => {
   };
 
   const replyCurrentPermRequest = async (allow, remember) => {
-
     const tab = getTab(currentPermRequest.tabId);
-    
+
     if (remember) {
       const perm = {
-	pubkey: tab.pubkey,
-	app: getTabGroupId(tab),
-	name: currentPermRequest.perm,
-	value: allow ? "1" : "0",
+        pubkey: tab.pubkey,
+        app: getTabGroupId(tab),
+        name: currentPermRequest.perm,
+        value: allow ? "1" : "0",
       };
-      updateWorkspace(ws => { return { perms: [...ws.perms, perm] } });
+      updateWorkspace((ws) => {
+        return { perms: [...ws.perms, perm] };
+      });
       await dbi.updatePerm(perm);
     }
 
@@ -1067,29 +1158,31 @@ const AppContextProvider = ({ children }) => {
     await currentPermRequest.cb(allow);
 
     // drop executed request
-    const i = PermRequests.findIndex(pr => pr.id === currentPermRequest.id);
-    if (i >= 0)
-      PermRequests.splice(i, 1);
-    else
-      throw new Error("Perm request not found");
+    const i = PermRequests.findIndex((pr) => pr.id === currentPermRequest.id);
+    if (i >= 0) PermRequests.splice(i, 1);
+    else throw new Error("Perm request not found");
 
     // more reqs?
-    const reqs = PermRequests.filter(pr => pr.tabId === currentPermRequest.tabId);
-    if (reqs.length > 0)
-      setCurrentPermRequest(reqs[0]);
-    else
-      setCurrentPermRequest(null);
+    const reqs = PermRequests.filter(
+      (pr) => pr.tabId === currentPermRequest.tabId
+    );
+    if (reqs.length > 0) setCurrentPermRequest(reqs[0]);
+    else setCurrentPermRequest(null);
   };
 
   const deletePerms = async (app) => {
     if (app)
-      updateWorkspace(ws => { return { perms: ws.perms.filter(p => p.add != app) } });
+      updateWorkspace((ws) => {
+        return { perms: ws.perms.filter((p) => p.add != app) };
+      });
     else
-      updateWorkspace(ws => { return { perms: [] } });
+      updateWorkspace((ws) => {
+        return { perms: [] };
+      });
 
     await dbi.deletePerms(currentPubkey, app);
   };
-  
+
   return (
     <AppContext.Provider
       value={{
@@ -1110,7 +1203,7 @@ const AppContextProvider = ({ children }) => {
         onHideTab: hideTab,
         onStopTab: stopTab,
         onReloadTab: reloadTab,
-	onImportPubkey: importPubkey,
+        onImportPubkey: importPubkey,
         setOpenKey,
         onCopyKey: copyKey,
         onShowKey: showKey,
@@ -1134,9 +1227,10 @@ const AppContextProvider = ({ children }) => {
         openAddr,
         setOpenAddr,
         updateLastContact,
-	currentPermRequest,
-	replyCurrentPermRequest,
-	deletePerms
+        swapTabs,
+        currentPermRequest,
+        replyCurrentPermRequest,
+        deletePerms,
       }}
     >
       {children}

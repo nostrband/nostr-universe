@@ -10,22 +10,39 @@ export const PinsList = ({ drawerBleeding }) => {
 
   const keys = Object.keys(tabGroups);
   keys.sort((ai, bi) => {
-    // desc
-    return tabGroups[bi].lastActive - tabGroups[ai].lastActive;
+    const lastActiveA = (tabGroups[ai].tabs.length > 0 && tabGroups[ai].lastActive) || 0;
+    const lastActiveB = (tabGroups[bi].tabs.length > 0 && tabGroups[bi].lastActive) || 0;
+
+    // both groups are active? desc by lastActive
+    if (lastActiveA != 0 && lastActiveB != 0)
+      return lastActiveB - lastActiveA;
+
+    // active goes before inactive
+    if (lastActiveA != 0)
+      return -1;
+    if (lastActiveB != 0)
+      return 1;
+
+    // inactive ones go by order asc
+    return tabGroups[ai].order - tabGroups[bi].order;
   });
+
   return (
     <StyledContainer length={keys.length} bleeddingheight={drawerBleeding}>
-      {keys.map(id => {
-	const tg = tabGroups[id];
+      {keys.map((id) => {
+        const tg = tabGroups[id];
         return (
           <PinItem
             key={tg.info.id}
             image={tg.info.icon}
             {...tg.info}
-            onClick={() => onOpenTabGroup(tg)}
-	    active={tg.tabs.length > 0}
+            onClick={() => {
+              console.log("TAB", tg);
+              onOpenTabGroup(tg);
+            }}
+            active={tg.tabs.length > 0}
           />
-	)
+        );
       })}
     </StyledContainer>
   );

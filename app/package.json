@@ -9,9 +9,13 @@
     "build_dev": "vite build --minify=false"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.0.8",
+    "@dnd-kit/sortable": "^7.0.2",
+    "@dnd-kit/utilities": "^3.2.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.14.2",
+    "array-move": "^4.0.0",
     "@nostrband/ndk": "^0.8.19-2",
     "@nostrband/nostr-tools": "^1.14.4",
     "bootstrap": "^5.3.0",

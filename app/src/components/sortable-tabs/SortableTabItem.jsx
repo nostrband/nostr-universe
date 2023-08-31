@@ -1,23 +1,37 @@
+import { useSortable } from "@dnd-kit/sortable";
 import React from "react";
+import { CSS as cssDndKit } from "@dnd-kit/utilities";
 import { Avatar, styled } from "@mui/material";
 import { useErrorHandledImageURL } from "../../hooks/useErrorHandledImageURL";
 
-export const PinItem = ({
-  image = "",
-  title = "",
-  isActive,
+export const SortableTabItem = ({
+  id,
+  activeId,
   onClick,
-  withTitle,
-  active,
+  image,
+  isActive,
+  title,
 }) => {
+  const { setNodeRef, transform, transition, listeners } = useSortable({ id });
+
   const { backgroundOnError, onImageError, url } =
     useErrorHandledImageURL(image);
 
+  const style = {
+    transform: cssDndKit.Transform.toString(transform),
+    transition,
+  };
   return (
-    <Container className="item" onClick={onClick}>
+    <Container
+      className={activeId === id ? "item dragging-dbd-kit" : "item"}
+      onClick={onClick}
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+    >
       <AvatarContainer
         background={url ? "black" : backgroundOnError}
-        active={active}
+        active={isActive}
       >
         <Avatar
           className="pin_app_avatar"
@@ -27,7 +41,7 @@ export const PinItem = ({
           {(title || "?").toUpperCase()[0]}
         </Avatar>
       </AvatarContainer>
-      {withTitle && <p className="title">{title}</p>}
+      <p className="title">{title}</p>
     </Container>
   );
 };

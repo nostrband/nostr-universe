@@ -1,5 +1,4 @@
 import React, { useState, useContext } from "react";
-import { db } from "../db";
 import { Header } from "../layout/Header";
 import { TrendingProfiles } from "../components/trending-profiles/TrendingProfiles";
 import { ContactList } from "../components/contact-list/ContactList";
