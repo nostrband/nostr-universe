@@ -277,6 +277,27 @@ const AppContextProvider = ({ children }) => {
     workspace.pins.forEach((p) => addToTabGroup(workspace, p, true));
     workspace.tabs.forEach((t) => addToTabGroup(workspace, t));
 
+    if (config.DEBUG) {
+      workspace.perms.push({
+        pubkey: workspace.pubkey,
+        app: "https://twitter.com",
+        name: "pubkey",
+        value: "1",
+      });
+      workspace.perms.push({
+        pubkey: workspace.pubkey,
+        app: "naddr1qqqnqq3qsx9rnd03vs34lp39fvfv5krwlnxpl90f3dzuk8y3cuwutk2gdhdqxpqqqp70vh7mzgu",
+        name: "pubkey",
+        value: "1",
+      });
+      workspace.perms.push({
+        pubkey: workspace.pubkey,
+        app: "naddr1qqqnqq3qsx9rnd03vs34lp39fvfv5krwlnxpl90f3dzuk8y3cuwutk2gdhdqxpqqqp70vh7mzgu",
+        name: "sign-1",
+        value: "1",
+      });
+    }
+    
     console.log(
       "load pins",
       workspace.pins.length,
@@ -1173,7 +1194,7 @@ const AppContextProvider = ({ children }) => {
   const deletePerms = async (app) => {
     if (app)
       updateWorkspace((ws) => {
-        return { perms: ws.perms.filter((p) => p.add != app) };
+        return { perms: ws.perms.filter((p) => p.app != app) };
       });
     else
       updateWorkspace((ws) => {
