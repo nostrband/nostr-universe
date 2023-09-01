@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useCallback } from "react";
 import { AppContext } from "../../store/app-context";
 import { SecondaryCloseIcon } from "../../assets";
 import {
@@ -8,9 +8,10 @@ import {
   FormControlLabel,
   styled,
   Container,
+  Avatar,
+  Typography,
 } from "@mui/material";
 import { Modal } from "../UI/modal/Modal";
-import { IconButton } from "../UI/IconButton";
 
 export const PermRequestModal = ({ isOpen, onClose }) => {
   const contextData = useContext(AppContext);
@@ -24,25 +25,36 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
   }, [currentPermRequest]);
 
   const req = currentPermRequest;
-  console.log(req, JSON.stringify(req), "REQ IN PermRequestModal component");
 
   const tab = getTab(req?.tabId);
 
-  let label = "";
-  let payload = null;
-  if (req?.perm === "pubkey") label = "Read your public key";
-  else if (req?.perm.startsWith("sign:")) {
-    label = "Sign event of kind " + req?.perm.split(":")[1];
-    payload = JSON.stringify(req.event);
-  } else if (req?.perm === "encrypt") {
-    label = "Encrypt a message";
-    // FIXME add pubkey
-    payload = req.plainText;
-  } else if (req?.perm === "decrypt") {
-    label = "Decrypt a message";
-    // FIXME add pubkey
-    payload = req.cipherText;
-  }
+  const prepareLabelAndPayload = useCallback(() => {
+    if (!req) {
+      return {
+        label: "",
+        payload: "",
+      };
+    }
+    const { perm, event, plainText, cipherText } = req || {};
+    let label = "";
+    let payload = null;
+    if (perm === "pubkey") label = "Read your public key:";
+    else if (perm.startsWith("sign:")) {
+      label = "Sign event of kind " + perm.split(":")[1];
+      payload = JSON.stringify(event);
+    } else if (perm === "encrypt") {
+      label = "Encrypt a message";
+      // FIXME add pubkey
+      payload = plainText;
+    } else if (perm === "decrypt") {
+      label = "Decrypt a message";
+      // FIXME add pubkey
+      payload = cipherText;
+    }
+    return { label, payload };
+  }, [req]);
+
+  const { label, payload } = prepareLabelAndPayload();
 
   const onDisallow = async () => {
     await replyCurrentPermRequest(false, isRemember);
@@ -62,26 +74,26 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
           </StyledIconButton>
         </StyledHeader>
         {req && (
-          <div>
-            <center>
-              <IconButton
-                data={{ title: tab.title, img: tab.icon }}
-                size="big"
-              />
-            </center>
+          <ContentWrapper>
+            <AvatarContainer>
+              <Avatar className="avatar" src={tab.icon || ""} />
+              <Typography className="title" variant="h5">
+                {tab.title}
+              </Typography>
+            </AvatarContainer>
 
             <RequestContainer>
               <h5>{label}</h5>
               <pre>{payload}</pre>
-
               <FormControlLabel
                 control={
-                  <Switch
+                  <StyledSwitch
                     checked={isRemember}
                     onChange={(e) => setIsRemember(e.target.checked)}
                   />
                 }
                 label="Remember, don't ask again"
+                className="form_control"
               />
             </RequestContainer>
 
@@ -102,28 +114,49 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
                 Allow
               </Button>
             </ButtonContainer>
-          </div>
+          </ContentWrapper>
         )}
       </StyledContainer>
     </Modal>
   );
 };
 
+const StyledContainer = styled(Container)(() => ({
+  paddingTop: "6px",
+  paddingBottom: "1rem",
+  display: "flex",
+  flexDirection: "column",
+}));
+
 const StyledHeader = styled("div")(() => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
+  marginBottom: "2rem",
   h1: {
     fontWeight: 500,
     fontSize: "28px",
   },
 }));
 
-const StyledContainer = styled(Container)(() => ({
-  paddingTop: "6px",
-  paddingBottom: "1rem",
+const ContentWrapper = styled("div")(() => ({
   display: "flex",
   flexDirection: "column",
+}));
+
+const AvatarContainer = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  "& .avatar": {
+    width: 72,
+    height: 72,
+    borderRadius: "10px",
+    marginBottom: "0.5rem",
+  },
+  "& .title": {
+    fontFamily: "inherit",
+  },
 }));
 
 const StyledIconButton = styled(MUIconButton)(() => ({
@@ -137,21 +170,30 @@ const StyledIconButton = styled(MUIconButton)(() => ({
 const RequestContainer = styled("div")(() => ({
   display: "flex",
   flexDirection: "column",
-  margin: "1rem",
+  margin: "1rem 0",
   "& pre": {
     flexGrow: "1",
     maxWidth: "100%",
     minHeight: "10rem",
-    // FIXME make text wrap and add vertical scrolling
+    maxHeight: "10rem",
+    overflowY: "scroll",
+    background: "#36363679",
+    borderRadius: "6px",
+  },
+  "& .form_control": {
+    display: "flex",
+    gap: "0.5rem",
+    alignItems: "center",
+    marginLeft: "0",
+    fontFamily: "inherit",
   },
 }));
 
 const ButtonContainer = styled("div")(() => ({
   display: "flex",
-  flexDirection: "row",
-  margin: "1rem",
-  gap: "5px",
-
+  alignItems: "center",
+  margin: "1rem 0",
+  gap: "0.5rem",
   "& .button": {
     background: "#363636",
     fontFamily: "inherit",
@@ -161,8 +203,59 @@ const ButtonContainer = styled("div")(() => ({
     padding: "4px auto",
     borderRadius: "72px",
     width: "50%",
-    "&:hover, &:active": {
+    "&:active": {
       background: "#363636",
     },
+  },
+}));
+
+const StyledSwitch = styled((props) => (
+  <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
+))(({ theme }) => ({
+  width: 42,
+  height: 26,
+  padding: 0,
+  "& .MuiSwitch-switchBase": {
+    padding: 0,
+    margin: 2,
+    transitionDuration: "300ms",
+    "&.Mui-checked": {
+      transform: "translateX(16px)",
+      color: "#fff",
+      "& + .MuiSwitch-track": {
+        backgroundColor: theme.palette.mode === "dark" ? "#CF82FF" : "#CF82FF",
+        opacity: 1,
+        border: 0,
+      },
+      "&.Mui-disabled + .MuiSwitch-track": {
+        opacity: 0.5,
+      },
+    },
+    "&.Mui-focusVisible .MuiSwitch-thumb": {
+      color: "#CF82FF",
+      border: "6px solid #fff",
+    },
+    "&.Mui-disabled .MuiSwitch-thumb": {
+      color:
+        theme.palette.mode === "light"
+          ? theme.palette.grey[100]
+          : theme.palette.grey[600],
+    },
+    "&.Mui-disabled + .MuiSwitch-track": {
+      opacity: theme.palette.mode === "light" ? 0.7 : 0.3,
+    },
+  },
+  "& .MuiSwitch-thumb": {
+    boxSizing: "border-box",
+    width: 22,
+    height: 22,
+  },
+  "& .MuiSwitch-track": {
+    borderRadius: 26 / 2,
+    backgroundColor: "#363636",
+    opacity: 1,
+    transition: theme.transitions.create(["background-color"], {
+      duration: 500,
+    }),
   },
 }));
