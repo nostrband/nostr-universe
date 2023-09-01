@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { styled } from "@mui/material";
 
 import { ProfileAvatar } from "./ProfileAvatar";
@@ -13,8 +13,10 @@ import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 import { ImportPubkeyModal } from "../onboarding/ImportPubkeyModal";
+import { PermsModal } from "../perms/PermsModal";
 import {
   SafeIcon,
+  keyPermsIcon
 } from "../../assets";
 
 
@@ -32,7 +34,6 @@ export const Profile = () => {
     profiles,
     onAddKey,
     onImportPubkey,
-    deletePerms
   } = contextData || {};
 
   const { profile: originalProfile = {} } = profile || {};
@@ -43,7 +44,10 @@ export const Profile = () => {
     originalImage: picture,
   });
 
+  const [showPerms, setShowPerms] = useState(false);
+  
   const [searchParams, setSearchParams] = useSearchParams();
+  
   const isChangeAccountModalOpen = Boolean(
     searchParams.get(CHANGE_ACCOUNT_SEARCH_PARAM)
   );
@@ -96,10 +100,10 @@ export const Profile = () => {
 
   const tools = [
     {
-      title: "Delete key permissions",
-      id: "delete-perms",
-      Icon: SafeIcon,
-      onClick: () => deletePerms(),
+      title: "Key permissions",
+      id: "show-perms",
+      Icon: () => (<img src={keyPermsIcon} width="24" />),
+      onClick: () => setShowPerms(true),
     },
   ];
   
@@ -129,9 +133,14 @@ export const Profile = () => {
       <ImportPubkeyModal
 	isOpen={isImportAccountModalOpen}
         onClose={closeImportModalHandler}
-	       onSelect={importPubkeyHandler}
+	onSelect={importPubkeyHandler}
       />
 
+      <PermsModal
+	isOpen={showPerms}
+        onClose={() => setShowPerms(false)}
+      />
+      
     </>
   );
 };

@@ -80,6 +80,10 @@ function addToTabGroup(workspace, pt, isPin) {
     tg.pin = pt;
   }
 
+  // FIXME info and pin aren't updated if their objects are modified elsewhere,
+  // in particular a change in tab icon won't propagate to the tab group bcs
+  // we're copying a tab, but not re-assigning it to the tab group
+  
   if (!isPin) {
     tg.tabs.push(pt.id);
   }
@@ -96,6 +100,8 @@ function deleteFromTabGroup(workspace, pt, isPin) {
   if (!isPin) tg.tabs = tg.tabs.filter((id) => id !== pt.id);
   else if (tg.pin?.id === pt.id) tg.pin = null;
 
+  if (tg.lastTabId === pt.id) tg.lastTabId = "";
+  
   if (!tg.pin && !tg.tabs.length) delete workspace.tabGroups[id];
 }
 
@@ -277,6 +283,27 @@ const AppContextProvider = ({ children }) => {
     workspace.pins.forEach((p) => addToTabGroup(workspace, p, true));
     workspace.tabs.forEach((t) => addToTabGroup(workspace, t));
 
+    if (config.DEBUG) {
+      workspace.perms.push({
+        pubkey: workspace.pubkey,
+        app: "https://twitter.com",
+        name: "pubkey",
+        value: "1",
+      });
+      workspace.perms.push({
+        pubkey: workspace.pubkey,
+        app: "naddr1qqqnqq3qsx9rnd03vs34lp39fvfv5krwlnxpl90f3dzuk8y3cuwutk2gdhdqxpqqqp70vh7mzgu",
+        name: "pubkey",
+        value: "1",
+      });
+      workspace.perms.push({
+        pubkey: workspace.pubkey,
+        app: "naddr1qqqnqq3qsx9rnd03vs34lp39fvfv5krwlnxpl90f3dzuk8y3cuwutk2gdhdqxpqqqp70vh7mzgu",
+        name: "sign-1",
+        value: "1",
+      });
+    }
+    
     console.log(
       "load pins",
       workspace.pins.length,
@@ -474,6 +501,46 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
+  const requestPermExec = (tab, perm, exec, error) => {
+    return new Promise((ok, err) => {
+      requestPerm(tab, perm, async (allowed) => {
+	try {
+          if (allowed) ok(await exec());
+          else err(error);
+	} catch (e) {
+	  err(e)
+	};
+      });
+    });
+  };
+
+  const handleCustomUrl = async (url, tab) => {
+    if (url.startsWith("lightning:")) {
+      // just open some outside app for now
+      window.cordova.InAppBrowser.open(url, "_self");
+      return true;
+    }
+
+    if (url.startsWith("nostr:")) {
+      const b32 = stringToBech32(url);
+      if (b32) {
+
+	// hide it
+	if (tab) await hide(tab);
+	
+        // offer to choose an app to show the event
+        setOpenAddr(b32);
+      } else {
+        // try some external app that might know this type of nostr: link
+        window.cordova.InAppBrowser.open(url, "_self");
+      }
+
+      return true;
+    }
+
+    return false;
+  };
+    
   const API = {
     // NIP-01
     getPublicKey: async function (tabId) {
@@ -483,12 +550,8 @@ const AppContextProvider = ({ children }) => {
       if (hasPerm(tab, "pubkey", "0"))
         throw new Error("Pubkey perm disallowed");
       if (hasPerm(tab, "pubkey", "1")) return currentPubkey;
-      return new Promise((ok, err) => {
-        requestPerm(tab, { perm: "pubkey" }, (allowed) => {
-          if (allowed) ok(currentPubkey);
-          else err("Pubkey perm disallowed");
-        });
-      });
+      const exec = () => currentPubkey;
+      return requestPermExec(tab, { perm: "pubkey" }, exec, "Pubkey perm disallowed");
     },
     signEvent: async function (tabId, event) {
       const tab = getTabAny(tabId);
@@ -506,12 +569,8 @@ const AppContextProvider = ({ children }) => {
       // disallowed this kind or all kinds
       if (hasPerm(tab, kindPerm, "0") || hasPerm(tab, allPerm, "0"))
         throw new Error("Sign kind " + event.kind + " perm disallowed");
-      return new Promise((ok, err) => {
-        requestPerm(tab, { perm: kindPerm, event }, async (allowed) => {
-          if (allowed) ok(await exec());
-          else err("Sign kind " + event.kind + " disallowed");
-        });
-      });
+      return requestPermExec(tab, { perm: kindPerm, event },
+			     exec, "Sign kind " + event.kind + " disallowed");
     },
 
     // NIP-04
@@ -524,16 +583,8 @@ const AppContextProvider = ({ children }) => {
       const exec = async () =>
         await window.nostr.nip04.encrypt(pubkey, plainText);
       if (hasPerm(tab, "encrypt", "1")) return await exec();
-      return new Promise((ok, err) => {
-        requestPerm(
-          tab,
-          { perm: "encrypt", pubkey, plainText },
-          async (allowed) => {
-            if (allowed) ok(await exec());
-            else err("Encrypt disallowed");
-          }
-        );
-      });
+      return requestPermExec(tab, { perm: "encrypt", pubkey, plainText },
+			     exec, "Encrypt disallowed");
     },
     decrypt: async function (tabId, pubkey, cipherText) {
       const tab = getTabAny(tabId);
@@ -544,16 +595,7 @@ const AppContextProvider = ({ children }) => {
       const exec = async () =>
         await window.nostr.nip04.decrypt(pubkey, cipherText);
       if (hasPerm(tab, "decrypt", "1")) return await exec();
-      return new Promise((ok, err) => {
-        requestPerm(
-          tab,
-          { perm: "decrypt", pubkey, cipherText },
-          async (allowed) => {
-            if (allowed) ok(await exec());
-            else err("Decrypt disallowed");
-          }
-        );
-      });
+      return requestPermExec(tab, { perm: "decrypt", pubkey, cipherText }, exec, "Decrypt disallowed");
     },
 
     setUrl: async function (tabId, url) {
@@ -568,6 +610,9 @@ const AppContextProvider = ({ children }) => {
         // set new url
         tab.url = url;
 
+	// NOTE: if we don't do this, an url change that causes
+	// group-id change will make this tab not-belong to the tab group
+	// that still thinks it owns this tab...
         // need to switch tab group?
         const tgid = getTabGroupId(tab);
         if (tgid !== getTabGroupId(wasTab)) {
@@ -598,6 +643,7 @@ const AppContextProvider = ({ children }) => {
     onLoadStart: async (tabId, event) => {
       console.log("loading", JSON.stringify(event));
       API.setUrl(tabId, event.url);
+      updateTab({ loading: true }, tabId);
     },
     onLoadStop: async (tabId, event) => {
       console.log("loaded", event.url);
@@ -614,22 +660,23 @@ const AppContextProvider = ({ children }) => {
     },
     onBlank: async (tabId, url) => {
       const tab = getTabAny(tabId);
+      console.log("onBlank", tabId, tab?.url, url);
+
+      // some special scheme?
+      if (await handleCustomUrl(url, tab))
+	return;
+
+      // new tab coming, hide current one
       if (tab) await hide(tab);
-      if (url.startsWith("nostr:")) {
-        const b32 = stringToBech32(url);
-        if (b32) {
-          // offer to choose an app to show the event
-          setOpenAddr(b32);
-        } else {
-          // try some external app that might know this type of nostr: link
-          window.cordova.InAppBrowser.open(url, "_self");
-        }
-      } else {
-        openBlank({ url });
-      }
+      
+      // just open another tab
+      openBlank({ url });
     },
     onBeforeLoad: async (tabId, url) => {
-      await API.onBlank(tabId, url);
+      const tab = getTabAny(tabId);
+      console.log("onBeforeLoad", tabId, tab?.url, url);
+      // intercept lightning: and nostr: links
+      return await handleCustomUrl(url, tab);
     },
     onHide: (tabId) => {
       console.log("hide", tabId);
@@ -718,6 +765,8 @@ const AppContextProvider = ({ children }) => {
       return {
         tabs: ws.tabs.filter((t) => t.id !== tab.id),
         tabGroups: { ...ws.tabGroups },
+	// make sure that if we're closing in bg that we no longer refer to it 
+	lastCurrentTabId: ws.lastCurrentTabId === tab.id ? "" : ws.lastCurrentTabId,
       };
     });
   };
@@ -740,19 +789,22 @@ const AppContextProvider = ({ children }) => {
     if (tab) {
       updateWorkspace({ currentTabId: "" });
       await browser.hide(tab.id);
-
-      if (!noScreenshot) {
-        const screenshot = await browser.screenshot(tab.id);
-        updateTab({ screenshot }, tab.id);
-
-        tab.screenshot = screenshot;
-        await dbi.updateTabScreenshot(tab);
-      }
     }
     setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
     document.body.style.overflow = "initial";
+
+    if (tab && !noScreenshot) {
+      // launch the 'screenshotting' after the next render cycle
+      setTimeout(async () => {
+        const screenshot = await browser.screenshot(tab.id);
+        updateTab({ screenshot }, tab.id);
+
+        tab.screenshot = screenshot;
+        await dbi.updateTabScreenshot(tab);
+      }, 0);
+    }
   };
 
   const showTabMenu = () => {
@@ -769,31 +821,38 @@ const AppContextProvider = ({ children }) => {
       setTimeout(async () => {
         // schedule the open after task bar is changed
         console.log("show", JSON.stringify(tab));
-        await ensureBrowser(tab);
 
-        await browser.show(tab.id);
-
+	// mark as active
         tab.lastActive = Date.now();
 
-        dbi.updateTab(tab);
-
+	// set as current
         updateWorkspace((ws) => {
           const tg = ws.tabGroups[getTabGroupId(tab)];
           tg.lastTabId = tab.id;
           tg.lastActive = tab.lastActive;
           return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
         });
-
         updateTab({ lastActive: tab.lastActive }, tab.id);
 
+	// make sure webview exists
+        await ensureBrowser(tab);
+
+	// show it
+        await browser.show(tab.id);
+
+	// write to db in the background, if that's possible
+        dbi.updateTab(tab);
+
+	// notify caller that we're done
         ok();
 
+	// check if there are pending perm requests
         const reqs = PermRequests.filter((pr) => pr.tabId === tab.id);
-        console.log(
-          "shown tab " + tab.id + " has perm requests",
-          JSON.stringify(reqs)
-        );
         if (reqs.length > 0) {
+          console.log(
+            "shown tab " + tab.id + " has perm requests",
+            JSON.stringify(reqs)
+          );
           setCurrentPermRequest(reqs[0]);
         }
       }, 0);
@@ -874,6 +933,7 @@ const AppContextProvider = ({ children }) => {
 
     const pin = currentWorkspace.pins.find((p) => p.appNaddr == params.naddr);
 
+    console.log("openApp", JSON.stringify(params));
     await openBlank({
       url: params.url,
       pinned: !!pin,
@@ -894,11 +954,18 @@ const AppContextProvider = ({ children }) => {
       return;
     }
 
+    // we've decided to open another native app
+    if (url.startsWith("nostr:")) {
+      // try some external app that might know this type of nostr: link
+      window.cordova.InAppBrowser.open(url, "_self");
+      return;
+    }
+    
     // find an existing app for this url
     const origin = getOrigin(url);
     const app = params.appNaddr
-      ? apps.find((a) => a.naddr === params.appNaddr)
-      : apps.find((a) => a.url.startsWith(origin));
+	      ? apps.find((a) => a.naddr === params.appNaddr)
+	      : apps.find((a) => a.url.startsWith(origin));
     if (app) {
       const pin = currentWorkspace.pins.find((p) => p.appNaddr === app.naddr);
       await open({
@@ -1010,15 +1077,6 @@ const AppContextProvider = ({ children }) => {
 
     // hide first
     await hide(tab, /* no_screenshot */ true);
-
-    // get tab group of the closed tab
-    const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];
-
-    // switch to previous one of the group
-    const index = tg.tabs.findIndex((id) => id === tab.id);
-    const next = index ? index - 1 : index + 1;
-    console.log("next", next);
-    if (next < tg.tabs.length) await show(getTab(tg.tabs[next]));
 
     // close in bg after that
     await close(tab);
@@ -1173,7 +1231,7 @@ const AppContextProvider = ({ children }) => {
   const deletePerms = async (app) => {
     if (app)
       updateWorkspace((ws) => {
-        return { perms: ws.perms.filter((p) => p.add != app) };
+        return { perms: ws.perms.filter((p) => p.app != app) };
       });
     else
       updateWorkspace((ws) => {

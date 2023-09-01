@@ -22,7 +22,16 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
     const load = async () => {
       console.log("addr", addr);
       setIsLoading(true);
-      const info = await fetchAppsForEvent(addr);
+      let info = null;
+      try {
+	info = await fetchAppsForEvent(addr);
+      } catch (e) {
+	console.log("fetch error", e);
+	setIsLoading(false);
+	setApps([]);
+	return;
+      }
+
       console.log("info", info);
 
       // save event kind
@@ -38,7 +47,19 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
       if (info.addr.kind in currentWorkspace.lastKindApps)
         lastAppNaddr = currentWorkspace.lastKindApps[info.addr.kind];
 
+      const NATIVE_NADDR = "nativeApp"; // fake
       const apps = [];
+      apps.push({
+        naddr: NATIVE_NADDR,
+        url: "nostr:" + addr,
+        name: "Native app",
+        about: "Any native Nostr app installed on your device",
+        picture: "",
+        lastUsed: NATIVE_NADDR === lastAppNaddr,
+        pinned: false,
+        order: NATIVE_NADDR === lastAppNaddr ? 1000 : 999,
+      });
+      
       for (const id in info.apps) {
         const app = info.apps[id].handlers[0];
         if (!app.eventUrl) continue;
@@ -86,8 +107,8 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
 
   const searchValueChangeHandler = (e) => setEnteredSearch(e.target.value);
 
-  const renderedApps = apps.filter((app) => {
-    return app.name.toLowerCase().includes(enteredSearch.toLowerCase());
+  const renderedApps = apps.filter((app) => {    
+    return !enteredSearch || app.name?.toLowerCase().includes(enteredSearch.toLowerCase());
   });
 
   const renderSearchInput = () => {
@@ -127,7 +148,7 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
             {renderSearchInput()}
             <EventsContainer>
               {renderedApps.map((app) => (
-                <EventApp app={app} onClick={() => onOpen(app)} />
+                <EventApp key={app.naddr} app={app} onClick={() => onOpen(app)} />
               ))}
             </EventsContainer>
           </>

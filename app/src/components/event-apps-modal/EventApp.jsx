@@ -43,7 +43,6 @@ const Details = styled("div")(() => ({
     marginBottom: "0",
   },
   "& .description": {
-    maxHeight: "1.3em",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
     overflow: "hidden",

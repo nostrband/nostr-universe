@@ -1,10 +1,3 @@
-/* 
-pins are known apps that are attached to the taskbar,
-when pin is clicked, a tab is created that has same appNaddr,
-when close is clicked, tab is destroyed,
-when pin is clicked for which a tab exists - tab is shown
-
- */
 
 import Dexie from "dexie";
 

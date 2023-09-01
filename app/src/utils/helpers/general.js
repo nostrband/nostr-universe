@@ -44,9 +44,12 @@ export const renderDefaultAppIcon = (title) => {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // text
-  ctx.font = "bold 92px Outfit";
-  ctx.fillStyle = "purple";
-  ctx.fillText(title.substring(0, 1).toUpperCase(), 32, 95);
+  if (title) {
+    ctx.font = "bold 92px Outfit";
+    ctx.fillStyle = "purple";
+    ctx.fillText(title.substring(0, 1).toUpperCase(), 32, 95);
+  }
+
   const dataURL = canvas.toDataURL();
   return dataURL;
 };
