@@ -17,7 +17,7 @@ import {
 
 export const TabMenu = ({ onClose, onOpenWith, onOpenPinAppModal }) => {
   const contextData = useContext(AppContext);
-  const { lastCurrentTab, onCloseTab, pinTab, unpinTab, apps } =
+  const { lastCurrentTab, onCloseTab, pinTab, unpinTab, apps, clearLastCurrentTab } =
     contextData || {};
 
   const tab = lastCurrentTab;
@@ -42,18 +42,24 @@ export const TabMenu = ({ onClose, onOpenWith, onOpenPinAppModal }) => {
         setApp(app);
       }
 
-      const tools = [];
+      let tools = [];
 
       const onClick = (cb) => {
         onClose();
         setTimeout(cb, 0);
       };
 
+      const closeTab = () => {
+	// we're closing it, do not reopen after the modal close
+	clearLastCurrentTab();
+	onClick(onCloseTab);
+      };
+      
       tools.push({
         title: "Close tab",
         id: "close-tab",
         Icon: () => <img width={23} height={23} src={closeIcon} />,
-        onClick: () => onClick(onCloseTab),
+        onClick: () => closeTab(),
       });
 
       if (tab.pinned) {

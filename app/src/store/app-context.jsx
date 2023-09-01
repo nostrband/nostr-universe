@@ -100,6 +100,8 @@ function deleteFromTabGroup(workspace, pt, isPin) {
   if (!isPin) tg.tabs = tg.tabs.filter((id) => id !== pt.id);
   else if (tg.pin?.id === pt.id) tg.pin = null;
 
+  if (tg.lastTabId === pt.id) tg.lastTabId = "";
+  
   if (!tg.pin && !tg.tabs.length) delete workspace.tabGroups[id];
 }
 
@@ -512,7 +514,7 @@ const AppContextProvider = ({ children }) => {
     });
   };
 
-  const handleCustomUrl = async (tab, url) => {
+  const handleCustomUrl = async (url, tab) => {
     if (url.startsWith("lightning:")) {
       // just open some outside app for now
       window.cordova.InAppBrowser.open(url, "_self");
@@ -641,6 +643,7 @@ const AppContextProvider = ({ children }) => {
     onLoadStart: async (tabId, event) => {
       console.log("loading", JSON.stringify(event));
       API.setUrl(tabId, event.url);
+      updateTab({ loading: true }, tabId);
     },
     onLoadStop: async (tabId, event) => {
       console.log("loaded", event.url);
@@ -660,7 +663,7 @@ const AppContextProvider = ({ children }) => {
       console.log("onBlank", tabId, tab?.url, url);
 
       // some special scheme?
-      if (await handleCustomUrl(tab, url))
+      if (await handleCustomUrl(url, tab))
 	return;
 
       // new tab coming, hide current one
@@ -673,7 +676,7 @@ const AppContextProvider = ({ children }) => {
       const tab = getTabAny(tabId);
       console.log("onBeforeLoad", tabId, tab?.url, url);
       // intercept lightning: and nostr: links
-      return await handleCustomUrl(tab, url);
+      return await handleCustomUrl(url, tab);
     },
     onHide: (tabId) => {
       console.log("hide", tabId);
@@ -762,6 +765,8 @@ const AppContextProvider = ({ children }) => {
       return {
         tabs: ws.tabs.filter((t) => t.id !== tab.id),
         tabGroups: { ...ws.tabGroups },
+	// make sure that if we're closing in bg that we no longer refer to it 
+	lastCurrentTabId: ws.lastCurrentTabId === tab.id ? "" : ws.lastCurrentTabId,
       };
     });
   };
@@ -784,19 +789,22 @@ const AppContextProvider = ({ children }) => {
     if (tab) {
       updateWorkspace({ currentTabId: "" });
       await browser.hide(tab.id);
-
-      if (!noScreenshot) {
-        const screenshot = await browser.screenshot(tab.id);
-        updateTab({ screenshot }, tab.id);
-
-        tab.screenshot = screenshot;
-        await dbi.updateTabScreenshot(tab);
-      }
     }
     setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
     document.body.style.overflow = "initial";
+
+    if (tab && !noScreenshot) {
+      // launch the 'screenshotting' after the next render cycle
+      setTimeout(async () => {
+        const screenshot = await browser.screenshot(tab.id);
+        updateTab({ screenshot }, tab.id);
+
+        tab.screenshot = screenshot;
+        await dbi.updateTabScreenshot(tab);
+      }, 0);
+    }
   };
 
   const showTabMenu = () => {
@@ -813,31 +821,38 @@ const AppContextProvider = ({ children }) => {
       setTimeout(async () => {
         // schedule the open after task bar is changed
         console.log("show", JSON.stringify(tab));
-        await ensureBrowser(tab);
 
-        await browser.show(tab.id);
-
+	// mark as active
         tab.lastActive = Date.now();
 
-        dbi.updateTab(tab);
-
+	// set as current
         updateWorkspace((ws) => {
           const tg = ws.tabGroups[getTabGroupId(tab)];
           tg.lastTabId = tab.id;
           tg.lastActive = tab.lastActive;
           return { currentTabId: tab.id, tabGroups: { ...ws.tabGroups } };
         });
-
         updateTab({ lastActive: tab.lastActive }, tab.id);
 
+	// make sure webview exists
+        await ensureBrowser(tab);
+
+	// show it
+        await browser.show(tab.id);
+
+	// write to db in the background, if that's possible
+        dbi.updateTab(tab);
+
+	// notify caller that we're done
         ok();
 
+	// check if there are pending perm requests
         const reqs = PermRequests.filter((pr) => pr.tabId === tab.id);
-        console.log(
-          "shown tab " + tab.id + " has perm requests",
-          JSON.stringify(reqs)
-        );
         if (reqs.length > 0) {
+          console.log(
+            "shown tab " + tab.id + " has perm requests",
+            JSON.stringify(reqs)
+          );
           setCurrentPermRequest(reqs[0]);
         }
       }, 0);
@@ -939,11 +954,18 @@ const AppContextProvider = ({ children }) => {
       return;
     }
 
+    // we've decided to open another native app
+    if (url.startsWith("nostr:")) {
+      // try some external app that might know this type of nostr: link
+      window.cordova.InAppBrowser.open(url, "_self");
+      return;
+    }
+    
     // find an existing app for this url
     const origin = getOrigin(url);
     const app = params.appNaddr
-      ? apps.find((a) => a.naddr === params.appNaddr)
-      : apps.find((a) => a.url.startsWith(origin));
+	      ? apps.find((a) => a.naddr === params.appNaddr)
+	      : apps.find((a) => a.url.startsWith(origin));
     if (app) {
       const pin = currentWorkspace.pins.find((p) => p.appNaddr === app.naddr);
       await open({
@@ -1055,15 +1077,6 @@ const AppContextProvider = ({ children }) => {
 
     // hide first
     await hide(tab, /* no_screenshot */ true);
-
-    // get tab group of the closed tab
-//    const tg = currentWorkspace.tabGroups[getTabGroupId(tab)];
-
-    // switch to previous one of the group
-//    const index = tg.tabs.findIndex((id) => id === tab.id);
-//    const next = index ? index - 1 : index + 1;
-//    console.log("next", next);
-//    if (next < tg.tabs.length) await show(getTab(tg.tabs[next]));
 
     // close in bg after that
     await close(tab);

@@ -40,7 +40,7 @@ export const ContextMenu = ({ input, onClose, onOpenWith }) => {
 	}
       }
       
-      const tools = [
+      let tools = [
 	{
 	  title: "Open with",
 	  id: "open-with",

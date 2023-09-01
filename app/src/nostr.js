@@ -37,11 +37,28 @@ export const allRelays = [nostrbandRelayAll, ...writeRelays];
 let ndk = null;
 
 const kindAppsCache = {};
-const metaCache = [];
-const eventCache = [];
+const metaCache = {};
+const eventCache = {};
+const addrCache = {};
 
 function fetchEventsRead(ndk, filter) {
-  return ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk));
+  return new Promise(async (ok) => {
+    const events = await ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk));
+    for (const e of events.values()) {
+      let addr = e.id;
+      if (e.kind === KIND_META
+	  || e.kind === KIND_CONTACT_LIST
+	  || (e.kind >= 10000 && e.kind < 20000)
+	  || (e.kind >= 10000 && e.kind < 20000)
+      ) {
+	addr = e.kind + ":" + e.pubkey + ":" + getTagValue(e, 'd');
+      }
+
+      eventCache[e.id] = e;
+      addrCache[addr] = e;
+    }
+    ok(events);
+  });
 }
 
 export function getTags(e, name) {
@@ -322,10 +339,12 @@ async function collectEvents(reqs) {
 
 async function fetchEventByAddr(ndk, addr) {
 
+  let id = "";
   const filter = {};
   if (addr.event_id) {
     // note, nevent
     filter.ids = [addr.event_id];
+    id = addr.event_id;
   } else if (
     addr.pubkey &&
     addr.d_tag !== undefined &&
@@ -335,13 +354,21 @@ async function fetchEventByAddr(ndk, addr) {
     filter['#d'] = [addr.d_tag];
     filter.authors = [addr.pubkey];
     filter.kinds = [addr.kind];
+    id = addr.kind + ":" + addr.pubkey + ":" + addr.d_tag;
   } else if (addr.pubkey && addr.kind !== undefined) {
     // npub, nprofile
     filter.authors = [addr.pubkey];
     filter.kinds = [addr.kind];
+    id = addr.kind + ":" + addr.pubkey + ":";
   }
-  console.log("loading event by filter", JSON.stringify(filter));
 
+  if (id in addrCache) {
+    console.log("event in addr cache", id);
+    return addrCache[id];
+  }
+
+  console.log("loading event by filter", JSON.stringify(filter));
+  
   const reqs = [fetchEventsRead(ndk, filter)];
   if (addr.hex) {
     const profileFilter = {
@@ -353,7 +380,10 @@ async function fetchEventByAddr(ndk, addr) {
   }
 
   const events = await collectEvents(reqs);
-  return events.length > 0 ? events[0] : null;
+  const event = events.length > 0 ? events[0] : null;
+  if (event)
+    addrCache[id] = event;
+  return event;
 }
 
 function prepareHandlers(events, filterKinds, metaPubkey) {
@@ -612,15 +642,18 @@ export async function fetchAppsForEvent(id, event) {
   
   // now fetch the apps for event kind
   let info = null;
-  if (addr.kind in kindAppsCache && kindAppsCache[addr.kind].apps.length > 0)
+  if (addr.kind in kindAppsCache) {
     info = kindAppsCache[addr.kind];
+    console.log("apps for kind", addr.kind, "in cache", info);
+  }
   if (!info)
     info = await fetchAppsByKinds(ndk, [addr.kind]);
   info.addr = addr;
 
   // put to cache
-  kindAppsCache[addr.kind] = info;
-
+  if (Object.keys(info.apps).length > 0)
+    kindAppsCache[addr.kind] = info;
+  
   // init convenient url property for each handler
   // to redirect to this event
   for (const id in info.apps) {
@@ -756,13 +789,13 @@ async function fetchEventsByIds({ ids, kinds, authors }) {
   if (reqIds.length > 0) {
     let events = await ndk.fetchEvents(
       {
-	reqIds,
+	ids: reqIds,
 	kinds,
       },
       {}, // opts
       NDKRelaySet.fromRelayUrls([nostrbandRelay], ndk)
     );
-    console.log("ids", ids, "kinds", kinds, "events", events);
+    console.log("ids", ids, "reqIds", reqIds, "kinds", kinds, "events", events);
 
     events = [...events.values()].map(e => rawEvent(e));
 
