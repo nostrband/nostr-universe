@@ -75,7 +75,6 @@ const MainPage = () => {
     setOpenAddr(addr);
   };
 
-
   const onSearch = (str) => {
     clearLastCurrentTab();
     try {
@@ -200,7 +199,7 @@ const MainPage = () => {
             <div>
               <IconButton
 		data={{ title: currentTab.title, img: currentTab.icon }}
-		size="big"
+		     size="big"
               />
             </div>
             <div className="mt-2">Loading...</div>
