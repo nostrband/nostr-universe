@@ -382,7 +382,6 @@ export function open(params) {
   });
 
   ref.addEventListener("blank", async (event) => {
-    console.log("blank", event.url);
     if (event.url.startsWith("lightning:"))
       cordova.InAppBrowser.open(event.url, "_self");
     else if (API.onBlank) await API.onBlank(params.apiCtx, event.url);
@@ -390,11 +389,12 @@ export function open(params) {
 
   ref.addEventListener("beforeload", async (event, cb) => {
     console.log("beforeload", JSON.stringify(event));
-    if (event.url.startsWith("lightning:"))
-      cordova.InAppBrowser.open(event.url, "_self");
-    else if (API.onBeforeLoad) await API.onBeforeLoad(params.apiCtx, event.url);
-    // FIXME new domain?
-    else cb(event.url);
+    if (API.onBeforeLoad) {
+      // handled by our code?
+      if (await API.onBeforeLoad(params.apiCtx, event.url))
+	return;
+    }
+    cb(event.url);
   });
 
   ref.addEventListener("icon", async (event) => {
@@ -427,6 +427,18 @@ const close = async (id) => {
   await ref.close();
   delete refs[id];
 };
+
+const screenshot = async (id) => {
+  if (!(id in refs)) return;
+
+  const ref = refs[id];
+  return new Promise((ok) => {
+    ref.screenshot((s) => {
+      console.log("screenshot", id, s.length);
+      ok(s);
+    }, 0.4 / window.devicePixelRatio, 1.0);
+  });
+}
 
 const generateMenu = () => {
   document.body.innerHTML =
@@ -474,6 +486,7 @@ export const browser = {
   hide,
   stop,
   reload,
+  screenshot,
   setAPI,
   showMenu,
 };

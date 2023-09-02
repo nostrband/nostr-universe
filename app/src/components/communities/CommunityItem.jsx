@@ -14,9 +14,9 @@ export const CommunityItem = ({ author = {}, content, onClick }) => {
 
   const avatar = content.image || authorAvatar;
   const name = ("/" + content.name) || renderedName;
-  const title = "+" + content.posts + " posts";
+  const title = content.posts ? ("+" + content.posts + " posts") : (content.moderators.length + " moderators");
   const desc = content.description || '';
-  const tm = formatTime(content.last_post_tm);
+  const tm = formatTime(content.last_post_tm || content.created_at);
   
   return (
     <Card onClick={() => onClick(content)}>

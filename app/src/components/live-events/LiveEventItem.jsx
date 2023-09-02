@@ -14,8 +14,12 @@ export const LiveEventItem = ({ host = {}, content, onClick }) => {
 
   const title = content.title || '';
   const summary = content.summary || content.content.substring(0, 300);
-  const live = content.status === 'live';  
-  const status = live ? "LIVE" : (content.starts ? formatTime(content.starts) : "");
+  let status = formatTime(content.starts || content.created_at);
+  switch (content.status) {
+    case 'live':
+      status = 'LIVE';
+      break;
+  }
   
   return (
     <Card onClick={() => onClick(content)}>

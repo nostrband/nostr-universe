@@ -34,3 +34,5 @@ export { default as closeIcon } from "./icons/close.svg";
 export { default as stopIcon } from "./icons/stop.svg";
 export { default as reloadIcon } from "./icons/reload.svg";
 export { default as copyIcon } from "./icons/copy.svg";
+export { default as tabsIcon } from "./icons/tabs.svg";
+export { default as keyPermsIcon } from "./icons/key-perms.svg";

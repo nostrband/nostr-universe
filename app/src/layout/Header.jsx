@@ -14,10 +14,11 @@ export const Header = ({
   const contextData = useContext(AppContext);
   const navigate = useNavigate();
 
-  const { currentTab, profile, onModalOpen } = contextData || {};
+  const { currentTab, profile, onModalOpen, clearLastCurrentTab } = contextData || {};
 
   const navigateToProfilePage = async () => {
     await onModalOpen();
+    clearLastCurrentTab();
     navigate("/profile");
   };
 
@@ -31,11 +32,11 @@ export const Header = ({
         />
         <ActionsContainer>
           {/* <StyledIconButton>
-            <ServerIcon />
-          </StyledIconButton>
-          <StyledIconButton>
-            <WalletIcon onClick />
-          </StyledIconButton> */}
+              <ServerIcon />
+              </StyledIconButton>
+              <StyledIconButton>
+              <WalletIcon onClick />
+              </StyledIconButton> */}
           {!searchMode && (
             <StyledIconButton onClick={onSearchClick}>
               <SearchIcon />
