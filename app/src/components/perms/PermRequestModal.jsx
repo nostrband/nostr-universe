@@ -38,16 +38,16 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
     const { perm, event, plainText, cipherText } = req || {};
     let label = "";
     let payload = null;
-    if (perm === "pubkey") label = "Read your public key:";
+    if (perm === "pubkey") label = "Read your public key";
     else if (perm.startsWith("sign:")) {
-      label = "Sign event of kind " + perm.split(":")[1];
-      payload = JSON.stringify(event);
+      label = "Sign event of kind " + perm.split(":")[1] + ":";
+      payload = JSON.stringify(event, null, 2);
     } else if (perm === "encrypt") {
-      label = "Encrypt a message";
+      label = "Encrypt a message:";
       // FIXME add pubkey
       payload = plainText;
     } else if (perm === "decrypt") {
-      label = "Decrypt a message";
+      label = "Decrypt a message:";
       // FIXME add pubkey
       payload = cipherText;
     }
@@ -176,9 +176,9 @@ const RequestContainer = styled("div")(() => ({
     maxWidth: "100%",
     minHeight: "10rem",
     maxHeight: "10rem",
-    overflowY: "scroll",
     background: "#36363679",
     borderRadius: "6px",
+    overflowY: "scroll",
   },
   "& .form_control": {
     display: "flex",

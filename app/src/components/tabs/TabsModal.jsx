@@ -3,7 +3,6 @@ import { AppContext } from "../../store/app-context";
 import { SecondaryCloseIcon } from "../../assets";
 import {
   Container,
-  GlobalStyles,
   IconButton as MUIconButton,
   styled,
 } from "@mui/material";
@@ -13,19 +12,27 @@ import { IconButton } from "../UI/IconButton";
 
 export const TabsModal = ({ isOpen, onClose }) => {
   const contextData = useContext(AppContext);
-  const { currentWorkspace, getTab, onOpenTab, clearLastCurrentTab } =
+  const { currentWorkspace, getTab, onOpenTab, onCloseTabAny, clearLastCurrentTab, currentTab } =
     contextData || {};
-
-  const onClick = (tab) => {
+  
+  const handleOpenTab = (tab) => {
     // to make sure onClose doesn't re-open the calling tab
     clearLastCurrentTab();
     onClose();
     onOpenTab(tab);
   };
 
-  if (!currentWorkspace) return;
+  const handleCloseTab = (tab) => {
+    // to make sure onClose doesn't re-open the calling tab
+    onCloseTabAny(tab);
+  };
 
-  const tgs = Object.values(currentWorkspace.tabGroups).filter(
+  const handleCloseTabGroup = (tabs) => {
+    // to make sure onClose doesn't re-open the calling tab
+    tabs.forEach(tab => onCloseTabAny(tab));
+  };
+
+  const tgs = Object.values(currentWorkspace?.tabGroups || {}).filter(
     (tg) => tg.tabs.length > 0
   );
   tgs.sort((a, b) => b.lastActive - a.lastActive);
@@ -35,7 +42,7 @@ export const TabsModal = ({ isOpen, onClose }) => {
       .map((id) => getTab(id))
       .sort((a, b) => b.lastActive - a.lastActive);
   };
-
+  
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <StyledContainer>
@@ -46,30 +53,29 @@ export const TabsModal = ({ isOpen, onClose }) => {
           </StyledIconButton>
         </StyledHeader>
         <>
+	  {!tgs.length && (<>No active tabs.</>)}
           {tgs.map((tg) => {
             const tabs = prepareTabs(tg.tabs);
             return (
               <TabGroup key={tg.id}>
                 <Title>
-                  <StyledIconButton
-                    onClick={() => console.log("close tab group")}
-                    size="small"
-                  >
-                    <SecondaryCloseIcon />
-                  </StyledIconButton>
                   <IconButton
                     data={{ title: "", img: tg.info.icon }}
                     size="small"
                   />
                   <div className="label">{tg.info.title}</div>
+                  <StyledIconButton
+                    onClick={() => handleCloseTabGroup(tabs)}
+                    size="small"
+                  >
+                    <SecondaryCloseIcon />
+                  </StyledIconButton>
                 </Title>
                 <TabsContainer>
                   {tabs.map((tab) => (
                     <Card key={tab.id}>
                       <StyledIconButton
-                        onClick={() =>
-                          console.log("close separate tab in tabgroup")
-                        }
+                        onClick={() => handleCloseTab(tab)}
                         size="large"
                         className="close_tab_btn"
                       >
@@ -79,7 +85,7 @@ export const TabsModal = ({ isOpen, onClose }) => {
                         src={tab.screenshot || tab.icon}
                         alt={tab.title}
                         width="150"
-                        onClick={() => onClick(tab)}
+                        onClick={() => handleOpenTab(tab)}
                       />
                     </Card>
                   ))}
@@ -89,11 +95,6 @@ export const TabsModal = ({ isOpen, onClose }) => {
           })}
         </>
       </StyledContainer>
-      <GlobalStyles
-        styles={{
-          body: { overflow: isOpen ? "hidden !important" : "initial" },
-        }}
-      />
     </Modal>
   );
 };
@@ -125,15 +126,14 @@ const Title = styled("div")(() => ({
   display: "flex",
   flexDirection: "row",
   margin: "0.5rem 0",
+  alignItems: "center",
   "& .label": {
     overflow: "hidden",
     textOverflow: "ellipsis",
     display: "-webkit-box",
     WebkitLineClamp: "1",
     WebkitBoxOrient: "vertical",
-    flexGrow: "1",
     marginLeft: "0.5rem",
-    marginTop: "0.5rem",
     fontWeight: 600,
   },
 }));
