@@ -597,7 +597,6 @@ const AppContextProvider = ({ children }) => {
       if (hasPerm(tab, "decrypt", "1")) return await exec();
       return requestPermExec(tab, { perm: "decrypt", pubkey, cipherText }, exec, "Decrypt disallowed");
     },
-
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
@@ -632,6 +631,12 @@ const AppContextProvider = ({ children }) => {
 
         dbi.updateTab(tab);
       }
+    },
+    clipboardWriteText: async function (tabId, text) {
+      return await window.cordova.plugins.clipboard.copy(text);
+    },
+    share: async function (tabId, data) {
+      return await window.navigator.share(data);
     },
     showContextMenu: async function (tabId, id) {
       console.log("event menu", id);

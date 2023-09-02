@@ -48,12 +48,27 @@ const initTab = () => {
     // NIP-07 API
     window.nostr = nostrKey;
 
-    // our own API
-    //    for (const name of apiMethods)
-    //      window.nostrCordovaPlugin[name] = _gen(name);
+    if (!window.navigator)
+      window.navigator = {};
+
+    if (!navigator.clipboard)
+      navigator.clipboard = {};
+
+    // override with out own implementation
+    navigator.clipboard.writeText = async (text) => {
+      return await window.nostrCordovaPlugin.clipboardWriteText(text);
+    };
+
+    navigator.canShare = () => true;
+    navigator.share = async (data) => {
+      return await window.nostrCordovaPlugin.share(data);
+    };
+    
     window.nostrCordovaPlugin.setUrl = _gen("setUrl");
     window.nostrCordovaPlugin.showContextMenu = _gen("showContextMenu");
     window.nostrCordovaPlugin.decodeBech32 = _gen("decodeBech32");
+    window.nostrCordovaPlugin.clipboardWriteText = _gen("clipboardWriteText");
+    window.nostrCordovaPlugin.share = _gen("share");
   };
 
   const initUrlChange = () => {
@@ -289,7 +304,7 @@ export function open(params) {
     // inject our scripts
 
     // main init to enable comms interface
-    await ref.executeFuncAsync("initTab", initTab, API ? Object.keys(API) : []);
+    await ref.executeFuncAsync("initTab", initTab);
 
     if (!params.menu) {
       // nostr-zap

@@ -3,7 +3,7 @@ import { fetchAppsForEvent } from "../../nostr";
 import { AppContext } from "../../store/app-context";
 import { EventApp } from "./EventApp";
 import { CircularProgress, IconButton, InputBase, styled } from "@mui/material";
-import { CloseIcon, SearchIcon } from "../../assets";
+import { CloseIcon, SearchIcon, copyIcon } from "../../assets";
 
 export const EventApps = ({ addr, onClose, onSelect }) => {
   const contextData = useContext(AppContext);
@@ -127,6 +127,10 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
     );
   };
 
+  const onCopy = () => {
+    window.cordova.plugins.clipboard.copy(addr);
+  };
+      
   return (
     <Container>
       <div className="header">
@@ -137,20 +141,27 @@ export const EventApps = ({ addr, onClose, onSelect }) => {
       </div>
       <hr className="m-0" />
       <div className="m-3" style={{ flex: "1" }}>
+	<AddrContainer>
+	  <div className="addr">Event: {addr}</div>
+          <IconButton onClick={onCopy} style={{padding: "0", marginLeft: "5px"}}>
+	    <img src={copyIcon} width="24px" height="24px" />
+          </IconButton>
+	</AddrContainer>
+	
         {(isLoading || apps.length === 0) && (
           <SpinnerContainer>
-            <CircularProgress className="spinner" />
+	    <CircularProgress className="spinner" />
           </SpinnerContainer>
         )}
 
         {!isLoading && apps.length ? (
           <>
-            {renderSearchInput()}
-            <EventsContainer>
-              {renderedApps.map((app) => (
-                <EventApp key={app.naddr} app={app} onClick={() => onOpen(app)} />
-              ))}
-            </EventsContainer>
+	    {renderSearchInput()}
+	    <AppsContainer>
+	      {renderedApps.map((app) => (
+                <EventApp  key={app.naddr} app={app} onClick={() => onOpen(app)} />
+	      ))}
+	    </AppsContainer>
           </>
         ) : null}
       </div>
@@ -173,7 +184,19 @@ const Container = styled("div")(() => ({
   },
 }));
 
-const EventsContainer = styled("div")(() => ({
+const AddrContainer = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "row",
+  width: "100%",
+  padding: "0.5rem 0",
+  "& .addr": {
+    flexGrow: "1",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+  }
+}));
+
+const AppsContainer = styled("div")(() => ({
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
