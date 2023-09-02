@@ -1,14 +1,22 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useCallback } from "react";
 import { AppContext } from "../../store/app-context";
 import { SecondaryCloseIcon } from "../../assets";
-import { IconButton as MUIconButton, Button, Switch, FormControlLabel, styled } from "@mui/material";
+import {
+  IconButton as MUIconButton,
+  Button,
+  Switch,
+  FormControlLabel,
+  styled,
+  Container,
+  Avatar,
+  Typography,
+} from "@mui/material";
 import { Modal } from "../UI/modal/Modal";
-import { PinItem } from "../pins/PinItem";
-import { IconButton } from "../UI/IconButton";
 
 export const PermRequestModal = ({ isOpen, onClose }) => {
   const contextData = useContext(AppContext);
-  const { currentPermRequest, getTab, replyCurrentPermRequest } = contextData || {};
+  const { currentPermRequest, getTab, replyCurrentPermRequest } =
+    contextData || {};
 
   const [isRemember, setIsRemember] = useState(false);
 
@@ -20,25 +28,34 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
 
   const tab = getTab(req?.tabId);
 
-  let label = "";
-  let payload = null;
-  if (req?.perm === "pubkey")
-    label = "Read you public key";
-  else if (req?.perm.startsWith("sign:")) {
-    label = "Sign event of kind " + req?.perm.split(':')[1];
-    payload = JSON.stringify(req.event);
-  }
-  else if (req?.perm === "encrypt") {
-    label = "Encrypt a message";
-    // FIXME add pubkey
-    payload = req.plainText;
-  }
-  else if (req?.perm === "decrypt") {
-    label = "Decrypt a message";
-    // FIXME add pubkey
-    payload = req.cipherText;
-  }  
-  
+  const prepareLabelAndPayload = useCallback(() => {
+    if (!req) {
+      return {
+        label: "",
+        payload: "",
+      };
+    }
+    const { perm, event, plainText, cipherText } = req || {};
+    let label = "";
+    let payload = null;
+    if (perm === "pubkey") label = "Read your public key";
+    else if (perm.startsWith("sign:")) {
+      label = "Sign event of kind " + perm.split(":")[1] + ":";
+      payload = JSON.stringify(event, null, 2);
+    } else if (perm === "encrypt") {
+      label = "Encrypt a message:";
+      // FIXME add pubkey
+      payload = plainText;
+    } else if (perm === "decrypt") {
+      label = "Decrypt a message:";
+      // FIXME add pubkey
+      payload = cipherText;
+    }
+    return { label, payload };
+  }, [req]);
+
+  const { label, payload } = prepareLabelAndPayload();
+
   const onDisallow = async () => {
     await replyCurrentPermRequest(false, isRemember);
   };
@@ -46,112 +63,100 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
   const onAllow = async () => {
     await replyCurrentPermRequest(true, isRemember);
   };
-  
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <Container>
-	<header>
-          <h3>Permission request</h3>
+      <StyledContainer>
+        <StyledHeader>
+          <h1>Permission request</h1>
           <StyledIconButton onClick={onClose}>
             <SecondaryCloseIcon />
           </StyledIconButton>
-	</header>
-	{req && (
-	  <main>
-	    <center>
-	      <IconButton
-		data={{ title: tab.title, img: tab.icon }}
-		size="big"
-	      />
-	      
-	    </center>	    
+        </StyledHeader>
+        {req && (
+          <ContentWrapper>
+            <AvatarContainer>
+              <Avatar className="avatar" src={tab.icon || ""} />
+              <Typography className="title" variant="h5">
+                {tab.title}
+              </Typography>
+            </AvatarContainer>
 
-	    <RequestContainer>
-	      <h5>{label}</h5>
-	      <pre>
-		{payload}
-	      </pre>
-
-
+            <RequestContainer>
+              <h5>{label}</h5>
+              <pre>{payload}</pre>
               <FormControlLabel
-		control={
-		  <Switch checked={isRemember} onChange={(e) => setIsRemember(e.target.checked)} />
-		}
-		label="Remember, don't ask again"
+                control={
+                  <StyledSwitch
+                    checked={isRemember}
+                    onChange={(e) => setIsRemember(e.target.checked)}
+                  />
+                }
+                label="Remember, don't ask again"
+                className="form_control"
               />
-	      
-	    </RequestContainer>
-	    
-	    <ButtonContainer>
-              <Button variant="contained" className="button" onClick={onDisallow}>
-		Disallow
+            </RequestContainer>
+
+            <ButtonContainer>
+              <Button
+                variant="contained"
+                className="button"
+                onClick={onDisallow}
+              >
+                Disallow
               </Button>
-              <Button variant="contained" className="button" color="success" onClick={onAllow}>
-		Allow
+              <Button
+                variant="contained"
+                className="button"
+                color="success"
+                onClick={onAllow}
+              >
+                Allow
               </Button>
-	    </ButtonContainer>
-	  </main>
-	)}
-      </Container>
+            </ButtonContainer>
+          </ContentWrapper>
+        )}
+      </StyledContainer>
     </Modal>
   );
 };
 
-const Container = styled("div")`
-  min-height: 100dvh;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto;
-  grid-template-areas:
-    "header"
-    "main";
-
-  & > header {
-    grid-area: header;
-    position: sticky;
-    background: #000;
-    z-index: 1199;
-    top: 0;
-    display: flex;
-    flex-direction: row;
-
-    & > h3 {
-      margin-left: 1rem;
-      margin-top: 0.3rem;
-      flex-grow: 1;
-    }
-  }
-
-  & > main {
-    grid-area: main;
-    overflow: scroll;
-    max-height: 100%;
-    padding-bottom: 2rem;
-  }
-`;
-
-const TabGroup = styled("div")(() => ({
+const StyledContainer = styled(Container)(() => ({
+  paddingTop: "6px",
+  paddingBottom: "1rem",
   display: "flex",
   flexDirection: "column",
-  marginTop: "0.5rem",
 }));
 
-
-const Title = styled("div")(() => ({
+const StyledHeader = styled("div")(() => ({
   display: "flex",
-  flexDirection: "row",
-  margin: "0.5rem 1rem",
-  "& .label": {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    display: "-webkit-box",
-    WebkitLineClamp: "1",
-    WebkitBoxOrient: "vertical",
-    flexGrow: "1",
-    marginLeft: "0.5rem",
-    marginTop: "0.5rem",
-    fontWeight: 600,
-  }
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: "2rem",
+  h1: {
+    fontWeight: 500,
+    fontSize: "28px",
+  },
+}));
+
+const ContentWrapper = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "column",
+}));
+
+const AvatarContainer = styled("div")(() => ({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  "& .avatar": {
+    width: 72,
+    height: 72,
+    borderRadius: "10px",
+    marginBottom: "0.5rem",
+  },
+  "& .title": {
+    fontFamily: "inherit",
+  },
 }));
 
 const StyledIconButton = styled(MUIconButton)(() => ({
@@ -165,21 +170,30 @@ const StyledIconButton = styled(MUIconButton)(() => ({
 const RequestContainer = styled("div")(() => ({
   display: "flex",
   flexDirection: "column",
-  margin: "1rem",
+  margin: "1rem 0",
   "& pre": {
     flexGrow: "1",
     maxWidth: "100%",
     minHeight: "10rem",
-    // FIXME make text wrap and add vertical scrolling
-  }
+    maxHeight: "10rem",
+    background: "#36363679",
+    borderRadius: "6px",
+    overflowY: "scroll",
+  },
+  "& .form_control": {
+    display: "flex",
+    gap: "0.5rem",
+    alignItems: "center",
+    marginLeft: "0",
+    fontFamily: "inherit",
+  },
 }));
 
 const ButtonContainer = styled("div")(() => ({
   display: "flex",
-  flexDirection: "row",
-  margin: "1rem",
-  gap: "5px",
-
+  alignItems: "center",
+  margin: "1rem 0",
+  gap: "0.5rem",
   "& .button": {
     background: "#363636",
     fontFamily: "inherit",
@@ -189,8 +203,59 @@ const ButtonContainer = styled("div")(() => ({
     padding: "4px auto",
     borderRadius: "72px",
     width: "50%",
-    "&:hover, &:active": {
+    "&:active": {
       background: "#363636",
     },
-  }
+  },
+}));
+
+const StyledSwitch = styled((props) => (
+  <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
+))(({ theme }) => ({
+  width: 42,
+  height: 26,
+  padding: 0,
+  "& .MuiSwitch-switchBase": {
+    padding: 0,
+    margin: 2,
+    transitionDuration: "300ms",
+    "&.Mui-checked": {
+      transform: "translateX(16px)",
+      color: "#fff",
+      "& + .MuiSwitch-track": {
+        backgroundColor: theme.palette.mode === "dark" ? "#CF82FF" : "#CF82FF",
+        opacity: 1,
+        border: 0,
+      },
+      "&.Mui-disabled + .MuiSwitch-track": {
+        opacity: 0.5,
+      },
+    },
+    "&.Mui-focusVisible .MuiSwitch-thumb": {
+      color: "#CF82FF",
+      border: "6px solid #fff",
+    },
+    "&.Mui-disabled .MuiSwitch-thumb": {
+      color:
+        theme.palette.mode === "light"
+          ? theme.palette.grey[100]
+          : theme.palette.grey[600],
+    },
+    "&.Mui-disabled + .MuiSwitch-track": {
+      opacity: theme.palette.mode === "light" ? 0.7 : 0.3,
+    },
+  },
+  "& .MuiSwitch-thumb": {
+    boxSizing: "border-box",
+    width: 22,
+    height: 22,
+  },
+  "& .MuiSwitch-track": {
+    borderRadius: 26 / 2,
+    backgroundColor: "#363636",
+    opacity: 1,
+    transition: theme.transitions.create(["background-color"], {
+      duration: 500,
+    }),
+  },
 }));

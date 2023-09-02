@@ -2,7 +2,13 @@ import React from "react";
 import { Avatar, Badge, Button, IconButton, styled } from "@mui/material";
 import { SwitchIcon } from "../../assets";
 
-export const ProfileAvatar = ({ username, profileImage, onOpenChangeAccountModal, isGuest, onAddKey }) => {
+export const ProfileAvatar = ({
+  username,
+  profileImage,
+  onOpenChangeAccountModal,
+  isGuest,
+  onAddKey,
+}) => {
   return (
     <>
       <ProfileBanner />
@@ -25,12 +31,12 @@ export const ProfileAvatar = ({ username, profileImage, onOpenChangeAccountModal
         </StyledBadge>
         <h2 className="username">{username || "..."}</h2>
         <Button
-	  variant="contained"
-	  className="edit_button"
-	  onClick={isGuest ? onOpenChangeAccountModal : undefined}
-	>
-          {isGuest && (<>Add keys</>)}
-	  {!isGuest && (<>LATER</>)}
+          variant="contained"
+          className="edit_button"
+          onClick={isGuest ? onOpenChangeAccountModal : undefined}
+        >
+          {isGuest && <>Add keys</>}
+          {!isGuest && <>LATER</>}
         </Button>
       </AvatarContainer>
     </>

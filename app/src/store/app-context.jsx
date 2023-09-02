@@ -793,7 +793,7 @@ const AppContextProvider = ({ children }) => {
     setIsShowDrawer(true);
     document.getElementById("tab-menu").classList.remove("d-flex");
     document.getElementById("tab-menu").classList.add("d-none");
-    document.body.style.overflow = "initial";
+//    document.body.style.overflow = "initial";
 
     if (tab && !noScreenshot) {
       // launch the 'screenshotting' after the next render cycle
@@ -811,7 +811,7 @@ const AppContextProvider = ({ children }) => {
     setIsShowDrawer(false);
     document.getElementById("tab-menu").classList.remove("d-none");
     document.getElementById("tab-menu").classList.add("d-flex");
-    document.body.style.overflow = "hidden";
+//    document.body.style.overflow = "hidden";
   };
 
   const show = async (tab) => {
@@ -1070,16 +1070,23 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  const closeTab = async () => {
-    console.log("closeTab");
-    const tab = currentTab || lastCurrentTab;
-    if (!tab) return;
+  const closeTabAny = async (tab) => {
+    console.log("closeTabAny", tab.id);
 
     // hide first
-    await hide(tab, /* no_screenshot */ true);
+    if (currentTab?.id === tab.id)
+      await hide(tab, /* no_screenshot */ true);
 
     // close in bg after that
     await close(tab);
+  };
+
+  const closeTab = async () => {
+    const tab = currentTab || lastCurrentTab;
+    console.log("closeTab", tab);
+    if (!tab) return;
+
+    closeTabAny(tab);
   };
 
   const hideTab = async () => {
@@ -1258,6 +1265,7 @@ const AppContextProvider = ({ children }) => {
         onOpenTab: show,
         onOpenTabGroup: openTabGroup,
         onCloseTab: closeTab,
+        onCloseTabAny: closeTabAny,
         onHideTab: hideTab,
         onStopTab: stopTab,
         onReloadTab: reloadTab,
