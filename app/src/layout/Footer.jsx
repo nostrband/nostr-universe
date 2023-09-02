@@ -3,10 +3,10 @@ import React, { useContext } from "react";
 import { AppContext } from "../store/app-context";
 import { SwipeableDrawer } from "../components/swipeable-drawer/SwipeableDrawer";
 import { IconButton, styled } from "@mui/material";
-import { homeIcon, stopIcon, reloadIcon } from "../assets";
+import { homeIcon, stopIcon, reloadIcon, tabsIcon } from "../assets";
 import { PinItem } from "../components/pins/PinItem";
 
-export const Footer = ({ onOpenPinModal }) => {
+export const Footer = ({ onOpenPinModal, onTabs }) => {
   const contextData = useContext(AppContext);
   const {
     currentWorkspace,
@@ -43,26 +43,39 @@ export const Footer = ({ onOpenPinModal }) => {
               className="me-0 d-flex justify-content-start align-items-center"
               style={{ overflowX: "scroll" }}
             >
-              {currentTabGroup &&
-                currentTabGroup.tabs.map((id) => {
-                  const tab = getTab(id);
-                  return (
-                    <div style={{ width: "34px", minWidth: "34px" }}>
-                      <PinItem
-                        image={tab.icon}
-                        title={tab.title}
-                        active={tab.id === currentTab.id}
-                        onClick={() => switchTab(tab)}
-                      />
-                    </div>
-                  );
-                })}
+              {false && currentTabGroup &&
+               currentTabGroup.tabs.map((id) => {
+                 const tab = getTab(id);
+                 return (
+                   <div style={{ width: "34px", minWidth: "34px" }}>
+                     <PinItem
+		       key={id}
+                       image={tab.icon}
+                       title={tab.title}
+                       active={tab.id === currentTab.id}
+                       onClick={() => switchTab(tab)}
+                     />
+                   </div>
+                 );
+              })}
+	      {currentTab && (
+                <div style={{ width: "34px", minWidth: "34px" }}>
+                  <PinItem
+                    image={currentTab.icon}
+                    title={currentTab.title}
+                    active={true}
+                  />
+                </div>
+	      )}
             </div>
             <div className="flex-shrink-0">
+              <StyledIconButton onClick={onTabs} disabled={!currentTab}>
+                <img src={tabsIcon} width={"24px"} height={"24px"} />
+              </StyledIconButton>
               <StyledIconButton onClick={onStopReload} disabled={!currentTab}>
                 <img
                   src={
-                    currentTab && !currentTab.loading ? reloadIcon : stopIcon
+                  currentTab && !currentTab.loading ? reloadIcon : stopIcon
                   }
                   width={"24px"}
                   height={"24px"}

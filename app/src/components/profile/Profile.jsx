@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { styled } from "@mui/material";
 
 import { ProfileAvatar } from "./ProfileAvatar";
@@ -13,14 +13,24 @@ import { AccountsMenu } from "./accounts-menu/AccountsMenu";
 import { useSearchParams } from "react-router-dom";
 import { useOptimizedMediaSource } from "../../hooks/useOptimizedMediaSource";
 import { ImportPubkeyModal } from "../onboarding/ImportPubkeyModal";
+import { PermsModal } from "../perms/PermsModal";
+import { keyPermsIcon } from "../../assets";
 
 const CHANGE_ACCOUNT_SEARCH_PARAM = "change-account";
 const IMPORT_ACCOUNT_SEARCH_PARAM = "import-account";
 
 export const Profile = () => {
   const contextData = useContext(AppContext);
-  const { currentPubkey, onSelectKey, profile, keys, readKeys, profiles, onAddKey, onImportPubkey } =
-    contextData || {};
+  const {
+    currentPubkey,
+    onSelectKey,
+    profile,
+    keys,
+    readKeys,
+    profiles,
+    onAddKey,
+    onImportPubkey,
+  } = contextData || {};
 
   const { profile: originalProfile = {} } = profile || {};
   const { picture } = originalProfile || {};
@@ -30,7 +40,10 @@ export const Profile = () => {
     originalImage: picture,
   });
 
+  const [showPerms, setShowPerms] = useState(false);
+
   const [searchParams, setSearchParams] = useSearchParams();
+
   const isChangeAccountModalOpen = Boolean(
     searchParams.get(CHANGE_ACCOUNT_SEARCH_PARAM)
   );
@@ -59,7 +72,7 @@ export const Profile = () => {
     searchParams.set(CHANGE_ACCOUNT_SEARCH_PARAM, true);
     setSearchParams(searchParams, { replace: true });
   };
-  
+
   const changeAccountHandler = (pubkey) => {
     onSelectKey(pubkey);
     closeChangeModalHandler();
@@ -67,19 +80,28 @@ export const Profile = () => {
 
   const importPubkeyHandler = (pubkey) => {
     onImportPubkey(pubkey);
-    closeImportModalHandler();    
+    closeImportModalHandler();
     closeChangeModalHandler();
   };
-  
+
   const currentUsername = getRenderedUsername(profile?.profile, currentPubkey);
 
   const accounts = keys.map((k) => {
     return {
       pubkey: k,
       readOnly: readKeys.includes(k),
-      ...profiles?.find((p) => p.pubkey === k)
+      ...profiles?.find((p) => p.pubkey === k),
     };
   });
+
+  const tools = [
+    {
+      title: "Key permissions",
+      id: "show-perms",
+      Icon: () => <img src={keyPermsIcon} width="24" />,
+      onClick: () => setShowPerms(true),
+    },
+  ];
 
   return (
     <>
@@ -91,7 +113,7 @@ export const Profile = () => {
           onAddKey={onAddKey}
           isGuest={isGuest(currentPubkey)}
         />
-        <Tools />
+        <Tools tools={tools} />
       </Container>
 
       <AccountsMenu
@@ -105,11 +127,12 @@ export const Profile = () => {
       />
 
       <ImportPubkeyModal
-	isOpen={isImportAccountModalOpen}
+        isOpen={isImportAccountModalOpen}
         onClose={closeImportModalHandler}
-	onSelect={importPubkeyHandler}
+        onSelect={importPubkeyHandler}
       />
 
+      <PermsModal isOpen={showPerms} onClose={() => setShowPerms(false)} />
     </>
   );
 };
