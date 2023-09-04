@@ -1,4 +1,5 @@
 import { useNavigate, useSearchParams, createSearchParams, useLocation } from 'react-router-dom'
+import queryString from 'query-string'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 type IExtraOptions = {
@@ -14,21 +15,21 @@ export const useOpenModalSearchParams = () => {
   const [searchParams] = useSearchParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const getSearchParamsLength = searchParams.size
+  const getSearchParamsLength = Object.keys(queryString.parse(location.search)).length
   const getEnumParam = (modal: MODAL_PARAMS_KEYS) =>
     Object.keys(MODAL_PARAMS_KEYS)[Object.values(MODAL_PARAMS_KEYS).indexOf(modal)]
 
   const handleOpen = (modal: MODAL_PARAMS_KEYS, extraOptions?: IExtraOptions) => {
     const enumKey = getEnumParam(modal)
 
-    const searchParams: SearchParamsType = { [enumKey]: modal }
+    const searchParamsData: SearchParamsType = { [enumKey]: modal }
     if (extraOptions) {
-      searchParams[extraOptions.key] = extraOptions.value
+      searchParamsData[extraOptions.key] = extraOptions.value
     }
 
     const searchString = !getSearchParamsLength
-      ? createSearchParams(searchParams).toString()
-      : `${location.search}&${createSearchParams(searchParams).toString()}`
+      ? createSearchParams(searchParamsData).toString()
+      : `${location.search}&${createSearchParams(searchParamsData).toString()}`
 
     navigate(
       {
