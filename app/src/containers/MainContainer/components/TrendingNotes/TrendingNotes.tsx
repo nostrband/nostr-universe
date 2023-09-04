@@ -10,7 +10,7 @@ import { StyledTitle, StyledWrapper } from './styled'
 
 export const TrendingNotes = () => {
   const { data, isLoading } = userService.useFetchTrendingNotesQuery('')
-  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleOpen } = useOpenModalSearchParams()
 
   const handleOpenProfile = (note: TrendingNote) => {
     const nprofile = nip19.nprofileEncode({
@@ -18,7 +18,7 @@ export const TrendingNotes = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
   }
 
   return (

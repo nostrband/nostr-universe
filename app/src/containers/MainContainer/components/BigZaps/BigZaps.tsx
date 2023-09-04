@@ -9,7 +9,7 @@ import { SliderBigZaps } from '@/components/Slider/SliderBigZaps/SliderBigZaps'
 import { StyledTitle, StyledWrapper } from './styled'
 
 export const BigZaps = () => {
-  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleOpen } = useOpenModalSearchParams()
   const { bigZaps } = useAppSelector((state) => state.contentWorkSpace)
 
   const handleOpenHighlight = (bigZap: BigZap) => {
@@ -38,7 +38,7 @@ export const BigZaps = () => {
       }
     }
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: addr })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: addr })
   }
 
   return (

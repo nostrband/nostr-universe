@@ -37,12 +37,19 @@ export const useUpdateProfile = () => {
     [dispatch]
   )
 
+  const getProfile = useCallback((currentPubKey?: string) => {
+    const getProfile = profiles.find((profile) => profile.pubkey === currentPubKey)
+
+    return getProfile
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return useCallback(
     async (keys: string[], currentPubKey?: string) => {
-      const getProfile = profiles.find((profile) => profile.pubkey === currentPubKey)
+      const currentProfile = getProfile(currentPubKey)
 
-      if (getProfile) {
-        dispatch(setCurrentProfile({ profile: getProfile }))
+      if (currentProfile) {
+        dispatch(setCurrentProfile({ profile: currentProfile }))
       } else {
         dispatch(setCurrentProfile({ profile: null }))
       }
@@ -88,6 +95,6 @@ export const useUpdateProfile = () => {
         //   //     }, pubkey);
       })
     },
-    [dispatch, setContacts, profiles]
+    [dispatch, setContacts, getProfile]
   )
 }

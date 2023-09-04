@@ -19,7 +19,7 @@ import { useOpenApp } from '@/hooks/open-entity'
 
 export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, currentPubKey }: IModalAccounts) => {
   const { onImportKey } = useOpenApp()
-  const { handleOpen: handleOpenKeyImport } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEY_IMPORT)
+  const { handleOpen } = useOpenModalSearchParams()
 
   return (
     <StyledViewModal onClose={handleClose} open={open} fullWidth maxWidth="lg">
@@ -42,7 +42,7 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
         ))}
 
         <ListItem disablePadding>
-          <StyledItemButton alignItems="center" onClick={() => handleOpenKeyImport()}>
+          <StyledItemButton alignItems="center" onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEY_IMPORT)}>
             <ListItemAvatar>
               <StyledItemIconAvatar>
                 <AddIcon />

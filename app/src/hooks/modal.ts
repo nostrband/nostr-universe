@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, createSearchParams, useLocation } from 'react-router-dom'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 type IExtraOptions = {
@@ -6,38 +6,53 @@ type IExtraOptions = {
   value: string
 }
 
-export const useOpenModalSearchParams = (modal: MODAL_PARAMS_KEYS) => {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const enumKey = Object.keys(MODAL_PARAMS_KEYS)[Object.values(MODAL_PARAMS_KEYS).indexOf(modal)]
+type SearchParamsType = {
+  [key: string | MODAL_PARAMS_KEYS]: string | MODAL_PARAMS_KEYS
+}
 
-  const handleOpen = (extraOptions?: IExtraOptions) => {
-    setSearchParams((prevSearchParams) => {
-      const u = new URLSearchParams(prevSearchParams)
-      u.set(enumKey, modal)
-      if (extraOptions) {
-        console.log(extraOptions)
-        u.set(extraOptions.key, extraOptions.value)
-      }
-      return u
-    })
+export const useOpenModalSearchParams = () => {
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const getSearchParamsLength = searchParams.size
+  const getEnumParam = (modal: MODAL_PARAMS_KEYS) =>
+    Object.keys(MODAL_PARAMS_KEYS)[Object.values(MODAL_PARAMS_KEYS).indexOf(modal)]
+
+  const handleOpen = (modal: MODAL_PARAMS_KEYS, extraOptions?: IExtraOptions) => {
+    const enumKey = getEnumParam(modal)
+
+    const searchParams: SearchParamsType = { [enumKey]: modal }
+    if (extraOptions) {
+      searchParams[extraOptions.key] = extraOptions.value
+    }
+
+    const searchString = !getSearchParamsLength
+      ? createSearchParams(searchParams).toString()
+      : `${location.search}&${createSearchParams(searchParams).toString()}`
+
+    navigate(
+      {
+        pathname: '/',
+        search: searchString
+      },
+      { replace: false }
+    )
   }
 
-  const handleClose = (extraOptionsDelete?: string) => {
-    setSearchParams((prevSearchParams) => {
-      const u = new URLSearchParams(prevSearchParams)
-      u.delete(enumKey)
-      if (extraOptionsDelete) {
-        u.delete(extraOptionsDelete)
-      }
-      return u
-    })
+  const handleClose = () => {
+    navigate(-1)
   }
 
-  const open = searchParams.get(enumKey) === modal
+  const getModalOpened = (modal: MODAL_PARAMS_KEYS) => {
+    const enumKey = getEnumParam(modal)
+    const modalOpened = searchParams.get(enumKey) === modal
+
+    return modalOpened
+  }
 
   return {
-    open,
     handleClose,
-    handleOpen
+    handleOpen,
+    getModalOpened
   }
 }

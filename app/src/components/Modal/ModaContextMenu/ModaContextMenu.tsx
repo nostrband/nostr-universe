@@ -12,7 +12,8 @@ import { useOpenApp } from '@/hooks/open-entity'
 
 export const ModaContextMenu = () => {
   const { onCloseTab } = useOpenApp()
-  const { open, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.CONTEXT_MENU)
+  const { getModalOpened, handleClose } = useOpenModalSearchParams()
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
   const { currentTab } = useAppSelector((state) => state.tab)
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
 
@@ -24,7 +25,7 @@ export const ModaContextMenu = () => {
   }
 
   return (
-    <Modal title="Tab Menu (WIP)" open={open} handleClose={handleClose}>
+    <Modal title="Tab Menu (WIP)" open={isOpen} handleClose={handleClose}>
       <Container>
         <StyledInfoItem>URL: {currentTab?.url}</StyledInfoItem>
         <StyledInfoItem>App: {currentTab?.name}</StyledInfoItem>

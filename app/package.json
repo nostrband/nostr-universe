@@ -8,7 +8,7 @@
     "build": "tsc && vite build --mode production",
     "lint": "eslint . --ext ts,tsx",
     "lint:fix": "eslint . --ext ts,tsx --fix",
-    "prettier": "npx prettier --write src",
+    "format": "npx prettier --write src",
     "preview": "vite preview",
     "prepare": "cd .. && husky install"
   },

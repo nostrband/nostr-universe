@@ -20,8 +20,28 @@ export const profileSlice = createSlice({
     },
 
     setProfiles: (state, action) => {
-      //   setProfiles((prev) => [profile, ...prev.filter((p) => p.pubkey != profile.pubkey)])
-      state.profiles = [...state.profiles, ...action.payload.profiles]
+      const mergeProfiles = (stateProfiles: ReturnProfileType[], payloadProfiles: ReturnProfileType[]) => {
+        // O(n)
+        const existingArray = [...stateProfiles]
+        const inputArray = [...payloadProfiles]
+
+        const existingObjMap: { [key: string]: ReturnProfileType } = {}
+        existingArray.forEach((obj) => {
+          existingObjMap[obj.pubkey] = obj
+        })
+
+        inputArray.forEach((obj) => {
+          if (!existingObjMap[obj.pubkey]) {
+            existingArray.push(obj)
+            existingObjMap[obj.pubkey] = obj
+          }
+        })
+
+        return existingArray
+      }
+      const profiles = mergeProfiles(state.profiles, action.payload.profiles)
+
+      state.profiles = profiles
     }
   }
 })

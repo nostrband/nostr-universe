@@ -10,7 +10,7 @@ import { SliderCommunities } from '@/components/Slider/SliderCommunities/SliderC
 
 export const Communities = () => {
   const { communities } = useAppSelector((state) => state.contentWorkSpace)
-  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleOpen } = useOpenModalSearchParams()
 
   const handleOpenCommuniti = (note: Communitie) => {
     const naddr = nip19.naddrEncode({
@@ -20,7 +20,7 @@ export const Communities = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
   }
 
   return (

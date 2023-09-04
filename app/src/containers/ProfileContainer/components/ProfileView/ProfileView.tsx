@@ -18,7 +18,7 @@ import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
 import { getRenderedUsername } from '@/utils/helpers/general'
 
 export const ProfileView = () => {
-  const { open, handleOpen, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEYS_PROFILE)
+  const { getModalOpened, handleOpen, handleClose } = useOpenModalSearchParams()
   const { currentProfile, profiles } = useAppSelector((state) => state.profile)
   const { keys, currentPubKey } = useAppSelector((state) => state.keys)
   const { changeAccount } = useChangeAccount()
@@ -41,13 +41,13 @@ export const ProfileView = () => {
 
   const getCurrentPubKey = isGuest(currentPubKey) ? '' : getNpub(currentPubKey)
 
-  console.log({ currentProfileGETObject: currentPubKey })
+  const isOpenModalAccounts = getModalOpened(MODAL_PARAMS_KEYS.KEYS_PROFILE)
 
   return (
     <>
       <Container>
         <StyledViewBaner>
-          <StyledViewAvatarWrapper onClick={() => handleOpen()}>
+          <StyledViewAvatarWrapper onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEYS_PROFILE)}>
             <StyledViewAvatar src={getProfileImage(currentProfile)} />
             <StyledViewAvatarSwitch>
               <SyncAltOutlinedIcon fontSize="small" />
@@ -72,7 +72,7 @@ export const ProfileView = () => {
         changeAccount={handlechangeAccount}
         currentPubKey={getCurrentPubKey}
         handleClose={handleClose}
-        open={open}
+        open={isOpenModalAccounts}
         accounts={accounts}
       />
 

@@ -9,7 +9,7 @@ import { StyledTitle, StyledWrapper } from './styled'
 import { ReturnTypeHighlight } from '@/types/contentWorkSpace'
 
 export const Highlights = () => {
-  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleOpen } = useOpenModalSearchParams()
   const { highlights } = useAppSelector((state) => state.contentWorkSpace)
 
   const handleOpenHighlight = (highlight: ReturnTypeHighlight) => {
@@ -18,7 +18,7 @@ export const Highlights = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
   }
 
   return (

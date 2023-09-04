@@ -12,7 +12,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 export const SuggestedProfiles = () => {
   const { currentPubKey } = useAppSelector((state) => state.keys)
   const { data, isLoading } = userService.useFetchSuggestedProfilesQuery(currentPubKey)
-  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleOpen } = useOpenModalSearchParams()
 
   const handleOpenProfile = (profile: TrendingProfile) => {
     const nprofile = nip19.nprofileEncode({
@@ -20,7 +20,7 @@ export const SuggestedProfiles = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
   }
 
   return (

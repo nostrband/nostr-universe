@@ -3,7 +3,8 @@ export enum MODAL_PARAMS_KEYS {
   KEY_IMPORT = 'key-import',
   SELECT_APP = 'select-app',
   SEARCH_MODAL = 'search-modal',
-  CONTEXT_MENU = 'context-menu'
+  CONTEXT_MENU = 'context-menu',
+  PROFILE_PAGE = 'profile-page'
 }
 
 export const EXTRA_OPTIONS = {

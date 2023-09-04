@@ -9,7 +9,7 @@ import { LongPost } from '@/types/long-notes'
 import { SliderLongPosts } from '@/components/Slider/SliderLongPosts/SliderLongPosts'
 
 export const LongPosts = () => {
-  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleOpen } = useOpenModalSearchParams()
   const { longPosts } = useAppSelector((state) => state.contentWorkSpace)
 
   const handleOpenLongPosts = (longPost: LongPost) => {
@@ -20,7 +20,7 @@ export const LongPosts = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
   }
 
   console.log({ longPosts })

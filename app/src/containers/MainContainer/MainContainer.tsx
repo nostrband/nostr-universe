@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { AppPinMenu } from '@/components/AppPinMenu/AppPinMenu'
 import { useAppSelector } from '@/store/hooks/redux'
 import { Header } from './components/Header/Header'
@@ -15,6 +15,7 @@ import { StyledWrapperMain } from './styled'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
 import { ModaSearch } from '@/components/Modal/ModaSearch/ModaSearch'
 import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextMenu'
+import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
 
 export const MainContainer = () => {
   const { isOpenTabWindow } = useAppSelector((state) => state.tab)
@@ -34,14 +35,14 @@ export const MainContainer = () => {
 
       <AppsNostro />
 
+      {/* Modal pages */}
+      <ProfilePage />
       <ModaContextMenu />
       <ModalSelectApp />
       <ModaSearch />
 
       {isShowAppPinMenu && !isOpenTabWindow && <AppPinMenu />}
       {isOpenTabWindow && <TabMenu />}
-
-      <Outlet />
     </StyledWrapperMain>
   )
 }

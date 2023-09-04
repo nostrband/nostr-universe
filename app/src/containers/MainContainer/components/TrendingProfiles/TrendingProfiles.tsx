@@ -10,7 +10,7 @@ import { nostrbandRelay } from '@/modules/nostr'
 
 export const TrendingProfiles = () => {
   const { data, isLoading } = userService.useFetchTrendingProfilesQuery('')
-  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleOpen } = useOpenModalSearchParams()
 
   const handleOpenProfile = (profile: TrendingProfile) => {
     const nprofile = nip19.nprofileEncode({
@@ -18,7 +18,7 @@ export const TrendingProfiles = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
   }
 
   return (

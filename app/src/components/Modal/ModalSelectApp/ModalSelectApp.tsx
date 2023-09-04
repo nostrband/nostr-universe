@@ -20,7 +20,8 @@ export const ModalSelectApp = () => {
   const [apps, setApps] = useState<IOpenAppNostro[]>([])
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
   const [searchParams, setSearchParams] = useSearchParams()
-  const { open, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleClose, getModalOpened } = useOpenModalSearchParams()
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.SELECT_APP)
 
   const paramSearchUrl = EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]
   const getParamAddr = searchParams.get(paramSearchUrl)
@@ -72,7 +73,7 @@ export const ModalSelectApp = () => {
 
   const handleOpen = (app: IOpenAppNostro) => {
     openApp({ ...app, kind })
-    handleClose(paramSearchUrl)
+    handleClose()
     setApps([])
     setKind('')
     setSearchValue('')
@@ -86,7 +87,7 @@ export const ModalSelectApp = () => {
   }, [getParamAddr, load])
 
   return (
-    <Modal title="Select App" open={open} handleClose={() => handleClose(paramSearchUrl)}>
+    <Modal title="Select App" open={isOpen} handleClose={handleClose}>
       <Container>
         <StyledForm>
           <StyledInput

@@ -1,29 +1,19 @@
-import { useState } from 'react'
-import Slide from '@mui/material/Slide'
-import { StyledWrapper } from './styled'
-import { Header } from './components/Header/Header'
-import { useNavigate } from 'react-router-dom'
+// import { Header } from './components/Header/Header'
+import { useOpenModalSearchParams } from '@/hooks/modal'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { Modal } from '@/modules/Modal/Modal'
 import { ProfilMenu } from './components/ProfileMenu/ProfileMenu'
 import { ProfileView } from './components/ProfileView/ProfileView'
 
 export const ProfileContainer = () => {
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(true)
-  const handleClose = () => {
-    setOpen(false)
-
-    setTimeout(() => {
-      navigate('/')
-    }, 200)
-  }
+  const { handleClose, getModalOpened } = useOpenModalSearchParams()
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PROFILE_PAGE)
 
   return (
-    <Slide direction="right" in={open}>
-      <StyledWrapper>
-        <Header handleClose={handleClose} />
-        <ProfileView />
-        <ProfilMenu />
-      </StyledWrapper>
-    </Slide>
+    <Modal title="My profile" open={isOpen} handleClose={handleClose}>
+      {/* <Header handleClose={handleClose} /> */}
+      <ProfileView />
+      <ProfilMenu />
+    </Modal>
   )
 }

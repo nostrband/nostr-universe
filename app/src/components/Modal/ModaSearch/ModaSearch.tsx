@@ -26,8 +26,8 @@ export const ModaSearch = () => {
   const [notes, setNotes] = useState(null)
   const [longNotes, setLongNotes] = useState(null)
 
-  const { open, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SEARCH_MODAL)
-  const { handleOpen } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.SELECT_APP)
+  const { handleClose, getModalOpened, handleOpen } = useOpenModalSearchParams()
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.SEARCH_MODAL)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -81,7 +81,7 @@ export const ModaSearch = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
+    handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
   }
 
   const handleOpenNote = (note) => {
@@ -90,7 +90,7 @@ export const ModaSearch = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
+    handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
   }
 
   const handleOpenLongPost = (longPost) => {
@@ -101,7 +101,7 @@ export const ModaSearch = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen({ key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
+    handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
   }
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export const ModaSearch = () => {
   }, [open])
 
   return (
-    <Modal title="Search" open={open} handleClose={handleClose}>
+    <Modal title="Search" open={isOpen} handleClose={handleClose}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput

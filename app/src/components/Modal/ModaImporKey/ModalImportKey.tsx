@@ -15,8 +15,8 @@ export const ModalImportKey = () => {
   const { onImportKey } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<ITrendingProfiles>([])
-  const { open, handleClose } = useOpenModalSearchParams(MODAL_PARAMS_KEYS.KEY_IMPORT)
-
+  const { handleClose, getModalOpened } = useOpenModalSearchParams()
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.KEY_IMPORT)
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -37,7 +37,7 @@ export const ModalImportKey = () => {
   }
 
   return (
-    <Modal title="Add read-only keys" open={open} handleClose={handleClose}>
+    <Modal title="Add read-only keys" open={isOpen} handleClose={handleClose}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput
