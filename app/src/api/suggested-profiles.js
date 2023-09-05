@@ -16,7 +16,7 @@ export async function getSuggestedProfilesRequest(pubkey) {
 	console.log("failed to parse profile", e);
 	return undefined;
       }
-    });
+    }).filter(p => p !== undefined);
 
     if (tp.length > 30) tp.length = 30;
     return tp;

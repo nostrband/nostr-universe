@@ -18,7 +18,7 @@ export const getTrendingNotesRequest = async () => {
       }
 
       return note;
-    });
+    }).filter(p => p !== undefined);
 
     if (notes.length > 30) notes.length = 30;
     return notes;
