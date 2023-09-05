@@ -32,8 +32,6 @@ export const WalletsModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     load ();
   }, [isOpen]);
-  
-  console.log("wallets", wallets, "current", currentWalletId);
 
   const onAdd = async () => {
     try {
