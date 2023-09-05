@@ -12,10 +12,13 @@ To build the apk:
 ```
 cd app
 npm i
-npx run build
+npx vite build
 cd ../universe
 cordova plugin add https://github.com/nostrband/nostr-keystore-cordova-plugin.git
 cordova plugin add https://github.com/nostrband/cordova-plugin-inappbrowser
+cordova plugin add cordova-clipboard
+cordova plugin add cordova-plugin-x-socialsharing
+cordova plugin add cordova-plugin-statusbar
 cordova platform add android
 cordova build android
 ```

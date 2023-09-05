@@ -18,7 +18,9 @@
     "cordova-plugin-device": "2.1.0",
     "cordova-plugin-inappbrowser": "github:nostrband/cordova-plugin-inappbrowser",
     "cordova-plugin-statusbar": "^3.0.0",
-    "nostr-cordova-plugin-secure-key": "github:nostrband/nostr-keystore-cordova-plugin"
+    "cordova-plugin-x-toast": "^2.7.3",
+    "nostr-cordova-plugin-secure-key": "github:nostrband/nostr-keystore-cordova-plugin",
+    "nostr-cordova-plugin-wallet-store": "github:nostrband/nostr-walletstore-cordova-plugin#without-nostr-utils"
   },
   "cordova": {
     "platforms": [
@@ -29,7 +31,9 @@
       "cordova-clipboard": {},
       "cordova-plugin-statusbar": {},
       "nostr-keystore-cordova-plugin": {},
-      "cordova-plugin-inappbrowser": {}
+      "cordova-plugin-inappbrowser": {},
+      "nostr-walletstore-cordova-plugin": {},
+      "cordova-plugin-x-toast": {}
     }
   }
 }

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { keystore } from "../keystore";
+import { walletstore } from "../walletstore";
 import { db, dbi } from "../db";
 import { nip19 } from "@nostrband/nostr-tools";
+import { decode as bolt11Decode } from "light-bolt11-decoder";
 import { config } from "../config";
 import {
   connect,
@@ -14,6 +16,8 @@ import {
   fetchFollowedZaps,
   fetchFollowedHighlights,
   stringToBech32,
+  addWalletInfo,
+  sendPayment
 } from "../nostr";
 import { browser } from "../browser";
 import { parseAddr } from "../nostr";
@@ -104,6 +108,14 @@ function deleteFromTabGroup(workspace, pt, isPin) {
   
   if (!tg.pin && !tg.tabs.length) delete workspace.tabGroups[id];
 }
+
+const reloadWallets = async () => {
+  const r = await walletstore.listWallets();
+  console.log("wallets", JSON.stringify(r));
+  Object.values(r)
+	.filter(w => typeof w === 'object') // exclude 'currentAlias'
+	.forEach(w => addWalletInfo(w));
+};
 
 const AppContext = React.createContext();
 
@@ -371,7 +383,7 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
     async function onDeviceReady() {
       console.log("device ready", Date.now());
-
+      
       const [keys, currentPubkey] = await reloadKeys();
 
       // add existing workspaces from db
@@ -410,6 +422,9 @@ const AppContextProvider = ({ children }) => {
       connect().then(async () => {
         console.log("ndk connected", Date.now());
 
+	// we need ndk to do this properly
+	reloadWallets();
+	
         // start profile updater after we're done with apps,
         // this should be the last of the initial loading
         // operations
@@ -547,11 +562,11 @@ const AppContextProvider = ({ children }) => {
       const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (currentPubkey === DEFAULT_PUBKEY) throw new Error("No pubkey");
-      if (hasPerm(tab, "pubkey", "0"))
-        throw new Error("Pubkey perm disallowed");
+      const error = "Pubkey disallowed";
+      if (hasPerm(tab, "pubkey", "0")) throw new Error(error);
       if (hasPerm(tab, "pubkey", "1")) return currentPubkey;
       const exec = () => currentPubkey;
-      return requestPermExec(tab, { perm: "pubkey" }, exec, "Pubkey perm disallowed");
+      return requestPermExec(tab, { perm: "pubkey" }, exec, error);
     },
     signEvent: async function (tabId, event) {
       const tab = getTabAny(tabId);
@@ -559,18 +574,20 @@ const AppContextProvider = ({ children }) => {
       if (isReadOnly()) throw new Error("No pubkey");
       const kindPerm = "sign:" + event.kind;
       const allPerm = "sign";
-      const exec = async () => await window.nostr.signEvent(event);
+      const exec = async () => await keystore.signEvent(event);
+
       // allowed this kind or all kinds (if not kind-0)?
       if (
         hasPerm(tab, kindPerm, "1") ||
         (event.kind != 0 && hasPerm(tab, allPerm, "1"))
       )
         return await exec();
+
       // disallowed this kind or all kinds
+      const error = "Signing of kind " + event.kind + " disallowed";
       if (hasPerm(tab, kindPerm, "0") || hasPerm(tab, allPerm, "0"))
-        throw new Error("Sign kind " + event.kind + " perm disallowed");
-      return requestPermExec(tab, { perm: kindPerm, event },
-			     exec, "Sign kind " + event.kind + " disallowed");
+        throw new Error(error);
+      return requestPermExec(tab, { perm: kindPerm, event }, exec, error);
     },
 
     // NIP-04
@@ -578,25 +595,76 @@ const AppContextProvider = ({ children }) => {
       const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (isReadOnly()) throw new Error("No pubkey");
-      if (hasPerm(tab, "encrypt", "0"))
-        throw new Error("Encrypt perm disallowed");
-      const exec = async () =>
-        await window.nostr.nip04.encrypt(pubkey, plainText);
+      const error = "Encrypt disallowed";
+      if (hasPerm(tab, "encrypt", "0")) throw new Error(error);
+      const exec = async () => await keystore.encrypt(pubkey, plainText);
       if (hasPerm(tab, "encrypt", "1")) return await exec();
-      return requestPermExec(tab, { perm: "encrypt", pubkey, plainText },
-			     exec, "Encrypt disallowed");
+      return requestPermExec(tab, { perm: "encrypt", pubkey, plainText }, exec, error);
     },
     decrypt: async function (tabId, pubkey, cipherText) {
       const tab = getTabAny(tabId);
       if (!tab) throw new Error("Inactive tab");
       if (isReadOnly()) throw new Error("No pubkey");
-      if (hasPerm(tab, "decrypt", "0"))
-        throw new Error("Decrypt perm disallowed");
-      const exec = async () =>
-        await window.nostr.nip04.decrypt(pubkey, cipherText);
+      const error = "Decrypt disallowed";
+      if (hasPerm(tab, "decrypt", "0")) throw new Error(error);
+      const exec = async () => await keystore.decrypt(pubkey, cipherText);
       if (hasPerm(tab, "decrypt", "1")) return await exec();
-      return requestPermExec(tab, { perm: "decrypt", pubkey, cipherText }, exec, "Decrypt disallowed");
+      return requestPermExec(tab, { perm: "decrypt", pubkey, cipherText }, exec, error);
     },
+
+    // NWC
+    getWalletInfo: async function (tabId) {
+      console.log("getWalletInfo", tabId);
+      return {
+	// some fake info to satisfy Snort
+	node: {
+	  pubkey: "001122334455667788990011223344556677889900112233445566778899001122",
+	  alias: "Wallet",
+	}
+      }
+    },
+    sendPayment: async function (tabId, paymentRequest) {
+      const tab = getTabAny(tabId);
+      if (!tab) throw new Error("Inactive tab");
+      if (isReadOnly()) throw new Error("No pubkey");
+
+      const bolt11 = bolt11Decode(paymentRequest);
+      const amount = Number(bolt11.sections?.find(s => s.name === 'amount').value);
+
+      const wallet = await walletstore.getInfo();
+      const perm = "pay_invoice:" + wallet.id;
+      const exec = async () => {
+	try {
+	  const res = await sendPayment(wallet, paymentRequest);
+	  console.log("payment result", res);
+	  window.plugins.toast.showShortBottom(`Sent ${amount / 1000} sats`);
+	  return res; // forward to the tab
+	} catch (e) {
+	  window.plugins.toast.showShortBottom(`Payment failed: ${e}`);
+	  throw e; // forward to the tab
+	};
+      };
+
+      // allowed?
+      const MAX_ALLOW_AMOUNT = 10000 * 1000; // anything above 10k must be explicitly authorized
+      if (amount <= MAX_ALLOW_AMOUNT && hasPerm(tab, perm, "1"))
+        return await exec();
+
+      // disallowed?
+      const error = "Payment request disallowed";
+      if (hasPerm(tab, perm, "0"))
+        throw new Error(error);
+
+      return requestPermExec(
+	tab,
+	{
+	  perm,
+	  paymentRequest,
+	  amount,
+	  wallet
+	}, exec, error);
+    },
+    
     setUrl: async function (tabId, url) {
       console.log("tab", tabId, "setUrl", url);
       updateTab({ url }, tabId);
@@ -1211,6 +1279,7 @@ const AppContextProvider = ({ children }) => {
   const replyCurrentPermRequest = async (allow, remember) => {
     const tab = getTab(currentPermRequest.tabId);
 
+    console.log("replyCurrentPermRequest", allow, remember, JSON.stringify(currentPermRequest));
     if (remember) {
       const perm = {
         pubkey: tab.pubkey,
@@ -1221,11 +1290,16 @@ const AppContextProvider = ({ children }) => {
       updateWorkspace((ws) => {
         return { perms: [...ws.perms, perm] };
       });
+      console.log("adding perm", JSON.stringify(perm));
       await dbi.updatePerm(perm);
     }
 
     // execute
-    await currentPermRequest.cb(allow);
+    try {
+      await currentPermRequest.cb(allow);
+    } catch (e) {
+      console.log("Failed to exec perm callback", e);
+    }
 
     // drop executed request
     const i = PermRequests.findIndex((pr) => pr.id === currentPermRequest.id);
