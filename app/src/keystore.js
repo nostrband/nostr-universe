@@ -64,12 +64,12 @@ const stub = {
     throw new Error("Not implemented");
   }, 
 
-  encrypt: async function (pubkey, plaintext) {
+  encrypt: async function ({pubkey, plaintext}) {
     console.log("encrypt", pubkey);
     throw new Error("Not implemented");
   }, 
 
-  decrypt: async function (pubkey, ciphertext) {
+  decrypt: async function ({pubkey, ciphertext}) {
     console.log("decrypt", pubkey);
     throw new Error("Not implemented");
   }, 
@@ -80,9 +80,10 @@ const API = function (method) {
   if (config.DEBUG)
     return function (...args) { return stub[method](...args) };
 
-  const target = cordova.plugins.NostrKeyStore;
+  const target = window.cordova.plugins.NostrKeyStore;
   return (...args) => {
     return new Promise((ok, err) => {
+//      console.log("method", method, "args", JSON.stringify([ok, err, ...args]));
       target[method](...[ok, err, ...args]);
     });
   };
@@ -116,6 +117,14 @@ export async function signEvent(event) {
   return API('signEvent')(event);
 }
 
+export async function encrypt(pubkey, plaintext) {
+  return API('encrypt')({pubkey, plaintext});
+}
+
+export async function decrypt(pubkey, ciphertext) {
+  return API('decrypt')({pubkey, ciphertext});
+}
+
 export const keystore = {
   listKeys,
   addKey,
@@ -124,4 +133,6 @@ export const keystore = {
   editKey,
   getPublicKey,
   signEvent,
+  encrypt,
+  decrypt
 };

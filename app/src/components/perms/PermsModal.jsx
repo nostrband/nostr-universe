@@ -1,9 +1,8 @@
 import { useContext, useState, useEffect } from "react";
 import { AppContext } from "../../store/app-context";
 import { SecondaryCloseIcon } from "../../assets";
-import { IconButton as MUIconButton, Button, Switch, FormControlLabel, styled } from "@mui/material";
+import { IconButton as MUIconButton, styled } from "@mui/material";
 import { Modal } from "../UI/modal/Modal";
-import { PinItem } from "../pins/PinItem";
 import { IconButton } from "../UI/IconButton";
 
 import List from '@mui/material/List';
@@ -43,6 +42,7 @@ export const PermsModal = ({ isOpen, onClose }) => {
 
   const onDeleteAppPerms = (a) => {
     deletePerms(a.id);
+    window.plugins.toast.showShortBottom(`Permission deleted`);
   };
   
   return (

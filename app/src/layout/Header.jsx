@@ -2,12 +2,13 @@ import React, { useContext } from "react";
 import { getProfileImage } from "../utils/helpers/general";
 import { AppContext } from "../store/app-context";
 import { Avatar, Container, Divider, IconButton, styled } from "@mui/material";
-import { SearchIcon, MeatballsIcon, SecondaryCloseIcon } from "../assets";
+import { SearchIcon, MeatballsIcon, SecondaryCloseIcon, WalletIcon } from "../assets";
 import { useNavigate } from "react-router-dom";
 
 export const Header = ({
   onSearchClick,
   onOpenTabMenuModal,
+  onOpenWalletsModal,
   searchMode = false,
   onClose = () => {},
 }) => {
@@ -34,19 +35,22 @@ export const Header = ({
           {/* <StyledIconButton>
               <ServerIcon />
               </StyledIconButton>
-              <StyledIconButton>
-              <WalletIcon onClick />
-              </StyledIconButton> */}
-          {!searchMode && (
-            <StyledIconButton onClick={onSearchClick}>
-              <SearchIcon />
-            </StyledIconButton>
-          )}
-          {currentTab && (
-            <StyledIconButton onClick={onOpenTabMenuModal}>
+	    */}
+	  {!searchMode && (
+	    <>
+	      <StyledIconButton onClick={onOpenWalletsModal}>
+		<WalletIcon />
+	      </StyledIconButton>
+	      <StyledIconButton onClick={onSearchClick}>
+		<SearchIcon />
+	      </StyledIconButton>
+	    </>
+	  )}
+	  {currentTab && (
+	    <StyledIconButton onClick={onOpenTabMenuModal}>
               <MeatballsIcon />
-            </StyledIconButton>
-          )}
+	    </StyledIconButton>
+	  )}
 
           {searchMode && (
             <StyledIconButton onClick={onClose}>

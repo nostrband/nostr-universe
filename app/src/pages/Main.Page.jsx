@@ -13,6 +13,7 @@ import { ImportPubkeyModal } from "../components/onboarding/ImportPubkeyModal";
 import { TabsModal } from "../components/tabs/TabsModal";
 import { PermRequestModal } from "../components/perms/PermRequestModal";
 import { WelcomeWidget } from "../components/onboarding/WelcomeWidget";
+import { WalletsModal } from "../components/wallets/WalletsModal";
 import { IconButton } from "../components/UI/IconButton";
 import { Footer } from "../layout/Footer";
 import { styled } from "@mui/material";
@@ -50,6 +51,7 @@ const MainPage = () => {
   const [showTabMenu, setShowTabMenu] = useState(false);
   const [showImportPubkey, setShowImportPubkey] = useState(false);
   const [showTabs, setShowTabs] = useState(false);
+  const [showWallets, setShowWallets] = useState(false);
 
   const isSearchModalVisible = Boolean(searchParams.get("search"));
 
@@ -105,6 +107,7 @@ const MainPage = () => {
         onSearchClick={toggleSearchModalVisibility}
         onOpenEditKeyModal={() => setIsEditKeyModalVisible(true)}
         onOpenTabMenuModal={() => setShowTabMenu(true)}
+        onOpenWalletsModal={() => setShowWallets(true)}
       />
       <main id="main">
 
@@ -134,7 +137,6 @@ const MainPage = () => {
 	}
 
 	<AppsList />
-        {false && <ContactList onOpenProfile={setContactOpenAddr} />}
 
 	<EditKeyModal
 	  isOpen={isEditKeyModalVisible}
@@ -192,6 +194,11 @@ const MainPage = () => {
 	<PermRequestModal
 	  isOpen={currentPermRequest != null}
 	  onClose={() => replyCurrentPermRequest(false, false)}
+	/>
+
+	<WalletsModal
+	  isOpen={showWallets}
+	  onClose={() => setShowWallets(false)}
 	/>
 	
 	{currentTab && (

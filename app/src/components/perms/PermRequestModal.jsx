@@ -10,6 +10,7 @@ import {
   Container,
   Avatar,
   Typography,
+  CircularProgress, 
 } from "@mui/material";
 import { Modal } from "../UI/modal/Modal";
 
@@ -19,6 +20,7 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
     contextData || {};
 
   const [isRemember, setIsRemember] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setIsRemember(false);
@@ -35,12 +37,27 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
         payload: "",
       };
     }
-    const { perm, event, plainText, cipherText } = req || {};
+
+    const {
+      perm,
+      event = {},
+      paymentRequest = "",
+      wallet = {},
+      amount = 0,
+      plainText,
+      cipherText
+    } = req || {};
+
     let label = "";
     let payload = null;
-    if (perm === "pubkey") label = "Read your public key";
-    else if (perm.startsWith("sign:")) {
-      label = "Sign event of kind " + perm.split(":")[1] + ":";
+    if (perm === "pubkey") {
+      label = "Read your public key";
+    } else if (perm.startsWith("pay_invoice:")) {
+      label = `Payment from wallet '${wallet.name}' amount ${amount / 1000} sats:`;
+      payload = paymentRequest;
+    } else if (perm.startsWith("sign:")) {
+      const kind = perm.split(":")[1];
+      label = "Sign event of kind " + kind + ":";
       payload = JSON.stringify(event, null, 2);
     } else if (perm === "encrypt") {
       label = "Encrypt a message:";
@@ -57,65 +74,76 @@ export const PermRequestModal = ({ isOpen, onClose }) => {
   const { label, payload } = prepareLabelAndPayload();
 
   const onDisallow = async () => {
+    setIsLoading(true);
     await replyCurrentPermRequest(false, isRemember);
+    setIsLoading(false);
   };
 
   const onAllow = async () => {
+    setIsLoading(true);
     await replyCurrentPermRequest(true, isRemember);
+    setIsLoading(false);
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <StyledContainer>
-        <StyledHeader>
+	<StyledHeader>
           <h1>Permission request</h1>
           <StyledIconButton onClick={onClose}>
             <SecondaryCloseIcon />
           </StyledIconButton>
-        </StyledHeader>
-        {req && (
-          <ContentWrapper>
+	</StyledHeader>
+	{req && (
+	  <ContentWrapper>
             <AvatarContainer>
               <Avatar className="avatar" src={tab.icon || ""} />
               <Typography className="title" variant="h5">
-                {tab.title}
+		{tab.title}
               </Typography>
             </AvatarContainer>
 
             <RequestContainer>
               <h5>{label}</h5>
-              <pre>{payload}</pre>
+              {payload && (<pre>{payload}</pre>)}
               <FormControlLabel
-                control={
+		control={
                   <StyledSwitch
                     checked={isRemember}
                     onChange={(e) => setIsRemember(e.target.checked)}
-                  />
+		  />
                 }
-                label="Remember, don't ask again"
-                className="form_control"
+		label="Remember, don't ask again"
+		className="form_control"
               />
             </RequestContainer>
 
             <ButtonContainer>
               <Button
-                variant="contained"
-                className="button"
-                onClick={onDisallow}
+		variant="contained"
+		className="button"
+		disabled={isLoading}
+		onClick={onDisallow}
               >
-                Disallow
+		Disallow
               </Button>
               <Button
-                variant="contained"
-                className="button"
-                color="success"
-                onClick={onAllow}
+		variant="contained"
+		className="button"
+		color="success"
+		disabled={isLoading}
+		onClick={onAllow}
               >
-                Allow
+		Allow
               </Button>
             </ButtonContainer>
-          </ContentWrapper>
-        )}
+	    {isLoading && (
+	      <SpinnerContainer>
+		<CircularProgress className="spinner" />
+	      </SpinnerContainer>
+	    )}
+	  </ContentWrapper>
+	)}
       </StyledContainer>
     </Modal>
   );
@@ -179,6 +207,7 @@ const RequestContainer = styled("div")(() => ({
     background: "#36363679",
     borderRadius: "6px",
     overflowY: "scroll",
+    overflowWrap: "break-word",
   },
   "& .form_control": {
     display: "flex",
@@ -257,5 +286,16 @@ const StyledSwitch = styled((props) => (
     transition: theme.transitions.create(["background-color"], {
       duration: 500,
     }),
+  },
+}));
+
+const SpinnerContainer = styled("div")(() => ({
+  display: "grid",
+  placeItems: "center",
+  height: "100%",
+  width: "100%",
+  marginTop: "1rem",
+  "& .spinner": {
+    color: "#fff",
   },
 }));
