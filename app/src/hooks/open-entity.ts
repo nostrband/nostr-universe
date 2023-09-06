@@ -17,6 +17,7 @@ import { useUpdateProfile } from './profile'
 import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import { addWorkspace } from '@/modules/AppInitialisation/utils'
 import { keystore } from '@/modules/keystore'
+import { useOpenModalSearchParams } from './modal'
 
 function getOrigin(url) {
   try {
@@ -29,6 +30,7 @@ function getOrigin(url) {
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
+  const { handleOpen } = useOpenModalSearchParams()
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
   const { apps } = useAppSelector((state) => state.apps)
   const { currentPubKey } = useAppSelector((state) => state.keys)

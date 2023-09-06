@@ -4,7 +4,8 @@ export enum MODAL_PARAMS_KEYS {
   SELECT_APP = 'select-app',
   SEARCH_MODAL = 'search-modal',
   CONTEXT_MENU = 'context-menu',
-  PROFILE_PAGE = 'profile-page'
+  PROFILE_PAGE = 'profile-page',
+  TAB_MODAL = 'tab-modal'
 }
 
 export const EXTRA_OPTIONS = {
