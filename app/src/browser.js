@@ -332,13 +332,16 @@ export function open(params) {
   ref.addEventListener("loadinit", async (event) => {
     console.log("loadinit", event.url);
     if (state === "init") return;
-
     state = "init";
-
     await init();
   });
 
   ref.addEventListener("loadstop", async (event) => {
+    if (state !== "init") {
+      state = "init";
+      await init();
+    }
+
     // after everything is done
     if (API.onLoadStop) await API.onLoadStop(params.apiCtx, event);
   });
