@@ -965,12 +965,11 @@ async function augmentLiveEvents(events, contactPubkeys, limit) {
 
   // drop ended ones
   events = events.filter((e) => {
-    return (
-      !!e.host &&
-      // For now let's show live events where some of our following are participating
-      //	&& contactPubkeys.includes(e.host)
-      e.status !== 'ended'
-    )
+    return !!e.host
+    // &&
+    // For now let's show live events where some of our following are participating
+    //	&& contactPubkeys.includes(e.host)
+    // e.status !== 'ended'
   })
 
   if (events.length > 0) {
@@ -996,7 +995,7 @@ async function augmentLiveEvents(events, contactPubkeys, limit) {
 
 export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
   let events = await fetchPubkeyEvents({
-    kind: KIND_LONG_NOTE,
+    kind: KIND_LIVE_EVENT,
     pubkeys: contactPubkeys,
     tagged: true
   })

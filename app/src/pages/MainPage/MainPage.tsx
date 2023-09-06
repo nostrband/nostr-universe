@@ -10,6 +10,7 @@ import { Highlights } from './components/Highlights/Highlights'
 import { TrendingNotes } from './components/TrendingNotes/TrendingNotes'
 import { BigZaps } from './components/BigZaps/BigZaps'
 import { LongPosts } from './components/LongPosts/LongPosts'
+import { LiveEvents } from './components/LiveEvents/LiveEvents'
 import { Communities } from './components/Communities/Communities'
 import { StyledWrapperMain } from './styled'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
@@ -31,6 +32,7 @@ export const MainPage = () => {
       <Highlights />
       <BigZaps />
       <LongPosts />
+      <LiveEvents />
       <Communities />
       <SuggestedProfiles />
 
