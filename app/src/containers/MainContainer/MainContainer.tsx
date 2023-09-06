@@ -16,6 +16,7 @@ import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfi
 import { ModaSearch } from '@/components/Modal/ModaSearch/ModaSearch'
 import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextMenu'
 import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
+import { LiveEvents } from './components/LiveEvents/LiveEvents'
 
 export const MainContainer = () => {
   const { isOpenTabWindow } = useAppSelector((state) => state.tab)
@@ -30,6 +31,7 @@ export const MainContainer = () => {
       <Highlights />
       <BigZaps />
       <LongPosts />
+      <LiveEvents />
       <Communities />
       <SuggestedProfiles />
 

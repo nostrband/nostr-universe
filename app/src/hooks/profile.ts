@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import {
   fetchFollowedCommunities,
   fetchFollowedHighlights,
+  fetchFollowedLiveEvents,
   fetchFollowedLongNotes,
   fetchFollowedZaps,
   subscribeContactList,
@@ -15,6 +16,7 @@ import {
   setCommunities,
   setContactList,
   setHighlights,
+  setLiveEvents,
   setLongPosts
 } from '@/store/reducers/contentWorkspace'
 import { ReturnTypeContactList } from '@/types/contentWorkSpace'
@@ -86,13 +88,11 @@ export const useUpdateProfile = () => {
           const communities = await fetchFollowedCommunities(contactList.contactPubkeys)
           console.log('new communities', communities)
           dispatch(setCommunities({ communities }))
-        }
 
-        //   //     const liveEvents = await fetchFollowedLiveEvents(lastCL.contactPubkeys);
-        //   //     console.log("new live events", liveEvents);
-        //   //     updateWorkspace((ws) => {
-        //   //       return { ...ws, liveEvents };
-        //   //     }, pubkey);
+          const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys)
+          console.log('new live events', liveEvents, JSON.stringify(liveEvents))
+          dispatch(setLiveEvents({ liveEvents }))
+        }
       })
     },
     [dispatch, setContacts, getProfile]
