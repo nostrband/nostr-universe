@@ -12,13 +12,13 @@ export const getTrendingNotesRequest = async () => {
       note.author.npub = getNpub(r.pubkey);
       note.author.pubkey = r.pubkey;
       try {
-	note.author.profile = JSON.parse(r.author.content);
+      	note.author.profile = JSON.parse(r.author.content);
       } catch (e) {
-	console.log("failed to parse note's content", e);
+      	console.log("failed to parse note's content", e);
       }
 
       return note;
-    }).filter(p => p != undefined);
+    }).filter(p => p !== undefined);
 
     if (notes.length > 30) notes.length = 30;
     return notes;
