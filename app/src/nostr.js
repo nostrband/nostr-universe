@@ -1,6 +1,7 @@
-import NDK, { NDKRelaySet } from "@nostrband/ndk";
+import NDK, { NDKRelaySet, NDKRelay, NDKEvent } from "@nostrband/ndk";
 import { nip19 } from "@nostrband/nostr-tools";
 import { decode as bolt11Decode } from "light-bolt11-decoder";
+import { walletstore } from "./walletstore";
 
 const KIND_META = 0;
 const KIND_NOTE = 1;
@@ -13,6 +14,8 @@ const KIND_LONG_NOTE = 30023;
 const KIND_APP = 31990;
 const KIND_LIVE_EVENT = 30311;
 const KIND_COMMUNITY = 34550;
+const KIND_NWC_PAYMENT_REQUEST = 23194;
+const KIND_NWC_PAYMENT_REPLY = 23195;
 
 // we only care about web apps
 const PLATFORMS = ["web"];
@@ -1179,7 +1182,7 @@ async function augmentLiveEvents({ events, contactPubkeys, limit, ended = false 
 export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
 
   let events = await fetchPubkeyEvents({
-    kind: KIND_LONG_NOTE,
+    kind: KIND_LIVE_EVENT,
     pubkeys: contactPubkeys,
     tagged: true
   });
@@ -1444,4 +1447,110 @@ export function launchZapDialog(id, event) {
   window.nostrZap.initTarget(d);
   d.click();
   d.remove();
+}
+
+function addRelay(r) {
+  if (!ndk.pool.relays.get(r))
+    ndk.pool.addRelay(new NDKRelay(r));
+  return ndk.pool.relays.get(r);
+}
+
+export async function addWalletInfo(info) {
+  const relay = await addRelay(info.relay);
+  relay.on("notice", (msg) => console.log("notice from", info.relay, msg));  
+  relay.on("publish:failed", (event, err) => console.log("publish failed to", info.relay, event, err));  
+}
+
+export async function sendPayment(info, payreq) {
+  localStorage.debug = "ndk:-";
+
+  const relay = await addRelay(info.relay);
+  console.log("relay", relay.url, "status", relay.status);
+
+  const req = {
+    method: "pay_invoice",
+    params: {
+      invoice: payreq,
+    }
+  };
+
+  const encReq = await walletstore.encrypt(info.publicKey, JSON.stringify(req));
+  console.log("encReq", encReq);
+    
+  const event = {
+    pubkey: info.publicKey,
+    kind: KIND_NWC_PAYMENT_REQUEST,
+    tags: [["p", info.publicKey]],
+    content: encReq,
+    created_at: Math.floor(Date.now() / 1000),
+  };
+  
+  const signed = await walletstore.signEvent(event);
+  console.log("signed", JSON.stringify(signed));
+  console.log("signed id", signed.id);
+
+  const relaySet = NDKRelaySet.fromRelayUrls([info.relay], ndk);
+  
+  const sub = await ndk.subscribe(
+    {
+      kinds:[KIND_NWC_PAYMENT_REPLY],
+      "#e": [signed.id],
+      authors: [info.publicKey]
+    },
+    { closeOnEose: false },
+    relaySet,
+    /* autoStart */ false
+  );
+
+  const TIMEOUT_MS = 30000; // 30 sec
+  const res = new Promise((ok, err) => {
+
+    // make sure we don't wait forever
+    const to = setTimeout(() => {
+      sub.stop();
+      err("Timeout error, payment might have failed");
+    }, TIMEOUT_MS);
+
+    sub.on("event", async (e) => {
+      e = rawEvent(e);
+      if (e.pubkey === info.publicKey
+	  && e.tags.find(t => t.length >= 2 && t[0] === 'e' && t[1] === signed.id)) {
+	clearTimeout(to);
+	console.log("payment reply event", JSON.stringify(e));
+
+	const rep = JSON.parse(await walletstore.decrypt(e.pubkey, e.content));
+	console.log("payment reply", JSON.stringify(rep));
+
+	if (rep.result_type === "pay_invoice") {
+	  if (rep.error)
+	    err(rep.error.message || "Error from the wallet");
+	  else
+	    ok({preimage: rep.result.preimage});
+	} else {
+	  err("Invalid payment reply");
+	}
+
+      } else {
+	console.log("irrelevant event received", JSON.stringify(e));
+      }
+    });
+  });
+
+  // publish when we're 100% sure we've subscribed to replies
+  sub.on("eose", async () => {
+
+    // publish
+    const r = await ndk.publish(
+      new NDKEvent(ndk, signed),
+      relaySet,
+      TIMEOUT_MS / 2);
+
+    console.log("published", r);
+
+  });
+  
+  // subscribe before publishing
+  await sub.start();
+
+  return res;
 }
