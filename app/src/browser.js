@@ -52,12 +52,12 @@ const initTab = () => {
     const weblnKey = {
       sendPayment: _gen("sendPayment"),
       getInfo: _gen("getWalletInfo"),
-      enable: () => {},
+      enable: () => { return Promise.resolve(undefined) },
     };
 
     // for NIP-47 NWC 
     window.webln = weblnKey;
-    
+
     if (!window.navigator)
       window.navigator = {};
 
@@ -302,19 +302,8 @@ export function open(params) {
   ref.executeScriptAsync = executeScriptAsync;
   ref.executeFuncAsync = executeFuncAsync;
 
-  let state = "";
-
-  ref.addEventListener("loadstart", async (event) => {
-    if (state === "starting") return;
-
-    state = "starting";
-    if (API.onLoadStart) await API.onLoadStart(params.apiCtx, event);
-  });
-
-  ref.addEventListener("loadstop", async (event) => {
-    if (state === "init") return;
-
-    state = "init";
+  // helper
+  const init = async () => {
 
     // inject our scripts
 
@@ -330,8 +319,27 @@ export function open(params) {
       // init context menu
       await ref.executeFuncAsync("nostrMenuConnect", nostrMenuConnect);
     }
+  };
+  
+  let state = "";  
+  ref.addEventListener("loadstart", async (event) => {
+    if (state === "starting") return;
 
-    // after everything is done!
+    state = "starting";
+    if (API.onLoadStart) await API.onLoadStart(params.apiCtx, event);
+  });
+
+  ref.addEventListener("loadinit", async (event) => {
+    console.log("loadinit", event.url);
+    if (state === "init") return;
+
+    state = "init";
+
+    await init();
+  });
+
+  ref.addEventListener("loadstop", async (event) => {
+    // after everything is done
     if (API.onLoadStop) await API.onLoadStop(params.apiCtx, event);
   });
 

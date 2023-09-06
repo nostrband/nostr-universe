@@ -615,13 +615,13 @@ const AppContextProvider = ({ children }) => {
     // NWC
     getWalletInfo: async function (tabId) {
       console.log("getWalletInfo", tabId);
-      return {
+      return Promise.resolve({
 	// some fake info to satisfy Snort
 	node: {
 	  pubkey: "001122334455667788990011223344556677889900112233445566778899001122",
-	  alias: "Wallet",
+	  alias: "Spring NWC Wallet",
 	}
-      }
+      });
     },
     sendPayment: async function (tabId, paymentRequest) {
       const tab = getTabAny(tabId);

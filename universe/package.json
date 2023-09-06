@@ -31,9 +31,9 @@
       "cordova-clipboard": {},
       "cordova-plugin-statusbar": {},
       "nostr-keystore-cordova-plugin": {},
-      "cordova-plugin-inappbrowser": {},
       "nostr-walletstore-cordova-plugin": {},
-      "cordova-plugin-x-toast": {}
+      "cordova-plugin-x-toast": {},
+      "cordova-plugin-inappbrowser": {}
     }
   }
 }

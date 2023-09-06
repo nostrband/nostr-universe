@@ -1182,7 +1182,7 @@ async function augmentLiveEvents({ events, contactPubkeys, limit, ended = false 
 export async function fetchFollowedLiveEvents(contactPubkeys, limit = 30) {
 
   let events = await fetchPubkeyEvents({
-    kind: KIND_LONG_NOTE,
+    kind: KIND_LIVE_EVENT,
     pubkeys: contactPubkeys,
     tagged: true
   });
