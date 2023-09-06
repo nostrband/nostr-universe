@@ -20,8 +20,6 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
     try {
       const [keys, currentPubKey, readKeys] = await getKeys()
 
-      console.log({ currentPubKeyGetForTesr: currentPubKey })
-
       dispatch(setKeys({ keys }))
       dispatch(setReadKeys({ readKeys }))
 
