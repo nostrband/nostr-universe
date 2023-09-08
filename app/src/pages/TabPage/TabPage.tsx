@@ -27,15 +27,12 @@ export const TabPage = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
   const id = searchParams.get('id')
 
-  const handleOpenTab = async (id: string) => {
-    await open(id)
-  }
-
   useEffect(() => {
     if (id) {
-      handleOpenTab(id)
+      console.log('useEffect')
+      open(id)
     }
-  }, [id, handleOpenTab])
+  }, [id, open])
 
   return (
     <StyledDialog fullScreen open={isOpen} TransitionComponent={Transition}>

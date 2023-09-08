@@ -3,7 +3,7 @@
 import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setCloseTabWindow, setCurrentTab, setLoadingTab, setOpenTab } from '@/store/reducers/tab.slice'
+import { setCloseTabWindow, setCurrentTab, setLoadingTab } from '@/store/reducers/tab.slice'
 import {
   removeTabFromTabs,
   setCurrentWorkspace,
@@ -126,7 +126,7 @@ export const useOpenApp = () => {
   browser.setAPI(API)
 
   const show = (tab) => {
-    handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, { search: ['id', tab.id], replace: true })
+    handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, { search: ['id', tab.id], replace: false })
   }
 
   const open = async (params) => {
