@@ -1,3 +1,4 @@
+import { OutfitExtraLight, OutfitLight, OutfitRegular, OutfitMedium, OutfitSemiBold, OutfitBold } from '@/assets/fonts'
 import { createTheme } from '@mui/material'
 
 declare module '@mui/material/styles' {
@@ -67,5 +68,17 @@ export const theme = createTheme({
   },
   shape: {
     borderRadius: 12
+  },
+  typography: {
+    fontFamily: ['Outfit', 'sans-serif'].join(',')
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        '@global': {
+          '@font-face': [OutfitExtraLight, OutfitLight, OutfitRegular, OutfitMedium, OutfitSemiBold, OutfitBold]
+        }
+      }
+    }
   }
 })
