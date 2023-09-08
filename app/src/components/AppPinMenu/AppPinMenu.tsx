@@ -34,8 +34,6 @@ export const AppPinMenu = (props: IAppPinMenu) => {
     await openApp(app)
   }
 
-  console.log({ tabGroups })
-
   return (
     <>
       {/* rewrite to styled */}

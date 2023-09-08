@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useEffect } from 'react'
 // import Toolbar from '@mui/material/Toolbar'
 // import IconButton from '@mui/material/IconButton'
 // import Typography from '@mui/material/Typography'
@@ -8,6 +8,8 @@ import { TransitionProps } from '@mui/material/transitions'
 import { StyledAppBar, StyledDialog } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { useTab } from '@/hooks/useTab'
+import { useSearchParams } from 'react-router-dom'
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -19,8 +21,21 @@ const Transition = forwardRef(function Transition(
 })
 
 export const TabPage = () => {
+  const { open } = useTab()
+  const [searchParams] = useSearchParams()
   const { getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
+  const id = searchParams.get('id')
+
+  const handleOpenTab = async (id: string) => {
+    await open(id)
+  }
+
+  useEffect(() => {
+    if (id) {
+      handleOpenTab(id)
+    }
+  }, [id, handleOpenTab])
 
   return (
     <StyledDialog fullScreen open={isOpen} TransitionComponent={Transition}>

@@ -18,6 +18,7 @@ import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.sl
 import { addWorkspace } from '@/modules/AppInitialisation/utils'
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 function getOrigin(url) {
   try {
@@ -125,60 +126,82 @@ export const useOpenApp = () => {
   browser.setAPI(API)
 
   const createTabBrowser = async (tab) => {
-    const openTab = {
-      id: tab.id,
-      name: tab.title,
-      url: tab.url,
-      picture: tab.icon,
-      appNaddr: tab.appNaddr
-    }
+    // const openTab = {
+    //   id: tab.id,
+    //   name: tab.title,
+    //   url: tab.url,
+    //   picture: tab.icon,
+    //   appNaddr: tab.appNaddr
+    // }
 
-    dispatch(setOpenTab({ tab: openTab }))
+    // dispatch(setOpenTab({ tab: openTab }))
 
-    dispatch(
-      setCurrentTab({
-        currentTab: openTab
-      })
-    )
+    // dispatch(
+    //   setCurrentTab({
+    //     currentTab: openTab
+    //   })
+    // )
 
-    const dataTabForOpen = {
-      id: tab.id,
-      url: tab.url,
-      hidden: true,
-      apiCtx: tab.id
-    }
+    // const dataTabForOpen = {
+    //   id: tab.id,
+    //   url: tab.url,
+    //   hidden: true,
+    //   apiCtx: tab.id
+    // }
 
-    await browser.open(dataTabForOpen)
+    // await browser.open(dataTabForOpen)
 
-    dispatch(
-      setLoadingTab({
-        isLoading: false
-      })
-    )
+    // dispatch(
+    //   setLoadingTab({
+    //     isLoading: false
+    //   })
+    // )
 
     return
   }
 
-  const show = async (tab) => {
-    return new Promise((ok) => {
-      setTimeout(async () => {
-        const getOpenedTab = openedTabs.find((openedTab) => tab.id === openedTab.id)
+  const show = (tab) => {
+    // return new Promise((ok) => {
+    //   setTimeout(async () => {
+    //     // const getOpenedTab = openedTabs.find((openedTab) => tab.id === openedTab.id)
 
-        if (!getOpenedTab) {
-          await createTabBrowser(tab)
-        }
+    //     // if (!getOpenedTab) {
+    //     //   await createTabBrowser(tab)
+    //     // }
 
-        await browser.show(tab.id)
+    //     // await browser.show(tab.id)
 
-        dispatch(
-          setCurrentTab({
-            currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
-          })
-        )
+    //     // const openTab = {
+    //     //   id: tab.id,
+    //     //   name: tab.title,
+    //     //   url: tab.url,
+    //     //   picture: tab.icon,
+    //     //   appNaddr: tab.appNaddr
+    //     // }
 
-        ok()
-      }, 0)
-    })
+    //     // dispatch(setOpenTab({ tab: openTab }))
+
+    //     // handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {key: 'id', value: tab.id})
+
+    //     // dispatch(
+    //     //   setCurrentTab({
+    //     //     currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
+    //     //   })
+    //     // )
+
+    //     ok()
+    //   }, 0)
+    // })
+
+    // const openTab = {
+    //   id: tab.id,
+    //   name: tab.title,
+    //   url: tab.url,
+    //   picture: tab.icon,
+    //   appNaddr: tab.appNaddr
+    // }
+
+    handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, { key: 'id', value: tab.id })
   }
 
   const open = async (params) => {
@@ -209,25 +232,25 @@ export const useOpenApp = () => {
     // // add to tab list
     dispatch(setTabsWorkspace({ tab }))
 
-    dispatch(
-      setCurrentTab({
-        currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
-      })
-    )
+    // dispatch(
+    //   setCurrentTab({
+    //     currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
+    //   })
+    // )
 
     // // add to db
 
     await dbi.addTab(tab)
 
     // it creates the tab and sets as current
-    await show(tab)
+    show(tab)
   }
 
   const openBlank = async (entity: AppNostro) => {
     const tab = currentWorkSpace.tabs.find((tab) => tab.url === entity.url)
 
     if (tab) {
-      await show(tab)
+      show(tab)
       return
     }
 
