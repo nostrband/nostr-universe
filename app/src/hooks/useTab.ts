@@ -22,7 +22,6 @@ export const useTab = () => {
         }
         dispatch(setOpenTab({ tab: dataTabForOpen }))
         await browser.open(dataTabForOpen)
-        return
       } else {
         console.log('open', tab)
         await browser.show(id)
