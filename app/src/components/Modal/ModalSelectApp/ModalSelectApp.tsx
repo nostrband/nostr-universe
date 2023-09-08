@@ -19,7 +19,7 @@ export const ModalSelectApp = () => {
   const [kind, setKind] = useState('')
   const [apps, setApps] = useState<IOpenAppNostro[]>([])
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.SELECT_APP)
 
@@ -73,11 +73,11 @@ export const ModalSelectApp = () => {
 
   const handleOpen = (app: IOpenAppNostro) => {
     openApp({ ...app, kind })
-    handleClose()
+    // handleClose()
     setApps([])
     setKind('')
     setSearchValue('')
-    setSearchParams('')
+    // setSearchParams('')
   }
 
   useEffect(() => {

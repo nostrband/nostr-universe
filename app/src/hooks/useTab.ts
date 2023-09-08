@@ -14,9 +14,14 @@ export const useTab = () => {
       const isOpened = openedTabs.find((openedTab) => tab.id === openedTab.id)
 
       if (!isOpened) {
-        console.log('create ', tab)
-        dispatch(setOpenTab({ tab }))
-        await browser.open(tab)
+        const dataTabForOpen = {
+          id: tab.id,
+          url: tab.url,
+          hidden: true,
+          apiCtx: tab.id
+        }
+        dispatch(setOpenTab({ tab: dataTabForOpen }))
+        await browser.open(dataTabForOpen)
         return
       } else {
         console.log('open', tab)

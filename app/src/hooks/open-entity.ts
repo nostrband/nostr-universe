@@ -125,83 +125,8 @@ export const useOpenApp = () => {
 
   browser.setAPI(API)
 
-  const createTabBrowser = async (tab) => {
-    // const openTab = {
-    //   id: tab.id,
-    //   name: tab.title,
-    //   url: tab.url,
-    //   picture: tab.icon,
-    //   appNaddr: tab.appNaddr
-    // }
-
-    // dispatch(setOpenTab({ tab: openTab }))
-
-    // dispatch(
-    //   setCurrentTab({
-    //     currentTab: openTab
-    //   })
-    // )
-
-    // const dataTabForOpen = {
-    //   id: tab.id,
-    //   url: tab.url,
-    //   hidden: true,
-    //   apiCtx: tab.id
-    // }
-
-    // await browser.open(dataTabForOpen)
-
-    // dispatch(
-    //   setLoadingTab({
-    //     isLoading: false
-    //   })
-    // )
-
-    return
-  }
-
   const show = (tab) => {
-    // return new Promise((ok) => {
-    //   setTimeout(async () => {
-    //     // const getOpenedTab = openedTabs.find((openedTab) => tab.id === openedTab.id)
-
-    //     // if (!getOpenedTab) {
-    //     //   await createTabBrowser(tab)
-    //     // }
-
-    //     // await browser.show(tab.id)
-
-    //     // const openTab = {
-    //     //   id: tab.id,
-    //     //   name: tab.title,
-    //     //   url: tab.url,
-    //     //   picture: tab.icon,
-    //     //   appNaddr: tab.appNaddr
-    //     // }
-
-    //     // dispatch(setOpenTab({ tab: openTab }))
-
-    //     // handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {key: 'id', value: tab.id})
-
-    //     // dispatch(
-    //     //   setCurrentTab({
-    //     //     currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
-    //     //   })
-    //     // )
-
-    //     ok()
-    //   }, 0)
-    // })
-
-    // const openTab = {
-    //   id: tab.id,
-    //   name: tab.title,
-    //   url: tab.url,
-    //   picture: tab.icon,
-    //   appNaddr: tab.appNaddr
-    // }
-
-    handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, { key: 'id', value: tab.id })
+    handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, { search: ['id', tab.id], replace: true })
   }
 
   const open = async (params) => {
@@ -231,12 +156,6 @@ export const useOpenApp = () => {
 
     // // add to tab list
     dispatch(setTabsWorkspace({ tab }))
-
-    // dispatch(
-    //   setCurrentTab({
-    //     currentTab: { id: tab.id, name: tab.title, url: tab.url, picture: tab.icon, appNaddr: tab.appNaddr }
-    //   })
-    // )
 
     // // add to db
 

@@ -20,7 +20,7 @@ export const LongPosts = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], naddr] })
   }
 
   console.log({ longPosts })

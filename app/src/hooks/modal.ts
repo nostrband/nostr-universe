@@ -3,8 +3,8 @@ import queryString from 'query-string'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 type IExtraOptions = {
-  key: string
-  value: string
+  search?: [string, string]
+  replace?: boolean
 }
 
 type SearchParamsType = {
@@ -23,20 +23,21 @@ export const useOpenModalSearchParams = () => {
     const enumKey = getEnumParam(modal)
 
     const searchParamsData: SearchParamsType = { [enumKey]: modal }
-    if (extraOptions) {
-      searchParamsData[extraOptions.key] = extraOptions.value
+    if (extraOptions?.search) {
+      searchParamsData[extraOptions.search[0]] = extraOptions.search[1]
     }
 
-    const searchString = !getSearchParamsLength
-      ? createSearchParams(searchParamsData).toString()
-      : `${location.search}&${createSearchParams(searchParamsData).toString()}`
+    const searchString =
+      extraOptions?.search || !getSearchParamsLength
+        ? createSearchParams(searchParamsData).toString()
+        : `${location.search}&${createSearchParams(searchParamsData).toString()}`
 
     navigate(
       {
         pathname: '/',
         search: searchString
       },
-      { replace: false }
+      { replace: extraOptions?.replace || false }
     )
   }
 
