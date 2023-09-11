@@ -18,4 +18,5 @@ export type AppNostro = {
 
 export interface IOpenAppNostro extends AppNostro {
   kind?: string
+  replace?: boolean
 }

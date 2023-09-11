@@ -8,8 +8,9 @@ import { TransitionProps } from '@mui/material/transitions'
 import { StyledAppBar, StyledDialog } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { useTab } from '@/hooks/useTab'
 import { useSearchParams } from 'react-router-dom'
+import { useOpenApp } from '@/hooks/open-entity'
+import { TabMenu } from '@/components/TabMenu/TabMenu'
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -21,21 +22,35 @@ const Transition = forwardRef(function Transition(
 })
 
 export const TabPage = () => {
-  const { open } = useTab()
+  const { openTabWindow, onHideTabInBrowser } = useOpenApp()
   const [searchParams] = useSearchParams()
   const { getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
   const id = searchParams.get('id')
+  const method = searchParams.get('method')
+
+  // const handleOpen = () => { // use this method letter
+  //   if (id && method) {
+  //     openTabWindow(id, method)
+  //   }
+  // }
 
   useEffect(() => {
-    if (id) {
-      console.log('useEffect')
-      open(id)
+    if (id && method) {
+      openTabWindow(id, method)
+      return () => {
+        onHideTabInBrowser(id)
+      }
     }
-  }, [id, open])
+  }, [id, method])
 
   return (
-    <StyledDialog fullScreen open={isOpen} TransitionComponent={Transition}>
+    <StyledDialog
+      // TransitionProps={{ onEntered: handleOpen }}
+      fullScreen
+      open={isOpen}
+      TransitionComponent={Transition}
+    >
       <StyledAppBar>
         {/* <Toolbar>
           <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
@@ -47,6 +62,7 @@ export const TabPage = () => {
         </Toolbar> */}
       </StyledAppBar>
       {/* {children} */}
+      <TabMenu />
     </StyledDialog>
   )
 }

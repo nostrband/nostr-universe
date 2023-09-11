@@ -29,6 +29,7 @@ const initTab = () => {
         return _call(method, ...a)
       }
     }
+
     const nostrKey = {
       getPublicKey: _gen('getPublicKey'),
       signEvent: _gen('signEvent'),
@@ -41,12 +42,41 @@ const initTab = () => {
     // NIP-07 API
     window.nostr = nostrKey
 
-    // our own API
-    //    for (const name of apiMethods)
-    //      window.nostrCordovaPlugin[name] = _gen(name);
+    const weblnKey = {
+      sendPayment: _gen('sendPayment'),
+      getInfo: _gen('getWalletInfo'),
+      enable: () => {
+        return Promise.resolve(undefined)
+      }
+    }
+
+    // for NIP-47 NWC
+    window.webln = weblnKey
+
+    if (!window.navigator) window.navigator = {}
+
+    if (!navigator.clipboard) navigator.clipboard = {}
+
+    // override with out own implementation
+    navigator.clipboard.writeText = async (text) => {
+      return await window.nostrCordovaPlugin.clipboardWriteText(text)
+    }
+
+    navigator.canShare = () => true
+    navigator.share = async (data) => {
+      return await window.nostrCordovaPlugin.share(data)
+    }
+
     window.nostrCordovaPlugin.setUrl = _gen('setUrl')
     window.nostrCordovaPlugin.showContextMenu = _gen('showContextMenu')
     window.nostrCordovaPlugin.decodeBech32 = _gen('decodeBech32')
+    window.nostrCordovaPlugin.clipboardWriteText = _gen('clipboardWriteText')
+    window.nostrCordovaPlugin.share = _gen('share')
+
+    // for some clients that expect this
+    setTimeout(() => {
+      document.dispatchEvent(new Event('webln:ready'))
+    }, 0)
   }
 
   const initUrlChange = () => {
@@ -235,14 +265,13 @@ async function executeFuncAsync(name, fn, ...args) {
 
 // returns ref to the browser window
 export function open(params) {
-  console.log('open browser window', params.id in refs)
   if (params.id in refs) {
     console.log('browser ', id, 'already opened')
     return
   }
 
   const header = document.getElementById('header')
-  // const main = document.getElementById('main')
+  const main = document.getElementById('main')
   const topOffset = 50
   const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)))
   const footer = document.getElementById('tab-menu')
@@ -260,24 +289,12 @@ export function open(params) {
   ref.executeScriptAsync = executeScriptAsync
   ref.executeFuncAsync = executeFuncAsync
 
-  let state = ''
-
-  ref.addEventListener('loadstart', async (event) => {
-    if (state === 'starting') return
-
-    state = 'starting'
-    if (API.onLoadStart) await API.onLoadStart(params.apiCtx, event)
-  })
-
-  ref.addEventListener('loadstop', async (event) => {
-    if (state === 'init') return
-
-    state = 'init'
-
+  // helper
+  const init = async () => {
     // inject our scripts
 
     // main init to enable comms interface
-    await ref.executeFuncAsync('initTab', initTab, API ? Object.keys(API) : [])
+    await ref.executeFuncAsync('initTab', initTab)
 
     if (!params.menu) {
       // nostr-zap
@@ -288,8 +305,30 @@ export function open(params) {
       // init context menu
       await ref.executeFuncAsync('nostrMenuConnect', nostrMenuConnect)
     }
+  }
 
-    // after everything is done!
+  let state = ''
+  ref.addEventListener('loadstart', async (event) => {
+    if (state === 'starting') return
+
+    state = 'starting'
+    if (API.onLoadStart) await API.onLoadStart(params.apiCtx, event)
+  })
+
+  ref.addEventListener('loadinit', async (event) => {
+    console.log('loadinit', event.url)
+    if (state === 'init') return
+    state = 'init'
+    await init()
+  })
+
+  ref.addEventListener('loadstop', async (event) => {
+    if (state !== 'init') {
+      state = 'init'
+      await init()
+    }
+
+    // after everything is done
     if (API.onLoadStop) await API.onLoadStop(params.apiCtx, event)
   })
 
@@ -300,19 +339,8 @@ export function open(params) {
     const method = msg.data.method
     let target = null
     let targetArgs = msg.data.params
-    switch (method) {
-      case 'encrypt':
-      case 'decrypt':
-        target = window.nostr.nip04
-        break
-      case 'getPublicKey':
-      case 'signEvent':
-        target = window.nostr
-        break
-      default:
-        if (method in API) target = API
-        if (params.apiCtx !== undefined) targetArgs = [params.apiCtx, ...targetArgs]
-    }
+    if (method in API) target = API
+    if (params.apiCtx !== undefined) targetArgs = [params.apiCtx, ...targetArgs]
 
     let err = null
     let reply = null
@@ -365,17 +393,17 @@ export function open(params) {
   })
 
   ref.addEventListener('blank', async (event) => {
-    console.log('blank', event.url)
     if (event.url.startsWith('lightning:')) cordova.InAppBrowser.open(event.url, '_self')
     else if (API.onBlank) await API.onBlank(params.apiCtx, event.url)
   })
 
   ref.addEventListener('beforeload', async (event, cb) => {
     console.log('beforeload', JSON.stringify(event))
-    if (event.url.startsWith('lightning:')) cordova.InAppBrowser.open(event.url, '_self')
-    else if (API.onBeforeLoad) await API.onBeforeLoad(params.apiCtx, event.url)
-    // FIXME new domain?
-    else cb(event.url)
+    if (API.onBeforeLoad) {
+      // handled by our code?
+      if (await API.onBeforeLoad(params.apiCtx, event.url)) return
+    }
+    cb(event.url)
   })
 
   ref.addEventListener('icon', async (event) => {
@@ -407,6 +435,22 @@ const close = async (id) => {
   const ref = refs[id]
   await ref.close()
   delete refs[id]
+}
+
+const screenshot = async (id) => {
+  if (!(id in refs)) return
+
+  const ref = refs[id]
+  return new Promise((ok) => {
+    ref.screenshot(
+      (s) => {
+        console.log('screenshot', id, s.length)
+        ok(s)
+      },
+      0.4 / window.devicePixelRatio,
+      1.0
+    )
+  })
 }
 
 const generateMenu = () => {
@@ -455,6 +499,7 @@ export const browser = {
   hide,
   stop,
   reload,
+  screenshot,
   setAPI,
   showMenu
 }

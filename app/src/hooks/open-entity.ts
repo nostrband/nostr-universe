@@ -3,7 +3,7 @@
 import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setCloseTabWindow, setCurrentTab, setLoadingTab } from '@/store/reducers/tab.slice'
+import { setLoadingTab, setOpenTab } from '@/store/reducers/tab.slice'
 import {
   removeTabFromTabs,
   setCurrentWorkspace,
@@ -19,6 +19,7 @@ import { addWorkspace } from '@/modules/AppInitialisation/utils'
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useSearchParams } from 'react-router-dom'
 
 function getOrigin(url) {
   try {
@@ -31,16 +32,19 @@ function getOrigin(url) {
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
   const { apps } = useAppSelector((state) => state.apps)
   const { currentPubKey } = useAppSelector((state) => state.keys)
   const { currentTab, openedTabs } = useAppSelector((state) => state.tab)
 
+  const [searchParams] = useSearchParams()
+  const test = searchParams.get('id')
+
   const getTab = (id) => currentWorkSpace?.tabs.find((t) => t.id === id)
 
-  const hide = async (tab) => {
-    await browser.hide(tab.id)
+  const hide = async (id: string) => {
+    await browser.hide(id)
   }
 
   const close = async (tab) => {
@@ -48,28 +52,16 @@ export const useOpenApp = () => {
     await browser.close(tab.id)
   }
 
-  const onHideTabInBrowser = async () => {
-    await hide(currentTab)
+  const onHideTabInBrowser = async (id: string) => {
+    await hide(id)
   }
 
-  const onHideTab = async () => {
-    await hide(currentTab)
-
-    dispatch(
-      setCloseTabWindow({
-        isOpenTabWindow: false
-      })
-    )
+  const onHideTab = () => {
+    handleClose('/')
   }
 
   const onCloseTab = async () => {
     await close(currentTab)
-
-    dispatch(
-      setCloseTabWindow({
-        isOpenTabWindow: false
-      })
-    )
 
     dispatch(
       removeTabFromTabs({
@@ -111,7 +103,7 @@ export const useOpenApp = () => {
 
   const API = {
     onHide: (tabId) => {
-      hide(getTab(tabId))
+      handleClose('/')
     },
     onClick: (tabId, x, y) => {
       console.log('click', x, y)
@@ -125,11 +117,54 @@ export const useOpenApp = () => {
 
   browser.setAPI(API)
 
-  const show = (tab) => {
-    handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, { search: ['id', tab.id], replace: false })
+  const openTabWindow = async (id, method) => {
+    if (method === 'create') {
+      const tab = currentWorkSpace.tabs.find((tab) => id === tab.id)
+      const dataTabForOpen = {
+        id: tab.id,
+        url: tab.url,
+        hidden: true,
+        apiCtx: tab.id
+      }
+
+      console.log('CREATE', tab)
+
+      await browser.open(dataTabForOpen)
+      await browser.show(id)
+    } else {
+      console.log('SHOW')
+      await browser.show(id)
+    }
   }
 
-  const open = async (params) => {
+  const show = (tab, options) => {
+    const isOpened = openedTabs.find((openedTab) => tab.id === openedTab.id)
+
+    let searchParams = {
+      id: tab.id,
+      method: 'show'
+    }
+
+    if (!isOpened) {
+      const dataTabForOpen = {
+        id: tab.id,
+        url: tab.url,
+        hidden: true,
+        apiCtx: tab.id
+      }
+
+      searchParams.method = 'create'
+
+      dispatch(setOpenTab({ tab: dataTabForOpen }))
+    }
+
+    handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {
+      search: searchParams,
+      ...options
+    })
+  }
+
+  const open = async (params, options) => {
     console.log('open', JSON.stringify(params))
 
     let { url, title = '', icon = '', pinned = false } = params
@@ -154,22 +189,21 @@ export const useOpenApp = () => {
     }
     // console.log("open", url, JSON.stringify(params), JSON.stringify(tab));
 
-    // // add to tab list
+    // add to tab list
     dispatch(setTabsWorkspace({ tab }))
 
-    // // add to db
-
+    // add to db
     await dbi.addTab(tab)
 
     // it creates the tab and sets as current
-    show(tab)
+    show(tab, options)
   }
 
-  const openBlank = async (entity: AppNostro) => {
+  const openBlank = async (entity: AppNostro, options) => {
     const tab = currentWorkSpace.tabs.find((tab) => tab.url === entity.url)
 
     if (tab) {
-      show(tab)
+      show(tab, options)
       return
     }
 
@@ -180,13 +214,17 @@ export const useOpenApp = () => {
       : apps.find((app) => app.url.startsWith(origin))
 
     if (app) {
-      await open({
-        url: entity.url,
-        pinned: entity.pinned,
-        icon: app.picture,
-        title: app.name,
-        appNaddr: app.naddr
-      })
+      await open(
+        {
+          url: entity.url,
+          pinned: entity.pinned,
+          icon: app.picture,
+          title: app.name,
+          appNaddr: app.naddr,
+          replace: app.replace
+        },
+        options
+      )
 
       return
     }
@@ -195,7 +233,7 @@ export const useOpenApp = () => {
     // await open(params);
   }
 
-  const openApp = async (app: IOpenAppNostro) => {
+  const openApp = async (app: IOpenAppNostro, options?: { replace?: boolean } = { replace: false }) => {
     // if (params.kind !== undefined) {
     //   updateWorkspace((ws) => {
     //     ws.lastKindApps[params.kind] = params.naddr;
@@ -206,13 +244,17 @@ export const useOpenApp = () => {
     // }
     const pin = currentWorkSpace.pins.find((pin) => pin.appNaddr == app.naddr)
 
-    await openBlank({
-      url: app.url,
-      pinned: !!pin,
-      appNaddr: app.naddr,
-      title: app.name,
-      icon: app.picture
-    })
+    await openBlank(
+      {
+        url: app.url,
+        pinned: !!pin,
+        appNaddr: app.naddr,
+        title: app.name,
+        icon: app.picture,
+        replace: app.replace
+      },
+      options
+    )
   }
 
   const onImportKey = async (importPubkey?: string) => {
@@ -248,6 +290,7 @@ export const useOpenApp = () => {
     onSwitchTab,
     onHideTabInBrowser,
     onImportKey,
-    onCloseTab
+    onCloseTab,
+    openTabWindow
   }
 }

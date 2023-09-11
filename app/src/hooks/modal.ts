@@ -2,13 +2,13 @@ import { useNavigate, useSearchParams, createSearchParams, useLocation } from 'r
 import queryString from 'query-string'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
-type IExtraOptions = {
-  search?: [string, string]
-  replace?: boolean
+type SearchParamsType = {
+  [key: string]: string
 }
 
-type SearchParamsType = {
-  [key: string | MODAL_PARAMS_KEYS]: string | MODAL_PARAMS_KEYS
+type IExtraOptions = {
+  search?: SearchParamsType
+  replace?: boolean
 }
 
 export const useOpenModalSearchParams = () => {
@@ -22,9 +22,9 @@ export const useOpenModalSearchParams = () => {
   const handleOpen = (modal: MODAL_PARAMS_KEYS, extraOptions?: IExtraOptions) => {
     const enumKey = getEnumParam(modal)
 
-    const searchParamsData: SearchParamsType = { [enumKey]: modal }
+    let searchParamsData: SearchParamsType = { [enumKey]: modal }
     if (extraOptions?.search) {
-      searchParamsData[extraOptions.search[0]] = extraOptions.search[1]
+      searchParamsData = { ...searchParamsData, ...extraOptions.search }
     }
 
     const searchString =
@@ -41,8 +41,14 @@ export const useOpenModalSearchParams = () => {
     )
   }
 
-  const handleClose = () => {
-    navigate(-1)
+  const handleClose = (path?: string) => {
+    console.log('CLOSE FROM API')
+    if (path) {
+      console.log('PATH CLOSE', path)
+      navigate('/', { replace: true })
+    } else {
+      navigate(-1)
+    }
   }
 
   const getModalOpened = (modal: MODAL_PARAMS_KEYS) => {

@@ -72,7 +72,7 @@ export const ModalSelectApp = () => {
   }, [currentWorkSpace.pins, getParamAddr])
 
   const handleOpen = (app: IOpenAppNostro) => {
-    openApp({ ...app, kind })
+    openApp({ ...app, kind }, { replace: true })
     // handleClose()
     setApps([])
     setKind('')

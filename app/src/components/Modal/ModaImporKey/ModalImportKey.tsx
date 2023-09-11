@@ -36,8 +36,12 @@ export const ModalImportKey = () => {
     handleClose()
   }
 
+  const handleCloseModal = () => {
+    handleClose()
+  }
+
   return (
-    <Modal title="Add read-only keys" open={isOpen} handleClose={handleClose}>
+    <Modal title="Add read-only keys" open={isOpen} handleClose={handleCloseModal}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput

@@ -20,7 +20,7 @@ export const Communities = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], naddr] })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
   }
 
   return (
