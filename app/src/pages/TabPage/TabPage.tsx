@@ -42,7 +42,7 @@ export const TabPage = () => {
         onHideTabInBrowser(id)
       }
     }
-  }, [id, method])
+  }, [id, method, onHideTabInBrowser, openTabWindow])
 
   return (
     <StyledDialog
