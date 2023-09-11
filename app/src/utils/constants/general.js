@@ -123,7 +123,7 @@ export const DEFAULT_APPS = [
     naddr:
       "naddr1qqxnzd3cx5urydfcxqunzd3nqgsru22d9lfnnwck54qr4phrvey50h2q33xc0gqxv5j03ftn4efu4rsrqsqqql8kr7wmdc",
     name: "Pinstr",
-    picture: "https://pinstr.app/favicon.ico",
+    picture: "https://pinstr.app/assets/pinstr.svg",
     url: "https://pinstr.app/",
     about:
       "Pinstr is a decentralized and open-source social network for curating and sharing your interests with the world. With Pinstr, you can easily organize and discover new ideas, inspiration, and recommendations.",
