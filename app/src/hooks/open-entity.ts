@@ -8,6 +8,7 @@ import {
   removeTabFromTabs,
   setCurrentWorkspace,
   setTabsWorkspace,
+  setUrlTabWorkspace,
   setWorkspaces
 } from '@/store/reducers/workspaces.slice'
 import { AppNostro, IOpenAppNostro } from '@/types/app-nostro'
@@ -15,19 +16,11 @@ import { getKeys, writeCurrentPubkey } from '@/utils/keys'
 import { v4 as uuidv4 } from 'uuid'
 import { useUpdateProfile } from './profile'
 import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
-import { addWorkspace } from '@/modules/AppInitialisation/utils'
+import { addWorkspace, getOrigin, getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useSearchParams } from 'react-router-dom'
-
-function getOrigin(url) {
-  try {
-    return new URL(url).origin
-  } catch {
-    return url
-  }
-}
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
@@ -47,9 +40,9 @@ export const useOpenApp = () => {
     await browser.hide(id)
   }
 
-  const close = async (tab) => {
-    await dbi.deleteTab(tab.id)
-    await browser.close(tab.id)
+  const close = async (id: string) => {
+    await dbi.deleteTab(id)
+    await browser.close(id)
   }
 
   const onHideTabInBrowser = async (id: string) => {
@@ -60,12 +53,12 @@ export const useOpenApp = () => {
     handleClose('/')
   }
 
-  const onCloseTab = async () => {
-    await close(currentTab)
+  const onCloseTab = async (id: string) => {
+    await close(id)
 
     dispatch(
       removeTabFromTabs({
-        currentTab
+        id
       })
     )
   }
@@ -104,6 +97,11 @@ export const useOpenApp = () => {
   const API = {
     onHide: (tabId) => {
       handleClose('/')
+    },
+    setUrl: async (tabId, url) => {
+      // const getTab = (id) => currentWorkSpace.tabs.find((tab) => tab.id === id)
+      // dispatch(setUrlTabWorkspace({ tab: getTab, url }))
+      // dbi.updateTab({ ...getTab(tabId), url }) ??????????????????????????????????????????????
     },
     onClick: (tabId, x, y) => {
       console.log('click', x, y)
@@ -230,7 +228,7 @@ export const useOpenApp = () => {
     }
 
     // nothing's known about this url, open a new tab
-    // await open(params);
+    await open(entity, options)
   }
 
   const openApp = async (app: IOpenAppNostro, options?: { replace?: boolean } = { replace: false }) => {
@@ -291,6 +289,7 @@ export const useOpenApp = () => {
     onHideTabInBrowser,
     onImportKey,
     onCloseTab,
-    openTabWindow
+    openTabWindow,
+    openBlank
   }
 }

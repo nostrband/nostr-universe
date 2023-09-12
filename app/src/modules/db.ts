@@ -37,7 +37,12 @@ export const dbi = {
   },
   updateTab: async (tab) => {
     try {
-      await db.tabs.where('id').equals(tab.id).modify({ url: tab.url, icon: tab.icon })
+      await db.tabs.where('id').equals(tab.id).modify({
+        url: tab.url,
+        icon: tab.icon,
+        lastActive: tab.lastActive,
+        order: tab.order
+      })
     } catch (error) {
       console.log(`Update tab in DB error: ${JSON.stringify(error)}`)
     }

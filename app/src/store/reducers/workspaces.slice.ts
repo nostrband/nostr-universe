@@ -38,14 +38,17 @@ export const workspacesSlice = createSlice({
     },
 
     removeTabFromTabs: (state, action) => {
+      const id = action.payload.id
+      const currentTab = state.currentWorkSpace.tabs.find((tab) => tab.id === id)
+
       state.currentWorkSpace = {
         ...state.currentWorkSpace,
-        tabs: state.currentWorkSpace.tabs.filter((tab) => tab.id !== action.payload.id),
+        tabs: state.currentWorkSpace.tabs.filter((tab) => tab.id !== id),
         tabGroups: state.currentWorkSpace.tabGroups.map((tab) => {
-          if (tab.id === action.payload.currentTab.appNaddr) {
+          if (tab.id === currentTab?.appNaddr) {
             return {
               ...tab,
-              tabs: tab.tabs.filter((el) => el !== action.payload.currentTab.id)
+              tabs: tab.tabs.filter((el) => el !== currentTab.id)
             }
           }
 
@@ -76,7 +79,7 @@ export const workspacesSlice = createSlice({
 
       state.currentWorkSpace = {
         ...state.currentWorkSpace,
-        tabs: [...state.currentWorkSpace.tabs, action.payload.tab],
+        tabs: [...state.currentWorkSpace.tabs, tab],
         tabGroups: tabGroups,
         lastCurrentTabId: ''
       }
@@ -85,8 +88,40 @@ export const workspacesSlice = createSlice({
         if (workspace.pubkey === state.currentWorkSpace.pubkey) {
           return {
             ...workspace,
-            tabs: [...state.currentWorkSpace.tabs, action.payload.tab],
+            tabs: [...state.currentWorkSpace.tabs, tab],
             tabGroups: tabGroups
+          }
+        }
+
+        return workspace
+      })
+    },
+
+    setUrlTabWorkspace: (state, action) => {
+      const url = action.payload.url
+      const id = getTabGroupId(action.payload.tab)
+
+      const tabs = state.currentWorkSpace.tabs.map((tab) => {
+        if (tab.id === id) {
+          return {
+            ...tab,
+            url
+          }
+        }
+        return tab
+      })
+
+      state.currentWorkSpace = {
+        ...state.currentWorkSpace,
+        tabs,
+        lastCurrentTabId: ''
+      }
+
+      state.workspaces = state.workspaces.map((workspace) => {
+        if (workspace.pubkey === state.currentWorkSpace.pubkey) {
+          return {
+            ...workspace,
+            tabs
           }
         }
 
@@ -96,4 +131,5 @@ export const workspacesSlice = createSlice({
   }
 })
 
-export const { setWorkspaces, setCurrentWorkspace, setTabsWorkspace, removeTabFromTabs } = workspacesSlice.actions
+export const { setWorkspaces, setUrlTabWorkspace, setCurrentWorkspace, setTabsWorkspace, removeTabFromTabs } =
+  workspacesSlice.actions

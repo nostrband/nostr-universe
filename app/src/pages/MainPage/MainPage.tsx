@@ -14,7 +14,7 @@ import { StyledWrapperMain } from './styled'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
 import { ModaSearch } from '@/components/Modal/ModaSearch/ModaSearch'
 import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
-// import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextMenu'
+import { ModaTabMenu } from '@/components/Modal/ModaTabMenu/ModaTabMenu'
 import { TabPage } from '../TabPage/TabPage'
 
 export const MainPage = () => {
@@ -37,7 +37,7 @@ export const MainPage = () => {
 
       {/* Modal pages */}
       <ProfilePage />
-      {/* <ModaContextMenu /> */}
+      <ModaTabMenu />
       <ModalSelectApp />
       <ModaSearch />
       <TabPage />

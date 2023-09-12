@@ -185,7 +185,7 @@ const ensureBootstrapped = async (workspaceKey) => {
   }
 }
 
-function getOrigin(url) {
+export const getOrigin = (url) => {
   try {
     return new URL(url).origin
   } catch {
@@ -197,26 +197,26 @@ export const getTabGroupId = (pt) => {
   return pt.appNaddr || getOrigin(pt.url)
 }
 
-function test(workspace, pt, isPin) {
-  const id = getTabGroupId(pt)
-  if (!(id in workspace.tabGroups))
-    workspace.tabGroups[id] = {
-      id,
-      info: pt,
-      tabs: [],
-      lastTabId: '',
-      lastActive: 0
-    }
+// function test(workspace, pt, isPin) {
+//   const id = getTabGroupId(pt)
+//   if (!(id in workspace.tabGroups))
+//     workspace.tabGroups[id] = {
+//       id,
+//       info: pt,
+//       tabs: [],
+//       lastTabId: '',
+//       lastActive: 0
+//     }
 
-  const tg = workspace.tabGroups[id]
-  if (isPin && !tg.pin) {
-    tg.pin = pt
-  }
+//   const tg = workspace.tabGroups[id]
+//   if (isPin && !tg.pin) {
+//     tg.pin = pt
+//   }
 
-  if (!isPin) {
-    tg.tabs.push(pt.id)
-  }
-}
+//   if (!isPin) {
+//     tg.tabs.push(pt.id)
+//   }
+// }
 
 export const addToTabGroup = (pins, tabs) => {
   const groupTab = []
