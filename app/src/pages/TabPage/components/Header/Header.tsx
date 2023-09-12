@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom'
 import { Avatar, IconButton } from '@mui/material'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Header as HeaderLayout } from '@/layout/Header/Header'
@@ -6,7 +7,6 @@ import { getProfileImage } from '@/utils/helpers/prepare-data'
 import { StyledIconButton, StyledWrapper } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { useSearchParams } from 'react-router-dom'
 
 export const Header = () => {
   const [searchParams] = useSearchParams()

@@ -21,7 +21,11 @@ db.version(8).stores({
   profiles: '&id,pubkey,kind,created_at',
   lastContacts: '[pubkey+contactPubkey],tm',
   flags: 'id,pubkey,name,value',
-  readOnlyKeys: '&pubkey,current'
+  readOnlyKeys: '&pubkey,current',
+
+  // allow: pubkey=1,sign:0=1,encrypt=1,decrypt=1,sign:*=1,
+  // disallow: sign:*=0
+  perms: '[pubkey+app+name],value'
 })
 
 export const dbi = {
@@ -42,6 +46,24 @@ export const dbi = {
         icon: tab.icon,
         lastActive: tab.lastActive,
         order: tab.order
+      })
+    } catch (error) {
+      console.log(`Update tab in DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  updatePin: async (pin) => {
+    try {
+      await db.pins.where('id').equals(pin.id).modify({
+        order: pin.order
+      })
+    } catch (error) {
+      console.log(`Update pin in DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  updateTabScreenshot: async (tab) => {
+    try {
+      await db.tabs.where('id').equals(tab.id).modify({
+        screenshot: tab.screenshot
       })
     } catch (error) {
       console.log(`Update tab in DB error: ${JSON.stringify(error)}`)
@@ -95,16 +117,22 @@ export const dbi = {
     try {
       return await db.profiles.toArray()
     } catch (error) {
-      return []
       console.log(`List profiles error: ${JSON.stringify(error)}`)
+      return []
     }
   },
   listLastContacts: async (pubkey) => {
     try {
       return await db.lastContacts.where('pubkey').equals(pubkey).toArray()
     } catch (error) {
-      return []
       console.log(`List lastContacts error: ${JSON.stringify(error)}`)
+    }
+  },
+  listPerms: async (pubkey) => {
+    try {
+      return await db.perms.where('pubkey').equals(pubkey).toArray()
+    } catch (error) {
+      console.log(`List perms error: ${JSON.stringify(error)}`)
     }
   },
   listReadOnlyKeys: async () => {
@@ -131,9 +159,30 @@ export const dbi = {
   },
   updateLastContact: async (pubkey, contactPubkey) => {
     try {
-      await db.lastContacts.put({ pubkey, contactPubkey, tm: Date.now() / 1000 })
+      await db.lastContacts.put({
+        pubkey,
+        contactPubkey,
+        tm: Date.now() / 1000
+      })
     } catch (error) {
       console.log(`Put lastContact to DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  updatePerm: async (perm) => {
+    try {
+      await db.perms.put(perm)
+    } catch (error) {
+      console.log(`Put perms to DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  deletePerms: async (pubkey, app) => {
+    try {
+      // Delete tab in DB by ID
+      const req = { pubkey }
+      if (app) req.app = app
+      await db.perms.where(req).delete()
+    } catch (error) {
+      console.log(`Delete perms in DB error: ${JSON.stringify(error)}`)
     }
   },
   getFlag: async (pubkey, name) => {
