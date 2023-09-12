@@ -7,7 +7,14 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
 import { IconButton } from '@mui/material'
-import { getTagValue, nostrbandRelay, searchLongNotes, searchNotes, searchProfiles } from '@/modules/nostr'
+import {
+  getTagValue,
+  nostrbandRelay,
+  searchLongNotes,
+  searchNotes,
+  searchProfiles,
+  stringToBech32
+} from '@/modules/nostr'
 import { StyledForm, StyledInput } from './styled'
 import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
 import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/SuggestedProfiles/styled'
@@ -19,8 +26,10 @@ import { TrendingProfile } from '@/types/trending-profiles'
 import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/SliderTrendingNotes'
 import { SliderLongPosts } from '@/components/Slider/SliderLongPosts/SliderLongPosts'
 import { ContactList } from '@/pages/MainPage/components/ContactList/ContactList'
+import { useOpenApp } from '@/hooks/open-entity'
 
 export const ModaSearch = () => {
+  const { openBlank } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState(null)
   const [notes, setNotes] = useState(null)
@@ -29,8 +38,29 @@ export const ModaSearch = () => {
   const { handleClose, getModalOpened, handleOpen } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.SEARCH_MODAL)
 
+  const onSearch = (str) => {
+    try {
+      const url = new URL('/', str)
+      if (url) {
+        openBlank({ url: str })
+        return true
+      }
+    } catch {}
+
+    const b32 = stringToBech32(str)
+
+    if (b32) {
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32 } })
+      return true
+    }
+
+    return false
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    onSearch(searchValue)
 
     searchProfiles(searchValue)
       .then((data) => {
@@ -81,7 +111,7 @@ export const ModaSearch = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
   }
 
   const handleOpenNote = (note) => {
@@ -90,7 +120,7 @@ export const ModaSearch = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: nprofile })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
   }
 
   const handleOpenLongPost = (longPost) => {
@@ -101,7 +131,7 @@ export const ModaSearch = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { key: EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP], value: naddr })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
   }
 
   useEffect(() => {

@@ -21,8 +21,12 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
   const { onImportKey } = useOpenApp()
   const { handleOpen } = useOpenModalSearchParams()
 
+  const handleCloseAccounts = () => {
+    handleClose()
+  }
+
   return (
-    <StyledViewModal onClose={handleClose} open={open} fullWidth maxWidth="lg">
+    <StyledViewModal onClose={handleCloseAccounts} open={open} fullWidth maxWidth="lg">
       <StyledList>
         {accounts.map((account, i) => (
           <StyledListItem

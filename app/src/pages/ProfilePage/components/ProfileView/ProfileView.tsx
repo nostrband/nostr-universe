@@ -39,6 +39,10 @@ export const ProfileView = () => {
     handleClose()
   }
 
+  const handleCloseProfile = () => {
+    handleClose()
+  }
+
   const getCurrentPubKey = isGuest(currentPubKey) ? '' : getNpub(currentPubKey)
 
   const isOpenModalAccounts = getModalOpened(MODAL_PARAMS_KEYS.KEYS_PROFILE)
@@ -71,7 +75,7 @@ export const ProfileView = () => {
       <ModalAccounts
         changeAccount={handlechangeAccount}
         currentPubKey={getCurrentPubKey}
-        handleClose={handleClose}
+        handleClose={handleCloseProfile}
         open={isOpenModalAccounts}
         accounts={accounts}
       />

@@ -9,30 +9,43 @@ import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import { StyledInfoItem, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
+import { useSearchParams } from 'react-router-dom'
 
-export const ModaContextMenu = () => {
+export const ModaTabMenu = () => {
+  const [searchParams] = useSearchParams()
   const { onCloseTab } = useOpenApp()
   const { getModalOpened, handleClose } = useOpenModalSearchParams()
-  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
-  const { currentTab } = useAppSelector((state) => state.tab)
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MENU)
+  const id = searchParams.get('id') || ''
 
-  const isPin = currentWorkSpace.pins.find((pin) => pin.id === currentTab?.id)
+  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
+
+  const isPin = currentWorkSpace.pins.find((pin) => pin.id === id)
 
   const handleCloseTab = () => {
-    handleClose()
-    onCloseTab()
+    handleClose('/')
+    onCloseTab(id)
+  }
+
+  const handlePinUnPinTab = () => {
+    // ????? diferent id in pins
+    if (isPin) {
+      console.log('unpin')
+    } else {
+      console.log('pin')
+    }
   }
 
   return (
-    <Modal title="Tab Menu (WIP)" open={isOpen} handleClose={handleClose}>
+    <Modal title="Tab Menu (WIP)" open={isOpen} handleClose={() => handleClose()}>
       <Container>
         <StyledInfoItem>URL: {currentTab?.url}</StyledInfoItem>
-        <StyledInfoItem>App: {currentTab?.name}</StyledInfoItem>
+        <StyledInfoItem>App: {currentTab?.title}</StyledInfoItem>
 
         <StyledList>
           <ListItem disablePadding>
-            <StyledItemButton alignItems="center">
+            <StyledItemButton alignItems="center" onClick={handlePinUnPinTab}>
               <ListItemAvatar>
                 <StyledItemIconAvatar>
                   {isPin ? <DeleteOutlineOutlinedIcon /> : <PushPinOutlinedIcon />}

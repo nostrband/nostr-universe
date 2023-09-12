@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
 import { ITab } from '@/types/workspace'
@@ -10,18 +11,18 @@ import ReplayOutlinedIcon from '@mui/icons-material/ReplayOutlined'
 import { StyledTabsActions, StyledWrapper } from './styled'
 
 export const TabMenu = () => {
+  const [searchParams] = useSearchParams()
   const { onSwitchTab, onHideTabInBrowser, onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
-  const { currentTab, isLoading } = useAppSelector((state) => state.tab)
+  const id = searchParams.get('id')
+  const { isLoading } = useAppSelector((state) => state.tab)
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-
-  // const handleOpenApp = async (app: AppNostroType) => {
-  //   await openApp(app)
-  // }
+  const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
 
   const handleSwitchTab = async (tab: AppNostroType) => {
-    console.log({ handleSwitchTab: tab })
-    await onHideTabInBrowser()
-    await onSwitchTab(tab)
+    if (currentTab) {
+      await onHideTabInBrowser(currentTab.id)
+      await onSwitchTab(tab)
+    }
   }
 
   const handleStopReloadTab = async () => {
@@ -40,8 +41,6 @@ export const TabMenu = () => {
     })
     .filter((tab): tab is ITab => !!tab)
 
-  console.log({ getTabs })
-
   return (
     <StyledWrapper>
       <StyledTabsActions>
@@ -53,7 +52,8 @@ export const TabMenu = () => {
               name: tab.title,
               naddr: tab.appNaddr,
               url: tab.url,
-              order: tab.order
+              order: tab.order,
+              id: tab.id
             }
 
             const isActive = currentTab.id === tab.id
