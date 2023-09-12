@@ -1436,7 +1436,7 @@ export function connect() {
   };
   scheduleStats();
   
-  return ndk.connect(/* timeoutMs */ 1000, /* minConns */ 3);
+  return ndk.pool.connect(/* timeoutMs */ 1000, /* minConns */ 3);
 }
 
 export function launchZapDialog(id, event) {
