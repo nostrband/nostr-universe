@@ -2,8 +2,9 @@
 // @ts-nocheck
 import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
+import { nip19 } from '@nostrband/nostr-tools'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setLoadingTab, setOpenTab } from '@/store/reducers/tab.slice'
+import { setIcontab, setLoadingTab, setOpenTab } from '@/store/reducers/tab.slice'
 import {
   removeTabFromTabs,
   setCurrentWorkspace,
@@ -13,6 +14,7 @@ import {
 } from '@/store/reducers/workspaces.slice'
 import { AppNostro, IOpenAppNostro } from '@/types/app-nostro'
 import { getKeys, writeCurrentPubkey } from '@/utils/keys'
+import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { v4 as uuidv4 } from 'uuid'
 import { useUpdateProfile } from './profile'
 import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
@@ -21,15 +23,21 @@ import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useSearchParams } from 'react-router-dom'
+import { DEFAULT_PUBKEY } from '@/consts'
+import { walletstore } from '@/modules/walletstore'
+import { sendPayment, stringToBech32 } from '@/modules/nostr'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const { currentWorkSpace, workspaces } = useAppSelector((state) => state.workspaces)
   const { apps } = useAppSelector((state) => state.apps)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const { currentPubKey, readKeys } = useAppSelector((state) => state.keys)
   const { currentTab, openedTabs } = useAppSelector((state) => state.tab)
+
+  const getTabAny = (id) => workspaces.map((ws) => ws.tabs.find((t) => t.id === id)).find((t) => t !== undefined) /// ???????????
+  const isReadOnly = () => currentPubKey === DEFAULT_PUBKEY || readKeys.includes(currentPubKey) //// ???????????
 
   const [searchParams] = useSearchParams()
   const test = searchParams.get('id')
@@ -94,7 +102,155 @@ export const useOpenApp = () => {
     })
   }
 
+  const handleCustomUrl = async (url, tab) => {
+    if (url.startsWith('lightning:')) {
+      // just open some outside app for now
+      window.cordova.InAppBrowser.open(url, '_self')
+      return true
+    }
+
+    if (url.startsWith('nostr:')) {
+      const b32 = stringToBech32(url)
+      if (b32) {
+        // hide it
+        if (tab) await hide(tab.id)
+
+        // offer to choose an app to show the event
+        // setOpenAddr(b32) ????????????? open select app
+      } else {
+        // try some external app that might know this type of nostr: link
+        window.cordova.InAppBrowser.open(url, '_self')
+      }
+
+      return true
+    }
+
+    return false
+  }
+
   const API = {
+    // NIP-01
+    getPublicKey: async function (tabId) {
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error('Inactive tab')
+      if (currentPubkey === DEFAULT_PUBKEY) throw new Error('No pubkey')
+      const error = 'Pubkey disallowed'
+      // if (hasPerm(tab, "pubkey", "0")) throw new Error(error);
+      // if (hasPerm(tab, "pubkey", "1")) return currentPubkey;
+      const exec = () => currentPubkey
+      return exec()
+      // return requestPermExec(tab, { perm: "pubkey" }, exec, error);
+    },
+    signEvent: async function (tabId, event) {
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error('Inactive tab')
+      if (isReadOnly()) throw new Error('No pubkey')
+      // const kindPerm = "sign:" + event.kind;
+      // const allPerm = "sign";
+      const exec = async () => await keystore.signEvent(event)
+      return await exec()
+
+      // // allowed this kind or all kinds (if not kind-0)?
+      // if (
+      //   hasPerm(tab, kindPerm, "1") ||
+      //   (event.kind != 0 && hasPerm(tab, allPerm, "1"))
+      // )
+      //   return await exec();
+
+      // // disallowed this kind or all kinds
+      // const error = "Signing of kind " + event.kind + " disallowed";
+      // if (hasPerm(tab, kindPerm, "0") || hasPerm(tab, allPerm, "0"))
+      //   throw new Error(error);
+      // return requestPermExec(tab, { perm: kindPerm, event }, exec, error);
+    },
+    // NIP-04
+    encrypt: async function (tabId, pubkey, plainText) {
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error('Inactive tab')
+      if (isReadOnly()) throw new Error('No pubkey')
+      const error = 'Encrypt disallowed'
+      // if (hasPerm(tab, "encrypt", "0")) throw new Error(error);
+      const exec = async () => await keystore.encrypt(pubkey, plainText)
+      return await exec()
+      // if (hasPerm(tab, "encrypt", "1")) return await exec();
+      // return requestPermExec(tab, { perm: "encrypt", pubkey, plainText }, exec, error);
+    },
+    decrypt: async function (tabId, pubkey, cipherText) {
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error('Inactive tab')
+      if (isReadOnly()) throw new Error('No pubkey')
+      const error = 'Decrypt disallowed'
+      // if (hasPerm(tab, "decrypt", "0")) throw new Error(error);
+      const exec = async () => await keystore.decrypt(pubkey, cipherText)
+      return await exec()
+      // if (hasPerm(tab, "decrypt", "1")) return await exec();
+      // return requestPermExec(tab, { perm: "decrypt", pubkey, cipherText }, exec, error);
+    },
+    // NWC
+    getWalletInfo: async function (tabId) {
+      console.log('getWalletInfo', tabId)
+      return Promise.resolve({
+        // some fake info to satisfy Snort
+        node: {
+          pubkey: '001122334455667788990011223344556677889900112233445566778899001122',
+          alias: 'Spring NWC Wallet'
+        }
+      })
+    },
+    sendPayment: async function (tabId, paymentRequest) {
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error('Inactive tab')
+      if (isReadOnly()) throw new Error('No pubkey')
+
+      const bolt11 = bolt11Decode(paymentRequest)
+      const amount = Number(bolt11.sections?.find((s) => s.name === 'amount').value)
+
+      const wallet = await walletstore.getInfo()
+      const perm = 'pay_invoice:' + wallet.id
+      const exec = async () => {
+        try {
+          const res = await sendPayment(wallet, paymentRequest)
+          console.log('payment result', res)
+          window.plugins.toast.showShortBottom(`Sent ${amount / 1000} sats`)
+          return res // forward to the tab
+        } catch (e) {
+          window.plugins.toast.showShortBottom(`Payment failed: ${e}`)
+          throw e // forward to the tab
+        }
+      }
+
+      // allowed?
+      // const MAX_ALLOW_AMOUNT = 10000 * 1000; // anything above 10k must be explicitly authorized
+      // if (amount <= MAX_ALLOW_AMOUNT && hasPerm(tab, perm, "1"))
+      return await exec()
+
+      // disallowed?
+      // const error = "Payment request disallowed";
+      // if (hasPerm(tab, perm, "0"))
+      //   throw new Error(error);
+
+      // return requestPermExec(
+      //   tab,
+      //   {
+      //     perm,
+      //     paymentRequest,
+      //     amount,
+      //     wallet
+      //   }, exec, error);
+    },
+    clipboardWriteText: async function (tabId, text) {
+      return await window.cordova.plugins.clipboard.copy(text)
+    },
+    showContextMenu: async function (tabId, id) {
+      console.log('event menu', id)
+      // setContextInput(id);
+    },
+    share: async function (tabId, data) {
+      return await window.navigator.share(data)
+    },
+    decodeBech32: function (tabId, s) {
+      return nip19.decode(s)
+    },
     onHide: (tabId) => {
       handleClose('/')
     },
@@ -103,6 +259,16 @@ export const useOpenApp = () => {
       // dispatch(setUrlTabWorkspace({ tab: getTab, url }))
       // dbi.updateTab({ ...getTab(tabId), url }) ??????????????????????????????????????????????
     },
+    onLoadStart: async (tabId, event) => {
+      console.log('loading', JSON.stringify(event))
+      API.setUrl(tabId, event.url)
+      dispatch(setLoadingTab({ isLoading: true }))
+    },
+    onLoadStop: async (tabId, event) => {
+      console.log('loaded', event.url)
+      API.setUrl(tabId, event.url)
+      dispatch(setLoadingTab({ isLoading: false }))
+    },
     onClick: (tabId, x, y) => {
       console.log('click', x, y)
       let e = document.elementFromPoint(x, y)
@@ -110,6 +276,30 @@ export const useOpenApp = () => {
       while (e && !e.click) e = e.parentNode
       console.log('click on ', e)
       if (e) e.click()
+    },
+    onBlank: async (tabId, url) => {
+      const tab = getTabAny(tabId)
+      console.log('onBlank', tabId, tab?.url, url)
+      // some special scheme?
+      if (await handleCustomUrl(url, tab)) return
+      // new tab coming, hide current one
+      if (tab) await hide(tab)
+      // just open another tab
+      openBlank({ url })
+    },
+    onBeforeLoad: async (tabId, url) => {
+      const tab = getTabAny(tabId)
+      console.log('onBeforeLoad', tabId, tab?.url, url)
+      // intercept lightning: and nostr: links
+      return await handleCustomUrl(url, tab)
+    },
+    onIcon: async (tabId, icon) => {
+      setIcontab({ id: tabId, icon })
+
+      const tab = getTabAny(tabId)
+      if (tab) {
+        dbi.updateTab({ tab, icon })
+      }
     }
   }
 
