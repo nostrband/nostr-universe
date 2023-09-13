@@ -26,18 +26,23 @@ export const tabSlice = createSlice({
       state.openedTabs = [...state.openedTabs, action.payload.tab]
     },
 
+    setIcontab: (state, action) => {
+      state.openedTabs = state.openedTabs.map((tab) => {
+        if (action.payload.id === tab.id) {
+          return {
+            ...tab,
+            icon: action.payload.icon
+          }
+        }
+
+        return tab
+      })
+    },
+
     setLoadingTab: (state, action) => {
       state.isLoading = action.payload.isLoading
     }
-
-    // setCurrentTab: (state, action) => {
-    //   state.currentTab = action.payload.currentTab
-    //   // state.isOpenTabWindow = true
-    // },
-    // setCloseTabWindow: (state, action) => {
-    //   state.isOpenTabWindow = action.payload.isLoading
-    // }
   }
 })
 
-export const { setOpenTab, setLoadingTab } = tabSlice.actions
+export const { setOpenTab, setLoadingTab, setIcontab } = tabSlice.actions

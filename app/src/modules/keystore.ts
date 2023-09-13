@@ -26,14 +26,14 @@ const keys = {
 
 let currentPubkey = '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd'
 
-const listKeysStub = () => {
+const listKeysStub = async () => {
   return {
     currentAlias: currentPubkey,
     ...keys
   }
 }
 
-const dummy = {
+const stub = {
   listKeys: listKeysStub,
 
   addKey: async function () {
@@ -44,9 +44,10 @@ const dummy = {
     console.log('SHOW KEY')
   },
 
-  selectKey: async function (pubkey) {
-    console.log('SHOW KEY', pubkey)
-    return listKeys()
+  selectKey: async function ({ publicKey }) {
+    console.log('selectKey', publicKey)
+    currentPubkey = publicKey
+    return listKeysStub()
   },
 
   editKey: async function (info) {
@@ -54,11 +55,21 @@ const dummy = {
   },
 
   getPublicKey: async function () {
-    return listKeys().currentAlias
+    return currentPubkey
   },
 
   signEvent: async function (event) {
     console.log('signEvent', event)
+    throw new Error('Not implemented')
+  },
+
+  encrypt: async function ({ pubkey, plaintext }) {
+    console.log('encrypt', pubkey)
+    throw new Error('Not implemented')
+  },
+
+  decrypt: async function ({ pubkey, ciphertext }) {
+    console.log('decrypt', pubkey)
     throw new Error('Not implemented')
   }
 }
@@ -66,12 +77,13 @@ const dummy = {
 const API = function (method) {
   if (import.meta.env.DEV)
     return function (...args) {
-      return dummy[method](...args)
+      return stub[method](...args)
     }
 
-  const target = cordova.plugins.NostrKeyStore
+  const target = window.cordova.plugins.NostrKeyStore
   return (...args) => {
     return new Promise((ok, err) => {
+      //      console.log("method", method, "args", JSON.stringify([ok, err, ...args]));
       target[method](...[ok, err, ...args])
     })
   }
@@ -105,6 +117,14 @@ export async function signEvent(event) {
   return API('signEvent')(event)
 }
 
+export async function encrypt(pubkey, plaintext) {
+  return API('encrypt')({ pubkey, plaintext })
+}
+
+export async function decrypt(pubkey, ciphertext) {
+  return API('decrypt')({ pubkey, ciphertext })
+}
+
 export const keystore = {
   listKeys,
   addKey,
@@ -112,5 +132,7 @@ export const keystore = {
   selectKey,
   editKey,
   getPublicKey,
-  signEvent
+  signEvent,
+  encrypt,
+  decrypt
 }

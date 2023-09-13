@@ -24,6 +24,7 @@ export const TabPage = () => {
   const [searchParams] = useSearchParams()
   const { getModalOpened } = useOpenModalSearchParams()
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const { isLoading } = useAppSelector((state) => state.tab)
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
   const id = searchParams.get('id')
   const method = searchParams.get('method')
@@ -61,7 +62,7 @@ export const TabPage = () => {
           <StyledAppImg src={tab?.icon} />
         </StyledAppPreview>
         <StyledViewName>{tab?.title}</StyledViewName>
-        <StyledViewName variant="body2">Loading...</StyledViewName>
+        {isLoading && <StyledViewName variant="body2">Loading...</StyledViewName>}
       </StyledWrap>
 
       <TabMenu />
