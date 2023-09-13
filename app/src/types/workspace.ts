@@ -51,6 +51,7 @@ export type WorkSpace = {
     }
     lastTabId: string
     lastActive: number
+    order: number
   }[]
   lastKindApps?: {
     [key: string]: string
