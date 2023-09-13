@@ -255,9 +255,9 @@ export const useOpenApp = () => {
       handleClose('/')
     },
     setUrl: async (tabId, url) => {
-      // const getTab = (id) => currentWorkSpace.tabs.find((tab) => tab.id === id)
-      // dispatch(setUrlTabWorkspace({ tab: getTab, url }))
-      // dbi.updateTab({ ...getTab(tabId), url }) ??????????????????????????????????????????????
+      const getTab = (id) => currentWorkSpace.tabs.find((tab) => tab.id === id)
+      dispatch(setUrlTabWorkspace({ tab: getTab, url }))
+      dbi.updateTab({ ...getTab(tabId), url })
     },
     onLoadStart: async (tabId, event) => {
       console.log('loading', JSON.stringify(event))
