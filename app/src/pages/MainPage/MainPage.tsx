@@ -16,6 +16,7 @@ import { ModaSearch } from '@/components/Modal/ModaSearch/ModaSearch'
 import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
 import { ModaTabMenu } from '@/components/Modal/ModaTabMenu/ModaTabMenu'
 import { TabPage } from '../TabPage/TabPage'
+import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextMenu'
 
 export const MainPage = () => {
   const location = useLocation()
@@ -38,9 +39,10 @@ export const MainPage = () => {
       {/* Modal pages */}
       <ProfilePage />
       <ModaTabMenu />
-      <ModalSelectApp />
       <ModaSearch />
+      <ModalSelectApp />
       <TabPage />
+      <ModaContextMenu />
 
       {isShowAppPinMenu && <AppPinMenu />}
     </StyledWrapperMain>

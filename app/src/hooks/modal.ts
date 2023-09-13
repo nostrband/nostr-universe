@@ -28,7 +28,7 @@ export const useOpenModalSearchParams = () => {
     }
 
     const searchString =
-      extraOptions?.replace || extraOptions?.search || !getSearchParamsLength
+      extraOptions?.replace || !getSearchParamsLength
         ? createSearchParams(searchParamsData).toString()
         : `${location.search}&${createSearchParams(searchParamsData).toString()}`
 
@@ -45,7 +45,7 @@ export const useOpenModalSearchParams = () => {
     console.log('CLOSE FROM API')
     if (path) {
       console.log('PATH CLOSE', path)
-      navigate('/', { replace: true })
+      navigate(path, { replace: true })
     } else {
       navigate(-1)
     }

@@ -243,7 +243,10 @@ export const useOpenApp = () => {
     },
     showContextMenu: async function (tabId, id) {
       console.log('event menu', id)
-      // setContextInput(id);
+      handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
+        search: { id: id },
+        replace: true
+      })
     },
     share: async function (tabId, data) {
       return await window.navigator.share(data)

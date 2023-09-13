@@ -87,7 +87,7 @@ export const ModalSelectApp = () => {
   }, [getParamAddr, load])
 
   return (
-    <Modal title="Select App" open={isOpen} handleClose={handleClose}>
+    <Modal title="Select App" open={isOpen} handleClose={() => handleClose()}>
       <Container>
         <StyledForm>
           <StyledInput
