@@ -233,7 +233,8 @@ export const addToTabGroup = (pins, tabs) => {
         tabs: [],
         pin: pt,
         lastTabId: '',
-        lastActive: 0
+        lastActive: 0,
+        order: pt.order
       })
     }
   })
@@ -243,6 +244,9 @@ export const addToTabGroup = (pins, tabs) => {
     const tabIndex = groupTab.findIndex((tab) => tab.id === id)
 
     if (tabIndex !== -1) {
+      if (groupTab[tabIndex].lastActive < pt.lastActive) {
+        groupTab[tabIndex].lastActive = pt.lastActive
+      }
       groupTab[tabIndex].tabs.push(pt.id)
     } else {
       groupTab.push({
@@ -251,7 +255,8 @@ export const addToTabGroup = (pins, tabs) => {
         tabs: [pt.id],
         pin: pt,
         lastTabId: '',
-        lastActive: 0
+        lastActive: 0,
+        order: pt.order
       })
     }
   })
@@ -269,6 +274,8 @@ export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
   const pinsSort = pins.sort((a, b) => a.order - b.order)
   const tabsSort = tabs.sort((a, b) => a.order - b.order)
   const tabGroups = addToTabGroup(pinsSort, tabsSort)
+
+  console.log({ pinsSort, tabsSort, tabGroups }, 'sortbek')
 
   const workspace = {
     pubkey,
