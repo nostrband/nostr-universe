@@ -13,7 +13,7 @@ import { StyledTabsActions, StyledWrapper } from './styled'
 export const TabMenu = () => {
   const [searchParams] = useSearchParams()
   const { onSwitchTab, onHideTabInBrowser, onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
-  const id = searchParams.get('id')
+  const id = searchParams.get('id') || ''
   const { isLoading } = useAppSelector((state) => state.tab)
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
   const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
@@ -27,9 +27,9 @@ export const TabMenu = () => {
 
   const handleStopReloadTab = async () => {
     if (isLoading) {
-      await onStopLoadTab()
+      await onStopLoadTab(id)
     } else {
-      await onReloadTab()
+      await onReloadTab(id)
     }
   }
 

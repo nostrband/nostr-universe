@@ -21,7 +21,7 @@ import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.sl
 import { addWorkspace, getOrigin, getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
-import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useSearchParams } from 'react-router-dom'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
@@ -34,7 +34,7 @@ export const useOpenApp = () => {
   const { currentWorkSpace, workspaces } = useAppSelector((state) => state.workspaces)
   const { apps } = useAppSelector((state) => state.apps)
   const { currentPubKey, readKeys } = useAppSelector((state) => state.keys)
-  const { currentTab, openedTabs } = useAppSelector((state) => state.tab)
+  const { openedTabs } = useAppSelector((state) => state.tab)
 
   const getTabAny = (id) => workspaces.map((ws) => ws.tabs.find((t) => t.id === id)).find((t) => t !== undefined) /// ???????????
   const isReadOnly = () => currentPubKey === DEFAULT_PUBKEY || readKeys.includes(currentPubKey) //// ???????????
@@ -72,20 +72,20 @@ export const useOpenApp = () => {
   }
 
   const onSwitchTab = async (tab) => {
-    await openBlank(tab)
+    await openBlank(tab, { replace: true })
   }
 
-  const onStopLoadTab = async () => {
+  const onStopLoadTab = async (id: string) => {
     dispatch(
       setLoadingTab({
         isLoading: false
       })
     )
 
-    await browser.stop(currentTab.id)
+    await browser.stop(id)
   }
 
-  const onReloadTab = async () => {
+  const onReloadTab = async (id: string) => {
     console.log('onReloadTab')
     dispatch(
       setLoadingTab({
@@ -93,7 +93,7 @@ export const useOpenApp = () => {
       })
     )
 
-    await browser.reload(currentTab.id).finally(() => {
+    await browser.reload(id).finally(() => {
       dispatch(
         setLoadingTab({
           isLoading: false
@@ -116,7 +116,7 @@ export const useOpenApp = () => {
         if (tab) await hide(tab.id)
 
         // offer to choose an app to show the event
-        // setOpenAddr(b32) ????????????? open select app
+        handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32 } })
       } else {
         // try some external app that might know this type of nostr: link
         window.cordova.InAppBrowser.open(url, '_self')
@@ -133,11 +133,11 @@ export const useOpenApp = () => {
     getPublicKey: async function (tabId) {
       const tab = getTabAny(tabId)
       if (!tab) throw new Error('Inactive tab')
-      if (currentPubkey === DEFAULT_PUBKEY) throw new Error('No pubkey')
+      if (currentPubKey === DEFAULT_PUBKEY) throw new Error('No pubkey')
       const error = 'Pubkey disallowed'
       // if (hasPerm(tab, "pubkey", "0")) throw new Error(error);
       // if (hasPerm(tab, "pubkey", "1")) return currentPubkey;
-      const exec = () => currentPubkey
+      const exec = () => currentPubKey
       return exec()
       // return requestPermExec(tab, { perm: "pubkey" }, exec, error);
     },
@@ -286,9 +286,9 @@ export const useOpenApp = () => {
       // some special scheme?
       if (await handleCustomUrl(url, tab)) return
       // new tab coming, hide current one
-      if (tab) await hide(tab)
+      if (tab) await hide(tab) // ????
       // just open another tab
-      openBlank({ url })
+      openBlank({ url }, {replace: true})
     },
     onBeforeLoad: async (tabId, url) => {
       const tab = getTabAny(tabId)
@@ -301,7 +301,7 @@ export const useOpenApp = () => {
 
       const tab = getTabAny(tabId)
       if (tab) {
-        dbi.updateTab({ tab, icon })
+        dbi.updateTab({ ...tab, icon })
       }
     }
   }
@@ -395,6 +395,12 @@ export const useOpenApp = () => {
 
     if (tab) {
       show(tab, options)
+      return
+    }
+
+    if (entity.url.startsWith('nostr:')) {
+      // try some external app that might know this type of nostr: link
+      window.cordova.InAppBrowser.open(entity.url, '_self')
       return
     }
 
