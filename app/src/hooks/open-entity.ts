@@ -288,7 +288,7 @@ export const useOpenApp = () => {
       // new tab coming, hide current one
       if (tab) await hide(tab) // ????
       // just open another tab
-      openBlank({ url }, {replace: true})
+      openBlank({ url }, { replace: true })
     },
     onBeforeLoad: async (tabId, url) => {
       const tab = getTabAny(tabId)
