@@ -21,6 +21,7 @@ const initialState: IWorkSpaceState = {
     tabGroups: [],
     tabs: [],
     pins: [],
+    perms: [],
     lastKindApps: {},
     currentTabId: '',
     lastCurrentTabId: ''

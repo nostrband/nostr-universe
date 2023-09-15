@@ -26,6 +26,7 @@ import { useSearchParams } from 'react-router-dom'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
 import { sendPayment, stringToBech32 } from '@/modules/nostr'
+import { setPermission } from '@/store/reducers/permissions.slice'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
@@ -35,12 +36,95 @@ export const useOpenApp = () => {
   const { apps } = useAppSelector((state) => state.apps)
   const { currentPubKey, readKeys } = useAppSelector((state) => state.keys)
   const { openedTabs } = useAppSelector((state) => state.tab)
+  const { permissions } = useAppSelector((state) => state.permissions)
+
+  const [searchParams] = useSearchParams()
+  const currentTabId = searchParams.get('id')
 
   const getTabAny = (id) => workspaces.map((ws) => ws.tabs.find((t) => t.id === id)).find((t) => t !== undefined) /// ???????????
   const isReadOnly = () => currentPubKey === DEFAULT_PUBKEY || readKeys.includes(currentPubKey) //// ???????????
+  const hasPerm = (tab, name, value) => {
+    const app = getTabGroupId(tab)
+    const ws = workspaces.find((ws) => ws.pubkey === tab.pubkey)
+    const perm = ws.perms.find((p) => p.app === app && p.name === name)?.value === value
 
-  const [searchParams] = useSearchParams()
-  const test = searchParams.get('id')
+    return perm
+  }
+
+  const replyCurrentPermRequest = async (allow, remember) => {
+    const tab = currentWorkSpace.tabs.find((t) => t.id === currentTabId)
+    const currentPermRequest = permissions.find((perm) => perm.id === currentTabId)
+
+    console.log('replyCurrentPermRequest', allow, remember, JSON.stringify(currentPermRequest))
+    if (remember) {
+      const perm = {
+        pubkey: tab.pubkey,
+        app: getTabGroupId(tab),
+        name: currentPermRequest.perm,
+        value: allow ? '1' : '0'
+      }
+
+      // updateWorkspace((ws) => {
+      //   return { perms: [...ws.perms, perm] };
+      // });
+
+      console.log('adding perm', JSON.stringify(perm))
+      await dbi.updatePerm(perm)
+    }
+
+    // execute
+    try {
+      await currentPermRequest.cb(allow)
+    } catch (e) {
+      console.log('Failed to exec perm callback', e)
+    }
+
+    // // drop executed request
+    // const i = PermRequests.findIndex((pr) => pr.id === currentPermRequest.id);
+    // if (i >= 0) PermRequests.splice(i, 1);
+    // else throw new Error("Perm request not found");
+
+    // // more reqs?
+    // const reqs = PermRequests.filter(
+    //   (pr) => pr.tabId === currentPermRequest.tabId
+    // );
+    // if (reqs.length > 0) setCurrentPermRequest(reqs[0]);
+    // else setCurrentPermRequest(null);
+  }
+
+  const requestPerm = (tab, req, cb) => {
+    const r = {
+      ...req,
+      id: uuidv4(),
+      tabId: tab.id,
+      cb
+    }
+
+    dispatch(setPermission({ permission: r }))
+
+    // permRequests.current = [...permRequests.current, r]
+
+    if (currentTabId === tab.id) {
+      // permRequests.current.length === 1
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { id: r.id }, replace: true })
+      // show request perm modal right now
+      // setCurrentPermRequest(r)
+      // console.log(JSON.stringify({ permissions: refPermissionReq.current }))
+    }
+  }
+
+  const requestPermExec = (tab, perm, exec, error) => {
+    return new Promise((ok, err) => {
+      requestPerm(tab, perm, async (allowed) => {
+        try {
+          if (allowed) ok(await exec())
+          else err(error)
+        } catch (e) {
+          err(e)
+        }
+      })
+    })
+  }
 
   const getTab = (id) => currentWorkSpace?.tabs.find((t) => t.id === id)
 
@@ -135,33 +219,31 @@ export const useOpenApp = () => {
       if (!tab) throw new Error('Inactive tab')
       if (currentPubKey === DEFAULT_PUBKEY) throw new Error('No pubkey')
       const error = 'Pubkey disallowed'
-      // if (hasPerm(tab, "pubkey", "0")) throw new Error(error);
-      // if (hasPerm(tab, "pubkey", "1")) return currentPubkey;
+      if (hasPerm(tab, 'pubkey', '0')) throw new Error(error)
+      if (hasPerm(tab, 'pubkey', '1')) return currentPubkey
       const exec = () => currentPubKey
-      return exec()
-      // return requestPermExec(tab, { perm: "pubkey" }, exec, error);
+      return requestPermExec(tab, { perm: 'pubkey' }, exec, error)
     },
     signEvent: async function (tabId, event) {
       const tab = getTabAny(tabId)
       if (!tab) throw new Error('Inactive tab')
       if (isReadOnly()) throw new Error('No pubkey')
-      // const kindPerm = "sign:" + event.kind;
-      // const allPerm = "sign";
+      const kindPerm = 'sign:' + event.kind
+      const allPerm = 'sign'
       const exec = async () => await keystore.signEvent(event)
-      return await exec()
+      // return await exec()
 
       // // allowed this kind or all kinds (if not kind-0)?
-      // if (
-      //   hasPerm(tab, kindPerm, "1") ||
-      //   (event.kind != 0 && hasPerm(tab, allPerm, "1"))
-      // )
-      //   return await exec();
+      if (hasPerm(tab, kindPerm, '1') || (event.kind != 0 && hasPerm(tab, allPerm, '1'))) {
+        return await exec()
+      }
 
-      // // disallowed this kind or all kinds
-      // const error = "Signing of kind " + event.kind + " disallowed";
-      // if (hasPerm(tab, kindPerm, "0") || hasPerm(tab, allPerm, "0"))
-      //   throw new Error(error);
-      // return requestPermExec(tab, { perm: kindPerm, event }, exec, error);
+      // disallowed this kind or all kinds
+      const error = 'Signing of kind ' + event.kind + ' disallowed'
+      if (hasPerm(tab, kindPerm, '0') || hasPerm(tab, allPerm, '0')) {
+        throw new Error(error)
+      }
+      return requestPermExec(tab, { perm: kindPerm, event }, exec, error)
     },
     // NIP-04
     encrypt: async function (tabId, pubkey, plainText) {
@@ -169,22 +251,20 @@ export const useOpenApp = () => {
       if (!tab) throw new Error('Inactive tab')
       if (isReadOnly()) throw new Error('No pubkey')
       const error = 'Encrypt disallowed'
-      // if (hasPerm(tab, "encrypt", "0")) throw new Error(error);
+      if (hasPerm(tab, 'encrypt', '0')) throw new Error(error)
       const exec = async () => await keystore.encrypt(pubkey, plainText)
-      return await exec()
-      // if (hasPerm(tab, "encrypt", "1")) return await exec();
-      // return requestPermExec(tab, { perm: "encrypt", pubkey, plainText }, exec, error);
+      if (hasPerm(tab, 'encrypt', '1')) return await exec()
+      return requestPermExec(tab, { perm: 'encrypt', pubkey, plainText }, exec, error)
     },
     decrypt: async function (tabId, pubkey, cipherText) {
       const tab = getTabAny(tabId)
       if (!tab) throw new Error('Inactive tab')
       if (isReadOnly()) throw new Error('No pubkey')
       const error = 'Decrypt disallowed'
-      // if (hasPerm(tab, "decrypt", "0")) throw new Error(error);
+      if (hasPerm(tab, 'decrypt', '0')) throw new Error(error)
       const exec = async () => await keystore.decrypt(pubkey, cipherText)
-      return await exec()
-      // if (hasPerm(tab, "decrypt", "1")) return await exec();
-      // return requestPermExec(tab, { perm: "decrypt", pubkey, cipherText }, exec, error);
+      if (hasPerm(tab, 'decrypt', '1')) return await exec()
+      return requestPermExec(tab, { perm: 'decrypt', pubkey, cipherText }, exec, error)
     },
     // NWC
     getWalletInfo: async function (tabId) {
@@ -489,6 +569,7 @@ export const useOpenApp = () => {
     onImportKey,
     onCloseTab,
     openTabWindow,
-    openBlank
+    openBlank,
+    replyCurrentPermRequest
   }
 }

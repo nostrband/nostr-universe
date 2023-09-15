@@ -7,6 +7,7 @@ import { workspacesSlice } from './reducers/workspaces.slice'
 import { profileSlice } from './reducers/profile.slice'
 import { tabSlice } from './reducers/tab.slice'
 import { contentWorkSpaceSlice } from './reducers/contentWorkspace'
+import { permissionsSlice } from './reducers/permissions.slice'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -16,6 +17,7 @@ export const rootReducer = combineReducers({
   tab: tabSlice.reducer,
   contentWorkSpace: contentWorkSpaceSlice.reducer,
   workspaces: workspacesSlice.reducer,
+  permissions: permissionsSlice.reducer,
   [userService.reducerPath]: userService.reducer
 })
 

@@ -10,7 +10,7 @@ export const ProfilePage = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PROFILE_PAGE)
 
   return (
-    <Modal title="My profile" open={isOpen} handleClose={handleClose}>
+    <Modal title="My profile" open={isOpen} handleClose={() => handleClose()}>
       {/* <Header handleClose={handleClose} /> */}
       <ProfileView />
       <ProfilMenu />

@@ -289,7 +289,8 @@ export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
     pins: pinsSort,
     lastKindApps: {},
     currentTabId: '',
-    lastCurrentTabId: ''
+    lastCurrentTabId: '',
+    perms: []
     // ...props
   }
 

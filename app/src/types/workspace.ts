@@ -58,4 +58,5 @@ export type WorkSpace = {
   }
   currentTabId?: string
   lastCurrentTabId?: string
+  perms: string[]
 }

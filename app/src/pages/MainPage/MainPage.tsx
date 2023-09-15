@@ -17,6 +17,7 @@ import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
 import { ModaTabMenu } from '@/components/Modal/ModaTabMenu/ModaTabMenu'
 import { TabPage } from '../TabPage/TabPage'
 import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextMenu'
+import { ModalPermissionsRequest } from '@/components/Modal/ModalPermissionsRequest/ModalPermissionsRequest'
 
 export const MainPage = () => {
   const location = useLocation()
@@ -41,6 +42,7 @@ export const MainPage = () => {
       <ModaTabMenu />
       <ModaSearch />
       <ModalSelectApp />
+      <ModalPermissionsRequest />
       <TabPage />
       <ModaContextMenu />
 

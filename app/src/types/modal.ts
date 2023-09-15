@@ -6,7 +6,8 @@ export enum MODAL_PARAMS_KEYS {
   CONTEXT_MENU = 'context-menu',
   PROFILE_PAGE = 'profile-page',
   TAB_MODAL = 'tab-modal',
-  TAB_MENU = 'tab-menu'
+  TAB_MENU = 'tab-menu',
+  PERMISSIONS_REQ = 'permissions-req'
 }
 
 export const EXTRA_OPTIONS = {

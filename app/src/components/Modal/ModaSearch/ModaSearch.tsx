@@ -142,7 +142,7 @@ export const ModaSearch = () => {
   }, [open])
 
   return (
-    <Modal title="Search" open={isOpen} handleClose={handleClose}>
+    <Modal title="Search" open={isOpen} handleClose={() => handleClose()}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput
