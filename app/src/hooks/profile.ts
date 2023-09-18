@@ -70,6 +70,7 @@ export const useUpdateProfile = () => {
 
       subscribeContactList(currentPubKey, async (contactList: ReturnTypeContactList) => {
         console.log('contact list update', contactList)
+
         if (contactList) {
           setContacts(contactList)
 

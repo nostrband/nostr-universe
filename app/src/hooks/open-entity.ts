@@ -6,8 +6,10 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setIcontab, setLoadingTab, setOpenTab } from '@/store/reducers/tab.slice'
 import {
+  deletePermWorkspace,
   removeTabFromTabs,
   setCurrentWorkspace,
+  setPermsWorkspace,
   setTabsWorkspace,
   setUrlTabWorkspace,
   setWorkspaces
@@ -23,12 +25,14 @@ import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
 import { sendPayment, stringToBech32 } from '@/modules/nostr'
-import { setPermission } from '@/store/reducers/permissions.slice'
+import { deletePermissionRequest, setPermissionRequest } from '@/store/reducers/permissionRequests.slice'
 
 export const useOpenApp = () => {
+  const [currentTabId, setCurrentTabId] = useState(null) // сохронять промежуточную id табы
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
@@ -36,10 +40,10 @@ export const useOpenApp = () => {
   const { apps } = useAppSelector((state) => state.apps)
   const { currentPubKey, readKeys } = useAppSelector((state) => state.keys)
   const { openedTabs } = useAppSelector((state) => state.tab)
-  const { permissions } = useAppSelector((state) => state.permissions)
+  const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
 
-  const [searchParams] = useSearchParams()
-  const currentTabId = searchParams.get('id')
+  // const [searchParams] = useSearchParams()
+  // const currentTabId = searchParams.get('id')
 
   const getTabAny = (id) => workspaces.map((ws) => ws.tabs.find((t) => t.id === id)).find((t) => t !== undefined) /// ???????????
   const isReadOnly = () => currentPubKey === DEFAULT_PUBKEY || readKeys.includes(currentPubKey) //// ???????????
@@ -51,9 +55,9 @@ export const useOpenApp = () => {
     return perm
   }
 
-  const replyCurrentPermRequest = async (allow, remember) => {
-    const tab = currentWorkSpace.tabs.find((t) => t.id === currentTabId)
-    const currentPermRequest = permissions.find((perm) => perm.id === currentTabId)
+  const replyCurrentPermRequest = async (allow, remember, currentPermId) => {
+    const currentPermRequest = permissionRequests.find((perm) => perm.id === currentPermId)
+    const tab = currentWorkSpace.tabs.find((t) => t.id === currentPermRequest.tabId)
 
     console.log('replyCurrentPermRequest', allow, remember, JSON.stringify(currentPermRequest))
     if (remember) {
@@ -64,9 +68,7 @@ export const useOpenApp = () => {
         value: allow ? '1' : '0'
       }
 
-      // updateWorkspace((ws) => {
-      //   return { perms: [...ws.perms, perm] };
-      // });
+      dispatch(setPermsWorkspace({ perm }))
 
       console.log('adding perm', JSON.stringify(perm))
       await dbi.updatePerm(perm)
@@ -79,17 +81,21 @@ export const useOpenApp = () => {
       console.log('Failed to exec perm callback', e)
     }
 
-    // // drop executed request
-    // const i = PermRequests.findIndex((pr) => pr.id === currentPermRequest.id);
-    // if (i >= 0) PermRequests.splice(i, 1);
-    // else throw new Error("Perm request not found");
+    // drop executed request
+    // const i = permissionRequests.findIndex((pr) => pr.id === currentPermRequest.id)
+
+    // if (i >= 0) {
+    //   dispatch(deletePermissionRequest({ id: currentPermRequest.id }))
+    // } else {
+    //   throw new Error('Perm request not found')
+    // }
 
     // // more reqs?
-    // const reqs = PermRequests.filter(
-    //   (pr) => pr.tabId === currentPermRequest.tabId
-    // );
-    // if (reqs.length > 0) setCurrentPermRequest(reqs[0]);
-    // else setCurrentPermRequest(null);
+    // const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
+
+    // if (reqs.length > 0) {
+    //   handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { id: reqs[0].id }, replace: true })
+    // }
   }
 
   const requestPerm = (tab, req, cb) => {
@@ -100,11 +106,9 @@ export const useOpenApp = () => {
       cb
     }
 
-    dispatch(setPermission({ permission: r }))
+    dispatch(setPermissionRequest({ permissionRequest: r }))
 
-    // permRequests.current = [...permRequests.current, r]
-
-    if (currentTabId === tab.id) {
+    if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { id: r.id }, replace: true })
       // show request perm modal right now
@@ -126,13 +130,27 @@ export const useOpenApp = () => {
     })
   }
 
+  const deletePermission = async (id: string) => {
+    if (id) {
+      dispatch(deletePermWorkspace({ id }))
+    } else {
+      // updateWorkspace((ws) => {
+      //   return { perms: [] }
+      // })
+    }
+
+    await dbi.deletePerms(currentPubKey, id)
+  }
+
   const getTab = (id) => currentWorkSpace?.tabs.find((t) => t.id === id)
 
   const hide = async (id: string) => {
+    setCurrentTabId(null)
     await browser.hide(id)
   }
 
   const close = async (id: string) => {
+    setCurrentTabId(null)
     await dbi.deleteTab(id)
     await browser.close(id)
   }
@@ -220,7 +238,7 @@ export const useOpenApp = () => {
       if (currentPubKey === DEFAULT_PUBKEY) throw new Error('No pubkey')
       const error = 'Pubkey disallowed'
       if (hasPerm(tab, 'pubkey', '0')) throw new Error(error)
-      if (hasPerm(tab, 'pubkey', '1')) return currentPubkey
+      if (hasPerm(tab, 'pubkey', '1')) return currentPubKey
       const exec = () => currentPubKey
       return requestPermExec(tab, { perm: 'pubkey' }, exec, error)
     },
@@ -429,6 +447,8 @@ export const useOpenApp = () => {
       dispatch(setOpenTab({ tab: dataTabForOpen }))
     }
 
+    setCurrentTabId(tab.id)
+
     handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {
       search: searchParams,
       ...options
@@ -570,6 +590,7 @@ export const useOpenApp = () => {
     onCloseTab,
     openTabWindow,
     openBlank,
-    replyCurrentPermRequest
+    replyCurrentPermRequest,
+    deletePermission
   }
 }

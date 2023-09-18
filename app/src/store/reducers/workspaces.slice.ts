@@ -40,6 +40,20 @@ export const workspacesSlice = createSlice({
         state.workspaces.find((w) => w.pubkey === action.payload.currentPubKey) || initialState.currentWorkSpace
     },
 
+    deletePermWorkspace: (state, action) => {
+      state.currentWorkSpace = {
+        ...state.currentWorkSpace,
+        perms: state.currentWorkSpace.perms.filter((p) => p.app !== action.payload.id)
+      }
+    },
+
+    setPermsWorkspace: (state, action) => {
+      state.currentWorkSpace = {
+        ...state.currentWorkSpace,
+        perms: [...state.currentWorkSpace.perms, action.payload.perm]
+      }
+    },
+
     removeTabFromTabs: (state, action) => {
       const id = action.payload.id
       const currentTab = state.currentWorkSpace.tabs.find((tab) => tab.id === id)
@@ -204,7 +218,9 @@ export const {
   setCurrentWorkspace,
   setTabsWorkspace,
   removeTabFromTabs,
-  swapTabGroups
+  swapTabGroups,
+  setPermsWorkspace,
+  deletePermWorkspace
 } = workspacesSlice.actions
 
 export const swapTabGroupsThunk = createAsyncThunk(

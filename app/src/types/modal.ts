@@ -7,7 +7,8 @@ export enum MODAL_PARAMS_KEYS {
   PROFILE_PAGE = 'profile-page',
   TAB_MODAL = 'tab-modal',
   TAB_MENU = 'tab-menu',
-  PERMISSIONS_REQ = 'permissions-req'
+  PERMISSIONS_REQ = 'permissions-req',
+  PERMISSIONS_MODAL = 'permissions-modal'
 }
 
 export const EXTRA_OPTIONS = {

@@ -7,8 +7,9 @@ import { useSearchParams } from 'react-router-dom'
 import { useOpenApp } from '@/hooks/open-entity'
 import { TabMenu } from '@/components/TabMenu/TabMenu'
 import { Header } from './components/Header/Header'
-import { StyledAppBar, StyledAppImg, StyledAppPreview, StyledDialog, StyledViewName, StyledWrap } from './styled'
+import { StyledAppBar, StyledDialog, StyledViewName, StyledWrap } from './styled'
 import { useAppSelector } from '@/store/hooks/redux'
+import { AppIcon } from '@/shared/AppIcon/AppIcon'
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -35,7 +36,7 @@ export const TabPage = () => {
   //     openTabWindow(id, method)
   //   }
   // }
-  console.log({ tab })
+  console.log(tab?.icon)
 
   useEffect(() => {
     if (id && method) {
@@ -58,9 +59,7 @@ export const TabPage = () => {
       </StyledAppBar>
 
       <StyledWrap>
-        <StyledAppPreview>
-          <StyledAppImg src={tab?.icon} />
-        </StyledAppPreview>
+        <AppIcon size="medium" picture={tab?.icon} isOutline={false} alt={tab?.title} />
         <StyledViewName>{tab?.title}</StyledViewName>
         {isLoading && <StyledViewName variant="body2">Loading...</StyledViewName>}
       </StyledWrap>

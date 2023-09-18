@@ -1,11 +1,5 @@
 import { BoxProps, TypographyProps } from '@mui/material'
-import { OverridableStringUnion } from '@/types/utility'
-import { APP_NOSTRO_SIZE } from './const'
-import { AppNostro } from '@/types/app-nostro'
-
-export type AppNostroSizeUnion = (typeof APP_NOSTRO_SIZE)[keyof typeof APP_NOSTRO_SIZE]
-
-export type AppNostroSize = OverridableStringUnion<AppNostroSizeUnion>
+import { AppNostro, AppNostroSize } from '@/types/app-nostro'
 
 export interface IAppNostro {
   app: AppNostro

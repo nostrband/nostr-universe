@@ -133,6 +133,7 @@ export const dbi = {
       return await db.perms.where('pubkey').equals(pubkey).toArray()
     } catch (error) {
       console.log(`List perms error: ${JSON.stringify(error)}`)
+      return []
     }
   },
   listReadOnlyKeys: async () => {
@@ -176,6 +177,9 @@ export const dbi = {
     }
   },
   deletePerms: async (pubkey, app) => {
+    console.log(JSON.stringify({
+      pubkey, app
+    }))
     try {
       // Delete tab in DB by ID
       const req = { pubkey }

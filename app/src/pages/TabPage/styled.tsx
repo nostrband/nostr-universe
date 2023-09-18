@@ -28,23 +28,6 @@ export const StyledWrap = styled(Box)(() => ({
   width: '100%'
 }))
 
-export const StyledAppPreview = styled(Box)(() => ({
-  position: 'relative',
-  display: 'block',
-  height: 70,
-  width: 70,
-  overflow: 'hidden'
-}))
-
-export const StyledAppImg = styled('img')(() => ({
-  position: 'absolute',
-  left: 0,
-  top: 0,
-  height: '100%',
-  width: '100%',
-  objectFit: 'cover'
-}))
-
 export const StyledViewName = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
     return <Typography ref={ref} {...props} />

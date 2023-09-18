@@ -270,6 +270,8 @@ export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
 
   const pins = await dbi.listPins(pubkey)
   const tabs = await dbi.listTabs(pubkey)
+  const perms = await dbi.listPerms(pubkey)
+  console.log(JSON.stringify({perms}))
 
   const pinsSort = pins.sort((a, b) => a.order - b.order)
   const tabsSort = tabs.sort((a, b) => a.order - b.order)
@@ -290,7 +292,7 @@ export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
     lastKindApps: {},
     currentTabId: '',
     lastCurrentTabId: '',
-    perms: []
+    perms
     // ...props
   }
 

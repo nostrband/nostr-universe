@@ -1,3 +1,4 @@
+import { IPerm } from './permission-req'
 import { ITrendingProfiles } from './trending-profiles'
 
 export interface ITab {
@@ -58,5 +59,5 @@ export type WorkSpace = {
   }
   currentTabId?: string
   lastCurrentTabId?: string
-  perms: string[]
+  perms: IPerm[]
 }
