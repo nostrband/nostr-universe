@@ -13,7 +13,7 @@ export const ModaContextMenu = () => {
   const [searchParams] = useSearchParams()
   const { getModalOpened, handleClose, handleOpen } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
-  const id = searchParams.get('id') || ''
+  const id = searchParams.get('tabId') || ''
 
   // const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
   // const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)

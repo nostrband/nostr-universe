@@ -24,7 +24,7 @@ export const Header = () => {
         <IconButton
           color="inherit"
           size="medium"
-          onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { id: id }, replace: true })}
+          onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id }, replace: true })}
         >
           <MoreVertIcon />
         </IconButton>

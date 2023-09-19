@@ -6,10 +6,12 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setIcontab, setLoadingTab, setOpenTab } from '@/store/reducers/tab.slice'
 import {
+  clearTabGroup,
   deletePermWorkspace,
   removeTabFromTabs,
   setCurrentWorkspace,
   setPermsWorkspace,
+  setScreenshotTab,
   setTabsWorkspace,
   setUrlTabWorkspace,
   setWorkspaces
@@ -82,20 +84,20 @@ export const useOpenApp = () => {
     }
 
     // drop executed request
-    // const i = permissionRequests.findIndex((pr) => pr.id === currentPermRequest.id)
+    const i = permissionRequests.findIndex((pr) => pr.id === currentPermRequest.id)
 
-    // if (i >= 0) {
-    //   dispatch(deletePermissionRequest({ id: currentPermRequest.id }))
-    // } else {
-    //   throw new Error('Perm request not found')
-    // }
+    if (i >= 0) {
+      dispatch(deletePermissionRequest({ id: currentPermRequest.id }))
+    } else {
+      throw new Error('Perm request not found')
+    }
 
-    // // more reqs?
-    // const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
+    // more reqs?
+    const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
 
-    // if (reqs.length > 0) {
-    //   handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { id: reqs[0].id }, replace: true })
-    // }
+    if (reqs.length > 1) {
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { id: reqs[1].id }, replace: true })
+    }
   }
 
   const requestPerm = (tab, req, cb) => {
@@ -146,7 +148,18 @@ export const useOpenApp = () => {
 
   const hide = async (id: string) => {
     setCurrentTabId(null)
+    // setTimeout(async () => {
+    const screenshot = await browser.screenshot(id)
+
+    dispatch(setScreenshotTab({ id, screenshot }))
+
+    const tab = getTab(id)
+    // tab.screenshot = screenshot
+
+    await dbi.updateTabScreenshot({ ...tab, screenshot })
+
     await browser.hide(id)
+    // }, 0);
   }
 
   const close = async (id: string) => {
@@ -169,6 +182,17 @@ export const useOpenApp = () => {
     dispatch(
       removeTabFromTabs({
         id
+      })
+    )
+  }
+
+  const onCloseAllGroupTabs = async (tabGrop) => {
+    const requestsCloseTabs = tabGrop.tabs.map((id) => close(id))
+    await Promise.all(requestsCloseTabs)
+
+    dispatch(
+      clearTabGroup({
+        tabGrop
       })
     )
   }
@@ -406,8 +430,13 @@ export const useOpenApp = () => {
 
   browser.setAPI(API)
 
-  const openTabWindow = async (id, method) => {
-    if (method === 'create') {
+  const openTabWindow = async (id) => {
+    const isOpened = openedTabs.find((tab) => id === tab.id)
+
+    if (isOpened) {
+      console.log('SHOW')
+      await browser.show(id)
+    } else {
       const tab = currentWorkSpace.tabs.find((tab) => id === tab.id)
       const dataTabForOpen = {
         id: tab.id,
@@ -418,39 +447,38 @@ export const useOpenApp = () => {
 
       console.log('CREATE', tab)
 
+      dispatch(setOpenTab({ tab: dataTabForOpen }))
+
       await browser.open(dataTabForOpen)
-      await browser.show(id)
-    } else {
-      console.log('SHOW')
       await browser.show(id)
     }
   }
 
   const show = (tab, options) => {
-    const isOpened = openedTabs.find((openedTab) => tab.id === openedTab.id)
+    // const isOpened = openedTabs.find((openedTab) => tab.id === openedTab.id)
 
-    let searchParams = {
-      id: tab.id,
-      method: 'show'
-    }
+    // let searchParams = {
+    //   id: tab.id,
+    //   method: 'show'
+    // }
 
-    if (!isOpened) {
-      const dataTabForOpen = {
-        id: tab.id,
-        url: tab.url,
-        hidden: true,
-        apiCtx: tab.id
-      }
+    // if (!isOpened) {
+    //   const dataTabForOpen = {
+    //     id: tab.id,
+    //     url: tab.url,
+    //     hidden: true,
+    //     apiCtx: tab.id
+    //   }
 
-      searchParams.method = 'create'
+    //   // searchParams.method = 'create'
 
-      dispatch(setOpenTab({ tab: dataTabForOpen }))
-    }
+    //   dispatch(setOpenTab({ tab: dataTabForOpen }))
+    // }
 
     setCurrentTabId(tab.id)
 
     handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {
-      search: searchParams,
+      search: { id: tab.id },
       ...options
     })
   }
@@ -591,6 +619,7 @@ export const useOpenApp = () => {
     openTabWindow,
     openBlank,
     replyCurrentPermRequest,
-    deletePermission
+    deletePermission,
+    onCloseAllGroupTabs
   }
 }

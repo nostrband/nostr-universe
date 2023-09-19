@@ -14,7 +14,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(8).stores({
+db.version(9).stores({
   tabs: 'id,pubkey,url,appNaddr,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -25,7 +25,7 @@ db.version(8).stores({
 
   // allow: pubkey=1,sign:0=1,encrypt=1,decrypt=1,sign:*=1,
   // disallow: sign:*=0
-  perms: '[pubkey+app+name],value'
+  perms: '[pubkey+app+name],[pubkey+app],value'
 })
 
 export const dbi = {

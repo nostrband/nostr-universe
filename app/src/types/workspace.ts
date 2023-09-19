@@ -10,6 +10,33 @@ export interface ITab {
   order: number
   pubkey: string
   pinned: string
+  screenshot?: string
+}
+
+export interface ITabGroup {
+  id: string
+  info: {
+    id: string
+    url: string
+    appNaddr: string
+    title: string
+    icon: string
+    order: number
+    pubkey: string
+  }
+  tabs: string[]
+  pin: {
+    id: string
+    url: string
+    appNaddr: string
+    title: string
+    icon: string
+    order: number
+    pubkey: string
+  }
+  lastTabId: string
+  lastActive: number
+  order: number
 }
 
 export type WorkSpace = {
@@ -29,31 +56,7 @@ export type WorkSpace = {
   longNotes?: string[]
   liveEvents?: string[]
   suggestedProfiles?: string[]
-  tabGroups: {
-    id: string
-    info: {
-      id: string
-      url: string
-      appNaddr: string
-      title: string
-      icon: string
-      order: number
-      pubkey: string
-    }
-    tabs: string[]
-    pin: {
-      id: string
-      url: string
-      appNaddr: string
-      title: string
-      icon: string
-      order: number
-      pubkey: string
-    }
-    lastTabId: string
-    lastActive: number
-    order: number
-  }[]
+  tabGroups: ITabGroup[]
   lastKindApps?: {
     [key: string]: string
   }

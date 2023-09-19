@@ -54,6 +54,38 @@ export const workspacesSlice = createSlice({
       }
     },
 
+    setScreenshotTab: (state, action) => {
+      const screenshot = action.payload.screenshot
+      const id = action.payload.id
+
+      const tabs = state.currentWorkSpace.tabs.map((tab) => {
+        if (tab.id === id) {
+          return {
+            ...tab,
+            screenshot
+          }
+        }
+        return tab
+      })
+
+      state.currentWorkSpace = {
+        ...state.currentWorkSpace,
+        tabs,
+        lastCurrentTabId: ''
+      }
+
+      state.workspaces = state.workspaces.map((workspace) => {
+        if (workspace.pubkey === state.currentWorkSpace.pubkey) {
+          return {
+            ...workspace,
+            tabs
+          }
+        }
+
+        return workspace
+      })
+    },
+
     removeTabFromTabs: (state, action) => {
       const id = action.payload.id
       const currentTab = state.currentWorkSpace.tabs.find((tab) => tab.id === id)
@@ -66,6 +98,25 @@ export const workspacesSlice = createSlice({
             return {
               ...tab,
               tabs: tab.tabs.filter((el) => el !== currentTab.id)
+            }
+          }
+
+          return tab
+        })
+      }
+    },
+
+    clearTabGroup: (state, action) => {
+      const tabGrop = action.payload.tabGrop
+
+      state.currentWorkSpace = {
+        ...state.currentWorkSpace,
+        tabs: state.currentWorkSpace.tabs.filter((tab) => tab.appNaddr !== tabGrop.id),
+        tabGroups: state.currentWorkSpace.tabGroups.map((tab) => {
+          if (tab.id === tabGrop.id) {
+            return {
+              ...tab,
+              tabs: []
             }
           }
 
@@ -220,7 +271,9 @@ export const {
   removeTabFromTabs,
   swapTabGroups,
   setPermsWorkspace,
-  deletePermWorkspace
+  deletePermWorkspace,
+  clearTabGroup,
+  setScreenshotTab
 } = workspacesSlice.actions
 
 export const swapTabGroupsThunk = createAsyncThunk(

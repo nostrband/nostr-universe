@@ -28,7 +28,6 @@ export const TabPage = () => {
   const { isLoading } = useAppSelector((state) => state.tab)
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
   const id = searchParams.get('id')
-  const method = searchParams.get('method')
   const tab = currentWorkSpace.tabs.find((tab) => tab.id === id)
 
   // const handleOpen = () => { // use this method letter
@@ -36,16 +35,15 @@ export const TabPage = () => {
   //     openTabWindow(id, method)
   //   }
   // }
-  console.log(tab?.icon)
 
   useEffect(() => {
-    if (id && method) {
-      openTabWindow(id, method)
+    if (id) {
+      openTabWindow(id)
       return () => {
         onHideTabInBrowser(id)
       }
     }
-  }, [id, method])
+  }, [id])
 
   return (
     <StyledDialog

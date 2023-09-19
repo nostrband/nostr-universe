@@ -8,7 +8,8 @@ export enum MODAL_PARAMS_KEYS {
   TAB_MODAL = 'tab-modal',
   TAB_MENU = 'tab-menu',
   PERMISSIONS_REQ = 'permissions-req',
-  PERMISSIONS_MODAL = 'permissions-modal'
+  PERMISSIONS_MODAL = 'permissions-modal',
+  TABS_SWITCHER = 'tabs-switcher'
 }
 
 export const EXTRA_OPTIONS = {
