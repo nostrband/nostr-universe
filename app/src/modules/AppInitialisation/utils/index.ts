@@ -3,7 +3,8 @@
 import { coracleIcon, irisIcon, nostrIcon, satelliteIcon, snortIcon } from '@/assets'
 import { db, dbi } from '@/modules/db'
 import { keystore } from '@/modules/keystore'
-import { subscribeProfiles } from '@/modules/nostr'
+import { addWalletInfo, subscribeProfiles } from '@/modules/nostr'
+import { walletstore } from '@/modules/walletstore'
 import { WorkSpace } from '@/types/workspace'
 
 // ?? зачем дефолтные аппы ??
@@ -303,4 +304,12 @@ export const createSomeWorkspaces = async (keys: string[]): Promise<WorkSpace[]>
   const workspaces = await Promise.all(keys.map((key) => addWorkspace(key)))
 
   return workspaces
+}
+
+export const reloadWallets = async () => {
+  const r = await walletstore.listWallets()
+  console.log('wallets', JSON.stringify(r))
+  Object.values(r)
+    .filter((w) => typeof w === 'object') // exclude 'currentAlias'
+    .forEach((w) => addWalletInfo(w))
 }

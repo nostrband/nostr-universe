@@ -13,3 +13,9 @@ export const StyledWrapper = styled(Box)(({ theme }) => ({
   zIndex: 2,
   background: theme.palette.background.default
 }))
+
+export const StyledContainerButton = styled(Box)(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 5
+}))

@@ -5,6 +5,12 @@ export const StyledIconButton = styled(IconButton)(() => ({
   padding: 0
 }))
 
+export const StyledContainerButton = styled(Box)(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 5
+}))
+
 export const StyledWrapper = styled(Box)(({ theme }) => ({
   position: 'fixed',
   top: 0,

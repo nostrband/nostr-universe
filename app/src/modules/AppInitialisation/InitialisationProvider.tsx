@@ -9,7 +9,7 @@ import { DEFAULT_PUBKEY } from '@/consts'
 import { getKeys } from '@/utils/keys'
 import { IInitialisationProvider } from './types'
 import { connect, fetchApps } from '../nostr'
-import { createSomeWorkspaces } from './utils'
+import { createSomeWorkspaces, reloadWallets } from './utils'
 import { dbi } from '../db'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
@@ -37,6 +37,8 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       console.log('ndk connected')
 
       await connect()
+
+      await reloadWallets()
 
       const profiles = await dbi.listProfiles()
       if (profiles.length > 0) {

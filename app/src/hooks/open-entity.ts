@@ -322,7 +322,7 @@ export const useOpenApp = () => {
     sendPayment: async function (tabId, paymentRequest) {
       const tab = getTabAny(tabId)
       if (!tab) throw new Error('Inactive tab')
-      if (isReadOnly()) throw new Error('No pubkey')
+      // if (isReadOnly()) throw new Error('No pubkey')
 
       const bolt11 = bolt11Decode(paymentRequest)
       const amount = Number(bolt11.sections?.find((s) => s.name === 'amount').value)
@@ -342,23 +342,26 @@ export const useOpenApp = () => {
       }
 
       // allowed?
-      // const MAX_ALLOW_AMOUNT = 10000 * 1000; // anything above 10k must be explicitly authorized
-      // if (amount <= MAX_ALLOW_AMOUNT && hasPerm(tab, perm, "1"))
-      return await exec()
+      const MAX_ALLOW_AMOUNT = 10000 * 1000 // anything above 10k must be explicitly authorized
+      if (amount <= MAX_ALLOW_AMOUNT && hasPerm(tab, perm, '1')) {
+        return await exec()
+      }
 
       // disallowed?
-      // const error = "Payment request disallowed";
-      // if (hasPerm(tab, perm, "0"))
-      //   throw new Error(error);
+      const error = 'Payment request disallowed'
+      if (hasPerm(tab, perm, '0')) throw new Error(error)
 
-      // return requestPermExec(
-      //   tab,
-      //   {
-      //     perm,
-      //     paymentRequest,
-      //     amount,
-      //     wallet
-      //   }, exec, error);
+      return requestPermExec(
+        tab,
+        {
+          perm,
+          paymentRequest,
+          amount,
+          wallet
+        },
+        exec,
+        error
+      )
     },
     clipboardWriteText: async function (tabId, text) {
       return await window.cordova.plugins.clipboard.copy(text)
