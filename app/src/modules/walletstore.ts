@@ -2,13 +2,13 @@
 // @ts-nocheck
 
 const wallets = {
-  'id1': {
+  id1: {
     id: 'id1',
     name: 'Wallet1',
     publicKey: '3156de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd',
     relay: 'wss://nostr.mutinywallet.com'
   },
-  'id2': {
+  id2: {
     id: 'id2',
     name: 'Wallet1',
     publicKey: '32770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24',
@@ -25,20 +25,19 @@ const listWalletsStub = async () => {
   }
 }
 
-
 const stub = {
   listWallets: listWalletsStub,
 
   addWallet: () => {
-    console.log("wallet add")
+    console.log('wallet add')
   },
 
   deleteWallet: ({ id }) => {
-    console.log("wallet delete", id)
+    console.log('wallet delete', id)
   },
 
   selectWallet: ({ id }) => {
-    console.log("wallet select", id)
+    console.log('wallet select', id)
     currentWallet = id
     return listWalletsStub()
   },
@@ -48,17 +47,16 @@ const stub = {
   },
 
   signEvent: async (event) => {
-    console.log("wallet sign ", event)
+    console.log('wallet sign ', event)
   },
 
   encrypt: async ({ pubkey, plaintext }) => {
-    console.log("wallet encrypt", pubkey, plaintext)
+    console.log('wallet encrypt', pubkey, plaintext)
   },
 
   decrypt: async ({ pubkey, ciphertext }) => {
-    console.log("wallet decrypt", pubkey, ciphertext)
-  },
-
+    console.log('wallet decrypt', pubkey, ciphertext)
+  }
 }
 
 const API = function (method) {

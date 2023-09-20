@@ -1,10 +1,10 @@
 import { forwardRef } from 'react'
 import { styled } from '@mui/material/styles'
-import { Typography, TypographyProps, ListItemText, ListItemButton, Avatar, List } from '@mui/material'
+import { Typography, Button, TypographyProps, Alert, ListItemText, ListItemButton, Avatar, List } from '@mui/material'
 
 export const StyledInfoItem = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
-    return <Typography variant="body1" ref={ref} {...props} />
+    return <Typography ref={ref} {...props} />
   })
 )(({ theme }) => ({
   color: theme.palette.primary.contrastText,
@@ -15,11 +15,16 @@ export const StyledInfoItem = styled(
 export const StyledItemText = styled(ListItemText)(({ theme }) => ({
   color: theme.palette.light.light,
   fontWeight: 'bold',
-  flex: 'none'
+  flex: 'none',
+  '.MuiListItemText-secondary': {
+    color: theme.palette.grey[500]
+  }
 }))
 
 export const StyledItemButton = styled(ListItemButton)(() => ({
-  borderTop: '1px solid'
+  borderTop: '1px solid',
+  paddingLeft: 0,
+  paddingRight: 0
 }))
 
 export const StyledItemIconAvatar = styled(Avatar)(({ theme }) => ({
@@ -29,4 +34,12 @@ export const StyledItemIconAvatar = styled(Avatar)(({ theme }) => ({
 
 export const StyledList = styled(List)(() => ({
   padding: 0
+}))
+
+export const StyledAlert = styled(Alert)(() => ({
+  marginBottom: 15
+}))
+
+export const StyledAaddButton = styled(Button)(() => ({
+  marginTop: 15
 }))

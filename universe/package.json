@@ -21,7 +21,8 @@
     "cordova-plugin-x-socialsharing": "^6.0.4",
     "cordova-plugin-x-toast": "^2.7.3",
     "es6-promise-plugin": "^4.2.2",
-    "nostr-cordova-plugin-secure-key": "github:nostrband/nostr-keystore-cordova-plugin"
+    "nostr-cordova-plugin-secure-key": "github:nostrband/nostr-keystore-cordova-plugin",
+    "nostr-cordova-plugin-wallet-store": "github:nostrband/nostr-walletstore-cordova-plugin#without-nostr-utils"
   },
   "cordova": {
     "platforms": [
@@ -34,7 +35,8 @@
       "nostr-keystore-cordova-plugin": {},
       "cordova-plugin-inappbrowser": {},
       "cordova-plugin-x-socialsharing": {},
-      "cordova-plugin-x-toast": {}
+      "cordova-plugin-x-toast": {},
+      "nostr-walletstore-cordova-plugin": {}
     }
   }
 }

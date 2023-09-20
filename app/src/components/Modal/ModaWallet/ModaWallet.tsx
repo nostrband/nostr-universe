@@ -1,39 +1,50 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
-import { Button } from '@mui/material'
-// import { useAppSelector } from '@/store/hooks/redux'
-// import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
-// import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
-// import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
-// import { StyledInfoItem, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
-// import { ListItem, ListItemAvatar } from '@mui/material'
-// import { useOpenApp } from '@/hooks/open-entity'
-// import { useSearchParams } from 'react-router-dom'
+import { ListItem, ListItemAvatar, IconButton } from '@mui/material'
+import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import { walletstore } from '@/modules/walletstore'
-import { StyledList } from './styled'
+import {
+  StyledAaddButton,
+  StyledAlert,
+  StyledInfoItem,
+  StyledItemButton,
+  StyledItemIconAvatar,
+  StyledItemText,
+  StyledList
+} from './styled'
+
+interface IWallet {
+  id: string
+  name: string
+  publicKey: string
+  isCurrent: boolean
+  relay: string
+}
 
 export const ModaWallet = () => {
   const { getModalOpened, handleClose } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.WALLET_MODAL)
 
-  // const [wallets, setWallets] = useState([])
-  // const [currentWalletId, setCurrentWalletId] = useState('')
+  const [wallets, setWallets] = useState<IWallet[]>([])
+  const [currentWalletId, setCurrentWalletId] = useState('')
 
-  const load = async () => {
+  const getCurrentWalet = wallets.find((w) => w.id === currentWalletId)
+  const getWallets = wallets.filter((wallet) => wallet.id !== currentWalletId)
+
+  const loadWallet = async () => {
     const r = await walletstore.listWallets()
-    // setCurrentWalletId(r.currentAlias || '')
+    setCurrentWalletId(r.currentAlias || '')
     const walletsPrepare = Object.values(r).filter((v) => typeof v === 'object')
-    console.log(JSON.stringify({ walletsPrepare }))
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // setWallets(walletsPrepare)
+    console.log({ walletsPrepare })
+    setWallets(walletsPrepare as IWallet[])
   }
 
   useEffect(() => {
-    load()
+    loadWallet()
   }, [isOpen])
 
   const handleAddWallet = async () => {
@@ -45,37 +56,92 @@ export const ModaWallet = () => {
       // @ts-ignore
       window.plugins.toast.showShortBottom(`Operation failed: ${e}`)
     }
-    load()
+    loadWallet()
+  }
+
+  const onDelete = async (w: IWallet) => {
+    console.log('delete', w.id)
+    const r = await walletstore.deleteWallet(w.id)
+    console.log('delete result', JSON.stringify(r))
+    loadWallet()
+  }
+
+  const onSelect = async (id: string) => {
+    console.log('select', id)
+    await walletstore.selectWallet(id)
+    loadWallet()
   }
 
   return (
     <Modal title="Wallet" open={isOpen} handleClose={() => handleClose()}>
       <Container>
-        <StyledList>
-          <Button fullWidth variant="contained" className="button" color="secondary" onClick={handleAddWallet}>
-            Add wallet
-          </Button>
-          {/* <ListItem disablePadding>
-            <StyledItemButton alignItems="center" onClick={handlePinUnPinTab}>
-              <ListItemAvatar>
-                <StyledItemIconAvatar>
-                  {isPin ? <DeleteOutlineOutlinedIcon /> : <PushPinOutlinedIcon />}
-                </StyledItemIconAvatar>
-              </ListItemAvatar>
-              <StyledItemText primary="Unpin" />
-            </StyledItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <StyledItemButton alignItems="center" onClick={handleCloseTab}>
-              <ListItemAvatar>
-                <StyledItemIconAvatar>
+        <StyledInfoItem variant="h5" component="div">
+          Current wallet:
+        </StyledInfoItem>
+        {!currentWalletId && (
+          <StyledAlert severity="warning">Select a wallet to make it current and accessible to apps.</StyledAlert>
+        )}
+
+        {getCurrentWalet && (
+          <StyledList>
+            <ListItem
+              disablePadding
+              secondaryAction={
+                <IconButton color="inherit" size="medium" onClick={() => onSelect('')}>
                   <CloseOutlinedIcon />
+                </IconButton>
+              }
+            >
+              <ListItemAvatar>
+                <StyledItemIconAvatar>
+                  <AccountBalanceWalletOutlinedIcon />
                 </StyledItemIconAvatar>
               </ListItemAvatar>
-              <StyledItemText primary="Close tab" />
-            </StyledItemButton>
-          </ListItem> */}
-        </StyledList>
+              <StyledItemText primary={getCurrentWalet?.name} secondary={getCurrentWalet?.relay} />
+            </ListItem>
+          </StyledList>
+        )}
+
+        <StyledInfoItem variant="h5" component="div">
+          {currentWalletId ? 'Other wallets' : 'Your wallets'}:
+        </StyledInfoItem>
+        {!wallets.length ? (
+          <StyledInfoItem variant="body2">No wallets yet.</StyledInfoItem>
+        ) : (
+          <StyledList>
+            {getWallets.map((wallet) => (
+              <ListItem
+                key={wallet.id}
+                disablePadding
+                secondaryAction={
+                  <IconButton color="inherit" size="medium" onClick={() => onDelete(wallet)}>
+                    <CloseOutlinedIcon />
+                  </IconButton>
+                }
+              >
+                <StyledItemButton alignItems="center" onClick={() => onSelect(wallet.id)}>
+                  <ListItemAvatar>
+                    <StyledItemIconAvatar>
+                      <AccountBalanceWalletOutlinedIcon />
+                    </StyledItemIconAvatar>
+                  </ListItemAvatar>
+                  <StyledItemText primary={wallet?.name} secondary={wallet?.relay} />
+                </StyledItemButton>
+              </ListItem>
+            ))}
+          </StyledList>
+        )}
+
+        <StyledAaddButton
+          fullWidth
+          variant="contained"
+          size="large"
+          className="button"
+          color="secondary"
+          onClick={handleAddWallet}
+        >
+          Add wallet
+        </StyledAaddButton>
       </Container>
     </Modal>
   )
