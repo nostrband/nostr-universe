@@ -49,6 +49,10 @@ export const StyledAppImg = styled('img')(() => ({
   objectFit: 'cover'
 }))
 
+export const StyledDetailsWrapper = styled(Box)({
+  width: 'calc(100% - 75px)'
+})
+
 export const StyledAppName = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function AppNameDisplayName(props, ref) {
     return <Typography variant="body1" ref={ref} {...props} />
