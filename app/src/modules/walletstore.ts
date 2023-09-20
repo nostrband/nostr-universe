@@ -42,6 +42,7 @@ const stub = {
   },
 
   getInfo: () => {
+    return wallets[currentWallet]
   },
 
   signEvent: async (event) => {
