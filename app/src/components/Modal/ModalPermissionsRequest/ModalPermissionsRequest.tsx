@@ -2,7 +2,7 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { Modal } from '@/modules/Modal/Modal'
 import { useSearchParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
@@ -13,6 +13,7 @@ import { Container } from '@/layout/Container/Conatiner'
 export const ModalPermissionsRequest = () => {
   const { replyCurrentPermRequest } = useOpenApp()
   const [isRemember, setIsRemember] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   const [searchParams] = useSearchParams()
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
 
@@ -24,18 +25,29 @@ export const ModalPermissionsRequest = () => {
   const permReq = permissionRequests.find((permReq) => permReq.id === currentPermId)
   const getTab = currentWorkSpace.tabs.find((tab) => tab.id === permReq?.tabId)
 
-  const handleCloseModal = () => {
-    handleClose()
+  useEffect(() => {
     setIsRemember(false)
+    setIsLoading(false)
+  }, [currentPermId, isOpen])
+
+  const reply = async (allow: boolean, remember: boolean) => {
+    setIsLoading(true)
+    await replyCurrentPermRequest(allow, remember, currentPermId)
+    setIsLoading(false)
+  }
+
+  const handleCloseModal = async () => {
+    await reply(false, false)
+    handleClose()
   }
 
   const onDisallow = async () => {
-    await replyCurrentPermRequest(false, isRemember, currentPermId)
+    await reply(false, isRemember)
     handleClose()
   }
 
   const onAllow = async () => {
-    await replyCurrentPermRequest(true, isRemember, currentPermId)
+    await reply(true, isRemember)
     handleClose()
   }
 
@@ -90,13 +102,18 @@ export const ModalPermissionsRequest = () => {
         />
 
         <StyledButtonContainer>
-          <Button fullWidth variant="contained" className="button" color="secondary" onClick={onDisallow}>
+          <Button fullWidth variant="contained" className="button" color="secondary"
+            disabled={isLoading} onClick={onDisallow}
+          >
             Disallow
           </Button>
-          <Button fullWidth variant="contained" className="button" color="secondary" onClick={onAllow}>
+          <Button fullWidth variant="contained" className="button" color="secondary"
+            disabled={isLoading} onClick={onAllow}
+          >
             Allow
           </Button>
         </StyledButtonContainer>
+        {isLoading && (<StyledTitle variant="body1">Processing...</StyledTitle>)}
       </Container>
     </Modal>
   )
