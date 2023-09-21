@@ -80,12 +80,16 @@ export const ModalSelectApp = () => {
     }
   }, [currentWorkSpace.pins, getParamAddr])
 
-  const handleOpen = (app: IOpenAppNostro) => {
-    openApp({ ...app, kind }, { replace: true })
-    // handleClose()
+  const resetStates = useCallback(() => {
     setApps([])
     setKind('')
     setSearchValue('')
+  }, [])
+
+  const handleOpen = (app: IOpenAppNostro) => {
+    openApp({ ...app, kind }, { replace: true })
+    // handleClose()
+    resetStates()
     // setSearchParams('')
   }
 
@@ -94,6 +98,12 @@ export const ModalSelectApp = () => {
       load()
     }
   }, [getParamAddr, load])
+
+  useEffect(() => {
+    return () => {
+      resetStates()
+    }
+  }, [isOpen, resetStates])
 
   const copyAddrHandler = () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
