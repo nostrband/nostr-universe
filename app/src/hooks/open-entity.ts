@@ -110,6 +110,7 @@ export const useOpenApp = () => {
 
     dispatch(setPermissionRequest({ permissionRequest: r }))
 
+//    console.log("perm request", tab.id, JSON.stringify(r), JSON.stringify(permissionRequests));
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { id: r.id }, replace: true })
@@ -148,18 +149,16 @@ export const useOpenApp = () => {
 
   const hide = async (id: string) => {
     setCurrentTabId(null)
-    // setTimeout(async () => {
-    const screenshot = await browser.screenshot(id)
-
-    dispatch(setScreenshotTab({ id, screenshot }))
-
-    const tab = getTab(id)
-    // tab.screenshot = screenshot
-
-    await dbi.updateTabScreenshot({ ...tab, screenshot })
-
     await browser.hide(id)
-    // }, 0);
+
+    setTimeout(async () => {
+      const screenshot = await browser.screenshot(id)
+
+      dispatch(setScreenshotTab({ id, screenshot }))
+
+      await dbi.updateTabScreenshot({ id, screenshot })
+
+    }, 0);
   }
 
   const close = async (id: string) => {
