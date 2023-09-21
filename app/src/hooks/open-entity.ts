@@ -43,7 +43,7 @@ export const useOpenApp = () => {
   const { openedTabs, currentTabId } = useAppSelector((state) => state.tab)
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
 
-  console.log({currentWorkSpace})
+  console.log({ currentWorkSpace })
 
   const getTabAny = (id) => workspaces.map((ws) => ws.tabs.find((t) => t.id === id)).find((t) => t !== undefined) /// ???????????
   const isReadOnly = () => currentPubKey === DEFAULT_PUBKEY || readKeys.includes(currentPubKey) //// ???????????
@@ -471,7 +471,6 @@ export const useOpenApp = () => {
 
     //   dispatch(setOpenTab({ tab: dataTabForOpen }))
     // }
-
 
     handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {
       search: { id: tab.id },
