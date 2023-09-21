@@ -15,9 +15,6 @@ export const ModaContextMenu = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
   const id = searchParams.get('tabId') || ''
 
-  // const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-  // const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
-
   const handleOpenModalSelect = () => {
     const addr = stringToBech32(id)
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
@@ -32,9 +29,6 @@ export const ModaContextMenu = () => {
   return (
     <Modal title="Context Menu (WIP)" open={isOpen} handleClose={() => handleClose()}>
       <Container>
-        {/* <StyledInfoItem>URL: {currentTab?.url}</StyledInfoItem>
-        <StyledInfoItem>App: {currentTab?.title}</StyledInfoItem> */}
-
         <StyledList>
           <ListItem disablePadding>
             <StyledItemButton alignItems="center" onClick={handleOpenModalSelect}>

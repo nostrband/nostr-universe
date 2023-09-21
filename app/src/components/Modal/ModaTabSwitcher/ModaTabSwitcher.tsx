@@ -18,18 +18,20 @@ import 'swiper/css'
 
 export const ModaTabSwitcher = () => {
   const { onSwitchTab, onCloseTab, onCloseAllGroupTabs } = useOpenApp()
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
   const { getModalOpened, handleClose } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TABS_SWITCHER)
 
   const tgs = Object.values(currentWorkSpace?.tabGroups || {}).filter((tg) => tg.tabs.length > 0)
-
+  console.log({ tgs })
   const prepareTabs = (tabs: string[]) => {
-    return currentWorkSpace.tabs.filter((tab) => tabs.includes(tab.id))
+    return currentWorkSpace?.tabs.filter((tab) => tabs.includes(tab.id))
   }
 
   const handleCloseModal = () => {
-    if (!currentWorkSpace.tabs.length) {
+    if (!currentWorkSpace?.tabs.length) {
       handleClose('/')
     } else {
       handleClose()
@@ -74,22 +76,23 @@ export const ModaTabSwitcher = () => {
                 </StyledHeadTabGroup>
               </Container>
               <Swiper className={styles.container} slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
-                {tabs.map((tab) => (
-                  <SwiperSlide className={styles.slide} key={tab.id} onClick={() => handleOpen(tab)}>
-                    <StyledTabWrap>
-                      <StyledCloseTabBtn
-                        size="small"
-                        edge="start"
-                        color="inherit"
-                        aria-label="close"
-                        onClick={(e) => handleCloseTab(e, tab.id)}
-                      >
-                        <CloseIcon />
-                      </StyledCloseTabBtn>
-                      <AppIcon size="big" picture={tab.screenshot || tab.icon} alt={tab.title} />
-                    </StyledTabWrap>
-                  </SwiperSlide>
-                ))}
+                {tabs &&
+                  tabs.map((tab) => (
+                    <SwiperSlide className={styles.slide} key={tab.id} onClick={() => handleOpen(tab)}>
+                      <StyledTabWrap>
+                        <StyledCloseTabBtn
+                          size="small"
+                          edge="start"
+                          color="inherit"
+                          aria-label="close"
+                          onClick={(e) => handleCloseTab(e, tab.id)}
+                        >
+                          <CloseIcon />
+                        </StyledCloseTabBtn>
+                        <AppIcon size="big" picture={tab.screenshot || tab.icon} alt={tab.title} />
+                      </StyledTabWrap>
+                    </SwiperSlide>
+                  ))}
               </Swiper>
             </Box>
           )

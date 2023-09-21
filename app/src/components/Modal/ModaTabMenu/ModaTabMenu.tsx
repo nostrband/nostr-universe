@@ -18,10 +18,12 @@ export const ModaTabMenu = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MENU)
   const id = searchParams.get('tabId') || ''
 
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-  const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
+  const currentTab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
 
-  const isPin = currentWorkSpace.pins.find((pin) => pin.id === id)
+  const isPin = currentWorkSpace?.pins.find((pin) => pin.id === id)
 
   const handleCloseTab = () => {
     handleClose('/')

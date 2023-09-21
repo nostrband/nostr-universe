@@ -11,11 +11,13 @@ interface ICurrentTab {
 interface ITabState {
   isLoading: boolean
   openedTabs: ICurrentTab[]
+  currentTabId: string | null
 }
 
 const initialState: ITabState = {
   isLoading: false,
-  openedTabs: []
+  openedTabs: [],
+  currentTabId: null
 }
 
 export const tabSlice = createSlice({
@@ -41,8 +43,12 @@ export const tabSlice = createSlice({
 
     setLoadingTab: (state, action) => {
       state.isLoading = action.payload.isLoading
+    },
+
+    setCurrentTabId: (state, action) => {
+      state.currentTabId = action.payload.id
     }
   }
 })
 
-export const { setOpenTab, setLoadingTab, setIcontab } = tabSlice.actions
+export const { setOpenTab, setLoadingTab, setIcontab, setCurrentTabId } = tabSlice.actions

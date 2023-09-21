@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { Modal } from '@/modules/Modal/Modal'
@@ -15,10 +13,12 @@ export const ModalPermissions = () => {
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL)
 
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
   const { apps: appsList } = useAppSelector((state) => state.apps)
 
-  const apps = [...new Set(currentWorkSpace.perms.map((p) => p.app))].map((id) => {
+  const apps = [...new Set(currentWorkSpace?.perms.map((p) => p.app))].map((id) => {
     const app = appsList.find((app) => app.naddr === id)
 
     let title = app?.name || id
@@ -34,7 +34,7 @@ export const ModalPermissions = () => {
       title,
       icon: app?.picture,
       naddr: app?.naddr,
-      perms: currentWorkSpace.perms.filter((p) => p.app === id)
+      perms: currentWorkSpace?.perms.filter((p) => p.app === id)
     }
   })
 
@@ -44,13 +44,15 @@ export const ModalPermissions = () => {
 
   const handleDelete = (id: string) => {
     deletePermission(id)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     window.plugins.toast.showShortBottom(`Permission deleted`)
   }
 
   return (
     <Modal title="App permissions" open={isOpen} handleClose={handleCloseModal}>
       <Container>
-        {!currentWorkSpace.perms.length ? (
+        {!currentWorkSpace?.perms.length ? (
           'No permissions given yet.'
         ) : (
           <List dense>
@@ -72,7 +74,7 @@ export const ModalPermissions = () => {
                   secondaryTypographyProps={{ color: '#fff' }}
                   primaryTypographyProps={{ color: '#fff' }}
                   primary={app.title}
-                  secondary={`${app.perms.length} permissions`}
+                  secondary={`${app.perms?.length} permissions`}
                 />
               </ListItem>
             ))}

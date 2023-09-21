@@ -17,15 +17,10 @@ export const TabMenu = () => {
   const { onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
   const id = searchParams.get('id') || ''
   const { isLoading } = useAppSelector((state) => state.tab)
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-  const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
-
-  // const handleSwitchTab = async (tab: AppNostroType) => {
-  //   if (currentTab) {
-  //     await onHideTabInBrowser(currentTab.id)
-  //     await onSwitchTab(tab)
-  //   }
-  // }
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
+  const currentTab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
 
   const handleStopReloadTab = async () => {
     if (isLoading) {

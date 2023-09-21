@@ -31,7 +31,9 @@ type TabGroupID = string | number
 
 export const AppPinMenu = (props: IAppPinMenu) => {
   const { openApp } = useOpenApp()
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
   const dispatch = useAppDispatch()
 
   const { window } = props
@@ -47,23 +49,27 @@ export const AppPinMenu = (props: IAppPinMenu) => {
 
   const container = window !== undefined ? () => window().document.body : undefined
 
-  const tabGroups = currentWorkSpace?.tabGroups
+  const tabGroups = currentWorkSpace?.tabGroups || []
 
   const sortedTabGroups = useMemo(() => {
-    return tabGroups.slice().sort((tabA, tabB) => {
-      const lastActiveA = (tabA.tabs.length > 0 && tabA.lastActive) || 0
-      const lastActiveB = (tabB.tabs.length > 0 && tabB.lastActive) || 0
+    if (tabGroups) {
+      return tabGroups.slice().sort((tabA, tabB) => {
+        const lastActiveA = (tabA.tabs.length > 0 && tabA.lastActive) || 0
+        const lastActiveB = (tabB.tabs.length > 0 && tabB.lastActive) || 0
 
-      // both groups are active? desc by lastActive
-      if (lastActiveA != 0 && lastActiveB != 0) return lastActiveB - lastActiveA
+        // both groups are active? desc by lastActive
+        if (lastActiveA != 0 && lastActiveB != 0) return lastActiveB - lastActiveA
 
-      // active goes before inactive
-      if (lastActiveA != 0) return -1
-      if (lastActiveB != 0) return 1
+        // active goes before inactive
+        if (lastActiveA != 0) return -1
+        if (lastActiveB != 0) return 1
 
-      // inactive ones go by order asc
-      return tabA.order - tabB.order
-    })
+        // inactive ones go by order asc
+        return tabA.order - tabB.order
+      })
+    }
+
+    return []
   }, [tabGroups])
 
   const tabGroupsIds = sortedTabGroups.map((tabGroup) => tabGroup.id)
@@ -91,14 +97,17 @@ export const AppPinMenu = (props: IAppPinMenu) => {
 
   const onSortEnd = useCallback(
     (fromTabGroupId: TabGroupID, toTabGroupId: TabGroupID) => {
-      dispatch(
-        swapTabGroupsThunk({
-          fromID: fromTabGroupId,
-          toID: toTabGroupId
-        })
-      )
+      if (currentWorkSpace) {
+        dispatch(
+          swapTabGroupsThunk({
+            fromID: fromTabGroupId,
+            toID: toTabGroupId,
+            currentWorkSpace
+          })
+        )
+      }
     },
-    [dispatch]
+    [dispatch, currentWorkSpace]
   )
 
   const handleDragStart = ({ active }: DragStartEvent) => {
