@@ -110,7 +110,7 @@ export const useOpenApp = () => {
 
     dispatch(setPermissionRequest({ permissionRequest: r }))
 
-    console.log("perm request", tab.id, currentTabId, JSON.stringify(r), JSON.stringify(permissionRequests));
+    //    console.log("perm request", tab.id, JSON.stringify(r), JSON.stringify(permissionRequests));
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log("show perm request modal", r.id);
@@ -158,8 +158,7 @@ export const useOpenApp = () => {
       dispatch(setScreenshotTab({ id, screenshot }))
 
       await dbi.updateTabScreenshot({ id, screenshot })
-
-    }, 0);
+    }, 0)
   }
 
   const close = async (id: string) => {

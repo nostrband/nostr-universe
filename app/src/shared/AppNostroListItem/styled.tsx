@@ -12,21 +12,8 @@ export const StyledApp = styled(Box)(({ theme }) => ({
   alignItems: 'center'
 }))
 
-export const StyledAppIcon = styled(Box)(({ theme }) => ({
-  borderRadius: theme.shape.borderRadius,
-  position: 'relative',
-  boxSizing: 'border-box',
-  height: 60,
-  maxWidth: 60,
-  width: '100%',
-  display: 'block',
-  overflow: 'hidden'
-}))
-
 export const StyledAppWrap = styled(Box)(() => ({
   position: 'relative',
-  height: 60,
-  width: 60,
   display: 'inline-flex',
   flexShrink: 0
 }))
@@ -38,15 +25,6 @@ export const StyledAppPinIcon = styled(Box)(({ theme }) => ({
   zIndex: 1,
   color: theme.palette.light.light,
   transform: 'rotate(45deg)'
-}))
-
-export const StyledAppImg = styled('img')(() => ({
-  position: 'absolute',
-  left: 0,
-  top: 0,
-  height: '100%',
-  width: '100%',
-  objectFit: 'cover'
 }))
 
 export const StyledDetailsWrapper = styled(Box)({

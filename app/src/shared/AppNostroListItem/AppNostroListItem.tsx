@@ -2,14 +2,13 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import {
   StyledApp,
   StyledAppAbout,
-  StyledAppIcon,
-  StyledAppImg,
   StyledAppName,
   StyledAppPinIcon,
   StyledAppWrap,
   StyledDetailsWrapper
 } from './styled'
 import { IAppNostroListItem } from './types'
+import { AppIcon } from '../AppIcon/AppIcon'
 
 export const AppNostroListItem = ({ app, onClick }: IAppNostroListItem) => {
   return (
@@ -20,9 +19,8 @@ export const AppNostroListItem = ({ app, onClick }: IAppNostroListItem) => {
             <PushPinOutlinedIcon fontSize="small" />
           </StyledAppPinIcon>
         )}
-        <StyledAppIcon>
-          <StyledAppImg src={app.picture} />
-        </StyledAppIcon>
+
+        <AppIcon size="small" isOutline={false} picture={app.picture} alt={app.name} />
       </StyledAppWrap>
 
       <StyledDetailsWrapper>

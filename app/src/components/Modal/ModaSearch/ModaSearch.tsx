@@ -27,6 +27,7 @@ import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/Sli
 import { SliderLongPosts } from '@/components/Slider/SliderLongPosts/SliderLongPosts'
 import { ContactList } from '@/pages/MainPage/components/ContactList/ContactList'
 import { useOpenApp } from '@/hooks/open-entity'
+import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 
 export const ModaSearch = () => {
   const { openBlank } = useOpenApp()
@@ -34,6 +35,8 @@ export const ModaSearch = () => {
   const [profiles, setProfiles] = useState(null)
   const [notes, setNotes] = useState(null)
   const [longNotes, setLongNotes] = useState(null)
+
+  const [isLoading, setIsLoading] = useState(false)
 
   const { handleClose, getModalOpened, handleOpen } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.SEARCH_MODAL)
@@ -61,7 +64,7 @@ export const ModaSearch = () => {
     e.preventDefault()
 
     onSearch(searchValue)
-
+    setIsLoading(true)
     searchProfiles(searchValue)
       .then((data) => {
         const prepareProfiles = data.map((el) => ({
@@ -99,6 +102,7 @@ export const ModaSearch = () => {
         }))
         setLongNotes(prepareLongPosts)
       })
+      .finally(() => setIsLoading(false))
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,11 +139,62 @@ export const ModaSearch = () => {
   }
 
   useEffect(() => {
-    setSearchValue('')
-    setProfiles(null)
-    setNotes(null)
-    setLongNotes(null)
-  }, [open])
+    return () => {
+      setSearchValue('')
+      setProfiles(null)
+      setNotes(null)
+      setLongNotes(null)
+    }
+  }, [isOpen])
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <LoadingContainer>
+          <LoadingSpinner />
+        </LoadingContainer>
+      )
+    }
+    return (
+      <>
+        {profiles && (
+          <StyledWrapper>
+            <Container>
+              <StyledTitle variant="h5" gutterBottom component="div">
+                Profiles
+              </StyledTitle>
+            </Container>
+
+            <SliderProfiles data={profiles} isLoading={false} handleClickEntity={handleOpenProfile} />
+          </StyledWrapper>
+        )}
+
+        {notes && (
+          <StyledWrapper>
+            <Container>
+              <StyledTitleNotes variant="h5" gutterBottom component="div">
+                Notes
+              </StyledTitleNotes>
+            </Container>
+
+            <SliderTrendingNotes data={notes} isLoading={false} handleClickEntity={handleOpenNote} />
+          </StyledWrapper>
+        )}
+
+        {longNotes && (
+          <StyledWrapper>
+            <Container>
+              <StyledTitleLongPost variant="h5" gutterBottom component="div">
+                Long posts
+              </StyledTitleLongPost>
+            </Container>
+
+            <SliderLongPosts data={longNotes} isLoading={false} handleClickEntity={handleOpenLongPost} />
+          </StyledWrapper>
+        )}
+      </>
+    )
+  }
 
   return (
     <Modal title="Search" open={isOpen} handleClose={() => handleClose()}>
@@ -163,41 +218,7 @@ export const ModaSearch = () => {
 
       {!searchValue && <ContactList />}
 
-      {profiles && (
-        <StyledWrapper>
-          <Container>
-            <StyledTitle variant="h5" gutterBottom component="div">
-              Profiles
-            </StyledTitle>
-          </Container>
-
-          <SliderProfiles data={profiles} isLoading={false} handleClickEntity={handleOpenProfile} />
-        </StyledWrapper>
-      )}
-
-      {notes && (
-        <StyledWrapper>
-          <Container>
-            <StyledTitleNotes variant="h5" gutterBottom component="div">
-              Notes
-            </StyledTitleNotes>
-          </Container>
-
-          <SliderTrendingNotes data={notes} isLoading={false} handleClickEntity={handleOpenNote} />
-        </StyledWrapper>
-      )}
-
-      {longNotes && (
-        <StyledWrapper>
-          <Container>
-            <StyledTitleLongPost variant="h5" gutterBottom component="div">
-              Long posts
-            </StyledTitleLongPost>
-          </Container>
-
-          <SliderLongPosts data={longNotes} isLoading={false} handleClickEntity={handleOpenLongPost} />
-        </StyledWrapper>
-      )}
+      {renderContent()}
     </Modal>
   )
 }

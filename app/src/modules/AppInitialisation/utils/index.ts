@@ -278,8 +278,6 @@ export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
   const tabsSort = tabs.sort((a, b) => a.order - b.order)
   const tabGroups = addToTabGroup(pinsSort, tabsSort)
 
-  console.log({ pinsSort, tabsSort, tabGroups }, 'sortbek')
-
   const workspace = {
     pubkey,
     trendingProfiles: [],
