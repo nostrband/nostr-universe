@@ -22,6 +22,7 @@ export type AppNostro = {
 export interface IOpenAppNostro extends AppNostro {
   kind?: string
   replace?: boolean
+  lastUsed?: boolean
 }
 
 export type AppNostroSizeUnion = (typeof APP_NOSTRO_SIZE)[keyof typeof APP_NOSTRO_SIZE]

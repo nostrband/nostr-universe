@@ -259,6 +259,10 @@ export const workspacesSlice = createSlice({
 
         return workspace
       })
+    },
+    setLastKindApp: (state, action) => {
+      const params = action.payload
+      state.currentWorkSpace.lastKindApps[params.kind] = params.naddr
     }
   }
 })
@@ -273,7 +277,8 @@ export const {
   setPermsWorkspace,
   deletePermWorkspace,
   clearTabGroup,
-  setScreenshotTab
+  setScreenshotTab,
+  setLastKindApp
 } = workspacesSlice.actions
 
 export const swapTabGroupsThunk = createAsyncThunk(

@@ -14,6 +14,7 @@ import { StyledForm, StyledInput } from './styled'
 import { IOpenAppNostro } from '@/types/app-nostro'
 import { AppNostroListItem } from '@/shared/AppNostroListItem/AppNostroListItem'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
+import { NATIVE_NADDR } from '@/consts'
 
 export const ModalSelectApp = () => {
   const { openApp } = useOpenApp()
@@ -45,19 +46,34 @@ export const ModalSelectApp = () => {
       setKind(info.addr.kind)
 
       const apps: IOpenAppNostro[] = []
+
+      let lastAppNaddr = ''
+      if (info.addr.kind in currentWorkSpace.lastKindApps) lastAppNaddr = currentWorkSpace.lastKindApps[info.addr.kind]
+
+      apps.push({
+        naddr: NATIVE_NADDR,
+        url: 'nostr:' + getParamAddr,
+        name: 'Native app',
+        about: 'Any native Nostr app installed on your device',
+        picture: '',
+        lastUsed: NATIVE_NADDR === lastAppNaddr,
+        pinned: false,
+        order: NATIVE_NADDR === lastAppNaddr ? 1000 : 999
+      })
+
       for (const id in info.apps) {
         const app = info.apps[id].handlers[0]
         if (!app.eventUrl) continue
 
         const pinned = currentWorkSpace.pins.find((p) => p.appNaddr === app.naddr)
 
-        // const lastUsed = app.naddr === lastAppNaddr;
+        const lastUsed = app.naddr === lastAppNaddr
 
-        const order = app.order
+        let order = app.order
         // last app always at the top
-        // if (lastUsed) order = 1000;
+        if (lastUsed) order = 1000
         // // pinned are a priority
-        // else if (pinned) order += 100;
+        else if (pinned) order += 100
 
         let hostname = ""
         try {
@@ -74,7 +90,7 @@ export const ModalSelectApp = () => {
           name: app.profile?.display_name || app.profile?.name || hostname,
           about: app.profile?.about || '',
           picture: app.profile?.picture,
-          // lastUsed,
+          lastUsed,
           pinned: Boolean(pinned),
           order
         })
@@ -87,7 +103,7 @@ export const ModalSelectApp = () => {
     } catch (error) {
       setIsAppsLoading(false)
     }
-  }, [currentWorkSpace.pins, getParamAddr])
+  }, [currentWorkSpace.lastKindApps, currentWorkSpace.pins, getParamAddr])
 
   const resetStates = useCallback(() => {
     setApps([])

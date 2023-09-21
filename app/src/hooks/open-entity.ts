@@ -10,6 +10,7 @@ import {
   deletePermWorkspace,
   removeTabFromTabs,
   setCurrentWorkspace,
+  setLastKindApp,
   setPermsWorkspace,
   setScreenshotTab,
   setTabsWorkspace,
@@ -561,14 +562,9 @@ export const useOpenApp = () => {
   }
 
   const openApp = async (app: IOpenAppNostro, options?: { replace?: boolean } = { replace: false }) => {
-    // if (params.kind !== undefined) {
-    //   updateWorkspace((ws) => {
-    //     ws.lastKindApps[params.kind] = params.naddr;
-    //     return {
-    //       lastKindApps: { ...ws.lastKindApps },
-    //     };
-    //   });
-    // }
+    if (app.kind !== undefined) {
+      dispatch(setLastKindApp(app))
+    }
     const pin = currentWorkSpace.pins.find((pin) => pin.appNaddr == app.naddr)
 
     await openBlank(
