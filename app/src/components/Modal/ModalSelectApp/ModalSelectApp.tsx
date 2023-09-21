@@ -59,10 +59,19 @@ export const ModalSelectApp = () => {
         // // pinned are a priority
         // else if (pinned) order += 100;
 
+        let hostname = ""
+        try {
+          const url = new URL(app.eventUrl)
+          hostname = url.hostname
+        } catch (e) {
+          console.log("bad app eventUrl", app.eventUrl)
+          continue;
+        }
+
         apps.push({
           naddr: app.naddr,
           url: app.eventUrl,
-          name: app.profile?.display_name || app.profile?.name,
+          name: app.profile?.display_name || app.profile?.name || hostname,
           about: app.profile?.about || '',
           picture: app.profile?.picture,
           // lastUsed,

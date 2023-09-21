@@ -2,7 +2,7 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { Modal } from '@/modules/Modal/Modal'
 import { useSearchParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
@@ -13,6 +13,7 @@ import { Container } from '@/layout/Container/Conatiner'
 export const ModalPermissionsRequest = () => {
   const { replyCurrentPermRequest } = useOpenApp()
   const [isRemember, setIsRemember] = useState(false)
+  const [lastPermRequestId, setLastPermRequestId] = useState('');
   const [searchParams] = useSearchParams()
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
 
@@ -24,19 +25,48 @@ export const ModalPermissionsRequest = () => {
   const permReq = permissionRequests.find((permReq) => permReq.id === currentPermId)
   const getTab = currentWorkSpace.tabs.find((tab) => tab.id === permReq?.tabId)
 
-  const handleCloseModal = () => {
-    handleClose()
+  // reset flag for new input
+  useEffect(() => {
     setIsRemember(false)
+  }, [currentPermId, isOpen])
+
+  // remember last request so that if user presses the system 'Back'
+  // button we could react to it and execute disallow reply below
+  useEffect(() => {
+    if (currentPermId)
+      setLastPermRequestId(currentPermId)
+  }, [currentPermId])
+
+  // disallow last request if it wasn't processed and the modal is closed
+  useEffect(() => {
+    if (!isOpen && lastPermRequestId)
+      reply(false, false, lastPermRequestId)
+  }, [isOpen])
+
+  const reply = async (allow: boolean, remember: boolean, reqId: string) => {
+    console.log("reply perm req ", reqId, "allow", allow, "remember", remember)
+
+    // mark last req as done, so that form closure wouldn't disallow it
+    setLastPermRequestId('')
+    await replyCurrentPermRequest(allow, remember, reqId)
   }
 
-  const onDisallow = async () => {
-    await replyCurrentPermRequest(false, isRemember, currentPermId)
+  const handleCloseModal = async () => {
     handleClose()
+  }
+
+  // note: close the modal immediately and only after that
+  // execute the reply in background, this way if reply takes
+  // a lot of time user won't be able to click 'Back' and
+  // won't repeat the 'close' logic
+  const onDisallow = async () => {
+    handleClose()
+    await reply(false, isRemember, currentPermId)
   }
 
   const onAllow = async () => {
-    await replyCurrentPermRequest(true, isRemember, currentPermId)
     handleClose()
+    await reply(true, isRemember, currentPermId)
   }
 
   const prepareLabelAndPayload = () => {
@@ -90,10 +120,14 @@ export const ModalPermissionsRequest = () => {
         />
 
         <StyledButtonContainer>
-          <Button fullWidth variant="contained" className="button" color="secondary" onClick={onDisallow}>
+          <Button fullWidth variant="contained" className="button" color="secondary"
+            onClick={onDisallow}
+          >
             Disallow
           </Button>
-          <Button fullWidth variant="contained" className="button" color="secondary" onClick={onAllow}>
+          <Button fullWidth variant="contained" className="button" color="secondary"
+            onClick={onAllow}
+          >
             Allow
           </Button>
         </StyledButtonContainer>
