@@ -589,9 +589,16 @@ export const useOpenApp = () => {
       await dbi.putReadOnlyKey(importPubkey)
       await writeCurrentPubkey(importPubkey)
     } else {
-      const r = await keystore.addKey()
-
-      await writeCurrentPubkey(r.pubkey)
+      try {
+        const r = await keystore.addKey()
+        await writeCurrentPubkey(r.pubkey)
+      } catch (e) {
+        console.log("addkey error ", JSON.stringify(e));
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        window.plugins.toast.showShortBottom(`Error: ${e}`)
+        return
+      }
     }
 
     // // reload the list

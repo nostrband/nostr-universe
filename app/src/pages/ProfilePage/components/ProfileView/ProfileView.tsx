@@ -68,7 +68,7 @@ export const ProfileView = () => {
           variant="contained"
           size="large"
         >
-          Edit
+          LATER
         </StyledViewAction>
       </Container>
 
