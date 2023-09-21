@@ -16,19 +16,13 @@ export const TabMenu = () => {
   const [searchParams] = useSearchParams()
   const { onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
   const id = searchParams.get('id') || ''
-  const { isLoading } = useAppSelector((state) => state.tab)
+  const { openedTabs } = useAppSelector((state) => state.tab)
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
   const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
-
-  // const handleSwitchTab = async (tab: AppNostroType) => {
-  //   if (currentTab) {
-  //     await onHideTabInBrowser(currentTab.id)
-  //     await onSwitchTab(tab)
-  //   }
-  // }
+  const tabState = openedTabs.find(t => t.id === id)
 
   const handleStopReloadTab = async () => {
-    if (isLoading) {
+    if (tabState?.loading) {
       await onStopLoadTab(id)
     } else {
       await onReloadTab(id)
@@ -41,7 +35,7 @@ export const TabMenu = () => {
 
   return (
     <StyledWrapper>
-      <AppIcon isActive isPreviewTab picture={currentTab?.icon} alt={currentTab?.title} />
+      <AppIcon isActive isPreviewTab picture={tabState?.picture || currentTab?.icon} alt={currentTab?.title} />
 
       <StyledTabsActions>
         <IconButton color="inherit" size="medium" onClick={handleOpenTabsSwitcher}>
@@ -49,7 +43,7 @@ export const TabMenu = () => {
         </IconButton>
 
         <IconButton color="inherit" size="medium" onClick={handleStopReloadTab}>
-          {isLoading ? <CloseOutlinedIcon /> : <ReplayOutlinedIcon />}
+          {tabState?.loading ? <CloseOutlinedIcon /> : <ReplayOutlinedIcon />}
         </IconButton>
 
         <IconButton color="inherit" size="medium" onClick={onHideTab}>

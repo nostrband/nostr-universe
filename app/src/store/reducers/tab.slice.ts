@@ -6,15 +6,14 @@ interface ICurrentTab {
   picture: string
   name: string
   appNaddr: string
+  loading: boolean
 }
 
 interface ITabState {
-  isLoading: boolean
   openedTabs: ICurrentTab[]
 }
 
 const initialState: ITabState = {
-  isLoading: false,
   openedTabs: []
 }
 
@@ -40,7 +39,16 @@ export const tabSlice = createSlice({
     },
 
     setLoadingTab: (state, action) => {
-      state.isLoading = action.payload.isLoading
+      state.openedTabs = state.openedTabs.map((tab) => {
+        if (action.payload.id === tab.id) {
+          return {
+            ...tab,
+            loading: action.payload.isLoading
+          }
+        }
+
+        return tab
+      })
     }
   }
 })

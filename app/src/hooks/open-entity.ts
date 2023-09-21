@@ -111,7 +111,7 @@ export const useOpenApp = () => {
 
     dispatch(setPermissionRequest({ permissionRequest: r }))
 
-    //    console.log("perm request", tab.id, JSON.stringify(r), JSON.stringify(permissionRequests));
+    console.log("perm request", tab.id, JSON.stringify(r), JSON.stringify(permissionRequests));
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log("show perm request modal", r.id);
@@ -202,30 +202,25 @@ export const useOpenApp = () => {
   }
 
   const onStopLoadTab = async (id: string) => {
+    await browser.stop(id)
+
     dispatch(
       setLoadingTab({
+        id,
         isLoading: false
       })
     )
-
-    await browser.stop(id)
   }
 
   const onReloadTab = async (id: string) => {
-    console.log('onReloadTab')
     dispatch(
       setLoadingTab({
+        id,
         isLoading: true
       })
     )
 
-    await browser.reload(id).finally(() => {
-      dispatch(
-        setLoadingTab({
-          isLoading: false
-        })
-      )
-    })
+    await browser.reload(id)
   }
 
   const handleCustomUrl = async (url, tab) => {
@@ -326,6 +321,7 @@ export const useOpenApp = () => {
 
       const bolt11 = bolt11Decode(paymentRequest)
       const amount = Number(bolt11.sections?.find((s) => s.name === 'amount').value)
+      console.log("sendPayment", tabId, amount, paymentRequest)
 
       const wallet = await walletstore.getInfo()
       const perm = 'pay_invoice:' + wallet.id
@@ -383,19 +379,20 @@ export const useOpenApp = () => {
       handleClose('/')
     },
     setUrl: async (tabId, url) => {
-      const getTab = (id) => currentWorkSpace.tabs.find((tab) => tab.id === id)
-      dispatch(setUrlTabWorkspace({ tab: getTab, url }))
-      dbi.updateTab({ ...getTab(tabId), url })
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error('Inactive tab')
+      dispatch(setUrlTabWorkspace({ tab, url }))
+      dbi.updateTab({ ...tab, url })
     },
     onLoadStart: async (tabId, event) => {
       console.log('loading', JSON.stringify(event))
       API.setUrl(tabId, event.url)
-      dispatch(setLoadingTab({ isLoading: true }))
+      dispatch(setLoadingTab({ id: tabId, isLoading: true }))
     },
     onLoadStop: async (tabId, event) => {
       console.log('loaded', event.url)
       API.setUrl(tabId, event.url)
-      dispatch(setLoadingTab({ isLoading: false }))
+      dispatch(setLoadingTab({ id: tabId, isLoading: false }))
     },
     onClick: (tabId, x, y) => {
       console.log('click', x, y)
@@ -612,6 +609,11 @@ export const useOpenApp = () => {
     await updateProfile(keys, pubkey)
   }
 
+  const openZap = (id) => {
+    const ZAP_URL = "https://zapper.nostrapps.org/zap?id="
+    openBlank({ url: `${ZAP_URL}${id}`})
+  }
+
   return {
     openApp,
     onStopLoadTab,
@@ -625,6 +627,7 @@ export const useOpenApp = () => {
     openBlank,
     replyCurrentPermRequest,
     deletePermission,
-    onCloseAllGroupTabs
+    onCloseAllGroupTabs,
+    openZap
   }
 }

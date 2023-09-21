@@ -142,6 +142,7 @@ const nostrMenuConnect = () => {
   }
 
   const menu = async (value) => {
+    if (!value) return
     // limit prefixes to small ascii chars
     const BECH32_REGEX = /[a-z]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g
 

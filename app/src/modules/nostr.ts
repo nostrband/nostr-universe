@@ -1269,6 +1269,7 @@ export async function subscribeBookmarkList(pubkey, cb) {
 }
 
 export function stringToBech32(s, hex = false) {
+  if (!s) return ''
   const BECH32_REGEX = /[a-z]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g
 
   const array = [...s.matchAll(BECH32_REGEX)].map((a) => a[0])
@@ -1341,15 +1342,6 @@ export function connect() {
   scheduleStats()
 
   return ndk.pool.connect(/* timeoutMs */ 1000, /* minConns */ 3)
-}
-
-export function launchZapDialog(id, event) {
-  const d = document.createElement('div')
-  d.setAttribute('data-npub', nip19.npubEncode(event.pubkey))
-  if (event.kind != 0) d.setAttribute('data-note-id', nip19.noteEncode(event.id))
-  window.nostrZap.initTarget(d)
-  d.click()
-  d.remove()
 }
 
 function addRelay(r) {

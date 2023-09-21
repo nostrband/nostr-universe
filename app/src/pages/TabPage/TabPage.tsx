@@ -25,10 +25,11 @@ export const TabPage = () => {
   const [searchParams] = useSearchParams()
   const { getModalOpened } = useOpenModalSearchParams()
   const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-  const { isLoading } = useAppSelector((state) => state.tab)
+  const { openedTabs } = useAppSelector((state) => state.tab)
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
   const id = searchParams.get('id')
   const tab = currentWorkSpace.tabs.find((tab) => tab.id === id)
+  const tabState = openedTabs.find((tab) => tab.id === id)
 
   // const handleOpen = () => { // use this method letter
   //   if (id && method) {
@@ -57,9 +58,9 @@ export const TabPage = () => {
       </StyledAppBar>
 
       <StyledWrap>
-        <AppIcon size="medium" picture={tab?.icon} isOutline={false} alt={tab?.title} />
+        <AppIcon size="medium" picture={tabState?.picture || tab?.icon} isOutline={false} alt={tab?.title} />
         <StyledViewName>{tab?.title}</StyledViewName>
-        {isLoading && <StyledViewName variant="body2">Loading...</StyledViewName>}
+        {tabState?.loading && <StyledViewName variant="body2">Loading...</StyledViewName>}
       </StyledWrap>
 
       <TabMenu />

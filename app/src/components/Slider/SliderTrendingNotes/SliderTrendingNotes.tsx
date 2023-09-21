@@ -15,8 +15,8 @@ export const SliderTrendingNotes = ({ data, isLoading, handleClickEntity = () =>
               <ItemTrendingNote
                 time={note.created_at}
                 content={note.content}
-                name={note.author.profile.name}
-                picture={note.author.profile.picture}
+                name={note.author?.profile?.name}
+                picture={note.author?.profile?.picture}
               />
             </SwiperSlide>
           ))}

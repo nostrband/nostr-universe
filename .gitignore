@@ -1,6 +1,7 @@
 *.DS_Store
 .idea
 universe/www/assets/
+universe/www/index.html
 *~
 
 /app/node_modules

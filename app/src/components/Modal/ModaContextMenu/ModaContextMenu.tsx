@@ -7,13 +7,15 @@ import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import { StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
-import { fetchEventByBech32, launchZapDialog, stringToBech32 } from '@/modules/nostr'
+import { stringToBech32 } from '@/modules/nostr'
+import { useOpenApp } from '@/hooks/open-entity'
 
 export const ModaContextMenu = () => {
   const [searchParams] = useSearchParams()
   const { getModalOpened, handleClose, handleOpen } = useOpenModalSearchParams()
+  const { openZap } = useOpenApp()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
-  const id = searchParams.get('tabId') || ''
+  const id = searchParams.get('id') || ''
 
   // const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
   // const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
@@ -25,8 +27,8 @@ export const ModaContextMenu = () => {
 
   const handleZap = async () => {
     const addr = stringToBech32(id)
-    const event = await fetchEventByBech32(addr)
-    launchZapDialog(addr, event)
+//    const event = await fetchEventByBech32(addr)
+    openZap(addr)
   }
 
   return (

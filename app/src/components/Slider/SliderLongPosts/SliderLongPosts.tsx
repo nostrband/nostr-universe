@@ -16,8 +16,8 @@ export const SliderLongPosts = ({ data, isLoading, handleClickEntity = () => {} 
                 time={longPost.created_at}
                 content={longPost.content}
                 subtitle={longPost.title}
-                name={longPost.author.profile.name}
-                picture={longPost.author.profile.picture}
+                name={longPost.author?.profile?.name}
+                picture={longPost.author?.profile?.picture}
               />
             </SwiperSlide>
           ))}
