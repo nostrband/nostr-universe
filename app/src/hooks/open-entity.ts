@@ -68,7 +68,7 @@ export const useOpenApp = () => {
         value: allow ? '1' : '0'
       }
 
-      dispatch(setPermsWorkspace({ perm, currentWorkSpace }))
+      dispatch(setPermsWorkspace({ perm, workspacePubkey: tab.pubkey }))
 
       console.log('adding perm', JSON.stringify(perm))
       await dbi.updatePerm(perm)
@@ -133,7 +133,8 @@ export const useOpenApp = () => {
   }
 
   const deletePermission = async (id: string) => {
-    dispatch(deletePermWorkspace({ id, currentWorkSpace }))
+
+    dispatch(deletePermWorkspace({ id, workspacePubkey: currentPubKey }))
 
     await dbi.deletePerms(currentPubKey, id)
   }
@@ -147,7 +148,7 @@ export const useOpenApp = () => {
     setTimeout(async () => {
       const screenshot = await browser.screenshot(id)
 
-      dispatch(setScreenshotTab({ id, screenshot, currentWorkSpace }))
+      dispatch(setScreenshotTab({ id, screenshot, workspacePubkey: getTabAny(id)?.pubkey }))
 
       await dbi.updateTabScreenshot({ id, screenshot })
     }, 0)
@@ -168,24 +169,25 @@ export const useOpenApp = () => {
   }
 
   const onCloseTab = async (id: string) => {
+    const pubkey = getTabAny(id)?.pubkey
     await close(id)
 
     dispatch(
       removeTabFromTabs({
         id,
-        currentWorkSpace
+        workspacePubkey: pubkey
       })
     )
   }
 
-  const onCloseAllGroupTabs = async (tabGrop) => {
-    const requestsCloseTabs = tabGrop.tabs.map((id) => close(id))
+  const onCloseAllGroupTabs = async (tabGroup) => {
+    const requestsCloseTabs = tabGroup.tabs.map((id) => close(id))
     await Promise.all(requestsCloseTabs)
 
     dispatch(
       clearTabGroup({
-        tabGrop,
-        currentWorkSpace
+        tabGroup,
+        workspacePubkey: tabGroup.info.pubkey
       })
     )
   }
@@ -376,9 +378,10 @@ export const useOpenApp = () => {
       handleClose('/')
     },
     setUrl: async (tabId, url) => {
-      const getTab = (id) => currentWorkSpace?.tabs.find((tab) => tab.id === id)
-      dispatch(setUrlTabWorkspace({ tab: getTab, url, currentWorkSpace }))
-      dbi.updateTab({ ...getTab(tabId), url })
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error('Inactive tab')
+      dispatch(setUrlTabWorkspace({ tabId: tab.id, url, workspacePubkey: tab.pubkey }))
+      dbi.updateTab({ ...tab, url })
     },
     onLoadStart: async (tabId, event) => {
       console.log('loading', JSON.stringify(event))
@@ -504,7 +507,7 @@ export const useOpenApp = () => {
     // console.log("open", url, JSON.stringify(params), JSON.stringify(tab));
 
     // add to tab list
-    dispatch(setTabsWorkspace({ tab, currentWorkSpace }))
+    dispatch(setTabsWorkspace({ tab, workspacePubkey: currentPubKey }))
 
     // add to db
     await dbi.addTab(tab)

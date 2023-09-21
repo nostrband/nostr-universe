@@ -21,8 +21,9 @@ export const workspacesSlice = createSlice({
     },
 
     deletePermWorkspace: (state, action) => {
-      const { pubkey } = action.payload.currentWorkSpace
+      const pubkey = action.payload.workspacePubkey
       const id = action.payload.id
+      console.log("deletePermWorkspace", pubkey, id)
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
@@ -37,8 +38,9 @@ export const workspacesSlice = createSlice({
     },
 
     setPermsWorkspace: (state, action) => {
-      const { pubkey } = action.payload.currentWorkSpace
+      const pubkey = action.payload.workspacePubkey
       const perm = action.payload.perm
+      console.log("setPermsWorkspace", pubkey, JSON.stringify(perm))
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
@@ -53,7 +55,7 @@ export const workspacesSlice = createSlice({
     },
 
     setScreenshotTab: (state, action) => {
-      const { pubkey } = action.payload.currentWorkSpace
+      const pubkey = action.payload.workspacePubkey
       const screenshot = action.payload.screenshot
       const id = action.payload.id
 
@@ -70,7 +72,6 @@ export const workspacesSlice = createSlice({
               }
               return tab
             }),
-            lastCurrentTabId: ''
           }
         }
 
@@ -80,7 +81,7 @@ export const workspacesSlice = createSlice({
 
     removeTabFromTabs: (state, action) => {
       const id = action.payload.id
-      const { pubkey } = action.payload.currentWorkSpace
+      const pubkey = action.payload.workspacePubkey
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
@@ -89,16 +90,16 @@ export const workspacesSlice = createSlice({
           return {
             ...workspace,
             tabs: workspace.tabs.filter((tab) => tab.id !== id),
-            tabGroups: workspace.tabGroups.map((tab) => {
-              if (tab.id === currentTab?.appNaddr) {
+            tabGroups: workspace.tabGroups.map((tg) => {
+              if (tg.id === getTabGroupId(currentTab)) {
                 return {
-                  ...tab,
-                  tabs: tab.tabs.filter((el) => el !== currentTab.id)
+                  ...tg,
+                  tabs: tg.tabs.filter((el) => el !== id)
                 }
               }
 
-              return tab
-            })
+              return tg
+            }).filter((tg) => tg.pin || tg.tabs.length > 0)
           }
         }
 
@@ -107,24 +108,24 @@ export const workspacesSlice = createSlice({
     },
 
     clearTabGroup: (state, action) => {
-      const { pubkey } = action.payload.currentWorkSpace
-      const tabGrop = action.payload.tabGrop
+      const pubkey = action.payload.workspacePubkey
+      const tabGroup = action.payload.tabGroup
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
           return {
             ...workspace,
-            tabs: workspace.tabs.filter((tab) => tab.appNaddr !== tabGrop.id),
-            tabGroups: workspace.tabGroups.map((tab) => {
-              if (tab.id === tabGrop.id) {
+            tabs: workspace.tabs.filter((tab) => getTabGroupId(tab) !== tabGroup.id),
+            tabGroups: workspace.tabGroups.map((tg) => {
+              if (tg.id === tabGroup.id) {
                 return {
-                  ...tab,
+                  ...tg,
                   tabs: []
                 }
               }
 
-              return tab
-            })
+              return tg
+            }).filter((tg) => tg.pin || tg.tabs.length > 0)
           }
         }
 
@@ -133,7 +134,7 @@ export const workspacesSlice = createSlice({
     },
 
     setTabsWorkspace: (state, action) => {
-      const { pubkey } = action.payload.currentWorkSpace
+      const pubkey = action.payload.workspacePubkey
       const tab = action.payload.tab
       const id = getTabGroupId(tab)
 
@@ -160,7 +161,6 @@ export const workspacesSlice = createSlice({
             ...workspace,
             tabs: [...workspace.tabs, tab],
             tabGroups: tabGroups,
-            lastCurrentTabId: ''
           }
         }
 
@@ -169,9 +169,9 @@ export const workspacesSlice = createSlice({
     },
 
     setUrlTabWorkspace: (state, action) => {
-      const { pubkey } = action.payload.currentWorkSpace
+      const pubkey = action.payload.workspacePubkey
       const url = action.payload.url
-      const id = getTabGroupId(action.payload.tab)
+      const id = action.payload.tabId
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
@@ -186,17 +186,18 @@ export const workspacesSlice = createSlice({
               }
               return tab
             }),
-            lastCurrentTabId: ''
           }
         }
 
         return workspace
       })
+
+      // FIXME implement switch between tab groups
     },
 
     swapTabGroups: (state, action) => {
       const { toID, fromID } = action.payload
-      const { pubkey } = action.payload.currentWorkSpace
+      const pubkey = action.payload.workspacePubkey
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
@@ -274,12 +275,12 @@ export const swapTabGroupsThunk = createAsyncThunk(
     {
       toID,
       fromID,
-      currentWorkSpace: curWorkSpace
-    }: { toID: string | number; fromID: string | number; currentWorkSpace: WorkSpace },
+      workspacePubkey
+    }: { toID: string | number; fromID: string | number; workspacePubkey: string | undefined },
     { getState, rejectWithValue, dispatch }
   ) => {
     try {
-      const { pubkey } = curWorkSpace
+      const pubkey = workspacePubkey
       const state = getState() as RootState
 
       const currentWorkSpace = state.workspaces.workspaces.find((workspace) => workspace.pubkey === pubkey)
@@ -314,7 +315,7 @@ export const swapTabGroupsThunk = createAsyncThunk(
           await dbi.updatePin({ ...toPin, order: fromOrder })
         }
 
-        dispatch(swapTabGroups({ toID, fromID, currentWorkSpace: curWorkSpace }))
+        dispatch(swapTabGroups({ toID, fromID, workspacePubkey }))
       }
     } catch (error) {
       rejectWithValue('Something went wrong!')

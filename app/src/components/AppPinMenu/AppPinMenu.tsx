@@ -102,7 +102,7 @@ export const AppPinMenu = (props: IAppPinMenu) => {
           swapTabGroupsThunk({
             fromID: fromTabGroupId,
             toID: toTabGroupId,
-            currentWorkSpace
+            workspacePubkey: currentWorkSpace.pubkey
           })
         )
       }
