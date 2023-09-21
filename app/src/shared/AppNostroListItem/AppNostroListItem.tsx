@@ -2,6 +2,7 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import {
   StyledApp,
   StyledAppAbout,
+  StyledAppLastUsed,
   StyledAppName,
   StyledAppPinIcon,
   StyledAppWrap,
@@ -26,6 +27,7 @@ export const AppNostroListItem = ({ app, onClick }: IAppNostroListItem) => {
       <StyledDetailsWrapper>
         <StyledAppName>{app.name}</StyledAppName>
         <StyledAppAbout> {app.about}</StyledAppAbout>
+        {app.lastUsed && <StyledAppLastUsed />}
       </StyledDetailsWrapper>
     </StyledApp>
   )

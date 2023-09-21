@@ -57,7 +57,7 @@ export type WorkSpace = {
   liveEvents?: string[]
   suggestedProfiles?: string[]
   tabGroups: ITabGroup[]
-  lastKindApps?: {
+  lastKindApps: {
     [key: string]: string
   }
   currentTabId?: string
