@@ -12,13 +12,15 @@ export const TrendingNotes = () => {
   const { data, isLoading } = userService.useFetchTrendingNotesQuery('')
   const { handleOpen } = useOpenModalSearchParams()
 
-  const handleOpenProfile = (note: TrendingNote) => {
-    const nprofile = nip19.nprofileEncode({
-      pubkey: note.pubkey,
-      relays: [nostrbandRelay]
+  const handleOpenNote = (note: TrendingNote) => {
+    const ntrendingnote = nip19.neventEncode({
+      relays: [nostrbandRelay],
+      id: note.id
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: ntrendingnote }
+    })
   }
 
   return (
@@ -29,7 +31,7 @@ export const TrendingNotes = () => {
         </StyledTitle>
       </Container>
 
-      <SliderTrendingNotes data={data} isLoading={isLoading} handleClickEntity={handleOpenProfile} />
+      <SliderTrendingNotes data={data} isLoading={isLoading} handleClickEntity={handleOpenNote} />
     </StyledWrapper>
   )
 }

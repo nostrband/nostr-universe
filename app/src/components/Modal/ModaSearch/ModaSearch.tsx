@@ -135,11 +135,13 @@ export const ModaSearch = () => {
   }
 
   useEffect(() => {
-    setSearchValue('')
-    setProfiles(null)
-    setNotes(null)
-    setLongNotes(null)
-  }, [open])
+    return () => {
+      setSearchValue('')
+      setProfiles(null)
+      setNotes(null)
+      setLongNotes(null)
+    }
+  }, [isOpen])
 
   return (
     <Modal title="Search" open={isOpen} handleClose={() => handleClose()}>
