@@ -10,21 +10,29 @@ import { ITrendingProfiles, TrendingProfile } from '@/types/trending-profiles'
 import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
 import { useOpenApp } from '@/hooks/open-entity'
 import { StyledForm, StyledHint, StyledInput, StyledSlider } from './styled'
+import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 
 export const ModalImportKey = () => {
   const { onImportKey } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<ITrendingProfiles>([])
+  const [isLoading, setIsLoading] = useState(false)
+
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.KEY_IMPORT)
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-
-    searchProfiles(searchValue).then((data) => {
-      console.log(data)
-      const r = data.map((el) => el.profile)
-      setProfiles(r)
-    })
+    setIsLoading(true)
+    searchProfiles(searchValue)
+      .then((data) => {
+        console.log(data)
+        const r = data.map((el) => el.profile)
+        setProfiles(r)
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,14 +68,23 @@ export const ModalImportKey = () => {
         </StyledForm>
       </Container>
 
-      <StyledSlider>
-        <SliderProfiles data={profiles} isLoading={false} handleClickEntity={handleProfileSetKey} />
-      </StyledSlider>
+      {isLoading && (
+        <LoadingContainer>
+          <LoadingSpinner />
+        </LoadingContainer>
+      )}
 
-      <Container>
-        <StyledHint>Paste an npub of some existing user to log in.</StyledHint>
-        <StyledHint>Or type something to search for matching profiles, then click on one to import it.</StyledHint>
-      </Container>
+      {!isLoading && (
+        <>
+          <StyledSlider>
+            <SliderProfiles data={profiles} isLoading={false} handleClickEntity={handleProfileSetKey} />
+          </StyledSlider>
+          <Container>
+            <StyledHint>Paste an npub of some existing user to log in.</StyledHint>
+            <StyledHint>Or type something to search for matching profiles, then click on one to import it.</StyledHint>
+          </Container>
+        </>
+      )}
     </Modal>
   )
 }
