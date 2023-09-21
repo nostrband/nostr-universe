@@ -66,8 +66,6 @@ export const AppPinMenu = (props: IAppPinMenu) => {
     })
   }, [tabGroups])
 
-  console.log({ tabGroups, sortedTabGroups }, 'sortedTabGroups')
-
   const tabGroupsIds = sortedTabGroups.map((tabGroup) => tabGroup.id)
 
   const handleOpen = async (app: AppNostroType) => {
