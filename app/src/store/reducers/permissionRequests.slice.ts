@@ -18,7 +18,7 @@ export const permissionRequestsSlice = createSlice({
     },
 
     deletePermissionRequest: (state, action) => {
-      state.permissionRequests = state.permissionRequests.filter((perm) => perm.id === action.payload.id)
+      state.permissionRequests = state.permissionRequests.filter((perm) => perm.id !== action.payload.id)
     }
   }
 })
