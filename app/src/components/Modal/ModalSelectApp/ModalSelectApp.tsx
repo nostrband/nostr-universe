@@ -118,6 +118,9 @@ export const ModalSelectApp = () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     window.cordova.plugins.clipboard.copy(getParamAddr)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    window.plugins.toast.showShortBottom('Copied')
   }
 
   const renderContent = () => {
@@ -133,7 +136,16 @@ export const ModalSelectApp = () => {
         <Container>
           <StyledForm>
             <StyledInput
-              placeholder="Search"
+              endAdornment={
+                <IconButton color="inherit" size="medium" onClick={copyAddrHandler}>
+                  <ContentCopyIcon />
+                </IconButton>
+              }
+              readOnly
+              defaultValue={getParamAddr}
+            />
+            <StyledInput
+              placeholder="Search app"
               endAdornment={
                 <IconButton color="inherit" size="medium">
                   <SearchOutlinedIcon />
@@ -142,17 +154,8 @@ export const ModalSelectApp = () => {
               onChange={handleChange}
               value={searchValue}
               inputProps={{
-                autoFocus: true
+                autoFocus: false
               }}
-            />
-            <StyledInput
-              endAdornment={
-                <IconButton color="inherit" size="medium" onClick={copyAddrHandler}>
-                  <ContentCopyIcon />
-                </IconButton>
-              }
-              readOnly
-              defaultValue={getParamAddr}
             />
           </StyledForm>
         </Container>

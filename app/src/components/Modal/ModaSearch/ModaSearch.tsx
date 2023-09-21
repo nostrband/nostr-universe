@@ -119,12 +119,12 @@ export const ModaSearch = () => {
   }
 
   const handleOpenNote = (note) => {
-    const nprofile = nip19.nprofileEncode({
-      pubkey: note.pubkey,
-      relays: [nostrbandRelay]
+    const nevent = nip19.neventEncode({
+      relays: [nostrbandRelay],
+      id: note.id
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
   }
 
   const handleOpenLongPost = (longPost) => {
