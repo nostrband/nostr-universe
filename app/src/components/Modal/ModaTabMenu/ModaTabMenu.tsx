@@ -22,19 +22,19 @@ export const ModaTabMenu = () => {
   const [eventAddr, setEventAddr] = useState('')
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MENU)
   const id = searchParams.get('tabId') || ''
-  const { openedTabs } = useAppSelector((state) => state.tab)
 
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-  const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
-  const tabState = openedTabs.find(t => t.id === id)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
+  const currentTab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
 
-  const isPin = currentWorkSpace.pins.find((pin) => pin.appNaddr === currentTab?.appNaddr)
-  const url = tabState?.url || currentTab?.url
+  const isPin = currentWorkSpace?.pins.find((pin) => pin.appNaddr === currentTab?.appNaddr)
+  const url = currentTab?.url
 
   useEffect(() => {
     if (url) {
       const addr = stringToBech32(url)
-      setEventAddr(addr)  
+      setEventAddr(addr)
     } else {
       setEventAddr('')
     }
@@ -55,8 +55,7 @@ export const ModaTabMenu = () => {
   }
 
   const handleOpenModalSelect = () => {
-    const addr = stringToBech32(id)
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: eventAddr } })
   }
 
   const handleZap = async () => {

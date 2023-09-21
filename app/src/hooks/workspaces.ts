@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { db } from '@/modules/db'
-import { setCurrentWorkspace, setWorkspaces } from '@/store/reducers/workspaces.slice'
+import { setWorkspaces } from '@/store/reducers/workspaces.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { WorkSpace } from '@/types/workspace'
 import { writeCurrentPubkey, getKeys } from '@/utils/keys'
@@ -74,8 +74,6 @@ export const useChangeAccount = () => {
       const [keys, pubkey] = await getKeys()
       dispatch(setKeys({ keys }))
       dispatch(setCurrentPubKey({ currentPubKey: pubkey }))
-
-      dispatch(setCurrentWorkspace({ currentPubKey: pubkey }))
 
       updateProfile(keys, pubkey)
     }

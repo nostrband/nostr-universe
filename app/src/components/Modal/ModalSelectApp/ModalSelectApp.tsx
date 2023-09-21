@@ -22,7 +22,9 @@ export const ModalSelectApp = () => {
   const [kind, setKind] = useState('')
   const [apps, setApps] = useState<IOpenAppNostro[]>([])
   const [isAppsLoading, setIsAppsLoading] = useState(false)
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
   const [searchParams] = useSearchParams()
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.SELECT_APP)
@@ -48,7 +50,7 @@ export const ModalSelectApp = () => {
       const apps: IOpenAppNostro[] = []
 
       let lastAppNaddr = ''
-      if (info.addr.kind in currentWorkSpace.lastKindApps) lastAppNaddr = currentWorkSpace.lastKindApps[info.addr.kind]
+      if (currentWorkSpace && info.addr.kind in currentWorkSpace.lastKindApps) lastAppNaddr = currentWorkSpace?.lastKindApps[info.addr.kind]
 
       apps.push({
         naddr: NATIVE_NADDR,
@@ -65,7 +67,7 @@ export const ModalSelectApp = () => {
         const app = info.apps[id].handlers[0]
         if (!app.eventUrl) continue
 
-        const pinned = currentWorkSpace.pins.find((p) => p.appNaddr === app.naddr)
+        const pinned = currentWorkSpace?.pins.find((p) => p.appNaddr === app.naddr)
 
         const lastUsed = app.naddr === lastAppNaddr
 
@@ -75,13 +77,13 @@ export const ModalSelectApp = () => {
         // // pinned are a priority
         else if (pinned) order += 100
 
-        let hostname = ""
+        let hostname = ''
         try {
           const url = new URL(app.eventUrl)
           hostname = url.hostname
         } catch (e) {
-          console.log("bad app eventUrl", app.eventUrl)
-          continue;
+          console.log('bad app eventUrl', app.eventUrl)
+          continue
         }
 
         apps.push({
@@ -103,7 +105,7 @@ export const ModalSelectApp = () => {
     } catch (error) {
       setIsAppsLoading(false)
     }
-  }, [currentWorkSpace.lastKindApps, currentWorkSpace.pins, getParamAddr])
+  }, [currentWorkSpace?.lastKindApps, currentWorkSpace?.pins, getParamAddr])
 
   const resetStates = useCallback(() => {
     setApps([])

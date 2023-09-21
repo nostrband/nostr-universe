@@ -13,17 +13,19 @@ import { Container } from '@/layout/Container/Conatiner'
 export const ModalPermissionsRequest = () => {
   const { replyCurrentPermRequest } = useOpenApp()
   const [isRemember, setIsRemember] = useState(false)
-  const [lastPermRequestId, setLastPermRequestId] = useState('');
+  const [lastPermRequestId, setLastPermRequestId] = useState('')
   const [searchParams] = useSearchParams()
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
 
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PERMISSIONS_REQ)
   const currentPermId = searchParams.get('id') || ''
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
 
   const permReq = permissionRequests.find((permReq) => permReq.id === currentPermId)
-  const getTab = currentWorkSpace.tabs.find((tab) => tab.id === permReq?.tabId)
+  const getTab = currentWorkSpace?.tabs.find((tab) => tab.id === permReq?.tabId)
 
   // reset flag for new input
   useEffect(() => {
@@ -33,18 +35,16 @@ export const ModalPermissionsRequest = () => {
   // remember last request so that if user presses the system 'Back'
   // button we could react to it and execute disallow reply below
   useEffect(() => {
-    if (currentPermId)
-      setLastPermRequestId(currentPermId)
+    if (currentPermId) setLastPermRequestId(currentPermId)
   }, [currentPermId])
 
   // disallow last request if it wasn't processed and the modal is closed
   useEffect(() => {
-    if (!isOpen && lastPermRequestId)
-      reply(false, false, lastPermRequestId)
+    if (!isOpen && lastPermRequestId) reply(false, false, lastPermRequestId)
   }, [isOpen])
 
   const reply = async (allow: boolean, remember: boolean, reqId: string) => {
-    console.log("reply perm req ", reqId, "allow", allow, "remember", remember)
+    console.log('reply perm req ', reqId, 'allow', allow, 'remember', remember)
 
     // mark last req as done, so that form closure wouldn't disallow it
     setLastPermRequestId('')
@@ -120,14 +120,10 @@ export const ModalPermissionsRequest = () => {
         />
 
         <StyledButtonContainer>
-          <Button fullWidth variant="contained" className="button" color="secondary"
-            onClick={onDisallow}
-          >
+          <Button fullWidth variant="contained" className="button" color="secondary" onClick={onDisallow}>
             Disallow
           </Button>
-          <Button fullWidth variant="contained" className="button" color="secondary"
-            onClick={onAllow}
-          >
+          <Button fullWidth variant="contained" className="button" color="secondary" onClick={onAllow}>
             Allow
           </Button>
         </StyledButtonContainer>

@@ -17,8 +17,10 @@ export const TabMenu = () => {
   const { onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
   const id = searchParams.get('id') || ''
   const { openedTabs } = useAppSelector((state) => state.tab)
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
-  const currentTab = currentWorkSpace.tabs.find((tab) => tab.id === id)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
+  const currentTab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
   const tabState = openedTabs.find(t => t.id === id)
 
   const handleStopReloadTab = async () => {

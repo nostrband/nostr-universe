@@ -24,11 +24,13 @@ export const TabPage = () => {
   const { openTabWindow, onHideTabInBrowser } = useOpenApp()
   const [searchParams] = useSearchParams()
   const { getModalOpened } = useOpenModalSearchParams()
-  const { currentWorkSpace } = useAppSelector((state) => state.workspaces)
+  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
   const { openedTabs } = useAppSelector((state) => state.tab)
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
   const id = searchParams.get('id')
-  const tab = currentWorkSpace.tabs.find((tab) => tab.id === id)
+  const tab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
   const tabState = openedTabs.find((tab) => tab.id === id)
 
   // const handleOpen = () => { // use this method letter

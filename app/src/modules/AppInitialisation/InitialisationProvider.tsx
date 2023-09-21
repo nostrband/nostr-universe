@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react'
 import { useAppDispatch } from '@/store/hooks/redux'
 import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
-import { setCurrentWorkspace, setWorkspaces } from '@/store/reducers/workspaces.slice'
+import { setWorkspaces } from '@/store/reducers/workspaces.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { setProfiles } from '@/store/reducers/profile.slice'
 import { DEFAULT_PUBKEY } from '@/consts'
@@ -31,8 +31,6 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
 
       const workspaces = await createSomeWorkspaces(keys)
       dispatch(setWorkspaces({ workspaces }))
-
-      dispatch(setCurrentWorkspace({ currentPubKey }))
 
       console.log('ndk connected')
 
