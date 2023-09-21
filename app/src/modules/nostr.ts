@@ -919,7 +919,7 @@ export async function searchCommunities(q, limit = 30) {
 class PromiseQueue {
   queue = []
 
-  constructor() {}
+  constructor() { }
 
   appender(cb) {
     return (...args) => {
@@ -1166,9 +1166,9 @@ class Subscription {
         if (eose) return // WTF second one?
 
         eose = true
-        ;[...events.values()].forEach(async (e) => {
-          await returnEvent(e)
-        })
+          ;[...events.values()].forEach(async (e) => {
+            await returnEvent(e)
+          })
       })
     )
 
@@ -1404,9 +1404,10 @@ export async function sendPayment(info, payreq) {
     /* autoStart */ false
   )
 
-  const TIMEOUT_MS = 30000 // 30 sec
-  const res = new Promise((ok, err) => {
+  return new Promise((ok, err) => {
+
     // make sure we don't wait forever
+    const TIMEOUT_MS = 30000 // 30 sec
     const to = setTimeout(() => {
       sub.stop()
       err('Timeout error, payment might have failed')
@@ -1431,18 +1432,19 @@ export async function sendPayment(info, payreq) {
         console.log('irrelevant event received', JSON.stringify(e))
       }
     })
+
+    // publish when we're 100% sure we've subscribed to replies
+    sub.on('eose', async () => {
+      // publish
+      try {
+        const r = await ndk.publish(new NDKEvent(ndk, signed), relaySet, TIMEOUT_MS / 2)
+        console.log('published', r)
+      } catch (e) {
+        err('Failed to send payment request: ' + e)
+      }
+    })
+
+    // subscribe before publishing
+    sub.start()
   })
-
-  // publish when we're 100% sure we've subscribed to replies
-  sub.on('eose', async () => {
-    // publish
-    const r = await ndk.publish(new NDKEvent(ndk, signed), relaySet, TIMEOUT_MS / 2)
-
-    console.log('published', r)
-  })
-
-  // subscribe before publishing
-  await sub.start()
-
-  return res
 }
