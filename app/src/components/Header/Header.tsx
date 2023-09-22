@@ -1,5 +1,7 @@
+import { useSearchParams } from 'react-router-dom'
 import { Avatar, IconButton } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 import { Header as HeaderLayout } from '@/layout/Header/Header'
 import { useAppSelector } from '@/store/hooks/redux'
@@ -9,8 +11,11 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 
 export const Header = () => {
+  const [searchParams] = useSearchParams()
   const { handleOpen } = useOpenModalSearchParams()
   const { currentProfile } = useAppSelector((state) => state.profile)
+  const { currentTabId } = useAppSelector((state) => state.tab)
+  const id = searchParams.get('id') || ''
 
   return (
     <StyledWrapper>
@@ -20,12 +25,30 @@ export const Header = () => {
         </StyledIconButton>
 
         <StyledContainerButton>
-          <IconButton color="inherit" size="medium" onClick={() => handleOpen(MODAL_PARAMS_KEYS.WALLET_MODAL)}>
+          <IconButton
+            color="inherit"
+            size="medium"
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.WALLET_MODAL, { replace: true })}
+          >
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
-          <IconButton color="inherit" size="medium" onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL)}>
+          <IconButton
+            color="inherit"
+            size="medium"
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { replace: true })}
+          >
             <SearchIcon />
           </IconButton>
+
+          {currentTabId && (
+            <IconButton
+              color="inherit"
+              size="medium"
+              onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id }, replace: true })}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          )}
         </StyledContainerButton>
       </HeaderLayout>
     </StyledWrapper>

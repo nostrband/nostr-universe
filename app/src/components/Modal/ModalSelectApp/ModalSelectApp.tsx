@@ -181,7 +181,7 @@ export const ModalSelectApp = () => {
 
         <Container>
           {filteredApps.map((app) => {
-            return <AppNostroListItem app={app} key={app.url} onClick={() => handleOpen(app)} />
+            return <AppNostroListItem app={app} key={app.naddr} onClick={() => handleOpen(app)} />
           })}
         </Container>
       </>

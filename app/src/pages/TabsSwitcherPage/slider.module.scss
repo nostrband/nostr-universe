@@ -1,0 +1,16 @@
+.slide {
+  width: auto;
+  padding-right: 8px;
+  height: auto;
+  display: flex;
+
+  &:first-child {
+    padding-left: 16px;
+  }
+}
+
+.container {
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 24px;
+}

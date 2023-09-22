@@ -6,10 +6,10 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useOpenApp } from '@/hooks/open-entity'
 import { TabMenu } from '@/components/TabMenu/TabMenu'
-import { Header } from './components/Header/Header'
 import { StyledAppBar, StyledDialog, StyledViewName, StyledWrap } from './styled'
 import { useAppSelector } from '@/store/hooks/redux'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
+import { Header } from '@/components/Header/Header'
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
