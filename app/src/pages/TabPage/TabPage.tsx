@@ -41,8 +41,7 @@ export const TabPage = () => {
   // }
 
   useEffect(() => {
-    if (isOpen && id && !tab)
-      navigate('/', { replace: true })
+    if (isOpen && id && !tab) navigate('/', { replace: true })
   }, [isOpen, id, tab])
 
   useEffect(() => {

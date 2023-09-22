@@ -39,7 +39,7 @@ export const ModaWallet = () => {
     const r = await walletstore.listWallets()
     setCurrentWalletId(r.currentAlias || '')
     const walletsPrepare = Object.values(r).filter((v) => typeof v === 'object')
-    console.log("wallets", JSON.stringify(walletsPrepare))
+    console.log('wallets', JSON.stringify(walletsPrepare))
     setWallets(walletsPrepare as IWallet[])
   }
 

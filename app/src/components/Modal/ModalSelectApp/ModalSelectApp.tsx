@@ -50,7 +50,8 @@ export const ModalSelectApp = () => {
       const apps: IOpenAppNostro[] = []
 
       let lastAppNaddr = ''
-      if (currentWorkSpace && info.addr.kind in currentWorkSpace.lastKindApps) lastAppNaddr = currentWorkSpace?.lastKindApps[info.addr.kind]
+      if (currentWorkSpace && info.addr.kind in currentWorkSpace.lastKindApps)
+        lastAppNaddr = currentWorkSpace?.lastKindApps[info.addr.kind]
 
       apps.push({
         naddr: NATIVE_NADDR,

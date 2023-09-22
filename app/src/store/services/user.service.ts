@@ -13,18 +13,20 @@ export const userService = createApi({
         url: '/trending/profiles'
       }),
       transformResponse: (response: { profiles: ReturnTrendingProfiles }) => {
-        const trendingProfiles: ITrendingProfiles = response.profiles.map((el) => {
-          try {
-            return {
-              ...JSON.parse(el.profile.content),
-              npub: getNpub(el.pubkey),
-              pubkey: el.pubkey
+        const trendingProfiles: ITrendingProfiles = response.profiles
+          .map((el) => {
+            try {
+              return {
+                ...JSON.parse(el.profile.content),
+                npub: getNpub(el.pubkey),
+                pubkey: el.pubkey
+              }
+            } catch (e) {
+              console.log('Failed to parse profile', e)
+              return null
             }
-          } catch (e) {
-            console.log("Failed to parse profile", e)
-            return null
-          }
-        }).filter(p => !!p)
+          })
+          .filter((p) => !!p)
 
         return trendingProfiles
       }
@@ -52,18 +54,20 @@ export const userService = createApi({
         url: `/suggested/profiles/${pubkey}`
       }),
       transformResponse: (response: { profiles: ReturnTypeSuggestedProfiles }) => {
-        const suggestedProfiles: SuggestedProfiles = response.profiles.map((el) => {
-          try {
-            return {
-              ...JSON.parse(el.profile.content),
-              npub: getNpub(el.pubkey),
-              pubkey: el.pubkey
+        const suggestedProfiles: SuggestedProfiles = response.profiles
+          .map((el) => {
+            try {
+              return {
+                ...JSON.parse(el.profile.content),
+                npub: getNpub(el.pubkey),
+                pubkey: el.pubkey
+              }
+            } catch (e) {
+              console.log('Failed to parse profile', e)
+              return null
             }
-          } catch (e) {
-            console.log("Failed to parse profile", e)
-            return null
-          }
-        }).filter(p => !!p)
+          })
+          .filter((p) => !!p)
 
         return suggestedProfiles
       }
