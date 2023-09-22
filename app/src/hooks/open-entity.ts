@@ -429,7 +429,7 @@ export const useOpenApp = () => {
     dispatch(setCurrentTabId({ id: id }))
 
     if (isOpened) {
-      console.log('SHOW')
+      console.log('show tab', id)
       await browser.show(id)
     } else {
       const tab = currentWorkSpace?.tabs.find((tab) => id === tab.id)
@@ -440,7 +440,7 @@ export const useOpenApp = () => {
         apiCtx: tab.id
       }
 
-      console.log('CREATE', tab)
+      console.log('create tab', JSON.stringify(tab))
 
       dispatch(setOpenTab({ tab: dataTabForOpen }))
 

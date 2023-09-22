@@ -25,7 +25,6 @@ export const ModaTabSwitcher = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TABS_SWITCHER)
 
   const tgs = Object.values(currentWorkSpace?.tabGroups || {}).filter((tg) => tg.tabs.length > 0)
-  console.log({ tgs })
   const prepareTabs = (tabs: string[]) => {
     return currentWorkSpace?.tabs.filter((tab) => tabs.includes(tab.id))
   }

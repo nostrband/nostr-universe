@@ -42,9 +42,8 @@ export const useOpenModalSearchParams = () => {
   }
 
   const handleClose = (path?: string) => {
-    console.log('CLOSE FROM API')
     if (path) {
-      console.log('PATH CLOSE', path)
+      console.log('path close', path)
       navigate(path, { replace: true })
     } else {
       navigate(-1)

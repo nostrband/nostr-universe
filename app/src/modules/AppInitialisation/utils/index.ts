@@ -225,7 +225,6 @@ export const addToTabGroup = (pins, tabs) => {
   pins.forEach((pt) => {
     const id = getTabGroupId(pt)
     const tabIndex = groupTab.findIndex((tab) => tab.id === id)
-    console.log(tabIndex)
 
     if (tabIndex === -1) {
       groupTab.push({

@@ -177,12 +177,6 @@ export const dbi = {
     }
   },
   deletePerms: async (pubkey, app) => {
-    console.log(
-      JSON.stringify({
-        pubkey,
-        app
-      })
-    )
     try {
       // Delete tab in DB by ID
       const req = { pubkey }
