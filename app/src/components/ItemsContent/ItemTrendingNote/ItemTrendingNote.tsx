@@ -4,13 +4,12 @@ import { ProfileInfo } from '@/shared/ContentComponents/ProfileInfo/ProfileInfo'
 import { Time } from '@/shared/ContentComponents/Time/Time'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemTrendingNote } from './types'
-import { cropName } from '@/utils/helpers/prepare-data'
 
-export const ItemTrendingNote = ({ name, picture, time, content }: IItemTrendingNote) => {
+export const ItemTrendingNote = ({ author, pubkey, time, content }: IItemTrendingNote) => {
   return (
     <Wrapper>
       <Head>
-        <ProfileInfo picture={picture} name={cropName(name, 10)} />
+        <ProfileInfo profile={author} pubkey={pubkey} />
         <Time date={time} />
       </Head>
       <Content>{content}</Content>

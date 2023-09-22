@@ -1,6 +1,8 @@
+import { MetaEvent } from "@/types/meta-event"
+
 export interface IItemBigZap {
-  name: string
-  picture: string
+  targetPubkey: string,
+  targetMeta?: MetaEvent
   time: number
   subtitle: string
 }

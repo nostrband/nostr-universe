@@ -30,7 +30,7 @@ export const LiveEvents = () => {
           Live Streams
         </StyledTitle>
       </Container>
-      <SliderLiveEvents data={liveEvents} isLoading={false} handleClickEntity={handleOpenLiveEvent} />
+      <SliderLiveEvents data={liveEvents || []} isLoading={false} handleClickEntity={handleOpenLiveEvent} />
     </StyledWrapper>
   )
 }

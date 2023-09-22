@@ -3,13 +3,13 @@ import { styled } from '@mui/material/styles'
 import { Box, Avatar } from '@mui/material'
 import { IAvatarProps, IBoxStyled } from './types'
 import { APP_NAME_FONT_SIZE_VALUE, APP_NOSTRO_SIZE_VALUE } from './const'
-import { APP_NOSTRO_SIZE } from '@/consts'
-import { AppNostroSize } from '@/types/app-nostro'
+import { APP_NOSTR_SIZE } from '@/consts'
+import { AppNostrSize } from '@/types/app-nostr'
 import { purple } from '@mui/material/colors'
 
 const color = purple[500]
 
-const getVariantApp = (isPreviewTab: boolean, size: AppNostroSize) => {
+const getVariantApp = (isPreviewTab: boolean, size: AppNostrSize) => {
   if (isPreviewTab) {
     return {
       height: 34,
@@ -31,7 +31,7 @@ export const StyledAppIcon = styled(
 )(
   ({
     theme,
-    size = APP_NOSTRO_SIZE.MEDIUM,
+    size = APP_NOSTR_SIZE.MEDIUM,
     isActive = false,
     isPreviewTab = false,
     isOutline = true,
@@ -60,7 +60,7 @@ export const StyledAppImg = styled(
 
     return <Avatar variant="square" {...omitProps} />
   })
-)(({ theme, isPreviewTab = false, size = APP_NOSTRO_SIZE.MEDIUM }) => ({
+)(({ theme, isPreviewTab = false, size = APP_NOSTR_SIZE.MEDIUM }) => ({
   position: 'absolute',
   left: 0,
   top: 0,
@@ -70,5 +70,5 @@ export const StyledAppImg = styled(
   background: 'none',
   color: theme.palette.light.light,
   fontWeight: 'bold',
-  fontSize: isPreviewTab ? APP_NAME_FONT_SIZE_VALUE[APP_NOSTRO_SIZE.EXTRA_SMALL] : APP_NAME_FONT_SIZE_VALUE[size]
+  fontSize: isPreviewTab ? APP_NAME_FONT_SIZE_VALUE[APP_NOSTR_SIZE.EXTRA_SMALL] : APP_NAME_FONT_SIZE_VALUE[size]
 }))

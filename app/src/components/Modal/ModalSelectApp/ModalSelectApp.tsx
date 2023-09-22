@@ -11,7 +11,7 @@ import { fetchAppsForEvent } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { StyledForm, StyledInput } from './styled'
-import { IOpenAppNostro } from '@/types/app-nostro'
+import { IOpenAppNostr } from '@/types/app-nostr'
 import { AppNostroListItem } from '@/shared/AppNostroListItem/AppNostroListItem'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { NATIVE_NADDR } from '@/consts'
@@ -20,7 +20,7 @@ export const ModalSelectApp = () => {
   const { openApp } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [kind, setKind] = useState('')
-  const [apps, setApps] = useState<IOpenAppNostro[]>([])
+  const [apps, setApps] = useState<IOpenAppNostr[]>([])
   const [isAppsLoading, setIsAppsLoading] = useState(false)
   const { workspaces } = useAppSelector((state) => state.workspaces)
   const { currentPubKey } = useAppSelector((state) => state.keys)
@@ -43,14 +43,20 @@ export const ModalSelectApp = () => {
   const load = useCallback(async () => {
     try {
       setIsAppsLoading(true)
-      const info = await fetchAppsForEvent(getParamAddr)
+      const [info, addr] = await fetchAppsForEvent(getParamAddr)
+      if (addr.kind === undefined) {
+        setIsAppsLoading(false)
+        return
+      }
 
-      setKind(info.addr.kind)
+      setKind(''+addr.kind)
 
-      const apps: IOpenAppNostro[] = []
+      const apps: IOpenAppNostr[] = []
 
       let lastAppNaddr = ''
-      if (currentWorkSpace && info.addr.kind in currentWorkSpace.lastKindApps) lastAppNaddr = currentWorkSpace?.lastKindApps[info.addr.kind]
+      if (currentWorkSpace && addr.kind in currentWorkSpace.lastKindApps) {
+        lastAppNaddr = currentWorkSpace?.lastKindApps[addr.kind]
+      }
 
       apps.push({
         naddr: NATIVE_NADDR,
@@ -63,8 +69,8 @@ export const ModalSelectApp = () => {
         order: NATIVE_NADDR === lastAppNaddr ? 1000 : 999
       })
 
-      for (const id in info.apps) {
-        const app = info.apps[id].handlers[0]
+      for (const [_, appHandlers] of info.apps) {
+        const app = appHandlers.handlers[0]
         if (!app.eventUrl) continue
 
         const pinned = currentWorkSpace?.pins.find((p) => p.appNaddr === app.naddr)
@@ -91,7 +97,7 @@ export const ModalSelectApp = () => {
           url: app.eventUrl,
           name: app.profile?.display_name || app.profile?.name || hostname,
           about: app.profile?.about || '',
-          picture: app.profile?.picture,
+          picture: app.profile?.picture || '',
           lastUsed,
           pinned: Boolean(pinned),
           order
@@ -113,7 +119,7 @@ export const ModalSelectApp = () => {
     setSearchValue('')
   }, [])
 
-  const handleOpen = (app: IOpenAppNostro) => {
+  const handleOpen = (app: IOpenAppNostr) => {
     openApp({ ...app, kind }, { replace: true })
     // handleClose()
     resetStates()
@@ -179,8 +185,8 @@ export const ModalSelectApp = () => {
         </Container>
 
         <Container>
-          {filteredApps.map((app) => {
-            return <AppNostroListItem app={app} key={app.url} onClick={() => handleOpen(app)} />
+          {filteredApps.map((app, index) => {
+            return <AppNostroListItem app={app} key={index} onClick={() => handleOpen(app)} />
           })}
         </Container>
       </>

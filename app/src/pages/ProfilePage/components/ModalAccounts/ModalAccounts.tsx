@@ -40,7 +40,7 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
               <ListItemAvatar>
                 <Avatar src={getProfileImage(account)}></Avatar>
               </ListItemAvatar>
-              <StyledItemText primary={getProfileName(account)} />
+              <StyledItemText primary={getProfileName(account.pubkey, account)} />
             </ListItemButton>
           </StyledListItem>
         ))}

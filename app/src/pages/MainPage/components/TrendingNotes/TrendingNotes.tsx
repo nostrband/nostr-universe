@@ -4,15 +4,15 @@ import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
-import { TrendingNote } from '@/types/trending-notes'
 import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/SliderTrendingNotes'
 import { StyledTitle, StyledWrapper } from './styled'
+import { AuthoredEvent } from '@/types/authored-event'
 
 export const TrendingNotes = () => {
   const { data, isLoading } = userService.useFetchTrendingNotesQuery('')
   const { handleOpen } = useOpenModalSearchParams()
 
-  const handleOpenNote = (note: TrendingNote) => {
+  const handleOpenNote = (note: AuthoredEvent) => {
     const ntrendingnote = nip19.neventEncode({
       relays: [nostrbandRelay],
       id: note.id

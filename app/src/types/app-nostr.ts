@@ -1,8 +1,8 @@
-import { APP_NOSTRO_SIZE } from '@/consts'
+import { APP_NOSTR_SIZE } from '@/consts'
 import { OverridableStringUnion } from './utility'
 
-export type AppNostro = {
-  autor?: Record<string, unknown>
+export type AppNostr = {
+  author?: Record<string, unknown>
   naddr: string
   url: string
   picture: string
@@ -19,12 +19,12 @@ export type AppNostro = {
   }
 }
 
-export interface IOpenAppNostro extends AppNostro {
+export interface IOpenAppNostr extends AppNostr {
   kind?: string
   replace?: boolean
   lastUsed?: boolean
 }
 
-export type AppNostroSizeUnion = (typeof APP_NOSTRO_SIZE)[keyof typeof APP_NOSTRO_SIZE]
+export type AppNostrSizeUnion = (typeof APP_NOSTR_SIZE)[keyof typeof APP_NOSTR_SIZE]
 
-export type AppNostroSize = OverridableStringUnion<AppNostroSizeUnion>
+export type AppNostrSize = OverridableStringUnion<AppNostrSizeUnion>

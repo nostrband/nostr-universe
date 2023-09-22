@@ -1,9 +1,9 @@
-import { ReturnProfileType } from '@/types/profile'
+import { MetaEvent } from '@/types/meta-event'
 import { createSlice } from '@reduxjs/toolkit'
 
 interface IProfileState {
-  currentProfile: ReturnProfileType | null
-  profiles: ReturnProfileType[] | []
+  currentProfile: MetaEvent | null
+  profiles: MetaEvent[] | []
 }
 
 const initialState: IProfileState = {
@@ -20,12 +20,12 @@ export const profileSlice = createSlice({
     },
 
     setProfiles: (state, action) => {
-      const mergeProfiles = (stateProfiles: ReturnProfileType[], payloadProfiles: ReturnProfileType[]) => {
+      const mergeProfiles = (stateProfiles: MetaEvent[], payloadProfiles: MetaEvent[]) => {
         // O(n)
         const existingArray = [...stateProfiles]
         const inputArray = [...payloadProfiles]
 
-        const existingObjMap: { [key: string]: ReturnProfileType } = {}
+        const existingObjMap: { [key: string]: MetaEvent } = {}
         existingArray.forEach((obj) => {
           existingObjMap[obj.pubkey] = obj
         })
@@ -42,6 +42,10 @@ export const profileSlice = createSlice({
       const profiles = mergeProfiles(state.profiles, action.payload.profiles)
 
       state.profiles = profiles
+
+      if (state.currentProfile) {
+        state.currentProfile = profiles.find(p => p.pubkey === state.currentProfile?.pubkey) || null
+      }
     }
   }
 })

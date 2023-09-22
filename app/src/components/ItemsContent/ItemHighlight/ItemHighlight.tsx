@@ -5,11 +5,11 @@ import { Time } from '@/shared/ContentComponents/Time/Time'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemHighlight } from './types'
 
-export const ItemHighlight = ({ name, picture, time, content }: IItemHighlight) => {
+export const ItemHighlight = ({ pubkey, author, time, content }: IItemHighlight) => {
   return (
     <Wrapper>
       <Head>
-        <ProfileInfo picture={picture} name={name} />
+        <ProfileInfo pubkey={pubkey} profile={author} />
         <Time date={time} />
       </Head>
       <Content isHighlight>{content}</Content>

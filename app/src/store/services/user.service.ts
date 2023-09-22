@@ -1,7 +1,10 @@
-import { ReturnTypeSuggestedProfiles, SuggestedProfiles } from '@/types/suggested-profiles'
-import { ReturnTrendingNotes, TrendingNotes } from '@/types/trending-notes'
-import { ITrendingProfiles, ReturnTrendingProfiles } from '@/types/trending-profiles'
-import { getNpub } from '@/utils/helpers/general'
+import { parseProfileJson } from '@/modules/nostr'
+import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
+import { AuthoredEvent, createAuthoredEvent } from '@/types/authored-event'
+import { MetaEvent, createMetaEvent } from '@/types/meta-event'
+import { ReturnTypeSuggestedProfiles } from '@/types/suggested-profiles'
+import { ReturnTypeTrendingNotes } from '@/types/trending-notes'
+import { ReturnTypeTrendingProfiles } from '@/types/trending-profiles'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/dist/query/react'
 
 export const userService = createApi({
@@ -12,19 +15,12 @@ export const userService = createApi({
       query: () => ({
         url: '/trending/profiles'
       }),
-      transformResponse: (response: { profiles: ReturnTrendingProfiles }) => {
-        const trendingProfiles: ITrendingProfiles = response.profiles.map((el) => {
-          try {
-            return {
-              ...JSON.parse(el.profile.content),
-              npub: getNpub(el.pubkey),
-              pubkey: el.pubkey
-            }
-          } catch (e) {
-            console.log("Failed to parse profile", e)
-            return null
-          }
-        }).filter(p => !!p)
+      transformResponse: (response: { profiles: ReturnTypeTrendingProfiles }) => {
+        const trendingProfiles: MetaEvent[] = response.profiles.map((el) => {
+          const meta = createMetaEvent(createAugmentedEvent(createEvent(el.profile)))
+          meta.profile = parseProfileJson(meta)
+          return meta
+        })
 
         return trendingProfiles
       }
@@ -33,16 +29,13 @@ export const userService = createApi({
       query: () => ({
         url: '/trending/notes'
       }),
-      transformResponse: (response: { notes: ReturnTrendingNotes }) => {
-        const trendingNotes: TrendingNotes = response.notes.map((el) => ({
-          ...el.event,
-          author: {
-            ...el.author,
-            npub: getNpub(el.pubkey),
-            pubkey: el.pubkey,
-            profile: JSON.parse(el.author.content)
-          }
-        }))
+      transformResponse: (response: { notes: ReturnTypeTrendingNotes }) => {
+        const trendingNotes: AuthoredEvent[] = response.notes.map((el) => {
+          const note = createAuthoredEvent(createAugmentedEvent(createEvent(el.event)))
+          note.author = createMetaEvent(createAugmentedEvent(createEvent(el.author)))
+          note.author.profile = parseProfileJson(note.author)
+          return note
+        })
 
         return trendingNotes
       }
@@ -52,18 +45,11 @@ export const userService = createApi({
         url: `/suggested/profiles/${pubkey}`
       }),
       transformResponse: (response: { profiles: ReturnTypeSuggestedProfiles }) => {
-        const suggestedProfiles: SuggestedProfiles = response.profiles.map((el) => {
-          try {
-            return {
-              ...JSON.parse(el.profile.content),
-              npub: getNpub(el.pubkey),
-              pubkey: el.pubkey
-            }
-          } catch (e) {
-            console.log("Failed to parse profile", e)
-            return null
-          }
-        }).filter(p => !!p)
+        const suggestedProfiles: MetaEvent[] = response.profiles.map((el) => {
+          const meta = createMetaEvent(createAugmentedEvent(createEvent(el.profile)))
+          meta.profile = parseProfileJson(meta)
+          return meta
+        })
 
         return suggestedProfiles
       }

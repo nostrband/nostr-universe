@@ -1,5 +1,4 @@
 import { IPerm } from './permission-req'
-import { ITrendingProfiles } from './trending-profiles'
 
 export interface ITab {
   id: string
@@ -41,7 +40,6 @@ export interface ITabGroup {
 
 export type WorkSpace = {
   pubkey?: string
-  trendingProfiles?: ITrendingProfiles
   tabs: ITab[]
   pins: {
     id: string
@@ -52,10 +50,6 @@ export type WorkSpace = {
     order: number
     pubkey: string
   }[]
-  trendingNotes?: string[]
-  longNotes?: string[]
-  liveEvents?: string[]
-  suggestedProfiles?: string[]
   tabGroups: ITabGroup[]
   lastKindApps: {
     [key: string]: string

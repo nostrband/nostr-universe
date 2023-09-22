@@ -1,4 +1,4 @@
-export type ReturnTrendingProfile = {
+export type TrendingProfile = {
   pubkey: string
   new_followers_count: number
   relays: string[]
@@ -13,35 +13,4 @@ export type ReturnTrendingProfile = {
   }
 }
 
-export type ReturnTrendingProfiles = ReturnTrendingProfile[]
-
-export type TrendingProfile = {
-  name: string
-  about: string
-  picture: string
-  username?: string
-  display_name: string
-  displayName?: string
-  banner?: string
-  website: string
-  nip05: string
-  lud16?: string
-  lud06?: string
-  npub: string
-  pubkey: string
-}
-
-export type ITrendingProfiles = TrendingProfile[]
-
-export type ReturnProfile = {
-  content: string
-  created_at: number
-  id: string
-  kind: number
-  pubkey: string
-  sig: string
-  tags: string[]
-  order: number
-  identifier: string
-  profile: TrendingProfile
-}
+export type ReturnTypeTrendingProfiles = TrendingProfile[]

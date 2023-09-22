@@ -1,6 +1,6 @@
-import { IOpenAppNostro } from '@/types/app-nostro'
+import { IOpenAppNostr } from '@/types/app-nostr'
 
 export interface IAppNostroListItem {
-  app: IOpenAppNostro
+  app: IOpenAppNostr
   onClick: () => void
 }

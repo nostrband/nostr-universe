@@ -1,7 +1,7 @@
-import { BigZap, ReturnTypeBigZaps } from '@/types/big-zaps'
+import { ZapEvent } from '@/types/zap-event'
 
 export interface ISliderBigZaps {
-  data: ReturnTypeBigZaps | undefined
+  data: ZapEvent[] | undefined
   isLoading?: boolean
-  handleClickEntity?: (profile: BigZap) => void
+  handleClickEntity?: (profile: ZapEvent) => void
 }

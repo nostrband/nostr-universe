@@ -4,7 +4,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useChangeAccount } from '@/hooks/workspaces'
-import { getNpub, getProfileImage, isGuest } from '@/utils/helpers/prepare-data'
+import { getProfileImage, isGuest } from '@/utils/helpers/prepare-data'
 import { ModalAccounts } from '../ModalAccounts/ModalAccounts'
 import {
   StyledViewAction,
@@ -16,6 +16,8 @@ import {
 } from './styled'
 import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
 import { getRenderedUsername } from '@/utils/helpers/general'
+import { createMetaEvent } from '@/types/meta-event'
+import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
 
 export const ProfileView = () => {
   const { getModalOpened, handleOpen, handleClose } = useOpenModalSearchParams()
@@ -24,14 +26,12 @@ export const ProfileView = () => {
   const { changeAccount } = useChangeAccount()
 
   const accounts = keys.map((key) => {
-    return {
-      pubkey: key,
-      ...profiles.find((profile) => {
-        if (profile.pubkey === key) {
-          return profile
-        }
-      })
-    }
+    let p = profiles.find(p => p.pubkey === key)
+    if (!p) 
+      p = createMetaEvent(
+        createAugmentedEvent(
+          createEvent({ pubkey: key })))
+    return p
   })
 
   const handlechangeAccount = (pubkey: string) => {
@@ -43,7 +43,7 @@ export const ProfileView = () => {
     handleClose()
   }
 
-  const getCurrentPubKey = isGuest(currentPubKey) ? '' : getNpub(currentPubKey)
+  const getCurrentPubKey = isGuest(currentPubKey) ? '' : currentPubKey
 
   const isOpenModalAccounts = getModalOpened(MODAL_PARAMS_KEYS.KEYS_PROFILE)
 

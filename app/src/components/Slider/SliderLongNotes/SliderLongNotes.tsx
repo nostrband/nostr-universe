@@ -1,23 +1,23 @@
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { FreeMode } from 'swiper/modules'
-import { ISliderLongPost } from './types'
+import { ISliderLongNotes } from './types'
 import 'swiper/css'
 import styles from './slider.module.scss'
-import { ItemLongPost } from '../../ItemsContent/ItemLongPost/ItemLongPost'
+import { ItemLongNote } from '../../ItemsContent/ItemLongNote/ItemLongNote'
 
-export const SliderLongPosts = ({ data, isLoading, handleClickEntity = () => {} }: ISliderLongPost) => {
+export const SliderLongNotes = ({ data, isLoading, handleClickEntity = () => {} }: ISliderLongNotes) => {
   return (
     <Swiper slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
       {isLoading || !data
         ? 'Loading'
         : data.map((longPost, i) => (
             <SwiperSlide className={styles.slide} key={i} onClick={() => handleClickEntity(longPost)}>
-              <ItemLongPost
+              <ItemLongNote
                 time={longPost.created_at}
                 content={longPost.content}
                 subtitle={longPost.title}
-                name={longPost.author?.profile?.name}
-                picture={longPost.author?.profile?.picture}
+                pubkey={longPost.pubkey}
+                author={longPost.author}
               />
             </SwiperSlide>
           ))}

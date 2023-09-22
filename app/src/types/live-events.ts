@@ -1,12 +1,8 @@
-export interface LiveEvent {
-  id: string
-  pubkey: string
-  created_at: number
-  kind: number
-  tags: string[][]
-  content: string
-  identifier: string
-  order: number
+import { AuthoredEvent } from "./authored-event"
+import { MetaEvent } from "./meta-event"
+
+
+export interface LiveEvent extends AuthoredEvent {
   title: string
   summary: string
   starts: number
@@ -14,47 +10,20 @@ export interface LiveEvent {
   status: string
   host: string
   members: string[]
-  author: Author
-  name: string
-  description: string
-  image: string
-  moderators: string[]
-  last_post_tm: number
-  posts: number
-  hostMeta: Meta
-  membersMeta: Meta[]
+
+  hostMeta?: MetaEvent
+  membersMeta: MetaEvent[]
 }
 
-export interface Author {
-  id: string
-  pubkey: string
-  created_at: number
-  kind: number
-  tags: string[]
-  content: string
-  identifier: string
-  order: number
-  profile: Profile
+export function createLiveEvent(e: AuthoredEvent): LiveEvent {
+  const c = e as LiveEvent
+  c.title = ''
+  c.summary = ''
+  c.starts = 0
+  c.current_participants = 0
+  c.status = ''
+  c.host = ''
+  c.members = []
+  c.membersMeta = []
+  return c
 }
-
-export interface Profile {
-  lud16: string
-  name: string
-  nip05: string
-  npub: string
-  picture: string
-  pubkey: string
-  website: string
-}
-
-export interface MetaProfile extends Profile {
-  banner: string
-  nip57: string
-  about: string
-}
-
-export interface Meta extends Omit<Author, 'profile'> {
-  profile: MetaProfile
-}
-
-export type ReturnTypeLiveEvents = LiveEvent[] | null

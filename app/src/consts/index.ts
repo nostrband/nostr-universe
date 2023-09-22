@@ -3,7 +3,7 @@ export const MIN_ZAP_AMOUNT = 1000
 export const EVENT_LIVE_STATUS = 'live'
 export const NATIVE_NADDR = 'nativeApp'
 
-export const APP_NOSTRO_SIZE = {
+export const APP_NOSTR_SIZE = {
   BIG: 'big',
   LARGE: 'large',
   MEDIUM: 'medium',

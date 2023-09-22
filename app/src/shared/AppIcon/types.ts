@@ -1,8 +1,8 @@
-import { AppNostroSize } from '@/types/app-nostro'
+import { AppNostrSize } from '@/types/app-nostr'
 import { BoxProps, AvatarProps } from '@mui/material'
 
 interface IAppIconProps {
-  size?: AppNostroSize
+  size?: AppNostrSize
   isActive?: boolean
   isPreviewTab?: boolean
   isNotLoaded?: boolean
@@ -12,7 +12,7 @@ interface IAppIconProps {
 export type IBoxStyled = IAppIconProps & BoxProps
 
 export interface IAvatarProps extends AvatarProps {
-  size?: AppNostroSize
+  size?: AppNostrSize
   isPreviewTab?: boolean
 }
 

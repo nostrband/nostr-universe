@@ -1,9 +1,9 @@
-import { ReturnProfileType } from '@/types/profile'
+import { MetaEvent } from '@/types/meta-event'
 
 export interface IModalAccounts {
   open: boolean
   handleClose: () => void
   changeAccount: (pubkey: string) => void
-  accounts: ReturnProfileType[]
+  accounts: MetaEvent[]
   currentPubKey: string
 }

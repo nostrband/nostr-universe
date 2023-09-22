@@ -5,11 +5,11 @@ import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemBigZap } from './types'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 
-export const ItemBigZap = ({ name, picture, time, subtitle }: IItemBigZap) => {
+export const ItemBigZap = ({ targetPubkey, targetMeta, time, subtitle }: IItemBigZap) => {
   return (
     <Wrapper>
       <Head>
-        <ProfileInfo picture={picture} name={name} />
+        <ProfileInfo pubkey={targetPubkey} profile={targetMeta} />
         <Time date={time} />
       </Head>
       <SubTitle>{subtitle}</SubTitle>

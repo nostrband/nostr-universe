@@ -59,6 +59,7 @@ export const ModaTabMenu = () => {
   }
 
   const handleZap = async () => {
+    if (!url) return
     const addr = stringToBech32(url)
     //    const event = await fetchEventByBech32(addr)
     openZap(addr)

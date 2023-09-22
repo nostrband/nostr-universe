@@ -10,7 +10,6 @@ import {
 } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setCurrentProfile, setProfiles } from '@/store/reducers/profile.slice'
-import { ReturnProfileType } from '@/types/profile'
 import {
   setBigZaps,
   setCommunities,
@@ -19,16 +18,17 @@ import {
   setLiveEvents,
   setLongPosts
 } from '@/store/reducers/contentWorkspace'
-import { ReturnTypeContactList } from '@/types/contentWorkSpace'
 import { dbi } from '@/modules/db'
 import { MIN_ZAP_AMOUNT } from '@/consts'
+import { MetaEvent } from '@/types/meta-event'
+import { ContactListEvent } from '@/types/contact-list-event'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
   const { profiles } = useAppSelector((state) => state.profile)
 
   const setContacts = useCallback(
-    async (contactList: ReturnTypeContactList) => {
+    async (contactList: ContactListEvent) => {
       if (contactList?.contactEvents) {
         const lastContacts = await dbi.listLastContacts(contactList.pubkey)
         console.log('lastContacts', lastContacts)
@@ -39,7 +39,7 @@ export const useUpdateProfile = () => {
     [dispatch]
   )
 
-  const getProfile = useCallback((currentPubKey?: string) => {
+  const getProfile = useCallback((currentPubKey: string) => {
     const getProfile = profiles.find((profile) => profile.pubkey === currentPubKey)
 
     return getProfile
@@ -47,7 +47,7 @@ export const useUpdateProfile = () => {
   }, [])
 
   return useCallback(
-    async (keys: string[], currentPubKey?: string) => {
+    async (keys: string[], currentPubKey: string) => {
       const currentProfile = getProfile(currentPubKey)
 
       if (currentProfile) {
@@ -56,7 +56,7 @@ export const useUpdateProfile = () => {
         dispatch(setCurrentProfile({ profile: null }))
       }
 
-      subscribeProfiles(keys, (profile: ReturnProfileType) => {
+      subscribeProfiles(keys, async (profile: MetaEvent) => {
         if (profile) {
           if (profile.pubkey === currentPubKey) {
             dispatch(setCurrentProfile({ profile }))
@@ -68,7 +68,7 @@ export const useUpdateProfile = () => {
         }
       })
 
-      subscribeContactList(currentPubKey, async (contactList: ReturnTypeContactList) => {
+      subscribeContactList(currentPubKey, async (contactList: ContactListEvent) => {
         console.log('contact list update', contactList)
 
         if (contactList) {

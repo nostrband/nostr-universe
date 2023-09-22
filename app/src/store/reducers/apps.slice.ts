@@ -1,8 +1,8 @@
-import { AppNostro } from '@/types/app-nostro'
+import { AppNostr } from '@/types/app-nostr'
 import { createSlice } from '@reduxjs/toolkit'
 
 interface IAppsState {
-  apps: AppNostro[]
+  apps: AppNostr[]
   isLoading: boolean
 }
 

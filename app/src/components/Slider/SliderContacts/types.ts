@@ -1,7 +1,7 @@
-import { ITrendingProfiles, TrendingProfile } from '@/types/trending-profiles'
+import { MetaEvent } from '@/types/meta-event'
 
 export interface ISliderContacts {
-  data: ITrendingProfiles | undefined
+  data: MetaEvent[] | undefined
   isLoading?: boolean
-  handleClickEntity?: (profile: TrendingProfile) => void
+  handleClickEntity?: (profile: MetaEvent) => void
 }

@@ -1,7 +1,7 @@
-import { LiveEvent, ReturnTypeLiveEvents } from '@/types/live-events'
+import { LiveEvent } from '@/types/live-events'
 
 export interface ISliderLiveEvents {
-  data: ReturnTypeLiveEvents | undefined
+  data: LiveEvent[] | undefined
   isLoading?: boolean
   handleClickEntity: (liveEvent: LiveEvent) => void
 }

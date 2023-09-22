@@ -16,8 +16,8 @@ export const SliderLiveEvents = ({ data, isLoading, handleClickEntity = () => {}
               <ItemLiveEvent
                 key={event.id}
                 time={event.starts || event.created_at}
-                name={event.hostMeta.profile.name}
-                picture={event.hostMeta.profile.picture}
+                hostPubkey={event.host}
+                host={event.hostMeta}
                 subtitle={event.title}
                 content={event.summary || event.content.substring(0, 300)}
                 status={event.status}

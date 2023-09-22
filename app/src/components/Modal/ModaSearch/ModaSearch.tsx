@@ -1,5 +1,4 @@
 /* eslint-disable */
-// @ts-nocheck
 import { useState, useEffect } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
@@ -20,32 +19,33 @@ import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfile
 import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/SuggestedProfiles/styled'
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
-import { getNpub } from '@/utils/helpers/prepare-data'
 import { nip19 } from '@nostrband/nostr-tools'
-import { TrendingProfile } from '@/types/trending-profiles'
 import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/SliderTrendingNotes'
-import { SliderLongPosts } from '@/components/Slider/SliderLongPosts/SliderLongPosts'
 import { ContactList } from '@/pages/MainPage/components/ContactList/ContactList'
 import { useOpenApp } from '@/hooks/open-entity'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
+import { AuthoredEvent } from '@/types/authored-event'
+import { LongNoteEvent } from '@/types/long-note-event'
+import { MetaEvent } from '@/types/meta-event'
+import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongNotes'
 
 export const ModaSearch = () => {
   const { openBlank } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
-  const [profiles, setProfiles] = useState(null)
-  const [notes, setNotes] = useState(null)
-  const [longNotes, setLongNotes] = useState(null)
+  const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
+  const [notes, setNotes] = useState<AuthoredEvent[] | null>(null)
+  const [longNotes, setLongNotes] = useState<LongNoteEvent[] | null>(null)
 
   const [isLoading, setIsLoading] = useState(false)
 
   const { handleClose, getModalOpened, handleOpen } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.SEARCH_MODAL)
 
-  const onSearch = (str) => {
+  const onSearch = (str: string): boolean => {
     try {
       const url = new URL('/', str)
       if (url) {
-        openBlank({ url: str })
+        openBlank({ url: str }, {})
         return true
       }
     } catch {}
@@ -67,40 +67,15 @@ export const ModaSearch = () => {
     setIsLoading(true)
     searchProfiles(searchValue)
       .then((data) => {
-        const prepareProfiles = data.map((el) => ({
-          ...JSON.parse(el.content),
-          npub: getNpub(el.pubkey),
-          pubkey: el.pubkey
-        }))
-
-        setProfiles(prepareProfiles)
+        setProfiles(data)
       })
       .then(() => searchNotes(searchValue))
       .then((data) => {
-        const prepareNotes = data.map((el) => ({
-          ...el,
-          author: {
-            ...el.author,
-            npub: getNpub(el.pubkey),
-            pubkey: el.pubkey,
-            profile: JSON.parse(el.author.content)
-          }
-        }))
-
-        setNotes(prepareNotes)
+        setNotes(data)
       })
       .then(() => searchLongNotes(searchValue))
       .then((data) => {
-        const prepareLongPosts = data.map((el) => ({
-          ...el,
-          author: {
-            ...el.author,
-            npub: getNpub(el.pubkey),
-            pubkey: el.pubkey,
-            profile: JSON.parse(el.author.content)
-          }
-        }))
-        setLongNotes(prepareLongPosts)
+        setLongNotes(data)
       })
       .finally(() => setIsLoading(false))
   }
@@ -109,7 +84,7 @@ export const ModaSearch = () => {
     setSearchValue(e.target.value)
   }
 
-  const handleOpenProfile = (profile: TrendingProfile) => {
+  const handleOpenProfile = (profile: MetaEvent) => {
     const nprofile = nip19.nprofileEncode({
       pubkey: profile.pubkey,
       relays: [nostrbandRelay]
@@ -118,7 +93,7 @@ export const ModaSearch = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
   }
 
-  const handleOpenNote = (note) => {
+  const handleOpenNote = (note: AuthoredEvent) => {
     const nevent = nip19.neventEncode({
       relays: [nostrbandRelay],
       id: note.id
@@ -127,11 +102,11 @@ export const ModaSearch = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
   }
 
-  const handleOpenLongPost = (longPost) => {
+  const handleOpenLongNote = (longNote: LongNoteEvent) => {
     const naddr = nip19.naddrEncode({
-      pubkey: longPost.pubkey,
-      kind: longPost.kind,
-      identifier: getTagValue(longPost, 'd'),
+      pubkey: longNote.pubkey,
+      kind: longNote.kind,
+      identifier: getTagValue(longNote, 'd'),
       relays: [nostrbandRelay]
     })
 
@@ -189,7 +164,7 @@ export const ModaSearch = () => {
               </StyledTitleLongPost>
             </Container>
 
-            <SliderLongPosts data={longNotes} isLoading={false} handleClickEntity={handleOpenLongPost} />
+            <SliderLongNotes data={longNotes} isLoading={false} handleClickEntity={handleOpenLongNote} />
           </StyledWrapper>
         )}
       </>

@@ -15,8 +15,8 @@ export const SliderHighlights = ({ data, isLoading, handleClickEntity = () => {}
               <ItemHighlight
                 time={highlight.created_at}
                 content={highlight.content}
-                name={highlight.author.profile.name}
-                picture={highlight.author.profile.picture}
+                pubkey={highlight.pubkey}
+                author={highlight.author}
               />
             </SwiperSlide>
           ))}

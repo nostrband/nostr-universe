@@ -6,16 +6,16 @@ import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
 import { IconButton } from '@mui/material'
 import { searchProfiles } from '@/modules/nostr'
-import { ITrendingProfiles, TrendingProfile } from '@/types/trending-profiles'
 import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
 import { useOpenApp } from '@/hooks/open-entity'
 import { StyledForm, StyledHint, StyledInput, StyledSlider } from './styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
+import { MetaEvent } from '@/types/meta-event'
 
 export const ModalImportKey = () => {
   const { onImportKey } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
-  const [profiles, setProfiles] = useState<ITrendingProfiles>([])
+  const [profiles, setProfiles] = useState<MetaEvent[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
@@ -26,9 +26,7 @@ export const ModalImportKey = () => {
     setIsLoading(true)
     searchProfiles(searchValue)
       .then((data) => {
-        console.log(data)
-        const r = data.map((el) => el.profile)
-        setProfiles(r)
+        setProfiles(data)
       })
       .finally(() => {
         setIsLoading(false)
@@ -39,7 +37,7 @@ export const ModalImportKey = () => {
     setSearchValue(e.target.value)
   }
 
-  const handleProfileSetKey = async (profile: TrendingProfile) => {
+  const handleProfileSetKey = async (profile: MetaEvent) => {
     await onImportKey(profile.pubkey)
     handleClose()
   }

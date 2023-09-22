@@ -1,7 +1,7 @@
-import { ReturnTypeHighlight, ReturnTypeHighlights } from '@/types/contentWorkSpace'
+import { HighlightEvent } from '@/types/highlight-event'
 
 export interface ISliderHighlights {
-  data: ReturnTypeHighlights | undefined
+  data: HighlightEvent[] | undefined
   isLoading?: boolean
-  handleClickEntity?: (profile: ReturnTypeHighlight) => void
+  handleClickEntity?: (profile: HighlightEvent) => void
 }

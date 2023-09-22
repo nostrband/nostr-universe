@@ -1,7 +1,7 @@
-import { TrendingNote, TrendingNotes } from '@/types/trending-notes'
+import { AuthoredEvent } from '@/types/authored-event'
 
 export interface ISliderTrendingNotes {
-  data: TrendingNotes | undefined
+  data: AuthoredEvent[] | undefined
   isLoading?: boolean
-  handleClickEntity?: (note: TrendingNote) => void
+  handleClickEntity?: (note: AuthoredEvent) => void
 }

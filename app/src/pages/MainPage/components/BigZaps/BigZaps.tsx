@@ -4,25 +4,25 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
-import { BigZap } from '@/types/big-zaps'
 import { SliderBigZaps } from '@/components/Slider/SliderBigZaps/SliderBigZaps'
 import { StyledTitle, StyledWrapper } from './styled'
+import { ZapEvent } from '@/types/zap-event'
 
 export const BigZaps = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const { bigZaps } = useAppSelector((state) => state.contentWorkSpace)
 
-  const handleOpenHighlight = (bigZap: BigZap) => {
+  const handleOpenHighlight = (bigZap: ZapEvent) => {
     let addr = ''
-    if (typeof bigZap.targetEvent !== 'string') {
-      if (bigZap.targetEvent?.kind === 0) {
+    if (bigZap.targetEvent) {
+      if (bigZap.targetEvent.kind === 0) {
         addr = nip19.nprofileEncode({
           pubkey: bigZap.targetEvent.pubkey,
           relays: [nostrbandRelay]
         })
       } else if (
-        (bigZap.targetEvent?.kind >= 10000 && bigZap.targetEvent?.kind < 20000) ||
-        (bigZap.targetEvent?.kind >= 10000 && bigZap.targetEvent?.kind < 20000)
+        (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000) ||
+        (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000)
       ) {
         addr = nip19.neventEncode({
           id: bigZap.targetEvent.pubkey,
@@ -30,11 +30,15 @@ export const BigZaps = () => {
           // identifier: bigZap.targetEvent.identifier,
           relays: [nostrbandRelay]
         })
-      } else {
+      } else if (bigZap.targetMeta) {
         addr = nip19.neventEncode({
-          id: bigZap.targetMeta?.id,
+          id: bigZap.targetMeta.id,
           relays: [nostrbandRelay]
         })
+      } else {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        window.plugins.toast.showShortBottom(`Target events not found`)
       }
     }
 
@@ -49,7 +53,7 @@ export const BigZaps = () => {
         </StyledTitle>
       </Container>
 
-      <SliderBigZaps data={bigZaps} isLoading={false} handleClickEntity={handleOpenHighlight} />
+      <SliderBigZaps data={bigZaps || []} isLoading={false} handleClickEntity={handleOpenHighlight} />
     </StyledWrapper>
   )
 }

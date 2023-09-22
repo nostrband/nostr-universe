@@ -1,17 +1,18 @@
-import { ReturnTypeBigZaps } from '@/types/big-zaps'
-import { ReturnTypeCommunities } from '@/types/communities'
-import { ReturnTypeContactList, ReturnTypeHighlights } from '@/types/contentWorkSpace'
-import { ReturnTypeLiveEvents } from '@/types/live-events'
-import { ReturnTypeLongPosts } from '@/types/long-notes'
+import { ExtendedCommunityEvent } from '@/types/communities'
+import { ContactListEvent } from '@/types/contact-list-event'
+import { HighlightEvent } from '@/types/highlight-event'
+import { LiveEvent } from '@/types/live-events'
+import { LongNoteEvent } from '@/types/long-note-event'
+import { ZapEvent } from '@/types/zap-event'
 import { createSlice } from '@reduxjs/toolkit'
 
 interface IContentWorkSpace {
-  contactList: ReturnTypeContactList
-  highlights: ReturnTypeHighlights
-  bigZaps: ReturnTypeBigZaps
-  longPosts: ReturnTypeLongPosts
-  communities: ReturnTypeCommunities
-  liveEvents: ReturnTypeLiveEvents
+  contactList: ContactListEvent | null
+  highlights: HighlightEvent[] | null
+  bigZaps: ZapEvent[] | null
+  longPosts: LongNoteEvent[] | null
+  communities: ExtendedCommunityEvent[] | null
+  liveEvents: LiveEvent[] | null
 }
 
 const initialState: IContentWorkSpace = {

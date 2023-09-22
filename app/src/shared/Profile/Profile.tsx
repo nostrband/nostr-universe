@@ -1,15 +1,22 @@
-import { cropName } from '@/utils/helpers/prepare-data'
+import { getProfileName } from '@/utils/helpers/prepare-data'
 import { StyledProfile, StyledProfileAvatar, StyledProfileName, StyledAboutProfile } from './styled'
 import { IProfile } from './types'
+import { useProfileImageSource } from '@/hooks/profile-image'
 
-export const Profile = ({ profile, isContact, onClick = () => {} }: IProfile) => {
-  const { name, display_name, npub, picture, about } = profile
-  const getName = cropName(name || display_name || npub, 9)
+export const Profile = ({ profile, isContact, onClick = () => { } }: IProfile) => {
+
+  const name = getProfileName(profile.pubkey, profile)
+  const src = useProfileImageSource({
+    pubkey: profile.pubkey,
+    originalImage: profile.profile?.picture
+  })
+
+  const about = profile.profile?.about
 
   return (
     <StyledProfile onClick={() => onClick(profile)}>
-      <StyledProfileAvatar src={picture} />
-      <StyledProfileName>{getName}</StyledProfileName>
+      <StyledProfileAvatar src={src} />
+      <StyledProfileName>{name}</StyledProfileName>
       {!isContact && <StyledAboutProfile variant="caption">{about}</StyledAboutProfile>}
     </StyledProfile>
   )

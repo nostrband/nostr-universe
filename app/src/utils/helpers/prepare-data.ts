@@ -1,4 +1,4 @@
-import { ReturnProfileType } from '@/types/profile'
+import { MetaEvent } from '@/types/meta-event'
 import { nip19 } from '@nostrband/nostr-tools'
 
 export const getNpub = (key: string) => {
@@ -17,11 +17,11 @@ export const cropName = (s: string, n: number) => {
   return s.trim()
 }
 
-export const getShortenText = (str: string) => {
+export const formatNpub = (str: string) => {
   return `${str.substring(0, 10)}...${str.substring(59)}`
 }
 
-export const getProfileImage = (profile: ReturnProfileType | null) => {
+export const getProfileImage = (profile: MetaEvent | null) => {
   if (profile?.profile) {
     return profile.profile.picture
   }
@@ -29,18 +29,14 @@ export const getProfileImage = (profile: ReturnProfileType | null) => {
   return ''
 }
 
-export const getProfileName = (profile: ReturnProfileType | null) => {
-  const getNameFromKey = (key: string) => (isGuest(key) ? 'Guest' : getShortenText(getNpub(key)))
+export const getProfileName = (pubkey: string, profile?: MetaEvent) => {
+  const getNameFromKey = (key: string) => (isGuest(key) ? 'Guest' : formatNpub(getNpub(key)))
 
   if (profile?.profile) {
-    return profile.profile.display_name || profile.profile.name || getNameFromKey(profile.pubkey)
+    return profile.profile.display_name || profile.profile.name || getNameFromKey(pubkey)
   }
 
-  if (profile?.pubkey) {
-    return getNameFromKey(profile.pubkey)
-  }
-
-  return 'Guest'
+  return getNameFromKey(pubkey)
 }
 
 export const formatTime = (tm: number) => {

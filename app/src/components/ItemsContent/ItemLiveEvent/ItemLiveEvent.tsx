@@ -8,12 +8,12 @@ import { EVENT_LIVE_STATUS } from '@/consts'
 import { Status } from '@/shared/ContentComponents/Status/Status'
 import { Time } from '@/shared/ContentComponents/Time/Time'
 
-export const ItemLiveEvent = ({ content, name, picture, subtitle, time, status }: IItemLiveEvent) => {
+export const ItemLiveEvent = ({ content, hostPubkey, host, subtitle, time, status }: IItemLiveEvent) => {
   const isLiveEvent = status === EVENT_LIVE_STATUS
   return (
     <Wrapper>
       <Head>
-        <ProfileInfo picture={picture} name={name} />
+        <ProfileInfo pubkey={hostPubkey} profile={host} />
         {isLiveEvent ? <Status status="Live" /> : <Time date={time} />}
       </Head>
       <SubTitle>{subtitle}</SubTitle>

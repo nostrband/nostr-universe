@@ -1,7 +1,7 @@
-import { Communitie, ReturnTypeCommunities } from '@/types/communities'
+import { CommunityEvent, ExtendedCommunityEvent } from '@/types/communities'
 
 export interface ISliderCommunities {
-  data: ReturnTypeCommunities | undefined
+  data: ExtendedCommunityEvent[] | undefined
   isLoading?: boolean
-  handleClickEntity?: (profile: Communitie) => void
+  handleClickEntity?: (profile: CommunityEvent) => void
 }

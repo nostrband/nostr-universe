@@ -1,7 +1,7 @@
-import { TrendingProfile } from '@/types/trending-profiles'
+import { MetaEvent } from '@/types/meta-event'
 
 export interface IProfile {
-  profile: TrendingProfile
+  profile: MetaEvent
   isContact?: boolean
-  onClick?: (profile: TrendingProfile) => void
+  onClick?: (profile: MetaEvent) => void
 }

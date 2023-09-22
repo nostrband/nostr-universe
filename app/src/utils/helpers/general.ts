@@ -1,6 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
-import { ReturnProfileType } from '@/types/profile'
+import { MetaEvent } from '@/types/meta-event'
 import { nip19 } from '@nostrband/nostr-tools'
 
 export const getShortenText = (str) => {
@@ -54,9 +54,9 @@ export const renderDefaultAppIcon = (title) => {
   return dataURL
 }
 
-export const checkIsCurrentUser = (npub: string, account: ReturnProfileType) => {
+export const checkIsCurrentUser = (pubkey: string, account: MetaEvent | null) => {
   if (account && account?.pubkey) {
-    return npub === getNpub(account.pubkey)
+    return pubkey === account.pubkey
   }
   return false
 }

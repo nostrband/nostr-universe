@@ -16,7 +16,7 @@ import {
   setUrlTabWorkspace,
   setWorkspaces
 } from '@/store/reducers/workspaces.slice'
-import { AppNostro, IOpenAppNostro } from '@/types/app-nostro'
+import { AppNostr, IOpenAppNostr } from '@/types/app-nostr'
 import { getKeys, writeCurrentPubkey } from '@/utils/keys'
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { v4 as uuidv4 } from 'uuid'
@@ -512,7 +512,7 @@ export const useOpenApp = () => {
     show(tab, options)
   }
 
-  const openBlank = async (entity: AppNostro, options) => {
+  const openBlank = async (entity: object, options) => {
     const tab = currentWorkSpace?.tabs.find((tab) => tab.url === entity.url)
 
     if (tab) {
@@ -552,7 +552,7 @@ export const useOpenApp = () => {
     await open(entity, options)
   }
 
-  const openApp = async (app: IOpenAppNostro, options?: { replace?: boolean } = { replace: false }) => {
+  const openApp = async (app: IOpenAppNostr, options?: { replace?: boolean } = { replace: false }) => {
     if (app.kind !== undefined) {
       dispatch(setLastKindApp({ kind: app.kind, naddr: app.naddr, workspacePubkey: currentPubKey }))
     }

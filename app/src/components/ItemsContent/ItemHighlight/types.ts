@@ -1,6 +1,8 @@
+import { MetaEvent } from "@/types/meta-event"
+
 export interface IItemHighlight {
-  name: string
-  picture: string
+  pubkey: string
+  author?: MetaEvent
   time: number
   content: string
 }

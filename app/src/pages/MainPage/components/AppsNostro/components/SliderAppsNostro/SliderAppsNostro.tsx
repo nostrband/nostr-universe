@@ -1,7 +1,7 @@
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { FreeMode } from 'swiper/modules'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
-import { AppNostro as AppNostroType } from '@/types/app-nostro'
+import { AppNostr as AppNostroType } from '@/types/app-nostr'
 import { useOpenApp } from '@/hooks/open-entity'
 // import { useOpenModalSearchParams } from '@/hooks/modal'
 // import { MODAL_PARAMS_KEYS } from '@/types/modal'

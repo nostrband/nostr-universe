@@ -1,3 +1,3 @@
-import { AppNostro } from '@/types/app-nostro'
+import { AppNostr } from '@/types/app-nostr'
 
-export type IAppsNostro = AppNostro[]
+export type IAppsNostro = AppNostr[]

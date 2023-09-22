@@ -5,14 +5,14 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { getTagValue, nostrbandRelay } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
-import { LongPost } from '@/types/long-notes'
-import { SliderLongPosts } from '@/components/Slider/SliderLongPosts/SliderLongPosts'
+import { LongNoteEvent } from '@/types/long-note-event'
+import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongNotes'
 
 export const LongPosts = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const { longPosts } = useAppSelector((state) => state.contentWorkSpace)
 
-  const handleOpenLongPosts = (longPost: LongPost) => {
+  const handleOpenLongPosts = (longPost: LongNoteEvent) => {
     const naddr = nip19.naddrEncode({
       pubkey: longPost.pubkey,
       kind: longPost.kind,
@@ -33,7 +33,7 @@ export const LongPosts = () => {
         </StyledTitle>
       </Container>
 
-      <SliderLongPosts data={longPosts} isLoading={false} handleClickEntity={handleOpenLongPosts} />
+      <SliderLongNotes data={longPosts || []} isLoading={false} handleClickEntity={handleOpenLongPosts} />
     </StyledWrapper>
   )
 }
