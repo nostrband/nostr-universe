@@ -3,7 +3,7 @@ import Slide from '@mui/material/Slide'
 import { TransitionProps } from '@mui/material/transitions'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useOpenApp } from '@/hooks/open-entity'
 import { TabMenu } from '@/components/TabMenu/TabMenu'
 import { Header } from './components/Header/Header'
@@ -24,6 +24,7 @@ export const TabPage = () => {
   const { openTabWindow, onHideTabInBrowser } = useOpenApp()
   const [searchParams] = useSearchParams()
   const { getModalOpened } = useOpenModalSearchParams()
+  const navigate = useNavigate()
   const { workspaces } = useAppSelector((state) => state.workspaces)
   const { currentPubKey } = useAppSelector((state) => state.keys)
   const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
@@ -38,6 +39,12 @@ export const TabPage = () => {
   //     openTabWindow(id, method)
   //   }
   // }
+
+  useEffect(() => {
+    console.log("tab show", isOpen, id, tab)
+    if (isOpen && id && !tab)
+      navigate('/', { replace: true })
+  }, [isOpen, id, tab])
 
   useEffect(() => {
     if (id) {

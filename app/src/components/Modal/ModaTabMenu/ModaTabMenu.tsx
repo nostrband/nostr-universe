@@ -38,7 +38,7 @@ export const ModaTabMenu = () => {
     } else {
       setEventAddr('')
     }
-  }, [id])
+  }, [url])
 
   const handleCloseTab = () => {
     handleClose('/')
@@ -59,7 +59,7 @@ export const ModaTabMenu = () => {
   }
 
   const handleZap = async () => {
-    const addr = stringToBech32(id)
+    const addr = stringToBech32(url)
     //    const event = await fetchEventByBech32(addr)
     openZap(addr)
   }
