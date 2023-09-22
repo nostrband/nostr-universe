@@ -1,6 +1,3 @@
-import { useLocation } from 'react-router-dom'
-import { AppPinMenu } from '@/components/AppPinMenu/AppPinMenu'
-import { Header } from './components/Header/Header'
 import { TrendingProfiles } from './components/TrendingProfiles/TrendingProfiles'
 import { AppsNostro } from './components/AppsNostro/AppsNostro'
 import { ModalSelectApp } from '@/components/Modal/ModalSelectApp/ModalSelectApp'
@@ -20,11 +17,12 @@ import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextM
 import { ModalPermissionsRequest } from '@/components/Modal/ModalPermissionsRequest/ModalPermissionsRequest'
 import { ModaTabSwitcher } from '@/components/Modal/ModaTabSwitcher/ModaTabSwitcher'
 import { ModaWallet } from '@/components/Modal/ModaWallet/ModaWallet'
+import { TabsSwitcherPage } from '../TabsSwitcherPage/TabsSwitcherPage'
+import { NavigationBottom } from '@/components/NavigationBottom/NavigationBottom'
+import { Header } from '@/components/Header/Header'
+import { AppsPage } from '../AppsPage/AppsPage'
 
 export const MainPage = () => {
-  const location = useLocation()
-  const isShowAppPinMenu = location.pathname !== '/profile'
-
   return (
     <StyledWrapperMain>
       <Header />
@@ -49,8 +47,10 @@ export const MainPage = () => {
       <ModalPermissionsRequest />
       <TabPage />
       <ModaContextMenu />
+      <TabsSwitcherPage />
+      <AppsPage />
 
-      {isShowAppPinMenu && <AppPinMenu />}
+      <NavigationBottom />
     </StyledWrapperMain>
   )
 }

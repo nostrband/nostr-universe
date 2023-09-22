@@ -10,6 +10,8 @@ export enum MODAL_PARAMS_KEYS {
   PERMISSIONS_REQ = 'permissions-req',
   PERMISSIONS_MODAL = 'permissions-modal',
   TABS_SWITCHER = 'tabs-switcher',
+  TABS_SWITCHER_PAGE = 'tabs-switcher-page',
+  APPS_PAGE = 'apps-page',
   WALLET_MODAL = 'wallet-modal'
 }
 

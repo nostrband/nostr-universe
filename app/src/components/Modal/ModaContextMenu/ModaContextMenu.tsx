@@ -24,7 +24,7 @@ export const ModaContextMenu = () => {
 
   const handleZap = async () => {
     const addr = stringToBech32(id)
-//    const event = await fetchEventByBech32(addr)
+    //    const event = await fetchEventByBech32(addr)
     openZap(addr)
   }
 

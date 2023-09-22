@@ -21,7 +21,7 @@ export const TabMenu = () => {
   const { currentPubKey } = useAppSelector((state) => state.keys)
   const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
   const currentTab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
-  const tabState = openedTabs.find(t => t.id === id)
+  const tabState = openedTabs.find((t) => t.id === id)
 
   const handleStopReloadTab = async () => {
     if (tabState?.loading) {

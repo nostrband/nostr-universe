@@ -107,7 +107,7 @@ export const useOpenApp = () => {
 
     dispatch(setPermissionRequest({ permissionRequest: r }))
 
-    console.log("perm request", tab.id, JSON.stringify(r), JSON.stringify(permissionRequests));
+    console.log('perm request', tab.id, JSON.stringify(r), JSON.stringify(permissionRequests))
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log('show perm request modal', r.id)
@@ -132,7 +132,6 @@ export const useOpenApp = () => {
   }
 
   const deletePermission = async (id: string) => {
-
     dispatch(deletePermWorkspace({ id, workspacePubkey: currentPubKey }))
 
     await dbi.deletePerms(currentPubKey, id)
@@ -315,7 +314,7 @@ export const useOpenApp = () => {
 
       const bolt11 = bolt11Decode(paymentRequest)
       const amount = Number(bolt11.sections?.find((s) => s.name === 'amount').value)
-      console.log("sendPayment", tabId, amount, paymentRequest)
+      console.log('sendPayment', tabId, amount, paymentRequest)
 
       const wallet = await walletstore.getInfo()
       const perm = 'pay_invoice:' + wallet.id
@@ -469,7 +468,7 @@ export const useOpenApp = () => {
 
     //   dispatch(setOpenTab({ tab: dataTabForOpen }))
     // }
-    console.log("show", tab.id, JSON.stringify(options))
+    console.log('show', tab.id, JSON.stringify(options))
 
     handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {
       search: { id: tab.id },
@@ -580,7 +579,7 @@ export const useOpenApp = () => {
         const r = await keystore.addKey()
         await writeCurrentPubkey(r.pubkey)
       } catch (e) {
-        console.log("addkey error ", JSON.stringify(e));
+        console.log('addkey error ', JSON.stringify(e))
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         window.plugins.toast.showShortBottom(`Error: ${e}`)
@@ -602,8 +601,8 @@ export const useOpenApp = () => {
   }
 
   const openZap = (id) => {
-    const ZAP_URL = "https://zapper.nostrapps.org/zap?id="
-    openBlank({ url: `${ZAP_URL}${id}`})
+    const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
+    openBlank({ url: `${ZAP_URL}${id}` })
   }
 
   return {

@@ -89,7 +89,7 @@ export const ModaTabMenu = () => {
                   {isPin ? <DeleteOutlineOutlinedIcon /> : <PushPinOutlinedIcon />}
                 </StyledItemIconAvatar>
               </ListItemAvatar>
-              <StyledItemText primary={isPin ? "Unpin" : "Pin"} />
+              <StyledItemText primary={isPin ? 'Unpin' : 'Pin'} />
             </StyledItemButton>
           </ListItem>
           {eventAddr && (

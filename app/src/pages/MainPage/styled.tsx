@@ -3,5 +3,5 @@ import { Box } from '@mui/material'
 
 export const StyledWrapperMain = styled(Box)(() => ({
   paddingTop: 60,
-  paddingBottom: 100
+  paddingBottom: 80
 }))

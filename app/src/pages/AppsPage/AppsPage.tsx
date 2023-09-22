@@ -1,19 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Global } from '@emotion/react'
 import { Grid } from '@mui/material'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 import { Container } from '@/layout/Container/Conatiner'
-import { AppNostro } from '@/shared/AppNostro/AppNostro'
-import { AppNostr as AppNostroType } from '@/types/app-nostr'
-import { useOpenApp } from '@/hooks/open-entity'
-import { Puller, StyledSwipeableMenu, StyledPinApps, StyledSwipeableDrawerContent } from './styled'
-import { IAppPinMenu } from './types'
-import { drawerbleeding } from './const'
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { FreeMode } from 'swiper/modules'
-import 'swiper/css'
-import styles from './slider.module.scss'
-
 import {
   DndContext,
   DragEndEvent,
@@ -23,34 +12,28 @@ import {
   useSensor,
   useSensors
 } from '@dnd-kit/core'
-import { SortableContext, rectSwappingStrategy } from '@dnd-kit/sortable'
+import { StyledAppBar, StyledDialog, StyledWrap, StyledSwipeableDrawerContent } from './styled'
+import { AppNostr as AppNostroType } from '@/types/app-nostr'
+import { Header } from '@/components/Header/Header'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { useOpenApp } from '@/hooks/open-entity'
 import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
 import { swapTabGroupsThunk } from '@/store/reducers/workspaces.slice'
+import { SortableContext, rectSwappingStrategy } from '@dnd-kit/sortable'
 
 type TabGroupID = string | number
 
-export const AppPinMenu = (props: IAppPinMenu) => {
+export const AppsPage = () => {
   const { openApp } = useOpenApp()
+  const { getModalOpened } = useOpenModalSearchParams()
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.APPS_PAGE)
+  const dispatch = useAppDispatch()
   const { workspaces } = useAppSelector((state) => state.workspaces)
   const { currentPubKey } = useAppSelector((state) => state.keys)
   const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
-  const dispatch = useAppDispatch()
-
-  const { window } = props
-  const [open, setOpen] = useState(false)
-  const [isDrag, setDrag] = useState<boolean>(false)
-  const [initialPoint, setInitialPoint] = useState<null | number>(null)
-
   const [activeId, setActiveId] = useState<TabGroupID | null>(null)
 
-  const toggleDrawer = (newOpen: boolean) => () => {
-    setOpen(newOpen)
-  }
-
-  const container = window !== undefined ? () => window().document.body : undefined
-
   const tabGroups = currentWorkSpace?.tabGroups || []
-
   const sortedTabGroups = useMemo(() => {
     if (tabGroups) {
       return tabGroups.slice().sort((tabA, tabB) => {
@@ -125,70 +108,12 @@ export const AppPinMenu = (props: IAppPinMenu) => {
   const handleDragOver = () => setActiveId(null)
 
   return (
-    <>
-      {/* rewrite to styled */}
-      <Global
-        styles={{
-          '.MuiDrawer-root > .MuiPaper-root': {
-            height: `calc(80% - ${drawerbleeding}px)`,
-            overflow: 'visible'
-          }
-        }}
-      />
+    <StyledDialog fullScreen open={isOpen}>
+      <StyledAppBar>
+        <Header />
+      </StyledAppBar>
 
-      <StyledSwipeableMenu
-        container={container}
-        anchor="bottom"
-        open={open}
-        isdrag={isDrag ? 1 : 0}
-        initialpoint={initialPoint}
-        onClose={toggleDrawer(false)}
-        onOpen={toggleDrawer(true)}
-        swipeAreaWidth={drawerbleeding}
-        disableSwipeToOpen={false}
-        allowSwipeInChildren={(...args: [TouchEvent, HTMLElement, HTMLElement]) => {
-          const paper = args[2]
-          setInitialPoint(paper.clientHeight)
-
-          return true
-        }}
-        ModalProps={{
-          keepMounted: true
-        }}
-        // transitionDuration={300}
-      >
-        <StyledPinApps
-          drawerbleeding={drawerbleeding}
-          open={open}
-          onTouchMove={() => {
-            setDrag(true)
-          }}
-          onTouchEnd={() => {
-            setDrag(false)
-          }}
-        >
-          <Puller />
-          <Swiper slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
-            {!open &&
-              tabGroups.map((tab, i) => {
-                const app = {
-                  picture: tab.info.icon,
-                  name: tab.info.title,
-                  naddr: tab.info.appNaddr,
-                  url: tab.info.url,
-                  order: tab.info.order
-                }
-
-                const isActive = Boolean(tab.tabs.length)
-
-                return (
-                  <SwiperSlide className={styles.slide} key={i}>
-                    <AppNostro isActive={isActive} app={app} size="extra-small" hideName onOpen={handleOpen} />
-                  </SwiperSlide>
-                )
-              })}
-          </Swiper>
-        </StyledPinApps>
+      <StyledWrap>
         <StyledSwipeableDrawerContent>
           <DndContext
             sensors={sensors}
@@ -229,7 +154,7 @@ export const AppPinMenu = (props: IAppPinMenu) => {
             </SortableContext>
           </DndContext>
         </StyledSwipeableDrawerContent>
-      </StyledSwipeableMenu>
-    </>
+      </StyledWrap>
+    </StyledDialog>
   )
 }

@@ -79,6 +79,32 @@ export const theme = createTheme({
           '@font-face': [OutfitExtraLight, OutfitLight, OutfitRegular, OutfitMedium, OutfitSemiBold, OutfitBold]
         }
       }
+    },
+    MuiBottomNavigation: {
+      styleOverrides: {
+        root: ({ theme }) =>
+          theme.unstable_sx({
+            backgroundColor: theme.palette.secondary.main,
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            zIndex: 9999,
+            width: '100%',
+            height: 60
+          })
+      }
+    },
+
+    MuiBottomNavigationAction: {
+      styleOverrides: {
+        root: ({ theme }) =>
+          theme.unstable_sx({
+            color: theme.palette.secondary.contrastText,
+            '&.Mui-selected': {
+              color: theme.palette.decorate.main
+            }
+          })
+      }
     }
   }
 })

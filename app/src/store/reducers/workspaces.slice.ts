@@ -23,7 +23,7 @@ export const workspacesSlice = createSlice({
     deletePermWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
       const id = action.payload.id
-      console.log("deletePermWorkspace", pubkey, id)
+      console.log('deletePermWorkspace', pubkey, id)
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
@@ -40,7 +40,7 @@ export const workspacesSlice = createSlice({
     setPermsWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
       const perm = action.payload.perm
-      console.log("setPermsWorkspace", pubkey, JSON.stringify(perm))
+      console.log('setPermsWorkspace', pubkey, JSON.stringify(perm))
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
@@ -71,7 +71,7 @@ export const workspacesSlice = createSlice({
                 }
               }
               return tab
-            }),
+            })
           }
         }
 
@@ -90,16 +90,18 @@ export const workspacesSlice = createSlice({
           return {
             ...workspace,
             tabs: workspace.tabs.filter((tab) => tab.id !== id),
-            tabGroups: workspace.tabGroups.map((tg) => {
-              if (tg.id === getTabGroupId(currentTab)) {
-                return {
-                  ...tg,
-                  tabs: tg.tabs.filter((el) => el !== id)
+            tabGroups: workspace.tabGroups
+              .map((tg) => {
+                if (tg.id === getTabGroupId(currentTab)) {
+                  return {
+                    ...tg,
+                    tabs: tg.tabs.filter((el) => el !== id)
+                  }
                 }
-              }
 
-              return tg
-            }).filter((tg) => tg.pin || tg.tabs.length > 0)
+                return tg
+              })
+              .filter((tg) => tg.pin || tg.tabs.length > 0)
           }
         }
 
@@ -116,16 +118,18 @@ export const workspacesSlice = createSlice({
           return {
             ...workspace,
             tabs: workspace.tabs.filter((tab) => getTabGroupId(tab) !== tabGroup.id),
-            tabGroups: workspace.tabGroups.map((tg) => {
-              if (tg.id === tabGroup.id) {
-                return {
-                  ...tg,
-                  tabs: []
+            tabGroups: workspace.tabGroups
+              .map((tg) => {
+                if (tg.id === tabGroup.id) {
+                  return {
+                    ...tg,
+                    tabs: []
+                  }
                 }
-              }
 
-              return tg
-            }).filter((tg) => tg.pin || tg.tabs.length > 0)
+                return tg
+              })
+              .filter((tg) => tg.pin || tg.tabs.length > 0)
           }
         }
 
@@ -160,7 +164,7 @@ export const workspacesSlice = createSlice({
           return {
             ...workspace,
             tabs: [...workspace.tabs, tab],
-            tabGroups: tabGroups,
+            tabGroups: tabGroups
           }
         }
 
@@ -183,7 +187,7 @@ export const workspacesSlice = createSlice({
                 }
               }
               return tab
-            }),
+            })
           }
         }
 
@@ -255,7 +259,7 @@ export const workspacesSlice = createSlice({
     setLastKindApp: (state, action) => {
       const { kind, naddr, workspacePubkey } = action.payload
 
-      const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey);
+      const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey)
       if (ws) ws.lastKindApps[kind] = naddr
     }
   }
