@@ -1,4 +1,4 @@
-import { MetaEvent } from "@/types/meta-event"
+import { MetaEvent } from '@/types/meta-event'
 
 export interface IItemHighlight {
   pubkey: string

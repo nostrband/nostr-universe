@@ -3,8 +3,7 @@ import { StyledProfile, StyledProfileAvatar, StyledProfileName, StyledAboutProfi
 import { IProfile } from './types'
 import { useProfileImageSource } from '@/hooks/profile-image'
 
-export const Profile = ({ profile, isContact, onClick = () => { } }: IProfile) => {
-
+export const Profile = ({ profile, isContact, onClick = () => {} }: IProfile) => {
   const name = getProfileName(profile.pubkey, profile)
   const src = useProfileImageSource({
     pubkey: profile.pubkey,

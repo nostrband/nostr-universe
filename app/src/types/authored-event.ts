@@ -1,5 +1,5 @@
-import { MetaEvent } from "./meta-event"
-import { AugmentedEvent } from "./augmented-event"
+import { MetaEvent } from './meta-event'
+import { AugmentedEvent } from './augmented-event'
 
 export interface AuthoredEvent extends AugmentedEvent {
   author?: MetaEvent

@@ -1,7 +1,7 @@
-import { MetaEvent } from "@/types/meta-event"
+import { MetaEvent } from '@/types/meta-event'
 
 export interface IItemTrendingNote {
-  pubkey: string,
+  pubkey: string
   author?: MetaEvent
   time: number
   content: string

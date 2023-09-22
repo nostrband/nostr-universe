@@ -12,7 +12,6 @@ export const ProfileInfo = ({
   profile?: MetaEvent
   isNotRounded?: boolean
 }) => {
-
   const name = getProfileName(pubkey, profile)
   const src = useProfileImageSource({
     pubkey: pubkey,

@@ -1,9 +1,9 @@
-import { AuthoredEvent } from "./authored-event";
-import { MetaEvent } from "./meta-event";
+import { AuthoredEvent } from './authored-event'
+import { MetaEvent } from './meta-event'
 
 export interface ContactListEvent extends AuthoredEvent {
   contactPubkeys: string[]
-  contactEvents: MetaEvent[]  
+  contactEvents: MetaEvent[]
 }
 
 export function createContactListEvent(e: AuthoredEvent): ContactListEvent {

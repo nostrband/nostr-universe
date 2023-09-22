@@ -49,7 +49,7 @@ export const ModalSelectApp = () => {
         return
       }
 
-      setKind(''+addr.kind)
+      setKind('' + addr.kind)
 
       const apps: IOpenAppNostr[] = []
 
@@ -69,7 +69,7 @@ export const ModalSelectApp = () => {
         order: NATIVE_NADDR === lastAppNaddr ? 1000 : 999
       })
 
-      for (const [_, appHandlers] of info.apps) {
+      for (const [, appHandlers] of info.apps) {
         const app = appHandlers.handlers[0]
         if (!app.eventUrl) continue
 

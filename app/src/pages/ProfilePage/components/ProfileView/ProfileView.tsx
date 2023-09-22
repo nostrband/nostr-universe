@@ -26,11 +26,8 @@ export const ProfileView = () => {
   const { changeAccount } = useChangeAccount()
 
   const accounts = keys.map((key) => {
-    let p = profiles.find(p => p.pubkey === key)
-    if (!p) 
-      p = createMetaEvent(
-        createAugmentedEvent(
-          createEvent({ pubkey: key })))
+    let p = profiles.find((p) => p.pubkey === key)
+    if (!p) p = createMetaEvent(createAugmentedEvent(createEvent({ pubkey: key })))
     return p
   })
 

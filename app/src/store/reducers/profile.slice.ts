@@ -44,7 +44,7 @@ export const profileSlice = createSlice({
       state.profiles = profiles
 
       if (state.currentProfile) {
-        state.currentProfile = profiles.find(p => p.pubkey === state.currentProfile?.pubkey) || null
+        state.currentProfile = profiles.find((p) => p.pubkey === state.currentProfile?.pubkey) || null
       }
     }
   }

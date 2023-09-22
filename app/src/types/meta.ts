@@ -1,4 +1,3 @@
-
 export interface Meta {
   name?: string
   picture?: string
@@ -11,7 +10,7 @@ export interface Meta {
   banner?: string
 
   npub?: string
-  pubkey?: string  
+  pubkey?: string
 }
 
 export function createMeta(o: object): Meta {

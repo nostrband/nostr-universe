@@ -10,7 +10,14 @@ import { MetaEvent, createMetaEvent } from '@/types/meta-event'
 import { Meta, createMeta } from '@/types/meta'
 import { NDKFilter, NDKSubscription, NostrTop } from 'node_modules/@nostrband/ndk/dist'
 import { ZapEvent, createZapEvent } from '@/types/zap-event'
-import { CommunityApprovalInfo, CommunityEvent, ExtendedCommunityEvent, createCommunityApprovalInfo, createCommunityEvent, createExtendedCommunityEvent } from '@/types/communities'
+import {
+  CommunityApprovalInfo,
+  CommunityEvent,
+  ExtendedCommunityEvent,
+  createCommunityApprovalInfo,
+  createCommunityEvent,
+  createExtendedCommunityEvent
+} from '@/types/communities'
 import { LongNoteEvent, createLongNoteEvent } from '@/types/long-note-event'
 import { HighlightEvent, createHighlightEvent } from '@/types/highlight-event'
 import { LiveEvent, createLiveEvent } from '@/types/live-events'
@@ -55,28 +62,28 @@ export const allRelays = [nostrbandRelayAll, ...writeRelays]
 let ndk: NDK = null
 
 interface EventAddr {
-  kind?: number,
-  pubkey?: string,
-  event_id?: string,
-  d_tag?: string,
-  relays?: string[],
+  kind?: number
+  pubkey?: string
+  event_id?: string
+  d_tag?: string
+  relays?: string[]
   hex: boolean
 }
 
 interface AppUrl {
-  url: string,
+  url: string
   type: string
 }
 
 interface AppHandlerEvent extends AugmentedEvent {
-  naddr: string,
-  meta: MetaEvent | null,
-  inheritedProfile: boolean,
-  profile: Meta | null,
-  kinds: number[],
-  urls: AppUrl[],
-  platforms: string[],
-  app_id: string,
+  naddr: string
+  meta: MetaEvent | null
+  inheritedProfile: boolean
+  profile: Meta | null
+  kinds: number[]
+  urls: AppUrl[]
+  platforms: string[]
+  app_id: string
   eventUrl: string
 }
 
@@ -95,20 +102,19 @@ function createAppHandlerEvent(e: AugmentedEvent): AppHandlerEvent {
 }
 
 interface App {
-  app_id: string,
-  handlers: AppHandlerEvent[],
-  kinds: number[],
+  app_id: string
+  handlers: AppHandlerEvent[]
+  kinds: number[]
   platforms: string[]
 }
 
 export interface AppInfos {
-  meta: MetaEvent | null,
-  apps: Map<string, App>,
-  handlers: AppHandlerEvent[],
-  kinds: number[],
+  meta: MetaEvent | null
+  apps: Map<string, App>
+  handlers: AppHandlerEvent[]
+  kinds: number[]
   platforms: string[]
 }
-
 
 const kindAppsCache = new Map<number, AppInfos>()
 const metaCache = new Map<string, MetaEvent>()
@@ -168,17 +174,11 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
   })
 }
 
-export function getTags(
-  e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent,
-  name: string
-): string[] {
+export function getTags(e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent, name: string): string[] {
   return e.tags.filter((t: string[]) => t.length > 0 && t[0] === name)
 }
 
-export function getTag(
-  e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent,
-  name: string
-): string | null {
+export function getTag(e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent, name: string): string | null {
   const tags = getTags(e, name)
   if (tags.length === 0) return null
   return tags[0]
@@ -195,9 +195,7 @@ export function getTagValue(
   return tag[1 + index]
 }
 
-export function getEventTagA(
-  e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent
-): string {
+export function getEventTagA(e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent): string {
   let addr = e.kind + ':' + e.pubkey + ':'
   if (e.kind >= 30000 && e.kind < 40000) addr += getTagValue(e, 'd')
   return addr
@@ -231,15 +229,11 @@ function findHandlerUrl(e: Event, k: number) {
   return null
 }
 
-function sortAsc(
-  arr: AugmentedEvent[] | AuthoredEvent[] | MetaEvent[]
-) {
+function sortAsc(arr: AugmentedEvent[] | AuthoredEvent[] | MetaEvent[]) {
   arr.sort((a, b) => a.order - b.order)
 }
 
-function sortDesc(
-  arr: AugmentedEvent[] | AuthoredEvent[] | MetaEvent[]
-) {
+function sortDesc(arr: AugmentedEvent[] | AuthoredEvent[] | MetaEvent[]) {
   arr.sort((a, b) => b.order - a.order)
 }
 
@@ -268,7 +262,7 @@ export async function fetchApps() {
       limit: 100
     })
 
-    events = [...ndkEvents.values()].map(e => rawEvent(e))
+    events = [...ndkEvents.values()].map((e) => rawEvent(e))
   }
   console.log('top app events', events.length)
 
@@ -278,10 +272,10 @@ export async function fetchApps() {
 
   // assign order to the apps, sort by top or by published date
   if (top)
-    events.forEach(e => {
+    events.forEach((e) => {
       e.order = top.ids.findIndex((i: string) => e.id === i)
     })
-  else 
+  else
     events.forEach((e) => {
       e.order = Number(getTagValue(e, 'published_at'))
     })
@@ -301,7 +295,7 @@ export async function fetchApps() {
     // app's handled kinds and per-kind handler urls for the 'web' platform,
     // we don't add a kind that doesn't have a proper handler
     const kinds: number[] = []
-    const handlers: {[key: string]: {url: string, type: string}} = {}
+    const handlers: { [key: string]: { url: string; type: string } } = {}
     e.tags.forEach((t) => {
       let k = 0
       if (t.length < 2 || t[0] != 'k') return
@@ -470,12 +464,7 @@ async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEve
   return event
 }
 
-function prepareHandlers(
-  events: AugmentedEvent[],
-  filterKinds: number[],
-  metaPubkey: string = ''
-): AppInfos {
-
+function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPubkey: string = ''): AppInfos {
   const info: AppInfos = {
     meta: null,
     apps: new Map<string, App>(),
@@ -586,8 +575,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   //  let events = await collectEvents(fetchEventsRead(ndk, filter));
   //  console.log('events', events);
 
-  const top: NostrTop | null = await ndk.fetchTop(
-    filter, NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk))
+  const top: NostrTop | null = await ndk.fetchTop(filter, NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk))
   console.log('top kind apps', top?.ids.length)
 
   let ndkEvents: NDKEvent[] = []
@@ -602,7 +590,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   }
   //  console.log('events', events);
 
-  const augmentedEvents = [...ndkEvents.values()].map(e => rawEvent(e))
+  const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e))
 
   if (top)
     top.ids.forEach((id, i) => {
@@ -614,7 +602,6 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   // we need profiles in case app info inherits content
   // from it's profile
   if (augmentedEvents.length > 0) {
-
     let pubkeys: string[] = []
     for (const e of augmentedEvents) pubkeys.push(e.pubkey)
     pubkeys = [...new Set(pubkeys)]
@@ -627,7 +614,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
     )
     //    console.log('metas', metas);
 
-    augmentedEvents.push(...metasNdkEvents.map(e => rawEvent(e)))
+    augmentedEvents.push(...metasNdkEvents.map((e) => rawEvent(e)))
   }
 
   // parse
@@ -636,7 +623,6 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
 }
 
 function getUrl(app: AppHandlerEvent, ad: EventAddr): string {
-
   if (ad.kind === undefined) return ''
 
   const findUrlType = (type: string): AppUrl | undefined => {
@@ -689,8 +675,7 @@ function getUrl(app: AppHandlerEvent, ad: EventAddr): string {
   return url
 }
 
-export async function fetchAppsForEvent(id: string, event: Event | null = null)
-: Promise<[AppInfos, EventAddr]> {
+export async function fetchAppsForEvent(id: string, event: Event | null = null): Promise<[AppInfos, EventAddr]> {
   const addr = parseAddr(id)
   if (!addr) throw new Error('Bad address')
 
@@ -733,8 +718,7 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null)
   return [info, addr]
 }
 
-export async function fetchEventByBech32(b32: string)
-: Promise<AugmentedEvent | null> {
+export async function fetchEventByBech32(b32: string): Promise<AugmentedEvent | null> {
   const addr = parseAddr(b32)
   console.log('b32', b32, 'addr', JSON.stringify(addr))
   if (!addr) throw new Error('Bad address')
@@ -760,7 +744,7 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
   if (top.ids.length) {
     const augmentedEvents = await fetchEventsByIds({ ids: top.ids, kinds: [KIND_META] })
 
-    // convert to meta events 
+    // convert to meta events
     const metaEvents = augmentedEvents.map((e) => {
       const c = createMetaEvent(e)
       c.profile = parseProfileJson(c)
@@ -784,7 +768,6 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
 }
 
 async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
-
   const metas: MetaEvent[] = []
   const reqPubkeys: string[] = []
   pubkeys.forEach((p) => {
@@ -818,10 +801,7 @@ async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   return metas
 }
 
-async function augmentEventAuthors(
-  events: AugmentedEvent[]
-): Promise<AuthoredEvent[]> {
-
+async function augmentEventAuthors(events: AugmentedEvent[]): Promise<AuthoredEvent[]> {
   const authoredEvents = events.map((e) => createAuthoredEvent(e))
   if (authoredEvents.length > 0) {
     // profile infos
@@ -835,15 +815,11 @@ async function augmentEventAuthors(
 }
 
 interface IFetchEventByIdsParams {
-  ids: string[],
+  ids: string[]
   kinds: number[]
 }
 
-async function fetchEventsByIds({
-  ids,
-  kinds
-}: IFetchEventByIdsParams): Promise<AugmentedEvent[]> {
-
+async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise<AugmentedEvent[]> {
   const results: AugmentedEvent[] = []
   const reqIds: string[] = []
   ids.forEach((id) => {
@@ -865,11 +841,9 @@ async function fetchEventsByIds({
       {}, // opts
       NDKRelaySet.fromRelayUrls(readRelays, ndk)
     )
-//    console.log('ids', ids, 'reqIds', reqIds, 'kinds', kinds, 'events', ndkEvents)
+    //    console.log('ids', ids, 'reqIds', reqIds, 'kinds', kinds, 'events', ndkEvents)
 
-    const augmentedEvents = [...ndkEvents.values()]
-      .map((e) => rawEvent(e))
-      .filter((e) => ids.includes(e.id))
+    const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e)).filter((e) => ids.includes(e.id))
 
     augmentedEvents.forEach((e) => eventCache.set(e.id, e))
 
@@ -886,7 +860,7 @@ async function fetchEventsByIds({
 }
 
 function augmentLongNotes(events: AuthoredEvent[]): LongNoteEvent[] {
-  const longNotes = events.map(e => createLongNoteEvent(e))
+  const longNotes = events.map((e) => createLongNoteEvent(e))
   longNotes.forEach((e) => {
     e.title = getTagValue(e, 'title')
     e.summary = getTagValue(e, 'summary')
@@ -896,8 +870,7 @@ function augmentLongNotes(events: AuthoredEvent[]): LongNoteEvent[] {
 }
 
 async function augmentZaps(augmentedEvents: AugmentedEvent[], minZap: number): Promise<ZapEvent[]> {
-
-  let zapEvents = augmentedEvents.map(e => createZapEvent(e))
+  let zapEvents = augmentedEvents.map((e) => createZapEvent(e))
 
   zapEvents.forEach((e) => {
     e.description = createEvent(parseContentJson(getTagValue(e, 'description')))
@@ -946,7 +919,7 @@ async function augmentZaps(augmentedEvents: AugmentedEvent[], minZap: number): P
       const target = augmentedTargetsEvents.find((t) => t.id === e.targetEventId)
       if (target) {
         e.targetEvent = createAuthoredEvent(target)
-        e.targetEvent.author = metas.find(m => m.pubkey === e.targetEvent?.pubkey)
+        e.targetEvent.author = metas.find((m) => m.pubkey === e.targetEvent?.pubkey)
       }
 
       e.targetMeta = metas.find((m) => m.pubkey === e.targetPubkey)
@@ -962,11 +935,9 @@ async function augmentZaps(augmentedEvents: AugmentedEvent[], minZap: number): P
   return zapEvents
 }
 
-async function augmentCommunities(events: AugmentedEvent[])
-  : Promise<CommunityEvent[]> {
-
+async function augmentCommunities(events: AugmentedEvent[]): Promise<CommunityEvent[]> {
   const pubkeys = new Set<string>()
-  const communities = events.map(e => createCommunityEvent(e))
+  const communities = events.map((e) => createCommunityEvent(e))
   communities.forEach((e) => {
     e.name = e.identifier
     e.description = getTagValue(e, 'description')
@@ -995,18 +966,15 @@ function augmentCommunitiesApprovals(
   communities: CommunityEvent[],
   approvals: CommunityApprovalInfo[]
 ): ExtendedCommunityEvent[] {
-
   // extend
-  const ecs = communities.map(e => {
+  const ecs = communities.map((e) => {
     const c = createExtendedCommunityEvent(e)
-    const apprs = approvals.filter(
-      (a) => a.communityPubkey === e.pubkey && a.communityIdentifier === e.identifier)
+    const apprs = approvals.filter((a) => a.communityPubkey === e.pubkey && a.communityIdentifier === e.identifier)
     c.last_post_tm = apprs[0].created_at
     c.order = c.last_post_tm
     c.posts = apprs.length
     return c
   })
-
 
   // desc
   sortDesc(ecs)
@@ -1015,16 +983,12 @@ function augmentCommunitiesApprovals(
 }
 
 interface SearchEventsParams {
-  q: string,
-  kind: number,
+  q: string
+  kind: number
   limit?: number
 }
 
-async function searchEvents({
-  q,
-  kind,
-  limit = 30
-}: SearchEventsParams): Promise<AugmentedEvent[]> {
+async function searchEvents({ q, kind, limit = 30 }: SearchEventsParams): Promise<AugmentedEvent[]> {
   const ndkEvents = await ndk.fetchEvents(
     {
       kinds: [kind],
@@ -1046,14 +1010,12 @@ async function searchEvents({
   return augmentedEvents
 }
 
-async function searchAuthoredEvents(params: SearchEventsParams)
-  : Promise<AuthoredEvent[]> {
+async function searchAuthoredEvents(params: SearchEventsParams): Promise<AuthoredEvent[]> {
   const augmentedEvents = await searchEvents(params)
   return await augmentEventAuthors(augmentedEvents)
 }
 
-export async function searchNotes(q: string, limit: number = 30)
-  : Promise<AuthoredEvent[]> {
+export async function searchNotes(q: string, limit: number = 30): Promise<AuthoredEvent[]> {
   return searchAuthoredEvents({
     q,
     kind: KIND_NOTE,
@@ -1061,8 +1023,7 @@ export async function searchNotes(q: string, limit: number = 30)
   })
 }
 
-export async function searchLongNotes(q: string, limit: number = 30)
-  : Promise<LongNoteEvent[]> {
+export async function searchLongNotes(q: string, limit: number = 30): Promise<LongNoteEvent[]> {
   const events = await searchAuthoredEvents({
     q,
     kind: KIND_LONG_NOTE,
@@ -1077,11 +1038,10 @@ export async function searchLiveEvents(q: string, limit: number = 30): Promise<L
     kind: KIND_LIVE_EVENT,
     limit
   })
-  return await augmentLiveEvents(events, [], limit, /*ended*/true)
+  return await augmentLiveEvents(events, [], limit, /*ended*/ true)
 }
 
-export async function searchCommunities(q: string, limit: number = 30)
-  : Promise<CommunityEvent[]> {
+export async function searchCommunities(q: string, limit: number = 30): Promise<CommunityEvent[]> {
   const augmentedEvents = await searchEvents({
     q,
     kind: KIND_COMMUNITY,
@@ -1093,7 +1053,7 @@ export async function searchCommunities(q: string, limit: number = 30)
 }
 
 interface PromiseQueueCb {
-  cb: (...args: any[]) => void,
+  cb: (...args: any[]) => void
   args: any[]
 }
 
@@ -1101,10 +1061,9 @@ interface PromiseQueueCb {
 // since each event-handling callback might be async we have to execute
 // them one by one through a queue to ensure eose marker comes last
 class PromiseQueue {
-
   queue: PromiseQueueCb[] = []
 
-  constructor() { }
+  constructor() {}
 
   appender(cb: (...cbArgs: any[]) => void): (...apArgs: any[]) => void {
     return (...args) => {
@@ -1129,10 +1088,10 @@ class PromiseQueue {
 }
 
 interface IFetchPubkeyEventsParams {
-  kind: number,
-  pubkeys: string[],
-  tagged?: boolean,
-  limit?: number,
+  kind: number
+  pubkeys: string[]
+  tagged?: boolean
+  limit?: number
   identifiers?: string[]
 }
 
@@ -1167,16 +1126,12 @@ async function fetchPubkeyEvents({
   return augmentedEvents
 }
 
-async function fetchPubkeyAuthoredEvents(
-  params: IFetchPubkeyEventsParams
-): Promise<AuthoredEvent[]> {
-
+async function fetchPubkeyAuthoredEvents(params: IFetchPubkeyEventsParams): Promise<AuthoredEvent[]> {
   const augmentedEvents = await fetchPubkeyEvents(params)
   return await augmentEventAuthors(augmentedEvents)
 }
 
-export async function fetchFollowedLongNotes(contactPubkeys: string[])
-  : Promise<LongNoteEvent[]> {
+export async function fetchFollowedLongNotes(contactPubkeys: string[]): Promise<LongNoteEvent[]> {
   const events = await fetchPubkeyAuthoredEvents({
     kind: KIND_LONG_NOTE,
     pubkeys: contactPubkeys
@@ -1184,17 +1139,15 @@ export async function fetchFollowedLongNotes(contactPubkeys: string[])
   return await augmentLongNotes(events)
 }
 
-export async function fetchFollowedHighlights(contactPubkeys: string[])
-  : Promise<HighlightEvent[]> {
+export async function fetchFollowedHighlights(contactPubkeys: string[]): Promise<HighlightEvent[]> {
   const events = await fetchPubkeyAuthoredEvents({
     kind: KIND_HIGHLIGHT,
-    pubkeys: contactPubkeys,
+    pubkeys: contactPubkeys
   })
-  return events.map(e => createHighlightEvent(e))
+  return events.map((e) => createHighlightEvent(e))
 }
 
-export async function fetchFollowedZaps(contactPubkeys: string[], minZap: number)
-  : Promise<ZapEvent[]> {
+export async function fetchFollowedZaps(contactPubkeys: string[], minZap: number): Promise<ZapEvent[]> {
   const events = await fetchPubkeyEvents({
     kind: KIND_ZAP,
     pubkeys: contactPubkeys,
@@ -1204,8 +1157,7 @@ export async function fetchFollowedZaps(contactPubkeys: string[], minZap: number
   return await augmentZaps(events, minZap)
 }
 
-export async function fetchFollowedCommunities(contactPubkeys: string[])
-  : Promise<ExtendedCommunityEvent[]> {
+export async function fetchFollowedCommunities(contactPubkeys: string[]): Promise<ExtendedCommunityEvent[]> {
   const approvalEvents = await fetchPubkeyEvents({
     kind: KIND_COMMUNITY_APPROVAL,
     pubkeys: contactPubkeys,
@@ -1222,7 +1174,7 @@ export async function fetchFollowedCommunities(contactPubkeys: string[])
     })
     .filter((a) => a.p.length == 3 && Number(a.p[0]) === KIND_COMMUNITY)
     .map((a) => {
-      const i = createCommunityApprovalInfo();
+      const i = createCommunityApprovalInfo()
       i.created_at = a.tm
       i.communityPubkey = a.p[1]
       i.communityIdentifier = a.p[2]
@@ -1243,11 +1195,15 @@ export async function fetchFollowedCommunities(contactPubkeys: string[])
   return extendedCommunities
 }
 
-async function augmentLiveEvents(augmentedEvent: AugmentedEvent[], contactPubkeys: string[], limit: number, ended = false)
-  : Promise<LiveEvent[]> {
+async function augmentLiveEvents(
+  augmentedEvent: AugmentedEvent[],
+  contactPubkeys: string[],
+  limit: number,
+  ended = false
+): Promise<LiveEvent[]> {
   // convert to an array of raw events
 
-  let liveEvents = augmentedEvent.map(e => createLiveEvent(createAuthoredEvent(e)))
+  let liveEvents = augmentedEvent.map((e) => createLiveEvent(createAuthoredEvent(e)))
 
   const MAX_LIVE_TTL = 3600
   liveEvents.forEach((e) => {
@@ -1305,8 +1261,7 @@ async function augmentLiveEvents(augmentedEvent: AugmentedEvent[], contactPubkey
   return liveEvents
 }
 
-export async function fetchFollowedLiveEvents(contactPubkeys: string[], limit: number = 30)
-  : Promise<LiveEvent[]> {
+export async function fetchFollowedLiveEvents(contactPubkeys: string[], limit: number = 30): Promise<LiveEvent[]> {
   let events = await fetchPubkeyEvents({
     kind: KIND_LIVE_EVENT,
     pubkeys: contactPubkeys,
@@ -1320,7 +1275,6 @@ class Subscription<OutputEventType> {
   lastSub: NDKSubscription | null = null
   label: string = ''
   onEvent: (e: AugmentedEvent) => Promise<OutputEventType>
-
 
   constructor(label: string, onEvent: (e: AugmentedEvent) => Promise<OutputEventType>) {
     this.label = label
@@ -1383,9 +1337,9 @@ class Subscription<OutputEventType> {
         if (eose) return // WTF second one?
 
         eose = true
-          ;[...events.values()].forEach(async (e) => {
-            await returnEvent(e)
-          })
+        ;[...events.values()].forEach(async (e) => {
+          await returnEvent(e)
+        })
       })
     )
 
@@ -1618,7 +1572,10 @@ export async function sendPayment(info: WalletInfo, payreq: string) {
 
     sub.on('event', async (e: NDKEvent) => {
       e = rawEvent(e)
-      if (e.pubkey === info.publicKey && e.tags.find((t: string[]) => t.length >= 2 && t[0] === 'e' && t[1] === signed.id)) {
+      if (
+        e.pubkey === info.publicKey &&
+        e.tags.find((t: string[]) => t.length >= 2 && t[0] === 'e' && t[1] === signed.id)
+      ) {
         clearTimeout(to)
         console.log('payment reply event', JSON.stringify(e))
 

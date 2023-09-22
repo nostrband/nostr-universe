@@ -1,6 +1,6 @@
-import { Event } from "@nostrband/nostr-tools"
-import { AuthoredEvent } from "./authored-event"
-import { MetaEvent } from "./meta-event"
+import { Event } from '@nostrband/nostr-tools'
+import { AuthoredEvent } from './authored-event'
+import { MetaEvent } from './meta-event'
 
 export interface ZapEvent extends AuthoredEvent {
   description?: Event

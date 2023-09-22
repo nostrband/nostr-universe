@@ -1,6 +1,6 @@
-import { Event } from "@nostrband/nostr-tools"
-import { AuthoredEvent } from "./authored-event"
-import { MetaEvent } from "./meta-event"
+import { Event } from '@nostrband/nostr-tools'
+import { AuthoredEvent } from './authored-event'
+import { MetaEvent } from './meta-event'
 
 export interface CommunityEvent extends AuthoredEvent {
   name: string
@@ -11,21 +11,21 @@ export interface CommunityEvent extends AuthoredEvent {
 }
 
 export interface CommunityApprovalEvent extends AuthoredEvent {
-  requestKind: number,
-  requestEventId: string,
-  requestEventAddr: string,
+  requestKind: number
+  requestEventId: string
+  requestEventAddr: string
   requestPubkey: string
   request: Event
 }
 
 export interface CommunityApprovalInfo {
-  communityPubkey: string,
-  communityIdentifier: string,
-  created_at: number,
+  communityPubkey: string
+  communityIdentifier: string
+  created_at: number
 }
 
 export interface ExtendedCommunityEvent extends CommunityEvent {
-  last_post_tm: number,
+  last_post_tm: number
   posts: number
 }
 
@@ -44,12 +44,12 @@ export function createExtendedCommunityEvent(e: CommunityEvent): ExtendedCommuni
   c.last_post_tm = 0
   c.posts = 0
   return c
-} 
+}
 
 export function createCommunityApprovalInfo(): CommunityApprovalInfo {
   return {
     communityPubkey: '',
     communityIdentifier: '',
-    created_at: 0,
+    created_at: 0
   }
 }

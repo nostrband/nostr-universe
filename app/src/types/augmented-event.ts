@@ -1,4 +1,4 @@
-import { Event, Kind } from "@nostrband/nostr-tools"
+import { Event, Kind } from '@nostrband/nostr-tools'
 
 export interface AugmentedEvent extends Event {
   order: number

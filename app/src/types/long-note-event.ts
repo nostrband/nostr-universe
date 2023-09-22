@@ -1,4 +1,4 @@
-import { AuthoredEvent } from "./authored-event"
+import { AuthoredEvent } from './authored-event'
 
 export interface LongNoteEvent extends AuthoredEvent {
   title: string

@@ -58,7 +58,7 @@ export const AppsPage = () => {
   const tabGroupsIds = sortedTabGroups.map((tabGroup) => tabGroup.id)
 
   const handleOpen = async (app: AppNostroType) => {
-    await openApp(app)
+    await openApp(app, { replace: true })
   }
 
   const mouseSensor = useSensor(MouseSensor, {

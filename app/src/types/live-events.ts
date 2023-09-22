@@ -1,6 +1,5 @@
-import { AuthoredEvent } from "./authored-event"
-import { MetaEvent } from "./meta-event"
-
+import { AuthoredEvent } from './authored-event'
+import { MetaEvent } from './meta-event'
 
 export interface LiveEvent extends AuthoredEvent {
   title: string

@@ -1,7 +1,7 @@
-import { MetaEvent } from "@/types/meta-event"
+import { MetaEvent } from '@/types/meta-event'
 
 export interface IItemBigZap {
-  targetPubkey: string,
+  targetPubkey: string
   targetMeta?: MetaEvent
   time: number
   subtitle: string

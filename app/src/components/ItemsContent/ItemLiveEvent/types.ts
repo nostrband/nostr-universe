@@ -1,7 +1,7 @@
-import { MetaEvent } from "@/types/meta-event"
+import { MetaEvent } from '@/types/meta-event'
 
 export interface IItemLiveEvent {
-  hostPubkey: string,
+  hostPubkey: string
   host?: MetaEvent
   time: number
   content: string
