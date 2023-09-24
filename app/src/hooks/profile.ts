@@ -73,7 +73,6 @@ export const useUpdateProfile = () => {
 
         if (contactList) {
           setContacts(contactList)
-
           const highlights = await fetchFollowedHighlights(contactList.contactPubkeys)
           console.log('new highlights', highlights)
           dispatch(setHighlights({ highlights }))

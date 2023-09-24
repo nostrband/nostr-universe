@@ -919,7 +919,7 @@ export async function searchCommunities(q, limit = 30) {
 class PromiseQueue {
   queue = []
 
-  constructor() { }
+  constructor() {}
 
   appender(cb) {
     return (...args) => {
@@ -1166,9 +1166,9 @@ class Subscription {
         if (eose) return // WTF second one?
 
         eose = true
-          ;[...events.values()].forEach(async (e) => {
-            await returnEvent(e)
-          })
+        ;[...events.values()].forEach(async (e) => {
+          await returnEvent(e)
+        })
       })
     )
 
@@ -1214,12 +1214,19 @@ const contactListSub = new Subscription('contact list', async (contactList) => {
     contactList.contactEvents = await fetchMetas(contactList.contactPubkeys)
 
     // assign order
-    contactList.contactEvents.forEach((p) => {
-      p.order = contactList.contactPubkeys.findIndex((pk) => pk == p.pubkey)
+    const mappedContactEvents = contactList.contactEvents.map((p) => {
+      return {
+        ...p,
+        order: contactList.contactPubkeys.findIndex((pk) => pk == p.pubkey)
+      }
     })
 
     // order by recently-added-first
-    sortDesc(contactList.contactEvents)
+    sortDesc(mappedContactEvents)
+    return {
+      ...contactList,
+      contactEvents: mappedContactEvents
+    }
   }
 
   return contactList
@@ -1405,7 +1412,6 @@ export async function sendPayment(info, payreq) {
   )
 
   return new Promise((ok, err) => {
-
     // make sure we don't wait forever
     const TIMEOUT_MS = 30000 // 30 sec
     const to = setTimeout(() => {
