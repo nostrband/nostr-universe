@@ -1381,12 +1381,19 @@ const contactListSub = new Subscription<ContactListEvent>('contact list', async 
     contactList.contactEvents = await fetchMetas(contactList.contactPubkeys)
 
     // assign order
-    contactList.contactEvents.forEach((p) => {
-      p.order = contactList.contactPubkeys.findIndex((pk) => pk == p.pubkey)
+    const mappedContactEvents = contactList.contactEvents.map((p) => {
+      return {
+        ...p,
+        order: contactList.contactPubkeys.findIndex((pk) => pk == p.pubkey)
+      }
     })
 
     // order by recently-added-first
-    sortDesc(contactList.contactEvents)
+    sortDesc(mappedContactEvents)
+    return {
+      ...contactList,
+      contactEvents: mappedContactEvents
+    }
   }
 
   return contactList
