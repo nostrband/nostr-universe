@@ -15,7 +15,7 @@ export const ModaContextMenu = () => {
   const { getModalOpened, handleClose, handleOpen } = useOpenModalSearchParams()
   const { openZap } = useOpenApp()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
-  const id = searchParams.get('id') || ''
+  const id = searchParams.get('nostrId') || ''
 
   const handleOpenModalSelect = () => {
     const addr = stringToBech32(id)

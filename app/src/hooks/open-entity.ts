@@ -93,7 +93,7 @@ export const useOpenApp = () => {
     const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
 
     if (reqs.length > 1) {
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { id: reqs[1].id }, replace: true })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id }, replace: true })
     }
   }
 
@@ -111,7 +111,7 @@ export const useOpenApp = () => {
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log('show perm request modal', r.id)
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { id: r.id }, replace: true })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id }, replace: true })
       // show request perm modal right now
       // setCurrentPermRequest(r)
       // console.log(JSON.stringify({ permissions: refPermissionReq.current }))
@@ -358,7 +358,7 @@ export const useOpenApp = () => {
     showContextMenu: async function (tabId, id) {
       console.log('event menu', id)
       handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
-        search: { id: id },
+        search: { nostrId: id },
         replace: true
       })
     },
@@ -432,6 +432,7 @@ export const useOpenApp = () => {
       await browser.show(id)
     } else {
       const tab = currentWorkSpace?.tabs.find((tab) => id === tab.id)
+      console.log('openTabWindow', id, tab)
       const dataTabForOpen = {
         id: tab.id,
         url: tab.url,
@@ -471,7 +472,7 @@ export const useOpenApp = () => {
     console.log('show', tab.id, JSON.stringify(options))
 
     handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {
-      search: { id: tab.id },
+      search: { tabId: tab.id },
       ...options
     })
   }

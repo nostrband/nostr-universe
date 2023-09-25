@@ -15,7 +15,7 @@ export const TabMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const [searchParams] = useSearchParams()
   const { onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
-  const id = searchParams.get('id') || ''
+  const id = searchParams.get('tabId') || ''
   const { openedTabs } = useAppSelector((state) => state.tab)
   const { workspaces } = useAppSelector((state) => state.workspaces)
   const { currentPubKey } = useAppSelector((state) => state.keys)

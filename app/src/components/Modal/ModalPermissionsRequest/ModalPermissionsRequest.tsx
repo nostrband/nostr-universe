@@ -18,7 +18,7 @@ export const ModalPermissionsRequest = () => {
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
 
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PERMISSIONS_REQ)
-  const currentPermId = searchParams.get('id') || ''
+  const currentPermId = searchParams.get('permId') || ''
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
   const { workspaces } = useAppSelector((state) => state.workspaces)
   const { currentPubKey } = useAppSelector((state) => state.keys)
