@@ -15,7 +15,7 @@ import { ModaTabMenu } from '@/components/Modal/ModaTabMenu/ModaTabMenu'
 import { TabPage } from '../TabPage/TabPage'
 import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextMenu'
 import { ModalPermissionsRequest } from '@/components/Modal/ModalPermissionsRequest/ModalPermissionsRequest'
-import { ModaTabSwitcher } from '@/components/Modal/ModaTabSwitcher/ModaTabSwitcher'
+import { ModalTabSwitcher } from '@/components/Modal/ModalTabSwitcher/ModalTabSwitcher'
 import { ModaWallet } from '@/components/Modal/ModaWallet/ModaWallet'
 import { TabsSwitcherPage } from '../TabsSwitcherPage/TabsSwitcherPage'
 import { NavigationBottom } from '@/components/NavigationBottom/NavigationBottom'
@@ -39,7 +39,7 @@ export const MainPage = () => {
 
       {/* Modal pages */}
       <ProfilePage />
-      <ModaTabSwitcher />
+      <ModalTabSwitcher />
       <ModaTabMenu />
       <ModaWallet />
       <ModalSearch />
