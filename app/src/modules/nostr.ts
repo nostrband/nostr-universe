@@ -1337,8 +1337,7 @@ class Subscription<OutputEventType> {
         if (eose) return // WTF second one?
 
         eose = true
-        for (const e of [...events.values()])
-          await returnEvent(e)
+        for (const e of [...events.values()]) await returnEvent(e)
       })
     )
 
