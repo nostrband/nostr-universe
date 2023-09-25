@@ -15,7 +15,7 @@ export const Header = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { currentTabId } = useAppSelector((state) => state.tab)
-  const id = searchParams.get('id') || ''
+  const id = searchParams.get('tabId') || ''
 
   return (
     <StyledWrapper>
