@@ -9,7 +9,7 @@ import { LiveEvents } from './components/LiveEvents/LiveEvents'
 import { Communities } from './components/Communities/Communities'
 import { StyledWrapperMain } from './styled'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
-import { ModaSearch } from '@/components/Modal/ModaSearch/ModaSearch'
+import { ModalSearch } from '@/components/Modal/ModalSearch/ModaSearch'
 import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
 import { ModaTabMenu } from '@/components/Modal/ModaTabMenu/ModaTabMenu'
 import { TabPage } from '../TabPage/TabPage'
@@ -42,7 +42,7 @@ export const MainPage = () => {
       <ModaTabSwitcher />
       <ModaTabMenu />
       <ModaWallet />
-      <ModaSearch />
+      <ModalSearch />
       <ModalSelectApp />
       <ModalPermissionsRequest />
       <TabPage />
