@@ -1,11 +1,13 @@
 import { SwiperSlide } from 'swiper/react'
 import { generateSkeletonItems } from '@/utils/helpers/prepare-data'
-import { Skeleton } from '@mui/material'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { Head } from '@/shared/ContentComponents/Head/Head'
 import { Content } from '@/shared/ContentComponents/Content/Content'
 import 'swiper/css'
 import styles from './slider.module.scss'
+import { SkeletonAvatar } from '@/shared/SkeletonComponents/SkeletonAvatar/SkeletonAvatar'
+import { SkeletonText } from '@/shared/SkeletonComponents/SkeletonText/SkeletonText'
+import { SkeletonContent } from '@/shared/SkeletonComponents/SkeletonContent/SkeletonContent'
 
 export const SkeletonHighlights = () => {
   const mockHighlights = generateSkeletonItems({})
@@ -15,11 +17,11 @@ export const SkeletonHighlights = () => {
       <SwiperSlide key={`slide_${index}`} className={styles.slide}>
         <Wrapper>
           <Head>
-            <Skeleton variant="circular" width={32} height={32} />
-            <Skeleton variant="text" sx={{ fontSize: '1rem', flex: '1', marginLeft: '0.5rem' }} />
+            <SkeletonAvatar />
+            <SkeletonText hasSpacing />
           </Head>
           <Content isHighlight>
-            <Skeleton variant="rounded" width="100%" height={60} />
+            <SkeletonContent size="big" />
           </Content>
         </Wrapper>
       </SwiperSlide>

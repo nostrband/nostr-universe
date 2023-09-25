@@ -1,9 +1,11 @@
 import { StyledProfile } from '@/shared/Profile/styled'
 import { generateSkeletonItems } from '@/utils/helpers/prepare-data'
-import { Skeleton } from '@mui/material'
 import { SwiperSlide } from 'swiper/react'
 import 'swiper/css'
 import styles from './slider.module.scss'
+import { SkeletonAvatar } from '@/shared/SkeletonComponents/SkeletonAvatar/SkeletonAvatar'
+import { SkeletonText } from '@/shared/SkeletonComponents/SkeletonText/SkeletonText'
+import { SkeletonContent } from '@/shared/SkeletonComponents/SkeletonContent/SkeletonContent'
 
 export const SkeletonProfiles = () => {
   const mockProfiles = generateSkeletonItems({})
@@ -12,9 +14,9 @@ export const SkeletonProfiles = () => {
     return (
       <SwiperSlide key={`slide_${index}`} className={styles.slide}>
         <StyledProfile>
-          <Skeleton variant="circular" width={50} height={50} />
-          <Skeleton variant="text" sx={{ fontSize: '1rem', minWidth: '5rem' }} />
-          <Skeleton variant="rounded" height={40} sx={{ minWidth: '90%' }} />
+          <SkeletonAvatar size="large" />
+          <SkeletonText width={'4rem'} fullWidth={false} />
+          <SkeletonContent width="90%" />
         </StyledProfile>
       </SwiperSlide>
     )

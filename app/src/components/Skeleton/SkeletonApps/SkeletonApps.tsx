@@ -1,9 +1,10 @@
 import { StyledAppWraper } from '@/shared/AppNostro/styled'
 import { generateSkeletonItems } from '@/utils/helpers/prepare-data'
-import { Skeleton } from '@mui/material'
 import { SwiperSlide } from 'swiper/react'
 import styles from './slider.module.scss'
 import 'swiper/css'
+import { SkeletonText } from '@/shared/SkeletonComponents/SkeletonText/SkeletonText'
+import { SkeletonAvatar } from '@/shared/SkeletonComponents/SkeletonAvatar/SkeletonAvatar'
 
 export const SkeletonApps = () => {
   const mockApps = generateSkeletonItems({})
@@ -12,8 +13,8 @@ export const SkeletonApps = () => {
     return (
       <SwiperSlide key={`slide_${index}`} className={styles.slide}>
         <StyledAppWraper>
-          <Skeleton variant="rounded" width={72} height={72} />
-          <Skeleton variant="text" width={'5rem'} sx={{ fontSize: '1rem' }} />
+          <SkeletonAvatar variant="rounded" size="big" />
+          <SkeletonText width={'4rem'} fullWidth={false} />
         </StyledAppWraper>
       </SwiperSlide>
     )

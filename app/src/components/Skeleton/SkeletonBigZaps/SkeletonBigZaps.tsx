@@ -4,8 +4,9 @@ import styles from './slider.module.scss'
 import { generateSkeletonItems } from '@/utils/helpers/prepare-data'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { Head } from '@/shared/ContentComponents/Head/Head'
-import { Skeleton } from '@mui/material'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
+import { SkeletonAvatar } from '@/shared/SkeletonComponents/SkeletonAvatar/SkeletonAvatar'
+import { SkeletonText } from '@/shared/SkeletonComponents/SkeletonText/SkeletonText'
 
 export const SkeletonBigZaps = () => {
   const mockBigZaps = generateSkeletonItems({})
@@ -15,11 +16,11 @@ export const SkeletonBigZaps = () => {
       <SwiperSlide key={`slide_${index}`} className={styles.slide}>
         <Wrapper>
           <Head>
-            <Skeleton variant="circular" width={32} height={32} />
-            <Skeleton variant="text" sx={{ fontSize: '1rem', flex: '1', marginLeft: '0.5rem' }} />
+            <SkeletonAvatar />
+            <SkeletonText hasSpacing />
           </Head>
           <SubTitle>
-            <Skeleton variant="text" sx={{ fontSize: '0.8rem', flex: '1' }} />
+            <SkeletonText size="small" />
           </SubTitle>
         </Wrapper>
       </SwiperSlide>

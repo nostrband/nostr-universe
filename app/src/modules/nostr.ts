@@ -919,7 +919,7 @@ async function augmentZaps(augmentedEvents: AugmentedEvent[], minZap: number): P
       let target = augmentedTargetsEvents.find((t) => t.id === e.targetEventId)
       if (target) {
         e.targetEvent = createAuthoredEvent(target)
-        // FIXME Receive frozen object property error!
+        // FIXME receive frozen object property error when change profile!
         e.targetEvent.author = metas.find((m) => m.pubkey === e.targetEvent?.pubkey)
       }
 
