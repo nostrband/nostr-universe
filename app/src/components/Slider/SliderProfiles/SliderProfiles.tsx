@@ -5,14 +5,20 @@ import { ISliderProfiles } from './types'
 import 'swiper/css'
 import styles from './slider.module.scss'
 import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/SkeletonProfiles'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
-export const SliderProfiles = ({ data, isLoading, handleClickEntity = () => {} }: ISliderProfiles) => {
+export const SliderProfiles = ({
+  data,
+  isLoading,
+  handleClickEntity = () => {},
+  handleReloadEntity = () => {}
+}: ISliderProfiles) => {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonProfiles />
     }
-    if (!data) {
-      return 'Nothing here'
+    if (!data || !data.length) {
+      return <EmptyListMessage onReload={handleReloadEntity} />
     }
     return data.map((profile, i) => (
       <SwiperSlide className={styles.slide} key={i}>

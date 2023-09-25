@@ -11,7 +11,11 @@ import { MetaEvent } from '@/types/meta-event'
 
 export const SuggestedProfiles = () => {
   const { currentPubKey } = useAppSelector((state) => state.keys)
-  const { data, isLoading } = userService.useFetchSuggestedProfilesQuery(currentPubKey)
+  const {
+    data,
+    isFetching: isLoading,
+    refetch: refetchSuggestedProfiles
+  } = userService.useFetchSuggestedProfilesQuery(currentPubKey)
   const { handleOpen } = useOpenModalSearchParams()
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -23,6 +27,8 @@ export const SuggestedProfiles = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
   }
 
+  const handleReloadSuggestedProfiles = () => refetchSuggestedProfiles()
+
   return (
     <StyledWrapper>
       <Container>
@@ -31,7 +37,12 @@ export const SuggestedProfiles = () => {
         </StyledTitle>
       </Container>
 
-      <SliderProfiles data={data || []} isLoading={isLoading} handleClickEntity={handleOpenProfile} />
+      <SliderProfiles
+        data={data || []}
+        isLoading={isLoading}
+        handleClickEntity={handleOpenProfile}
+        handleReloadEntity={handleReloadSuggestedProfiles}
+      />
     </StyledWrapper>
   )
 }

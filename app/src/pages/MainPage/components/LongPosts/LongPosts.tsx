@@ -2,15 +2,17 @@ import { Container } from '@/layout/Container/Conatiner'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
-import { getTagValue, nostrbandRelay } from '@/modules/nostr'
-import { useAppSelector } from '@/store/hooks/redux'
+import { fetchFollowedLongNotes, getTagValue, nostrbandRelay } from '@/modules/nostr'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { LongNoteEvent } from '@/types/long-note-event'
 import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongNotes'
+import { setLongPosts } from '@/store/reducers/contentWorkspace'
 
 export const LongPosts = () => {
   const { handleOpen } = useOpenModalSearchParams()
-  const { longPosts } = useAppSelector((state) => state.contentWorkSpace)
+  const { longPosts, contactList } = useAppSelector((state) => state.contentWorkSpace)
+  const dispatch = useAppDispatch()
 
   const handleOpenLongPosts = (longPost: LongNoteEvent) => {
     const naddr = nip19.naddrEncode({
@@ -25,6 +27,14 @@ export const LongPosts = () => {
 
   console.log({ longPosts })
 
+  const handleReloadLongPosts = async () => {
+    if (contactList) {
+      dispatch(setLongPosts({ longPosts: null }))
+      const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys)
+      dispatch(setLongPosts({ longPosts }))
+    }
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -33,7 +43,12 @@ export const LongPosts = () => {
         </StyledTitle>
       </Container>
 
-      <SliderLongNotes data={longPosts || []} isLoading={longPosts === null} handleClickEntity={handleOpenLongPosts} />
+      <SliderLongNotes
+        data={longPosts || []}
+        isLoading={longPosts === null}
+        handleClickEntity={handleOpenLongPosts}
+        handleReloadEntity={handleReloadLongPosts}
+      />
     </StyledWrapper>
   )
 }

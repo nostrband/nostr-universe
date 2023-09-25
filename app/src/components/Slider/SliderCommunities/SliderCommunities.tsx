@@ -5,14 +5,20 @@ import styles from './slider.module.scss'
 import { ISliderCommunities } from './types'
 import 'swiper/css'
 import { SkeletonCommunities } from '@/components/Skeleton/SkeletonCommunties/SkeletonCommunities'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
-export const SliderCommunities = ({ data, isLoading, handleClickEntity = () => {} }: ISliderCommunities) => {
+export const SliderCommunities = ({
+  data,
+  isLoading,
+  handleClickEntity = () => {},
+  handleReloadEntity = () => {}
+}: ISliderCommunities) => {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonCommunities />
     }
     if (!data || !data.length) {
-      return 'Nothing here'
+      return <EmptyListMessage onReload={handleReloadEntity} />
     }
     return data.map((community, i) => (
       <SwiperSlide className={styles.slide} key={i} onClick={() => handleClickEntity(community)}>

@@ -7,8 +7,9 @@ import { ISliderAppsNostro } from './types'
 import styles from './slider.module.scss'
 import 'swiper/css'
 import { SkeletonApps } from '@/components/Skeleton/SkeletonApps/SkeletonApps'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
-export const SliderAppsNostro = ({ data, isLoading }: ISliderAppsNostro) => {
+export const SliderAppsNostro = ({ data, isLoading, handleReloadEntity = () => {} }: ISliderAppsNostro) => {
   const { openApp } = useOpenApp()
 
   const handleOpenApp = async (app: AppNostroType) => {
@@ -20,7 +21,7 @@ export const SliderAppsNostro = ({ data, isLoading }: ISliderAppsNostro) => {
       return <SkeletonApps />
     }
     if (!data.length && !isLoading) {
-      return 'Nothing here'
+      return <EmptyListMessage onReload={handleReloadEntity} />
     }
     return data.map((app, i) => (
       <SwiperSlide className={styles.slide} key={i}>

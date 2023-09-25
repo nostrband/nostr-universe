@@ -5,14 +5,20 @@ import 'swiper/css'
 import styles from './slider.module.scss'
 import { ItemLongNote } from '../../ItemsContent/ItemLongNote/ItemLongNote'
 import { SkeletonLongPosts } from '@/components/Skeleton/SkeletonLongPosts/SkeletonLongPosts'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
-export const SliderLongNotes = ({ data, isLoading, handleClickEntity = () => {} }: ISliderLongNotes) => {
+export const SliderLongNotes = ({
+  data,
+  isLoading,
+  handleClickEntity = () => {},
+  handleReloadEntity = () => {}
+}: ISliderLongNotes) => {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonLongPosts />
     }
-    if (!data) {
-      return 'Nothing here'
+    if (!data || !data.length) {
+      return <EmptyListMessage onReload={handleReloadEntity} />
     }
     return data.map((longPost, i) => (
       <SwiperSlide className={styles.slide} key={i} onClick={() => handleClickEntity(longPost)}>

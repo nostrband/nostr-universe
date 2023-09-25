@@ -91,7 +91,7 @@ export const useUpdateProfile = () => {
           dispatch(setCommunities({ communities }))
 
           const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys)
-          console.log('new live events', liveEvents, JSON.stringify(liveEvents))
+          console.log('new live events', liveEvents)
           dispatch(setLiveEvents({ liveEvents }))
         }
       })

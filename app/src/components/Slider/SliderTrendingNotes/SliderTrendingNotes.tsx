@@ -5,14 +5,20 @@ import 'swiper/css'
 import styles from './slider.module.scss'
 import { ItemTrendingNote } from '../../ItemsContent/ItemTrendingNote/ItemTrendingNote'
 import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNotes/SkeletonTrendingNotes'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
-export const SliderTrendingNotes = ({ data, isLoading, handleClickEntity = () => {} }: ISliderTrendingNotes) => {
+export const SliderTrendingNotes = ({
+  data,
+  isLoading,
+  handleClickEntity = () => {},
+  handleReloadEntity = () => {}
+}: ISliderTrendingNotes) => {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonTrendingNotes />
     }
-    if (!data) {
-      return 'Nothing here'
+    if (!data || !data.length) {
+      return <EmptyListMessage onReload={handleReloadEntity} />
     }
     return data.map((note, i) => (
       <SwiperSlide className={styles.slide} key={i} onClick={() => handleClickEntity(note)}>

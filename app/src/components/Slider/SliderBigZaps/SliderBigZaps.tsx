@@ -5,14 +5,20 @@ import { ISliderBigZaps } from './types'
 import 'swiper/css'
 import styles from './slider.module.scss'
 import { SkeletonBigZaps } from '@/components/Skeleton/SkeletonBigZaps/SkeletonBigZaps'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
-export const SliderBigZaps = ({ data, isLoading, handleClickEntity = () => {} }: ISliderBigZaps) => {
+export const SliderBigZaps = ({
+  data,
+  isLoading,
+  handleClickEntity = () => {},
+  handleReloadEntity = () => {}
+}: ISliderBigZaps) => {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonBigZaps />
     }
-    if (!data) {
-      return 'Nothing here'
+    if (!data || !data.length) {
+      return <EmptyListMessage onReload={handleReloadEntity} />
     }
     return data.map((bigZap, i) => (
       <SwiperSlide className={styles.slide} key={i} onClick={() => handleClickEntity(bigZap)}>

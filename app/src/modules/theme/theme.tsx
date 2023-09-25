@@ -6,14 +6,14 @@ declare module '@mui/material/styles' {
     light: Palette['primary']
     decorate: Palette['primary']
     textPrimaryDecorate: Palette['primary']
-    textSeocondaryDecorate: Palette['primary']
+    textSecondaryDecorate: Palette['primary']
   }
 
   interface PaletteOptions {
     light?: Palette['primary']
     decorate?: Palette['primary']
     textPrimaryDecorate?: Palette['primary']
-    textSeocondaryDecorate?: Palette['primary']
+    textSecondaryDecorate?: Palette['primary']
   }
 }
 
@@ -59,7 +59,7 @@ export const theme = createTheme({
       dark: '#000',
       contrastText: '#000'
     },
-    textSeocondaryDecorate: {
+    textSecondaryDecorate: {
       light: '#000',
       main: '#CBA3E8',
       dark: '#000',

@@ -1,19 +1,24 @@
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { FreeMode } from 'swiper/modules'
-
 import 'swiper/css'
 import styles from './slider.module.scss'
 import { ISliderLiveEvents } from './types'
 import { ItemLiveEvent } from '@/components/ItemsContent/ItemLiveEvent/ItemLiveEvent'
 import { SkeletonLiveEvents } from '@/components/Skeleton/SkeletonLiveEvents/SkeletonLiveEvents'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
-export const SliderLiveEvents = ({ data, isLoading, handleClickEntity = () => {} }: ISliderLiveEvents) => {
+export const SliderLiveEvents = ({
+  data,
+  isLoading,
+  handleClickEntity = () => {},
+  handleReloadEntity = () => {}
+}: ISliderLiveEvents) => {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonLiveEvents />
     }
     if (!data || !data.length) {
-      return 'Nothing here'
+      return <EmptyListMessage onReload={handleReloadEntity} />
     }
     return data.map((event, i) => (
       <SwiperSlide className={styles.slide} key={i} onClick={() => handleClickEntity(event)}>

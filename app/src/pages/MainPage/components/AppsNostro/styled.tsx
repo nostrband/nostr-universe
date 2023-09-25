@@ -7,6 +7,6 @@ export const StyledTitle = styled(
     return <Typography ref={ref} {...props} />
   })
 )(({ theme }) => ({
-  color: theme.palette.textSeocondaryDecorate.main,
+  color: theme.palette.textSecondaryDecorate.main,
   fontWeight: 'bold'
 }))
