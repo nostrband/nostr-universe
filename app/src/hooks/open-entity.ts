@@ -8,9 +8,11 @@ import { setIcontab, setLoadingTab, setOpenTab, setCurrentTabId } from '@/store/
 import {
   clearTabGroup,
   deletePermWorkspace,
+  removePinFromPins,
   removeTabFromTabs,
   setLastKindApp,
   setPermsWorkspace,
+  setPinsWorkspace,
   setScreenshotTab,
   setTabsWorkspace,
   setUrlTabWorkspace,
@@ -32,6 +34,7 @@ import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
 import { sendPayment, stringToBech32 } from '@/modules/nostr'
 import { deletePermissionRequest, setPermissionRequest } from '@/store/reducers/permissionRequests.slice'
+import { ITab } from '@/types/workspace'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
@@ -423,6 +426,31 @@ export const useOpenApp = () => {
 
   browser.setAPI(API)
 
+  const onPinTab = async (currentTab: ITab) => {
+    const pin = {
+      id: uuidv4(),
+      url: currentTab.url,
+      appNaddr: currentTab.appNaddr,
+      title: currentTab.title,
+      icon: currentTab.icon,
+      order: currentWorkSpace.pins.length,
+      pubkey: currentPubKey,
+      perms: []
+    }
+
+    dispatch(setPinsWorkspace({ pin, workspacePubkey: currentPubKey }))
+
+    await dbi.addPin(pin)
+  }
+
+  const onUnPinTab = async (currentTab: ITab) => {
+    const pin = currentWorkSpace.pins.find((p) => p.appNaddr === currentTab.appNaddr)
+    console.log({ PIN: pin, currentWorkSpace: currentWorkSpace?.pins })
+    dispatch(removePinFromPins({ pin, workspacePubkey: currentPubKey }))
+
+    await dbi.deletePin(pin.id)
+  }
+
   const openTabWindow = async (id) => {
     const isOpened = openedTabs.find((tab) => id === tab.id)
     dispatch(setCurrentTabId({ id: id }))
@@ -620,6 +648,8 @@ export const useOpenApp = () => {
     replyCurrentPermRequest,
     deletePermission,
     onCloseAllGroupTabs,
-    openZap
+    openZap,
+    onPinTab,
+    onUnPinTab
   }
 }

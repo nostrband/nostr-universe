@@ -32,7 +32,7 @@ export const AppsPage = () => {
   const { currentPubKey } = useAppSelector((state) => state.keys)
   const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
   const [activeId, setActiveId] = useState<TabGroupID | null>(null)
-
+  console.log({ currentWorkSpace })
   const tabGroups = currentWorkSpace?.tabGroups || []
   const sortedTabGroups = useMemo(() => {
     if (tabGroups) {

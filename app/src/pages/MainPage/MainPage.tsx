@@ -21,11 +21,14 @@ import { TabsSwitcherPage } from '../TabsSwitcherPage/TabsSwitcherPage'
 import { NavigationBottom } from '@/components/NavigationBottom/NavigationBottom'
 import { Header } from '@/components/Header/Header'
 import { AppsPage } from '../AppsPage/AppsPage'
+import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
+import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
 
 export const MainPage = () => {
   return (
     <StyledWrapperMain>
       <Header />
+      <WelcomeWidget />
       <TrendingNotes />
       <TrendingProfiles />
       <Highlights />
@@ -38,6 +41,7 @@ export const MainPage = () => {
       <AppsNostro />
 
       {/* Modal pages */}
+      <ModalImportKey />
       <ProfilePage />
       <ModaTabSwitcher />
       <ModaTabMenu />

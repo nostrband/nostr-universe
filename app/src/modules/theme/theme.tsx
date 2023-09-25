@@ -1,10 +1,14 @@
 import { OutfitExtraLight, OutfitLight, OutfitRegular, OutfitMedium, OutfitSemiBold, OutfitBold } from '@/assets/fonts'
 import { createTheme } from '@mui/material'
+import { grey } from '@mui/material/colors'
+
+const color = grey[800]
 
 declare module '@mui/material/styles' {
   interface Palette {
     light: Palette['primary']
     decorate: Palette['primary']
+    actionPrimary: Palette['primary']
     textPrimaryDecorate: Palette['primary']
     textSeocondaryDecorate: Palette['primary']
   }
@@ -12,6 +16,7 @@ declare module '@mui/material/styles' {
   interface PaletteOptions {
     light?: Palette['primary']
     decorate?: Palette['primary']
+    actionPrimary?: Palette['primary']
     textPrimaryDecorate?: Palette['primary']
     textSeocondaryDecorate?: Palette['primary']
   }
@@ -26,6 +31,12 @@ declare module '@mui/material/Typography' {
 declare module '@mui/material/IconButton' {
   interface IconButtonPropsColorOverrides {
     decorate: true
+  }
+}
+
+declare module '@mui/material/Button' {
+  interface ButtonPropsColorOverrides {
+    actionPrimary: true
   }
 }
 
@@ -64,6 +75,12 @@ export const theme = createTheme({
       main: '#CBA3E8',
       dark: '#000',
       contrastText: '#000'
+    },
+    actionPrimary: {
+      light: '#000',
+      main: color,
+      dark: '#000',
+      contrastText: '#fff'
     }
   },
   shape: {

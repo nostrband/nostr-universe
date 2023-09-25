@@ -17,7 +17,7 @@ import { stringToBech32 } from '@/modules/nostr'
 
 export const ModaTabMenu = () => {
   const [searchParams] = useSearchParams()
-  const { onCloseTab, openZap } = useOpenApp()
+  const { onCloseTab, openZap, onPinTab, onUnPinTab } = useOpenApp()
   const { getModalOpened, handleClose, handleOpen } = useOpenModalSearchParams()
   const [eventAddr, setEventAddr] = useState('')
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MENU)
@@ -30,6 +30,8 @@ export const ModaTabMenu = () => {
 
   const isPin = currentWorkSpace?.pins.find((pin) => pin.appNaddr === currentTab?.appNaddr)
   const url = currentTab?.url
+
+  console.log({ PINS: currentWorkSpace })
 
   useEffect(() => {
     if (url) {
@@ -46,11 +48,14 @@ export const ModaTabMenu = () => {
   }
 
   const handlePinUnPinTab = () => {
-    // ????? diferent id in pins
-    if (isPin) {
-      console.log('unpin')
-    } else {
-      console.log('pin')
+    if (currentTab) {
+      if (isPin) {
+        console.log('unpin')
+        onUnPinTab(currentTab)
+      } else {
+        console.log('pin')
+        onPinTab(currentTab)
+      }
     }
   }
 
@@ -61,7 +66,6 @@ export const ModaTabMenu = () => {
   const handleZap = async () => {
     if (!url) return
     const addr = stringToBech32(url)
-    //    const event = await fetchEventByBech32(addr)
     openZap(addr)
   }
 
