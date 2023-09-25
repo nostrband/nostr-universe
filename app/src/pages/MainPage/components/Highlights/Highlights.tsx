@@ -29,7 +29,11 @@ export const Highlights = () => {
         </StyledTitle>
       </Container>
 
-      <SliderHighlights data={highlights || []} isLoading={false} handleClickEntity={handleOpenHighlight} />
+      <SliderHighlights
+        data={highlights || []}
+        isLoading={highlights === null}
+        handleClickEntity={handleOpenHighlight}
+      />
     </StyledWrapper>
   )
 }

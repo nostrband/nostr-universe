@@ -31,7 +31,11 @@ export const Communities = () => {
         </StyledTitle>
       </Container>
 
-      <SliderCommunities data={communities || []} isLoading={false} handleClickEntity={handleOpenCommuniti} />
+      <SliderCommunities
+        data={communities || []}
+        isLoading={communities === null}
+        handleClickEntity={handleOpenCommuniti}
+      />
     </StyledWrapper>
   )
 }

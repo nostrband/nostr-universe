@@ -53,7 +53,7 @@ export const BigZaps = () => {
         </StyledTitle>
       </Container>
 
-      <SliderBigZaps data={bigZaps || []} isLoading={false} handleClickEntity={handleOpenHighlight} />
+      <SliderBigZaps data={bigZaps || []} isLoading={bigZaps === null} handleClickEntity={handleOpenHighlight} />
     </StyledWrapper>
   )
 }

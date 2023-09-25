@@ -33,7 +33,7 @@ export const LongPosts = () => {
         </StyledTitle>
       </Container>
 
-      <SliderLongNotes data={longPosts || []} isLoading={false} handleClickEntity={handleOpenLongPosts} />
+      <SliderLongNotes data={longPosts || []} isLoading={longPosts === null} handleClickEntity={handleOpenLongPosts} />
     </StyledWrapper>
   )
 }
