@@ -30,7 +30,9 @@ export const LongPosts = () => {
   const handleReloadLongPosts = async () => {
     if (contactList) {
       dispatch(setLongPosts({ longPosts: null }))
-      const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys)
+      const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys).catch(() => {
+        dispatch(setLongPosts({ longPosts: null }))
+      })
       dispatch(setLongPosts({ longPosts }))
     }
   }

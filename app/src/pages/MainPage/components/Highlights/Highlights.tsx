@@ -26,7 +26,9 @@ export const Highlights = () => {
   const handleReloadHighlights = async () => {
     if (contactList) {
       dispatch(setHighlights({ highlights: null }))
-      const highlights = await fetchFollowedHighlights(contactList.contactPubkeys)
+      const highlights = await fetchFollowedHighlights(contactList.contactPubkeys).catch(() => {
+        dispatch(setHighlights({ highlights: null }))
+      })
       dispatch(setHighlights({ highlights }))
     }
   }

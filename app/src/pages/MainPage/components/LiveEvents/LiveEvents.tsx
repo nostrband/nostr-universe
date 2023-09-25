@@ -28,7 +28,9 @@ export const LiveEvents = () => {
   const handleReloadLiveEvents = async () => {
     if (contactList) {
       dispatch(setLiveEvents({ liveEvents: null }))
-      const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys)
+      const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys).catch(() => {
+        dispatch(setLiveEvents({ liveEvents: null }))
+      })
       dispatch(setLiveEvents({ liveEvents }))
     }
   }

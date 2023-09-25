@@ -18,6 +18,7 @@ import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
 import { getRenderedUsername } from '@/utils/helpers/general'
 import { createMetaEvent } from '@/types/meta-event'
 import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
+import { userService } from '@/store/services/user.service'
 
 export const ProfileView = () => {
   const { getModalOpened, handleOpen, handleClose } = useOpenModalSearchParams()
@@ -31,7 +32,12 @@ export const ProfileView = () => {
     return p
   })
 
+  const [fetchTrendingNotes] = userService.useLazyFetchTrendingNotesQuery()
+  const [fetchTrendingProfiles] = userService.useLazyFetchTrendingProfilesQuery()
+
   const handlechangeAccount = (pubkey: string) => {
+    fetchTrendingNotes('')
+    fetchTrendingProfiles('')
     changeAccount(pubkey)
     handleClose()
   }

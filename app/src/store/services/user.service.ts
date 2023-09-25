@@ -10,6 +10,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/dist/query/react'
 export const userService = createApi({
   reducerPath: 'userService',
   baseQuery: fetchBaseQuery({ baseUrl: 'https://api.nostr.band/v0' }),
+  tagTypes: ['TrendingProfiles', 'TrendingNotes'],
   endpoints: (build) => ({
     fetchTrendingProfiles: build.query({
       query: () => ({
@@ -23,7 +24,8 @@ export const userService = createApi({
         })
 
         return trendingProfiles
-      }
+      },
+      providesTags: ['TrendingProfiles']
     }),
     fetchTrendingNotes: build.query({
       query: () => ({
@@ -38,7 +40,8 @@ export const userService = createApi({
         })
 
         return trendingNotes
-      }
+      },
+      providesTags: ['TrendingNotes']
     }),
     fetchSuggestedProfiles: build.query({
       query: (pubkey: string) => ({

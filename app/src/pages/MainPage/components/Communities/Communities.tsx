@@ -28,7 +28,9 @@ export const Communities = () => {
   const handleReloadCommunities = async () => {
     if (contactList) {
       dispatch(setCommunities({ communities: null }))
-      const communities = await fetchFollowedCommunities(contactList.contactPubkeys)
+      const communities = await fetchFollowedCommunities(contactList.contactPubkeys).catch(() => {
+        dispatch(setCommunities({ communities: null }))
+      })
       dispatch(setCommunities({ communities }))
     }
   }

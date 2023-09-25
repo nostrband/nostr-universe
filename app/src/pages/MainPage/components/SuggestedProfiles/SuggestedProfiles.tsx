@@ -15,7 +15,9 @@ export const SuggestedProfiles = () => {
     data,
     isFetching: isLoading,
     refetch: refetchSuggestedProfiles
-  } = userService.useFetchSuggestedProfilesQuery(currentPubKey)
+  } = userService.useFetchSuggestedProfilesQuery(currentPubKey, {
+    skip: !currentPubKey
+  })
   const { handleOpen } = useOpenModalSearchParams()
 
   const handleOpenProfile = (profile: MetaEvent) => {

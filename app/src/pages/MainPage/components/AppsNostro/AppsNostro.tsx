@@ -11,9 +11,10 @@ export const AppsNostro = () => {
 
   const handleReloadApps = async () => {
     dispatch(setLoading({ isLoading: true }))
-    const apps = await fetchApps()
+    const apps = await fetchApps().finally(() => {
+      dispatch(setLoading({ isLoading: false }))
+    })
     dispatch(setApps({ apps }))
-    dispatch(setLoading({ isLoading: false }))
   }
 
   return (

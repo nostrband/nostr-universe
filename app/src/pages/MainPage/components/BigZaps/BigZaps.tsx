@@ -48,10 +48,14 @@ export const BigZaps = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
   }
 
+  console.log({ bigZaps })
+
   const handleReloadBigZaps = async () => {
     if (contactList) {
       dispatch(setBigZaps({ bigZaps: null }))
-      const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT)
+      const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT).catch(() => {
+        dispatch(setBigZaps({ bigZaps: null }))
+      })
       dispatch(setBigZaps({ bigZaps }))
     }
   }

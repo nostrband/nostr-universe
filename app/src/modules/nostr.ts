@@ -916,9 +916,10 @@ async function augmentZaps(augmentedEvents: AugmentedEvent[], minZap: number): P
 
     // assign to zaps
     zapEvents.forEach((e) => {
-      const target = augmentedTargetsEvents.find((t) => t.id === e.targetEventId)
+      let target = augmentedTargetsEvents.find((t) => t.id === e.targetEventId)
       if (target) {
         e.targetEvent = createAuthoredEvent(target)
+        // FIXME Receive frozen object property error!
         e.targetEvent.author = metas.find((m) => m.pubkey === e.targetEvent?.pubkey)
       }
 
