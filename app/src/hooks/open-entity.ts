@@ -432,7 +432,7 @@ export const useOpenApp = () => {
       await browser.show(id)
     } else {
       const tab = currentWorkSpace?.tabs.find((tab) => id === tab.id)
-      console.log("openTabWindow", id, tab)
+      console.log('openTabWindow', id, tab)
       const dataTabForOpen = {
         id: tab.id,
         url: tab.url,
