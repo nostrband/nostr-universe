@@ -50,10 +50,6 @@ export const BigZaps = () => {
 
   console.log({ bigZaps })
 
-  if (!bigZaps?.length) {
-    return null
-  }
-
   const handleReloadBigZaps = async () => {
     if (contactList) {
       dispatch(setBigZaps({ bigZaps: null }))
