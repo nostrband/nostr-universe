@@ -48,7 +48,7 @@ export const ModalSearch = () => {
         openBlank({ url: str }, {})
         return true
       }
-    } catch { }
+    } catch {}
 
     const b32 = stringToBech32(str)
 

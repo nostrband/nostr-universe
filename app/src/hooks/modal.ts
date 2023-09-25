@@ -13,7 +13,6 @@ type IExtraOptions = {
 }
 
 export const useOpenModalSearchParams = () => {
-
   const [searchParams] = useSearchParams()
   const location = useLocation()
   const navigate = useNavigate()
@@ -22,45 +21,54 @@ export const useOpenModalSearchParams = () => {
     return Object.keys(MODAL_PARAMS_KEYS)[Object.values(MODAL_PARAMS_KEYS).indexOf(modal)]
   }, [])
 
-  const handleOpen = useCallback((modal: MODAL_PARAMS_KEYS, extraOptions?: IExtraOptions) => {
-    const enumKey = getEnumParam(modal)
-    const getSearchParamsLength = Object.keys(queryString.parse(location.search)).length
+  const handleOpen = useCallback(
+    (modal: MODAL_PARAMS_KEYS, extraOptions?: IExtraOptions) => {
+      const enumKey = getEnumParam(modal)
+      const getSearchParamsLength = Object.keys(queryString.parse(location.search)).length
 
-    let searchParamsData: SearchParamsType = { [enumKey]: modal }
-    if (extraOptions?.search) {
-      searchParamsData = { ...searchParamsData, ...extraOptions.search }
-    }
+      let searchParamsData: SearchParamsType = { [enumKey]: modal }
+      if (extraOptions?.search) {
+        searchParamsData = { ...searchParamsData, ...extraOptions.search }
+      }
 
-    const searchString =
-      extraOptions?.replace || !getSearchParamsLength
-        ? createSearchParams(searchParamsData).toString()
-        : `${location.search}&${createSearchParams(searchParamsData).toString()}`
+      const searchString =
+        extraOptions?.replace || !getSearchParamsLength
+          ? createSearchParams(searchParamsData).toString()
+          : `${location.search}&${createSearchParams(searchParamsData).toString()}`
 
-    navigate(
-      {
-        pathname: '/',
-        search: searchString
-      },
-      { replace: false }
-    )
-  }, [searchParams, location, navigate, getEnumParam])
+      navigate(
+        {
+          pathname: '/',
+          search: searchString
+        },
+        { replace: false }
+      )
+    },
+    [searchParams, location, navigate, getEnumParam]
+  )
 
-  const handleClose = useCallback((path?: string) => {
-    if (path) {
-      console.log('path close', path)
-      navigate(path, { replace: true })
-    } else {
-      navigate(-1)
-    }
-  }, [navigate])
+  const handleClose = useCallback(
+    (path?: string) => {
+      if (path) {
+        console.log('path close', path)
+        navigate(path, { replace: true })
+      } else {
+        navigate(-1)
+      }
+    },
+    [navigate]
+  )
 
-  const getModalOpened = useCallback((modal: MODAL_PARAMS_KEYS) => {
-    const enumKey = getEnumParam(modal)
-    const modalOpened = searchParams.get(enumKey) === modal
+  const getModalOpened = useCallback(
+    (modal: MODAL_PARAMS_KEYS) => {
+      const enumKey = getEnumParam(modal)
+      const modalOpened = searchParams.get(enumKey) === modal
 
-    return modalOpened
-  }, [getEnumParam, searchParams])
- 
+      return modalOpened
+    },
+    [getEnumParam, searchParams]
+  )
+
   return {
     handleClose,
     handleOpen,
