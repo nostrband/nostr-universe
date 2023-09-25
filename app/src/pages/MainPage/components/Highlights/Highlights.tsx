@@ -21,6 +21,10 @@ export const Highlights = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
   }
 
+  if (!highlights?.length) {
+    return null
+  }
+
   return (
     <StyledWrapper>
       <Container>

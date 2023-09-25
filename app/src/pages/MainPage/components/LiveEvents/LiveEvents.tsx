@@ -23,6 +23,10 @@ export const LiveEvents = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
   }
 
+  if (!liveEvents?.length) {
+    return null
+  }
+
   return (
     <StyledWrapper>
       <Container>
