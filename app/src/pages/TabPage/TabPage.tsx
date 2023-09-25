@@ -45,13 +45,13 @@ export const TabPage = () => {
   }, [isOpen, id, tab])
 
   useEffect(() => {
-    if (id) {
+    if (id && isOpen) {
       openTabWindow(id)
       return () => {
         onHideTabInBrowser(id)
       }
     }
-  }, [id])
+  }, [id, isOpen])
 
   return (
     <StyledDialog

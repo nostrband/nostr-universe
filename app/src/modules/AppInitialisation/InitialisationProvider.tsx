@@ -25,12 +25,15 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
 
       if (!currentPubKey) {
         dispatch(setCurrentPubKey({ currentPubKey: DEFAULT_PUBKEY }))
+
+        const workspaces = await createSomeWorkspaces([DEFAULT_PUBKEY])
+        dispatch(setWorkspaces({ workspaces }))
       } else {
         dispatch(setCurrentPubKey({ currentPubKey }))
-      }
 
-      const workspaces = await createSomeWorkspaces(keys)
-      dispatch(setWorkspaces({ workspaces }))
+        const workspaces = await createSomeWorkspaces(keys)
+        dispatch(setWorkspaces({ workspaces }))
+      }
 
       console.log('ndk connected')
 

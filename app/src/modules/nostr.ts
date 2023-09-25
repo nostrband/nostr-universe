@@ -772,7 +772,7 @@ async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   const reqPubkeys: string[] = []
   pubkeys.forEach((p) => {
     const meta = metaCache.get(p)
-    if (meta) metas.push(meta)
+    if (meta) metas.push({ meta })
     else reqPubkeys.push(p)
   })
 
@@ -826,7 +826,7 @@ async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise
     const ne = eventCache.get(id)
     if (ne) {
       // make sure kinds match
-      if (kinds.includes(ne.kind)) results.push(ne)
+      if (kinds.includes(ne.kind)) results.push({ ne })
     } else {
       reqIds.push(id)
     }
@@ -1333,14 +1333,12 @@ class Subscription<OutputEventType> {
     // notify that initial fetch is over
     sub.on(
       'eose',
-      pq.appender((sub, reason) => {
+      pq.appender(async (sub, reason) => {
         console.log('eose was', eose, this.label, 'events', events.size, 'reason', reason, 'at', Date.now())
         if (eose) return // WTF second one?
 
         eose = true
-        ;[...events.values()].forEach(async (e) => {
-          await returnEvent(e)
-        })
+        for (const e of [...events.values()]) await returnEvent(e)
       })
     )
 
@@ -1379,22 +1377,16 @@ const contactListSub = new Subscription<ContactListEvent>('contact list', async 
 
   if (contactList.contactPubkeys.length) {
     // profiles
-    contactList.contactEvents = await fetchMetas(contactList.contactPubkeys)
+    const contactEvents = await fetchMetas(contactList.contactPubkeys)
 
     // assign order
-    const mappedContactEvents = contactList.contactEvents.map((p) => {
-      return {
-        ...p,
-        order: contactList.contactPubkeys.findIndex((pk) => pk == p.pubkey)
-      }
+    contactEvents.forEach((p) => {
+      p.order = contactList.contactPubkeys.findIndex((pk) => pk == p.pubkey)
     })
 
-    // order by recently-added-first
-    sortDesc(mappedContactEvents)
-    return {
-      ...contactList,
-      contactEvents: mappedContactEvents
-    }
+    sortDesc(contactEvents)
+
+    contactList.contactEvents = contactEvents
   }
 
   return contactList

@@ -9,23 +9,26 @@ import { LiveEvents } from './components/LiveEvents/LiveEvents'
 import { Communities } from './components/Communities/Communities'
 import { StyledWrapperMain } from './styled'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
-import { ModaSearch } from '@/components/Modal/ModaSearch/ModaSearch'
+import { ModalSearch } from '@/components/Modal/ModalSearch/ModaSearch'
 import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
 import { ModaTabMenu } from '@/components/Modal/ModaTabMenu/ModaTabMenu'
 import { TabPage } from '../TabPage/TabPage'
 import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextMenu'
 import { ModalPermissionsRequest } from '@/components/Modal/ModalPermissionsRequest/ModalPermissionsRequest'
-import { ModaTabSwitcher } from '@/components/Modal/ModaTabSwitcher/ModaTabSwitcher'
+import { ModalTabSwitcher } from '@/components/Modal/ModalTabSwitcher/ModalTabSwitcher'
 import { ModaWallet } from '@/components/Modal/ModaWallet/ModaWallet'
 import { TabsSwitcherPage } from '../TabsSwitcherPage/TabsSwitcherPage'
 import { NavigationBottom } from '@/components/NavigationBottom/NavigationBottom'
 import { Header } from '@/components/Header/Header'
 import { AppsPage } from '../AppsPage/AppsPage'
+import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
+import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
 
 export const MainPage = () => {
   return (
     <StyledWrapperMain>
       <Header />
+      <WelcomeWidget />
       <TrendingNotes />
       <TrendingProfiles />
       <Highlights />
@@ -38,11 +41,12 @@ export const MainPage = () => {
       <AppsNostro />
 
       {/* Modal pages */}
+      <ModalImportKey />
       <ProfilePage />
-      <ModaTabSwitcher />
+      <ModalTabSwitcher />
       <ModaTabMenu />
       <ModaWallet />
-      <ModaSearch />
+      <ModalSearch />
       <ModalSelectApp />
       <ModalPermissionsRequest />
       <TabPage />

@@ -25,7 +25,9 @@ export const LongPosts = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
   }
 
-  console.log({ longPosts })
+  if (!longPosts?.length) {
+    return null
+  }
 
   const handleReloadLongPosts = async () => {
     if (contactList) {

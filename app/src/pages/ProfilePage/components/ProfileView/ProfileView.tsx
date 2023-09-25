@@ -14,7 +14,6 @@ import {
   StyledViewBaner,
   StyledViewName
 } from './styled'
-import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
 import { getRenderedUsername } from '@/utils/helpers/general'
 import { createMetaEvent } from '@/types/meta-event'
 import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
@@ -82,8 +81,6 @@ export const ProfileView = () => {
         open={isOpenModalAccounts}
         accounts={accounts}
       />
-
-      <ModalImportKey />
     </>
   )
 }

@@ -25,6 +25,10 @@ export const Communities = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
   }
 
+  if (!communities?.length) {
+    return null
+  }
+
   const handleReloadCommunities = async () => {
     if (contactList) {
       dispatch(setCommunities({ communities: null }))

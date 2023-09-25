@@ -1,4 +1,4 @@
-import { getTabGroupId } from '@/modules/AppInitialisation/utils'
+import { addToTabGroup, getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { WorkSpace } from '@/types/workspace'
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { RootState } from '../store'
@@ -86,6 +86,7 @@ export const workspacesSlice = createSlice({
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
           const currentTab = workspace.tabs.find((tab) => tab.id === id)
+          const pins = workspace.pins
 
           return {
             ...workspace,
@@ -101,7 +102,23 @@ export const workspacesSlice = createSlice({
 
                 return tg
               })
-              .filter((tg) => tg.pin || tg.tabs.length > 0)
+              .filter((tg) => pins.find((pin) => pin.appNaddr === tg.id) || tg.tabs.length > 0)
+          }
+        }
+
+        return workspace
+      })
+    },
+
+    removePinFromPins: (state, action) => {
+      const { id } = action.payload.pin
+      const pubkey = action.payload.workspacePubkey
+
+      state.workspaces = state.workspaces.map((workspace) => {
+        if (workspace.pubkey === pubkey) {
+          return {
+            ...workspace,
+            pins: workspace.pins.filter((pin) => pin.id !== id)
           }
         }
 
@@ -140,30 +157,37 @@ export const workspacesSlice = createSlice({
     setTabsWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
       const tab = action.payload.tab
-      const id = getTabGroupId(tab)
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
-          const tabGroups = workspace.tabGroups
-          const tabIndex = workspace.tabGroups.findIndex((t) => t.id === id)
-
-          if (tabIndex !== -1) {
-            tabGroups[tabIndex].tabs.push(tab.id)
-          } else {
-            tabGroups.push({
-              id,
-              info: tab,
-              tabs: [tab.id],
-              pin: tab,
-              lastTabId: '',
-              lastActive: 0,
-              order: tab.order
-            })
-          }
+          const pins = workspace.pins
+          const tabs = [...workspace.tabs, tab]
+          const tabGroups = addToTabGroup(pins, tabs)
 
           return {
             ...workspace,
-            tabs: [...workspace.tabs, tab],
+            tabs: tabs,
+            tabGroups: tabGroups
+          }
+        }
+
+        return workspace
+      })
+    },
+
+    setPinsWorkspace: (state, action) => {
+      const pubkey = action.payload.workspacePubkey
+      const pin = action.payload.pin
+
+      state.workspaces = state.workspaces.map((workspace) => {
+        if (workspace.pubkey === pubkey) {
+          const pins = [...workspace.pins, pin]
+          const tabs = workspace.tabs
+          const tabGroups = addToTabGroup(pins, tabs)
+
+          return {
+            ...workspace,
+            pins: pins,
             tabGroups: tabGroups
           }
         }
@@ -269,6 +293,8 @@ export const {
   setWorkspaces,
   setUrlTabWorkspace,
   setTabsWorkspace,
+  removePinFromPins,
+  setPinsWorkspace,
   removeTabFromTabs,
   swapTabGroups,
   setPermsWorkspace,

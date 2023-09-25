@@ -29,7 +29,7 @@ import { LongNoteEvent } from '@/types/long-note-event'
 import { MetaEvent } from '@/types/meta-event'
 import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongNotes'
 
-export const ModaSearch = () => {
+export const ModalSearch = () => {
   const { openBlank } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
@@ -123,13 +123,6 @@ export const ModaSearch = () => {
   }, [isOpen])
 
   const renderContent = () => {
-    if (isLoading) {
-      return (
-        <LoadingContainer>
-          <LoadingSpinner />
-        </LoadingContainer>
-      )
-    }
     return (
       <>
         {profiles && (
@@ -166,6 +159,11 @@ export const ModaSearch = () => {
 
             <SliderLongNotes data={longNotes} isLoading={false} handleClickEntity={handleOpenLongNote} />
           </StyledWrapper>
+        )}
+        {isLoading && (
+          <LoadingContainer>
+            <LoadingSpinner />
+          </LoadingContainer>
         )}
       </>
     )

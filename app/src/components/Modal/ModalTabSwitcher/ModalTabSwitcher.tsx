@@ -15,7 +15,7 @@ import { StyledCloseTabBtn, StyledHeadTabGroup, StyledTabWrap, StyledTitle } fro
 import styles from './slider.module.scss'
 import 'swiper/css'
 
-export const ModaTabSwitcher = () => {
+export const ModalTabSwitcher = () => {
   const { onSwitchTab, onCloseTab, onCloseAllGroupTabs } = useOpenApp()
   const { workspaces } = useAppSelector((state) => state.workspaces)
   const { currentPubKey } = useAppSelector((state) => state.keys)
