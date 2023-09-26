@@ -7,14 +7,7 @@ import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useSearchParams } from 'react-router-dom'
-import {
-  StyledViewAvatar,
-  StyledViewAvatarWrapper,
-  StyledViewBaner,
-  StyledViewTitle,
-  StyledViewName,
-  StyledListItem
-} from './styled'
+import { StyledViewTitle, StyledListItem } from './styled'
 import { getRenderedUsername } from '@/utils/helpers/general'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
@@ -37,15 +30,36 @@ export const ModalProfileTabMenu = () => {
     ? (currentWorkSpace?.perms.filter((perm) => perm.app === getTabGroupId(currentTab)) as IPerm[])
     : []
 
+  const prepareLabel = (perm: string) => {
+    if (perm === 'pubkey') {
+      return 'Read your public key'
+    } else if (perm?.startsWith('pay_invoice:')) {
+      const wallet = perm?.split(':')[1]
+      return `Payment from wallet '${wallet}'`
+    } else if (perm?.startsWith('sign:')) {
+      const kind = perm?.split(':')[1]
+      return 'Sign event of kind ' + kind + ':'
+    } else if (perm === 'encrypt') {
+      return 'Encrypt a message:'
+    } else if (perm === 'decrypt') {
+      return 'Decrypt a message:'
+    }
+  }
+
   return (
-    <Modal title="Profile" open={isOpen} handleClose={() => handleClose()}>
+    <Modal title="Profile tab menu" open={isOpen} handleClose={() => handleClose()}>
       <Container>
-        <StyledViewBaner>
-          <StyledViewAvatarWrapper>
-            <StyledViewAvatar src={getProfileImage(currentProfile)} />
-          </StyledViewAvatarWrapper>
-        </StyledViewBaner>
-        <StyledViewName>{getRenderedUsername(currentProfile, currentPubkey)}</StyledViewName>
+        <StyledViewTitle>Profile</StyledViewTitle>
+        <List dense>
+          <StyledListItem disablePadding>
+            <ListItemAvatar>
+              <Avatar src={getProfileImage(currentProfile)}>
+                <ImageOutlinedIcon />
+              </Avatar>
+            </ListItemAvatar>
+            <ListItemText primary={getRenderedUsername(currentProfile, currentPubkey)} />
+          </StyledListItem>
+        </List>
 
         <StyledViewTitle>Tab</StyledViewTitle>
         <List dense>
@@ -77,7 +91,7 @@ export const ModalProfileTabMenu = () => {
             <>
               {perms.map((perm, i) => (
                 <StyledListItem key={i} disablePadding>
-                  <ListItemText primary={perm.name} />
+                  <ListItemText primary={prepareLabel(perm.name)} />
                 </StyledListItem>
               ))}
             </>
