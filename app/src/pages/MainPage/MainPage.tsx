@@ -11,18 +11,18 @@ import { StyledWrapperMain } from './styled'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
 import { ModalSearch } from '@/components/Modal/ModalSearch/ModaSearch'
 import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
-import { ModaTabMenu } from '@/components/Modal/ModaTabMenu/ModaTabMenu'
+import { ModalTabMenu } from '@/components/Modal/ModalTabMenu/ModalTabMenu'
 import { TabPage } from '../TabPage/TabPage'
-import { ModaContextMenu } from '@/components/Modal/ModaContextMenu/ModaContextMenu'
+import { ModalContextMenu } from '@/components/Modal/ModalContextMenu/ModalContextMenu'
 import { ModalPermissionsRequest } from '@/components/Modal/ModalPermissionsRequest/ModalPermissionsRequest'
 import { ModalTabSwitcher } from '@/components/Modal/ModalTabSwitcher/ModalTabSwitcher'
-import { ModaWallet } from '@/components/Modal/ModaWallet/ModaWallet'
+import { ModalWallet } from '@/components/Modal/ModalWallet/ModalWallet'
 import { TabsSwitcherPage } from '../TabsSwitcherPage/TabsSwitcherPage'
 import { NavigationBottom } from '@/components/NavigationBottom/NavigationBottom'
 import { Header } from '@/components/Header/Header'
 import { AppsPage } from '../AppsPage/AppsPage'
 import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
-import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
+import { ModalImportKey } from '@/components/Modal/ModalImporKey/ModalImportKey'
 
 export const MainPage = () => {
   return (
@@ -44,13 +44,13 @@ export const MainPage = () => {
       <ModalImportKey />
       <ProfilePage />
       <ModalTabSwitcher />
-      <ModaTabMenu />
-      <ModaWallet />
+      <ModalTabMenu />
+      <ModalWallet />
       <ModalSearch />
       <ModalSelectApp />
       <ModalPermissionsRequest />
       <TabPage />
-      <ModaContextMenu />
+      <ModalContextMenu />
       <TabsSwitcherPage />
       <AppsPage />
 

@@ -9,6 +9,7 @@ import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { useAppSelector } from '@/store/hooks/redux'
 import { StyledButtonContainer, StyledFormControl, StyledInfo, StyledTitle, SwitchControl } from './styled'
 import { Container } from '@/layout/Container/Conatiner'
+import { selectTab } from '@/store/reducers/tab.slice'
 
 export const ModalPermissionsRequest = () => {
   const { replyCurrentPermRequest } = useOpenApp()
@@ -20,12 +21,9 @@ export const ModalPermissionsRequest = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PERMISSIONS_REQ)
   const currentPermId = searchParams.get('permId') || ''
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
-  const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
 
   const permReq = permissionRequests.find((permReq) => permReq.id === currentPermId)
-  const getTab = currentWorkSpace?.tabs.find((tab) => tab.id === permReq?.tabId)
+  const tab = useAppSelector((state) => selectTab(state, permReq?.tabId || ''))
 
   // reset flag for new input
   useEffect(() => {
@@ -108,8 +106,8 @@ export const ModalPermissionsRequest = () => {
     <Modal title="Permission request" open={isOpen} handleClose={handleCloseModal}>
       <Container>
         <StyledInfo>
-          <AppIcon size="large" picture={getTab?.icon} alt={getTab?.title} isOutline={false} />
-          <StyledTitle variant="h6">{getTab?.title}</StyledTitle>
+          <AppIcon size="large" picture={tab?.icon} alt={tab?.title} isOutline={false} />
+          <StyledTitle variant="h6">{tab?.title}</StyledTitle>
         </StyledInfo>
 
         <StyledTitle variant="body1">{label}</StyledTitle>
