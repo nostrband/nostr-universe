@@ -1,56 +1,61 @@
-import { createSlice } from '@reduxjs/toolkit'
-
-interface ICurrentTab {
-  id: string
-  url: string
-  picture: string
-  name: string
-  appNaddr: string
-  loading: boolean
-}
+import { ITab } from '@/types/tab'
+import { PayloadAction, createSlice } from '@reduxjs/toolkit'
+import { RootState } from '../store'
 
 interface ITabState {
-  openedTabs: ICurrentTab[]
+  tabs: ITab[]
   currentTabId: string | null
 }
 
 const initialState: ITabState = {
-  openedTabs: [],
+  tabs: [],
   currentTabId: null
+}
+
+function updateTab(state: ITabState, id: string, props: object) {
+  state.tabs = state.tabs.map((tab) => {
+    if (id === tab.id) {
+      const t = {
+        ...tab,
+        ...props
+      }
+      return t
+    }
+
+    return tab
+  })
 }
 
 export const tabSlice = createSlice({
   name: 'tab',
   initialState,
   reducers: {
-    setOpenTab: (state, action) => {
-      state.openedTabs = [...state.openedTabs, action.payload.tab]
+    addTabs: (state, action: PayloadAction<{ tabs: ITab[] }>) => {
+      state.tabs = [...state.tabs, ...action.payload.tabs]
+    },
+    removeTab: (state, action) => {
+      const id = action.payload.id
+      state.tabs = state.tabs.filter((t) => t.id != id)
     },
 
-    setIcontab: (state, action) => {
-      state.openedTabs = state.openedTabs.map((tab) => {
-        if (action.payload.id === tab.id) {
-          return {
-            ...tab,
-            icon: action.payload.icon
-          }
-        }
-
-        return tab
-      })
+    setTabCreated: (state, action) => {
+      updateTab(state, action.payload.id, { created: true })
     },
 
-    setLoadingTab: (state, action) => {
-      state.openedTabs = state.openedTabs.map((tab) => {
-        if (action.payload.id === tab.id) {
-          return {
-            ...tab,
-            loading: action.payload.isLoading
-          }
-        }
+    setTabUrl: (state, action) => {
+      updateTab(state, action.payload.id, { url: action.payload.url })
+    },
 
-        return tab
-      })
+    setTabIcon: (state, action) => {
+      updateTab(state, action.payload.id, { icon: action.payload.icon })
+    },
+
+    setTabScreenshot: (state, action) => {
+      updateTab(state, action.payload.id, { screenshot: action.payload.screenshot })
+    },
+
+    setTabIsLoading: (state, action) => {
+      updateTab(state, action.payload.id, { loading: action.payload.isLoading })
     },
 
     setCurrentTabId: (state, action) => {
@@ -59,4 +64,17 @@ export const tabSlice = createSlice({
   }
 })
 
-export const { setOpenTab, setLoadingTab, setIcontab, setCurrentTabId } = tabSlice.actions
+export const {
+  addTabs,
+  removeTab,
+  setTabCreated,
+  setTabIsLoading,
+  setTabUrl,
+  setTabIcon,
+  setTabScreenshot,
+  setCurrentTabId
+} = tabSlice.actions
+
+export const selectTab = (state: RootState, id: string): ITab | undefined => {
+  return state.tab.tabs.find((tab) => tab.id === id)
+}

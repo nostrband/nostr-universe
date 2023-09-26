@@ -18,11 +18,11 @@ import {
 import { Header } from '@/components/Header/Header'
 import { useOpenApp } from '@/hooks/open-entity'
 import { useAppSelector } from '@/store/hooks/redux'
-import { ITab, ITabGroup } from '@/types/workspace'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import styles from './slider.module.scss'
 import 'swiper/css'
-import { selectTabGroups } from '@/store/store'
+import { ITabGroup, selectTabGroups } from '@/store/store'
+import { ITab } from '@/types/tab'
 
 export const TabsSwitcherPage = () => {
   const { onSwitchTab, onCloseTab, onCloseTabs } = useOpenApp()

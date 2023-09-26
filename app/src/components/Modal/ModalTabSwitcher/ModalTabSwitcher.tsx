@@ -5,7 +5,6 @@ import { FreeMode } from 'swiper/modules'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenApp } from '@/hooks/open-entity'
-import { ITab, ITabGroup } from '@/types/workspace'
 import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
 import { useAppSelector } from '@/store/hooks/redux'
@@ -14,7 +13,8 @@ import CloseIcon from '@mui/icons-material/Close'
 import { StyledCloseTabBtn, StyledHeadTabGroup, StyledTabWrap, StyledTitle } from './styled'
 import styles from './slider.module.scss'
 import 'swiper/css'
-import { selectCurrentWorkspace, selectTabGroups } from '@/store/store'
+import { ITabGroup, selectCurrentWorkspace, selectTabGroups } from '@/store/store'
+import { ITab } from '@/types/tab'
 
 export const ModalTabSwitcher = () => {
   const { onSwitchTab, onCloseTab, onCloseTabs } = useOpenApp()
@@ -25,7 +25,7 @@ export const ModalTabSwitcher = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TABS_SWITCHER)
 
   const handleCloseModal = () => {
-    if (!currentWorkSpace?.tabs.length) {
+    if (!currentWorkSpace?.tabIds.length) {
       handleClose('/')
     } else {
       handleClose()

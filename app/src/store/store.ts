@@ -8,8 +8,9 @@ import { profileSlice } from './reducers/profile.slice'
 import { tabSlice } from './reducers/tab.slice'
 import { contentWorkSpaceSlice } from './reducers/contentWorkspace'
 import { permissionRequestsSlice } from './reducers/permissionRequests.slice'
-import { ITabGroup } from '@/types/workspace'
+import { WorkSpace } from '@/types/workspace'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
+import { ITab } from '@/types/tab'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -38,14 +39,26 @@ export type RootState = ReturnType<typeof rootReducer>
 export type AppStore = ReturnType<typeof createStore>
 export type AppDispatch = AppStore['dispatch']
 
-export const selectCurrentWorkspace = (state: RootState) => {
-  const currentPubKey = state.keys.currentPubKey
+export const selectCurrentWorkspace = (state: RootState): WorkSpace | undefined => {
+  const currentPubKey = state.keys.currentPubkey
   return state.workspaces.workspaces.find((ws) => ws.pubkey === currentPubKey)
 }
 
-export const selectTabGroups = (state: RootState) => {
+// FIXME should be memoized
+export const selectCurrentWorkspaceTabs = (state: RootState): ITab[] => {
   const currentWorkSpace = selectCurrentWorkspace(state)
-  const tabs = currentWorkSpace?.tabs || []
+  if (!currentWorkSpace) return []
+  return state.tab.tabs.filter((t) => currentWorkSpace.tabIds.includes(t.id))
+}
+
+export interface ITabGroup {
+  id: string,
+  tabs: ITab[],
+}
+
+// FIXME should be memoized
+export const selectTabGroups = (state: RootState): ITabGroup[] => {
+  const tabs = selectCurrentWorkspaceTabs(state)
   const groups: ITabGroup[] = []
   tabs.forEach((t) => {
     const id = getTabGroupId(t)

@@ -48,8 +48,6 @@ export const BigZaps = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
   }
 
-  console.log({ bigZaps })
-
   const handleReloadBigZaps = async () => {
     if (contactList) {
       dispatch(setBigZaps({ bigZaps: null }))

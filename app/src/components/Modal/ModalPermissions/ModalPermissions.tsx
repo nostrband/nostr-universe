@@ -7,15 +7,13 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import { Avatar, IconButton, List, ListItem, ListItemAvatar, ListItemText } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenApp } from '@/hooks/open-entity'
+import { selectCurrentWorkspace } from '@/store/store'
 
 export const ModalPermissions = () => {
   const { deletePermission } = useOpenApp()
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL)
-
-  const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
+  const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const { apps: appsList } = useAppSelector((state) => state.apps)
 
   const apps = [...new Set(currentWorkSpace?.perms.map((p) => p.app))].map((id) => {

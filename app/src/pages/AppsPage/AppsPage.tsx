@@ -21,6 +21,7 @@ import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
 import { swapPins } from '@/store/reducers/workspaces.slice'
 import { SortableContext, rectSwappingStrategy } from '@dnd-kit/sortable'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
+import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
 
 type PinID = string | number
 
@@ -29,11 +30,11 @@ export const AppsPage = () => {
   const { getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.APPS_PAGE)
   const dispatch = useAppDispatch()
-  const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
+  const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
+  const tabs = useAppSelector(selectCurrentWorkspaceTabs)
+
   const [activeId, setActiveId] = useState<PinID | null>(null)
-  console.log({ currentWorkSpace })
+
   const pins = currentWorkSpace?.pins || []
   const pinIds = pins.map((p) => p.id)
 
@@ -116,7 +117,7 @@ export const AppsPage = () => {
                     }
 
                     const gid = getTabGroupId(pin)
-                    const isActive = !!currentWorkSpace?.tabs.find((t) => getTabGroupId(t) === gid)
+                    const isActive = !!tabs.find((t) => getTabGroupId(t) === gid)
 
                     return (
                       <Grid key={i} item xs={2}>

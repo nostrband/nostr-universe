@@ -10,27 +10,27 @@ const initialState: IWorkSpaceState = {
   workspaces: []
 }
 
-function updateWorkspaceTab(workspace: WorkSpace, id: string, props: object) {
-  return {
-    ...workspace,
-    tabs: workspace.tabs.map((tab) => {
-      if (tab.id === id) {
-        return {
-          ...tab,
-          props
-        }
-      }
-      return tab
-    })
-  }
-}
-
 export const workspacesSlice = createSlice({
   name: 'workspaces',
   initialState,
   reducers: {
-    setWorkspaces: (state, action: PayloadAction<{ workspaces: WorkSpace[] }>) => {
+    addWorkspaces: (state, action: PayloadAction<{ workspaces: WorkSpace[] }>) => {
       state.workspaces = [...state.workspaces, ...action.payload.workspaces]
+    },
+
+    updateWorkspacePubkey: (state, action) => {
+      const workspacePubkey = action.payload.workspacePubkey
+      const pubkey = action.payload.pubkey
+      state.workspaces = state.workspaces.map((workspace) => {
+        if (workspace.pubkey === workspacePubkey) {
+          return {
+            ...workspace,
+            pubkey
+          }
+        }
+
+        return workspace
+      })
     },
 
     deletePermWorkspace: (state, action) => {
@@ -67,32 +67,7 @@ export const workspacesSlice = createSlice({
       })
     },
 
-    setScreenshotTab: (state, action) => {
-      const pubkey = action.payload.workspacePubkey
-      const screenshot = action.payload.screenshot
-      const id = action.payload.id
-
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            tabs: workspace.tabs.map((tab) => {
-              if (tab.id === id) {
-                return {
-                  ...tab,
-                  screenshot
-                }
-              }
-              return tab
-            })
-          }
-        }
-
-        return workspace
-      })
-    },
-
-    removeTabFromTabs: (state, action) => {
+    removeTabWorkspace: (state, action) => {
       const id = action.payload.id
       const pubkey = action.payload.workspacePubkey
 
@@ -100,7 +75,7 @@ export const workspacesSlice = createSlice({
         if (workspace.pubkey === pubkey) {
           return {
             ...workspace,
-            tabs: workspace.tabs.filter((tab) => tab.id !== id),
+            tabIds: workspace.tabIds.filter((tid) => tid !== id),
           }
         }
 
@@ -108,7 +83,7 @@ export const workspacesSlice = createSlice({
       })
     },
 
-    removePinFromPins: (state, action) => {
+    removePinWorkspace: (state, action) => {
       const { id } = action.payload.pin
       const pubkey = action.payload.workspacePubkey
 
@@ -124,16 +99,15 @@ export const workspacesSlice = createSlice({
       })
     },
 
-    setTabsWorkspace: (state, action) => {
+    addTabWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
-      const tab = action.payload.tab
+      const id = action.payload.id
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
-          const tabs = [...workspace.tabs, tab]
           return {
             ...workspace,
-            tabs: tabs,
+            tabIds: [...workspace.tabIds, id],
           }
         }
 
@@ -141,7 +115,7 @@ export const workspacesSlice = createSlice({
       })
     },
 
-    setPinsWorkspace: (state, action) => {
+    addPinWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
       const pin = action.payload.pin
 
@@ -154,17 +128,6 @@ export const workspacesSlice = createSlice({
           }
         }
 
-        return workspace
-      })
-    },
-
-    setUrlTabWorkspace: (state, action) => {
-      const { workspacePubkey: pubkey, tabId: id, url } = action.payload
-
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return updateWorkspaceTab(workspace, id, { url })
-        }
         return workspace
       })
     },
@@ -215,15 +178,14 @@ export const workspacesSlice = createSlice({
 })
 
 export const {
-  setWorkspaces,
-  setUrlTabWorkspace,
-  setTabsWorkspace,
-  removePinFromPins,
-  setPinsWorkspace,
-  removeTabFromTabs,
+  addWorkspaces,
+  updateWorkspacePubkey,
+  addTabWorkspace,
+  removePinWorkspace,
+  addPinWorkspace,
+  removeTabWorkspace,
   swapPins,
   setPermsWorkspace,
   deletePermWorkspace,
-  setScreenshotTab,
   setLastKindApp
 } = workspacesSlice.actions

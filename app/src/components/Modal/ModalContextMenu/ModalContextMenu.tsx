@@ -10,7 +10,7 @@ import { useSearchParams } from 'react-router-dom'
 import { stringToBech32 } from '@/modules/nostr'
 import { useOpenApp } from '@/hooks/open-entity'
 
-export const ModaContextMenu = () => {
+export const ModalContextMenu = () => {
   const [searchParams] = useSearchParams()
   const { getModalOpened, handleClose, handleOpen } = useOpenModalSearchParams()
   const { openZap } = useOpenApp()
