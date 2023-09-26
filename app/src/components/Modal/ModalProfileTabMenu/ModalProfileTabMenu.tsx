@@ -9,7 +9,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { useSearchParams } from 'react-router-dom'
 import { StyledViewTitle, StyledListItem } from './styled'
 import { getRenderedUsername } from '@/utils/helpers/general'
-import { getProfileImage } from '@/utils/helpers/prepare-data'
+import { getOrigin, getProfileImage } from '@/utils/helpers/prepare-data'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { IPerm } from '@/types/permission-req'
 import { selectTab } from '@/store/reducers/tab.slice'
@@ -47,9 +47,9 @@ export const ModalProfileTabMenu = () => {
   }
 
   return (
-    <Modal title="Profile tab menu" open={isOpen} handleClose={() => handleClose()}>
+    <Modal title="App permissions" open={isOpen} handleClose={() => handleClose()}>
       <Container>
-        <StyledViewTitle>Profile</StyledViewTitle>
+        <StyledViewTitle>Account</StyledViewTitle>
         <List dense>
           <StyledListItem disablePadding>
             <ListItemAvatar>
@@ -61,7 +61,7 @@ export const ModalProfileTabMenu = () => {
           </StyledListItem>
         </List>
 
-        <StyledViewTitle>Tab</StyledViewTitle>
+        <StyledViewTitle>App</StyledViewTitle>
         <List dense>
           <StyledListItem disablePadding>
             <ListItemAvatar>
@@ -77,7 +77,7 @@ export const ModalProfileTabMenu = () => {
                 <InsertLinkOutlinedIcon />
               </Avatar>
             </ListItemAvatar>
-            <ListItemText primary={currentTab?.url} />
+            <ListItemText primary={getOrigin(currentTab?.url || '')} />
           </StyledListItem>
         </List>
 

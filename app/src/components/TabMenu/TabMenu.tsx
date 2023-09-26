@@ -43,7 +43,6 @@ export const TabMenu = () => {
           <StyledAvatar src={getProfileImage(currentProfile)} />
         </StyledIconButton>
         <AppIcon
-          isActive
           isPreviewTab
           picture={currentTab?.icon}
           alt={currentTab?.title}
