@@ -71,20 +71,20 @@ export const ModalTabSwitcher = () => {
               </Container>
               <Swiper className={styles.container} slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
                 {tg.tabs.map((tab) => (
-                    <SwiperSlide className={styles.slide} key={tab.id} onClick={() => handleOpen(tab)}>
-                      <StyledTabWrap>
-                        <StyledCloseTabBtn
-                          size="small"
-                          edge="start"
-                          color="inherit"
-                          aria-label="close"
-                          onClick={(e) => handleCloseTab(e, tab.id)}
-                        >
-                          <CloseIcon />
-                        </StyledCloseTabBtn>
-                        <AppIcon size="big" picture={tab.screenshot || tab.icon} alt={tab.title} />
-                      </StyledTabWrap>
-                    </SwiperSlide>
+                  <SwiperSlide className={styles.slide} key={tab.id} onClick={() => handleOpen(tab)}>
+                    <StyledTabWrap>
+                      <StyledCloseTabBtn
+                        size="small"
+                        edge="start"
+                        color="inherit"
+                        aria-label="close"
+                        onClick={(e) => handleCloseTab(e, tab.id)}
+                      >
+                        <CloseIcon />
+                      </StyledCloseTabBtn>
+                      <AppIcon size="big" picture={tab.screenshot || tab.icon} alt={tab.title} />
+                    </StyledTabWrap>
+                  </SwiperSlide>
                 ))}
               </Swiper>
             </Box>

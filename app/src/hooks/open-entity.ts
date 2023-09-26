@@ -4,7 +4,7 @@ import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { nip19 } from '@nostrband/nostr-tools'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { 
+import {
   setTabIcon,
   setTabIsLoading,
   setOpenTab,
@@ -30,7 +30,13 @@ import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { v4 as uuidv4 } from 'uuid'
 import { useUpdateProfile } from './profile'
 import { setCurrentPubkey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
-import { loadWorkspace, getOrigin, getTabGroupId, writeCurrentPubkey, loadKeys } from '@/modules/AppInitialisation/utils'
+import {
+  loadWorkspace,
+  getOrigin,
+  getTabGroupId,
+  writeCurrentPubkey,
+  loadKeys
+} from '@/modules/AppInitialisation/utils'
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
@@ -56,7 +62,10 @@ export const useOpenApp = () => {
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
   const currentWorkSpaceTabs = useAppSelector(selectCurrentWorkspaceTabs)
 
-  console.log("tabs", tabs.map(t => ({id: t.id, created: t.created})))
+  console.log(
+    'tabs',
+    tabs.map((t) => ({ id: t.id, created: t.created }))
+  )
 
   const getTabAny = (id) => tabs.find((t) => t.id === id)
   const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey) //// ???????????
@@ -427,7 +436,7 @@ export const useOpenApp = () => {
       title: currentTab.title,
       icon: currentTab.icon,
       order: currentWorkSpace.pins.length,
-      pubkey: currentPubkey,
+      pubkey: currentPubkey
     }
 
     dispatch(addPinWorkspace({ pin, workspacePubkey: currentPubkey }))

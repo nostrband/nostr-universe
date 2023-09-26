@@ -3,7 +3,7 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import { StyledAppIcon, StyledAppImg } from './styled'
 import { IAppIcon } from './types'
 
-export const AppIcon = ({ picture = '', size, isActive, isPreviewTab, isOutline, alt }: IAppIcon) => {
+export const AppIcon = ({ picture = '', size, isActive, isPreviewTab, isOutline, alt, onClick }: IAppIcon) => {
   const [isFailed, setIsFailed] = useState(false)
 
   useEffect(() => {
@@ -23,6 +23,7 @@ export const AppIcon = ({ picture = '', size, isActive, isPreviewTab, isOutline,
       size={size}
       isActive={isActive}
       isPreviewTab={isPreviewTab}
+      onClick={onClick}
     >
       {alt ? (
         <StyledAppImg isPreviewTab={isPreviewTab} size={size} alt={alt} src={isFailed ? '/' : picture} />

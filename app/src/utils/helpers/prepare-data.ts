@@ -60,3 +60,12 @@ export const formatTime = (tm: number) => {
 export const generateSkeletonItems = <T>(fill: T, length = 10): T[] => {
   return Array(length).fill(fill)
 }
+
+export const getOrigin = (url: string) => {
+  try {
+    return new URL(url).origin
+  } catch (e) {
+    console.log("Bad url", url, e)
+    return url
+  }
+}

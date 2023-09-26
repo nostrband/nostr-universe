@@ -6,10 +6,9 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useOpenApp } from '@/hooks/open-entity'
 import { TabMenu } from '@/components/TabMenu/TabMenu'
-import { StyledAppBar, StyledDialog, StyledViewName, StyledWrap } from './styled'
+import { StyledDialog, StyledViewName, StyledWrap } from './styled'
 import { useAppSelector } from '@/store/hooks/redux'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
-import { Header } from '@/components/Header/Header'
 import { selectTab } from '@/store/reducers/tab.slice'
 
 const Transition = forwardRef(function Transition(
@@ -52,10 +51,6 @@ export const TabPage = () => {
       open={isOpen}
       TransitionComponent={Transition}
     >
-      <StyledAppBar>
-        <Header />
-      </StyledAppBar>
-
       <StyledWrap>
         <AppIcon size="medium" picture={tab?.icon} isOutline={false} alt={tab?.title} />
         <StyledViewName>{tab?.title}</StyledViewName>

@@ -16,8 +16,7 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
     try {
       const [keys, currentPubKey] = await loadKeys(dispatch)
 
-      for (const key of keys)
-        await loadWorkspace(key, dispatch)
+      for (const key of keys) await loadWorkspace(key, dispatch)
 
       console.log('ndk connected')
 

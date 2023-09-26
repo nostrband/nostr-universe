@@ -75,7 +75,7 @@ export const workspacesSlice = createSlice({
         if (workspace.pubkey === pubkey) {
           return {
             ...workspace,
-            tabIds: workspace.tabIds.filter((tid) => tid !== id),
+            tabIds: workspace.tabIds.filter((tid) => tid !== id)
           }
         }
 
@@ -107,7 +107,7 @@ export const workspacesSlice = createSlice({
         if (workspace.pubkey === pubkey) {
           return {
             ...workspace,
-            tabIds: [...workspace.tabIds, id],
+            tabIds: [...workspace.tabIds, id]
           }
         }
 
@@ -124,7 +124,7 @@ export const workspacesSlice = createSlice({
           const pins = [...workspace.pins, pin]
           return {
             ...workspace,
-            pins: pins,
+            pins: pins
           }
         }
 

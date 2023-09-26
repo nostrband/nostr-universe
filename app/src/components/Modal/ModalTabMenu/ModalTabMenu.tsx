@@ -1,13 +1,11 @@
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
 import { useAppSelector } from '@/store/hooks/redux'
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
-import FlashOnIcon from '@mui/icons-material/FlashOn'
 import { StyledInfoItem, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
@@ -19,9 +17,9 @@ import { selectTab } from '@/store/reducers/tab.slice'
 
 export const ModalTabMenu = () => {
   const [searchParams] = useSearchParams()
-  const { onCloseTab, openZap, onPinTab, onUnPinTab } = useOpenApp()
-  const { getModalOpened, handleClose, handleOpen } = useOpenModalSearchParams()
-  const [eventAddr, setEventAddr] = useState('')
+  const { onCloseTab, onPinTab, onUnPinTab } = useOpenApp()
+  const { getModalOpened, handleClose } = useOpenModalSearchParams()
+  const [, setEventAddr] = useState('')
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MENU)
   const id = searchParams.get('tabId') || ''
 
@@ -57,16 +55,6 @@ export const ModalTabMenu = () => {
     }
   }
 
-  const handleOpenModalSelect = () => {
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: eventAddr } })
-  }
-
-  const handleZap = async () => {
-    if (!url) return
-    const addr = stringToBech32(url)
-    openZap(addr)
-  }
-
   return (
     <Modal title="Tab Menu (WIP)" open={isOpen} handleClose={() => handleClose()}>
       <Container>
@@ -94,30 +82,6 @@ export const ModalTabMenu = () => {
               <StyledItemText primary={isPin ? 'Unpin' : 'Pin'} />
             </StyledItemButton>
           </ListItem>
-          {eventAddr && (
-            <>
-              <ListItem disablePadding>
-                <StyledItemButton alignItems="center" onClick={handleOpenModalSelect}>
-                  <ListItemAvatar>
-                    <StyledItemIconAvatar>
-                      <OpenInNewOutlinedIcon />
-                    </StyledItemIconAvatar>
-                  </ListItemAvatar>
-                  <StyledItemText primary="Open with" />
-                </StyledItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <StyledItemButton alignItems="center" onClick={handleZap}>
-                  <ListItemAvatar>
-                    <StyledItemIconAvatar>
-                      <FlashOnIcon />
-                    </StyledItemIconAvatar>
-                  </ListItemAvatar>
-                  <StyledItemText primary="Zap" />
-                </StyledItemButton>
-              </ListItem>
-            </>
-          )}
         </StyledList>
       </Container>
     </Modal>
