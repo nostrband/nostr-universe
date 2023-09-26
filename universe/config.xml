@@ -19,7 +19,7 @@
   <allow-navigation href="https://*/*" />
   <icon src="www/img/icon.png" />
   <preference name="StatusBarOverlaysWebView" value="false" />
-  <preference name="AndroidWindowSplashScreenAnimatedIcon" value="platforms/android/app/src/main/res/drawable/splash_spring.png" />
+  <preference name="AndroidWindowSplashScreenAnimatedIcon" value="www/img/splash_spring.png" />
   <edit-config 
       xmlns:android="http://schemas.android.com/apk/res/android" 
       file="app/src/main/AndroidManifest.xml" 
