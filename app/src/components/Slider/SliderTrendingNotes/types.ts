@@ -4,4 +4,5 @@ export interface ISliderTrendingNotes {
   data: AuthoredEvent[] | undefined
   isLoading?: boolean
   handleClickEntity?: (note: AuthoredEvent) => void
+  handleReloadEntity?: () => void
 }

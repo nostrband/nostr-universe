@@ -24,7 +24,11 @@ export const StyledProfileAvatar = styled(Avatar)(() => ({
 export const StyledProfileName = styled(Typography)(({ theme }) => ({
   color: theme.palette.light.contrastText,
   fontWeight: 'bold',
-  textWrap: 'nowrap'
+  textWrap: 'nowrap',
+  width: '100%',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  textAlign: 'center'
 }))
 
 export const StyledAboutProfile = styled(

@@ -9,7 +9,11 @@ import { nostrbandRelay } from '@/modules/nostr'
 import { MetaEvent } from '@/types/meta-event'
 
 export const TrendingProfiles = () => {
-  const { data, isLoading } = userService.useFetchTrendingProfilesQuery('')
+  const {
+    data,
+    isFetching: isLoading,
+    refetch: refetchTrendingProfiles
+  } = userService.useFetchTrendingProfilesQuery('')
   const { handleOpen } = useOpenModalSearchParams()
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -21,6 +25,8 @@ export const TrendingProfiles = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
   }
 
+  const handleReloadTrendingProfiles = () => refetchTrendingProfiles()
+
   return (
     <StyledWrapper>
       <Container>
@@ -29,7 +35,12 @@ export const TrendingProfiles = () => {
         </StyledTitle>
       </Container>
 
-      <SliderProfiles data={data} isLoading={isLoading} handleClickEntity={handleOpenProfile} />
+      <SliderProfiles
+        data={data}
+        isLoading={isLoading}
+        handleClickEntity={handleOpenProfile}
+        handleReloadEntity={handleReloadTrendingProfiles}
+      />
     </StyledWrapper>
   )
 }

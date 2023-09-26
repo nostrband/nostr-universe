@@ -3,29 +3,36 @@ import { FreeMode } from 'swiper/modules'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
 import { AppNostr as AppNostroType } from '@/types/app-nostr'
 import { useOpenApp } from '@/hooks/open-entity'
-// import { useOpenModalSearchParams } from '@/hooks/modal'
-// import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ISliderAppsNostro } from './types'
 import styles from './slider.module.scss'
 import 'swiper/css'
+import { SkeletonApps } from '@/components/Skeleton/SkeletonApps/SkeletonApps'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
-export const SliderAppsNostro = ({ data, isLoading }: ISliderAppsNostro) => {
+export const SliderAppsNostro = ({ data, isLoading, handleReloadEntity = () => {} }: ISliderAppsNostro) => {
   const { openApp } = useOpenApp()
 
   const handleOpenApp = async (app: AppNostroType) => {
     await openApp(app)
-    // handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL)
+  }
+
+  const renderContent = () => {
+    if (isLoading && !data.length) {
+      return <SkeletonApps />
+    }
+    if (!data.length && !isLoading) {
+      return <EmptyListMessage onReload={handleReloadEntity} />
+    }
+    return data.map((app, i) => (
+      <SwiperSlide className={styles.slide} key={i}>
+        <AppNostro app={app} onOpen={handleOpenApp} />
+      </SwiperSlide>
+    ))
   }
 
   return (
     <Swiper slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
-      {isLoading
-        ? 'Loading'
-        : data.map((app, i) => (
-            <SwiperSlide className={styles.slide} key={i}>
-              <AppNostro app={app} onOpen={handleOpenApp} />
-            </SwiperSlide>
-          ))}
+      {renderContent()}
     </Swiper>
   )
 }

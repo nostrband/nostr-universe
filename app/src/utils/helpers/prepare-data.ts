@@ -56,3 +56,7 @@ export const formatTime = (tm: number) => {
 
   return (future ? '+' : '') + s
 }
+
+export const generateSkeletonItems = <T>(fill: T, length = 10): T[] => {
+  return Array(length).fill(fill)
+}

@@ -2,15 +2,18 @@ import { Container } from '@/layout/Container/Conatiner'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
-import { useAppSelector } from '@/store/hooks/redux'
+import { fetchFollowedZaps, nostrbandRelay } from '@/modules/nostr'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { SliderBigZaps } from '@/components/Slider/SliderBigZaps/SliderBigZaps'
 import { StyledTitle, StyledWrapper } from './styled'
 import { ZapEvent } from '@/types/zap-event'
+import { setBigZaps } from '@/store/reducers/contentWorkspace'
+import { MIN_ZAP_AMOUNT } from '@/consts'
 
 export const BigZaps = () => {
   const { handleOpen } = useOpenModalSearchParams()
-  const { bigZaps } = useAppSelector((state) => state.contentWorkSpace)
+  const { bigZaps, contactList } = useAppSelector((state) => state.contentWorkSpace)
+  const dispatch = useAppDispatch()
 
   const handleOpenHighlight = (bigZap: ZapEvent) => {
     let addr = ''
@@ -45,6 +48,18 @@ export const BigZaps = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
   }
 
+  console.log({ bigZaps })
+
+  const handleReloadBigZaps = async () => {
+    if (contactList) {
+      dispatch(setBigZaps({ bigZaps: null }))
+      const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT).catch(() => {
+        dispatch(setBigZaps({ bigZaps: null }))
+      })
+      dispatch(setBigZaps({ bigZaps }))
+    }
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -53,7 +68,12 @@ export const BigZaps = () => {
         </StyledTitle>
       </Container>
 
-      <SliderBigZaps data={bigZaps || []} isLoading={false} handleClickEntity={handleOpenHighlight} />
+      <SliderBigZaps
+        data={bigZaps || []}
+        isLoading={bigZaps === null}
+        handleClickEntity={handleOpenHighlight}
+        handleReloadEntity={handleReloadBigZaps}
+      />
     </StyledWrapper>
   )
 }

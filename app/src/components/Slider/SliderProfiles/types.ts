@@ -4,4 +4,5 @@ export interface ISliderProfiles {
   data: MetaEvent[] | undefined
   isLoading?: boolean
   handleClickEntity?: (profile: MetaEvent) => void
+  handleReloadEntity?: () => void
 }

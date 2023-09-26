@@ -55,6 +55,12 @@ export const useUpdateProfile = () => {
       } else {
         dispatch(setCurrentProfile({ profile: null }))
       }
+      // Reset previous events state for showing loaders
+      dispatch(setHighlights({ highlights: null }))
+      dispatch(setBigZaps({ bigZaps: null }))
+      dispatch(setLongPosts({ longPosts: null }))
+      dispatch(setCommunities({ communities: null }))
+      dispatch(setLiveEvents({ liveEvents: null }))
 
       subscribeProfiles(keys, async (profile: MetaEvent) => {
         if (profile) {
@@ -73,25 +79,36 @@ export const useUpdateProfile = () => {
 
         if (contactList) {
           setContacts(contactList)
-          const highlights = await fetchFollowedHighlights(contactList.contactPubkeys)
+
+          const highlights = await fetchFollowedHighlights(contactList.contactPubkeys).catch(() => {
+            dispatch(setHighlights({ highlights: null }))
+          })
           console.log('new highlights', highlights)
           dispatch(setHighlights({ highlights }))
 
-          const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT)
+          const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT).catch(() => {
+            dispatch(setBigZaps({ bigZaps: null }))
+          })
           console.log('new zaps', bigZaps)
           dispatch(setBigZaps({ bigZaps }))
 
-          const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys)
+          const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys).catch(() => {
+            dispatch(setLongPosts({ longPosts: null }))
+          })
           console.log('new long notes', longPosts)
           dispatch(setLongPosts({ longPosts }))
 
-          const communities = await fetchFollowedCommunities(contactList.contactPubkeys)
+          const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys).catch(() => {
+            dispatch(setLiveEvents({ liveEvents: null }))
+          })
+          console.log('new live events', liveEvents)
+          dispatch(setLiveEvents({ liveEvents }))
+
+          const communities = await fetchFollowedCommunities(contactList.contactPubkeys).catch(() => {
+            dispatch(setCommunities({ communities: null }))
+          })
           console.log('new communities', communities)
           dispatch(setCommunities({ communities }))
-
-          const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys)
-          console.log('new live events', liveEvents, JSON.stringify(liveEvents))
-          dispatch(setLiveEvents({ liveEvents }))
         }
       })
     },

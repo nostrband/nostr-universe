@@ -9,7 +9,7 @@ import { StyledTitle, StyledWrapper } from './styled'
 import { AuthoredEvent } from '@/types/authored-event'
 
 export const TrendingNotes = () => {
-  const { data, isLoading } = userService.useFetchTrendingNotesQuery('')
+  const { data, isFetching: isLoading, refetch: refetchTrendingNotes } = userService.useFetchTrendingNotesQuery('')
   const { handleOpen } = useOpenModalSearchParams()
 
   const handleOpenNote = (note: AuthoredEvent) => {
@@ -23,6 +23,8 @@ export const TrendingNotes = () => {
     })
   }
 
+  const handleReloadTrendingNotes = () => refetchTrendingNotes()
+
   return (
     <StyledWrapper>
       <Container>
@@ -31,7 +33,12 @@ export const TrendingNotes = () => {
         </StyledTitle>
       </Container>
 
-      <SliderTrendingNotes data={data} isLoading={isLoading} handleClickEntity={handleOpenNote} />
+      <SliderTrendingNotes
+        data={data}
+        isLoading={isLoading}
+        handleClickEntity={handleOpenNote}
+        handleReloadEntity={handleReloadTrendingNotes}
+      />
     </StyledWrapper>
   )
 }

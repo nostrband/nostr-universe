@@ -4,4 +4,5 @@ export interface ISliderLongNotes {
   data: LongNoteEvent[] | undefined
   isLoading?: boolean
   handleClickEntity?: (e: LongNoteEvent) => void
+  handleReloadEntity?: () => void
 }
