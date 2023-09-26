@@ -14,7 +14,6 @@ export const AppIcon = ({ picture = '', size, isActive, isPreviewTab, isOutline,
     img.onerror = () => {
       setIsFailed(true)
     }
-
   }, [picture])
 
   return (

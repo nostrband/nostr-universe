@@ -56,7 +56,7 @@ export const AppsPage = () => {
   //   return []
   // }, [tabGroups])
 
-//  const tabGroupsIds = sortedTabGroups.map((tabGroup) => tabGroup.id)
+  //  const tabGroupsIds = sortedTabGroups.map((tabGroup) => tabGroup.id)
   const pinIds = pins.map((p) => p.id)
 
   const handleOpen = async (app: AppNostroType) => {
@@ -83,7 +83,7 @@ export const AppsPage = () => {
   const onSortEnd = useCallback(
     (fromPinId: PinID, toPinId: PinID) => {
       if (currentWorkSpace) {
-        console.log("swap pins", fromPinId, toPinId)
+        console.log('swap pins', fromPinId, toPinId)
         dispatch(
           swapPins({
             fromID: fromPinId,

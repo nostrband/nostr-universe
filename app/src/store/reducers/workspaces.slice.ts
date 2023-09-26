@@ -226,12 +226,12 @@ export const workspacesSlice = createSlice({
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
-          const fromPin = workspace.pins.find(p => p.id == fromID)
-          const toPin = workspace.pins.find(p => p.id == toID)
+          const fromPin = workspace.pins.find((p) => p.id == fromID)
+          const toPin = workspace.pins.find((p) => p.id == toID)
 
           const fromOrder = fromPin ? fromPin.order : 0
           const toOrder = toPin ? toPin.order : 0
-          console.log("swap order", fromOrder, toOrder)
+          console.log('swap order', fromOrder, toOrder)
 
           dbi.updatePinOrder(fromID, toOrder)
           dbi.updatePinOrder(toID, fromOrder)
@@ -249,7 +249,7 @@ export const workspacesSlice = createSlice({
 
           return {
             ...workspace,
-            pins: swappedPins,
+            pins: swappedPins
           }
         }
 
