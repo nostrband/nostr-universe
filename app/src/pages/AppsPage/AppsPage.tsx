@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Grid } from '@mui/material'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
@@ -18,10 +18,11 @@ import { Header } from '@/components/Header/Header'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
-import { swapTabGroupsThunk } from '@/store/reducers/workspaces.slice'
+import { swapPins } from '@/store/reducers/workspaces.slice'
 import { SortableContext, rectSwappingStrategy } from '@dnd-kit/sortable'
+import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 
-type TabGroupID = string | number
+type PinID = string | number
 
 export const AppsPage = () => {
   const { openApp } = useOpenApp()
@@ -31,31 +32,32 @@ export const AppsPage = () => {
   const { workspaces } = useAppSelector((state) => state.workspaces)
   const { currentPubKey } = useAppSelector((state) => state.keys)
   const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
-  const [activeId, setActiveId] = useState<TabGroupID | null>(null)
+  const [activeId, setActiveId] = useState<PinID | null>(null)
   console.log({ currentWorkSpace })
-  const tabGroups = currentWorkSpace?.tabGroups || []
-  const sortedTabGroups = useMemo(() => {
-    if (tabGroups) {
-      return tabGroups.slice().sort((tabA, tabB) => {
-        const lastActiveA = (tabA.tabs.length > 0 && tabA.lastActive) || 0
-        const lastActiveB = (tabB.tabs.length > 0 && tabB.lastActive) || 0
+  const pins = currentWorkSpace?.pins || []
+  // const sortedTabGroups = useMemo(() => {
+  //   if (tabGroups) {
+  //     return tabGroups.slice().sort((tabA, tabB) => {
+  //       const lastActiveA = (tabA.tabs.length > 0 && tabA.lastActive) || 0
+  //       const lastActiveB = (tabB.tabs.length > 0 && tabB.lastActive) || 0
 
-        // both groups are active? desc by lastActive
-        if (lastActiveA != 0 && lastActiveB != 0) return lastActiveB - lastActiveA
+  //       // both groups are active? desc by lastActive
+  //       if (lastActiveA != 0 && lastActiveB != 0) return lastActiveB - lastActiveA
 
-        // active goes before inactive
-        if (lastActiveA != 0) return -1
-        if (lastActiveB != 0) return 1
+  //       // active goes before inactive
+  //       if (lastActiveA != 0) return -1
+  //       if (lastActiveB != 0) return 1
 
-        // inactive ones go by order asc
-        return tabA.order - tabB.order
-      })
-    }
+  //       // inactive ones go by order asc
+  //       return tabA.order - tabB.order
+  //     })
+  //   }
 
-    return []
-  }, [tabGroups])
+  //   return []
+  // }, [tabGroups])
 
-  const tabGroupsIds = sortedTabGroups.map((tabGroup) => tabGroup.id)
+//  const tabGroupsIds = sortedTabGroups.map((tabGroup) => tabGroup.id)
+  const pinIds = pins.map((p) => p.id)
 
   const handleOpen = async (app: AppNostroType) => {
     await openApp(app, { replace: true })
@@ -79,12 +81,13 @@ export const AppsPage = () => {
   const sensors = useSensors(mouseSensor, touchSensor)
 
   const onSortEnd = useCallback(
-    (fromTabGroupId: TabGroupID, toTabGroupId: TabGroupID) => {
+    (fromPinId: PinID, toPinId: PinID) => {
       if (currentWorkSpace) {
+        console.log("swap pins", fromPinId, toPinId)
         dispatch(
-          swapTabGroupsThunk({
-            fromID: fromTabGroupId,
-            toID: toTabGroupId,
+          swapPins({
+            fromID: fromPinId,
+            toID: toPinId,
             workspacePubkey: currentWorkSpace.pubkey
           })
         )
@@ -122,25 +125,26 @@ export const AppsPage = () => {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragOver}
           >
-            <SortableContext items={tabGroupsIds} strategy={rectSwappingStrategy}>
+            <SortableContext items={pinIds} strategy={rectSwappingStrategy}>
               <Container>
                 <Grid columns={10} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-                  {sortedTabGroups.map((tab, i) => {
+                  {pins.map((pin, i) => {
                     const app = {
-                      picture: tab.info.icon,
-                      name: tab.info.title,
-                      naddr: tab.info.appNaddr,
-                      url: tab.info.url,
-                      order: tab.info.order
+                      picture: pin.icon,
+                      name: pin.title,
+                      naddr: pin.appNaddr,
+                      url: pin.url,
+                      order: pin.order
                     }
 
-                    const isActive = Boolean(tab.tabs.length)
+                    const gid = getTabGroupId(pin)
+                    const isActive = !!currentWorkSpace?.tabs.find((t) => getTabGroupId(t) === gid)
 
                     return (
                       <Grid key={i} item xs={2}>
                         <AppNostroSortable
-                          isDragging={activeId === tab.id}
-                          id={tab.id}
+                          isDragging={activeId === pin.id}
+                          id={pin.id}
                           isActive={isActive}
                           app={app}
                           size="small"

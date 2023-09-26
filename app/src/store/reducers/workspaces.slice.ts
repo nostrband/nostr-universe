@@ -1,7 +1,6 @@
 import { addToTabGroup, getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { WorkSpace } from '@/types/workspace'
-import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { RootState } from '../store'
+import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { dbi } from '@/modules/db'
 
 interface IWorkSpaceState {
@@ -221,59 +220,36 @@ export const workspacesSlice = createSlice({
       // FIXME implement switch between tab groups
     },
 
-    swapTabGroups: (state, action) => {
+    swapPins: (state, action) => {
       const { toID, fromID } = action.payload
       const pubkey = action.payload.workspacePubkey
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
-          const fromTabGroup = workspace.tabGroups.find((tg) => tg.id === fromID)
-          const toTabGroup = workspace.tabGroups.find((tg) => tg.id === toID)
+          const fromPin = workspace.pins.find(p => p.id == fromID)
+          const toPin = workspace.pins.find(p => p.id == toID)
 
-          const fromOrder = fromTabGroup ? fromTabGroup.order : 0
-          const toOrder = toTabGroup ? toTabGroup.order : 0
+          const fromOrder = fromPin ? fromPin.order : 0
+          const toOrder = toPin ? toPin.order : 0
+          console.log("swap order", fromOrder, toOrder)
 
-          const swappedTabGroups = workspace.tabGroups.map((tabGroup) => {
-            if (tabGroup.id === fromID) {
-              tabGroup.order = toOrder
-              tabGroup.info.order = toOrder
-              tabGroup.pin.order = toOrder
-            }
-            if (tabGroup.id === toID) {
-              tabGroup.order = fromOrder
-              tabGroup.info.order = fromOrder
-              tabGroup.pin.order = fromOrder
-            }
-            return tabGroup
-          })
-
-          const swappedTabs = workspace.tabs.map((tab) => {
-            const tabGroupId = getTabGroupId(tab)
-            if (tabGroupId === fromID) {
-              tab.order = toOrder
-            }
-            if (tabGroupId === toID) {
-              tab.order = fromOrder
-            }
-            return tab
-          })
+          dbi.updatePinOrder(fromID, toOrder)
+          dbi.updatePinOrder(toID, fromOrder)
 
           const swappedPins = workspace.pins.map((pin) => {
-            const tabGroupId = getTabGroupId(pin)
-            if (tabGroupId === fromID) {
-              pin.order = toOrder
+            if (pin.id === fromID) {
+              return { ...pin, order: toOrder }
             }
-            if (tabGroupId === toID) {
-              pin.order = fromOrder
+            if (pin.id === toID) {
+              return { ...pin, order: fromOrder }
             }
             return pin
           })
+          swappedPins.sort((a, b) => a.order - b.order)
 
           return {
             ...workspace,
-            tabs: swappedTabs,
             pins: swappedPins,
-            tabGroups: swappedTabGroups
           }
         }
 
@@ -296,64 +272,10 @@ export const {
   removePinFromPins,
   setPinsWorkspace,
   removeTabFromTabs,
-  swapTabGroups,
+  swapPins,
   setPermsWorkspace,
   deletePermWorkspace,
   clearTabGroup,
   setScreenshotTab,
   setLastKindApp
 } = workspacesSlice.actions
-
-export const swapTabGroupsThunk = createAsyncThunk(
-  'workspaces/swapTabGroupsThunk',
-  async (
-    {
-      toID,
-      fromID,
-      workspacePubkey
-    }: { toID: string | number; fromID: string | number; workspacePubkey: string | undefined },
-    { getState, rejectWithValue, dispatch }
-  ) => {
-    try {
-      const pubkey = workspacePubkey
-      const state = getState() as RootState
-
-      const currentWorkSpace = state.workspaces.workspaces.find((workspace) => workspace.pubkey === pubkey)
-
-      if (currentWorkSpace) {
-        const fromTabGroup = currentWorkSpace.tabGroups.find((tg) => tg.id === fromID)
-        const toTabGroup = currentWorkSpace.tabGroups.find((tg) => tg.id === toID)
-
-        const fromOrder = fromTabGroup ? fromTabGroup.order : 0
-        const toOrder = toTabGroup ? toTabGroup.order : 0
-
-        const tabs = currentWorkSpace.tabs
-        const fromTab = tabs.find((tab) => getTabGroupId(tab) === fromID)
-        const toTab = tabs.find((tab) => getTabGroupId(tab) === toID)
-
-        if (fromTab) {
-          await dbi.updateTab({ ...fromTab, order: toOrder })
-        }
-        if (toTab) {
-          await dbi.updateTab({ ...toTab, order: fromOrder })
-        }
-
-        const pins = currentWorkSpace.pins
-
-        const fromPin = pins.find((pin) => getTabGroupId(pin) === fromID)
-        const toPin = pins.find((pin) => getTabGroupId(pin) === toID)
-
-        if (fromPin) {
-          await dbi.updatePin({ ...fromPin, order: toOrder })
-        }
-        if (toPin) {
-          await dbi.updatePin({ ...toPin, order: fromOrder })
-        }
-
-        dispatch(swapTabGroups({ toID, fromID, workspacePubkey }))
-      }
-    } catch (error) {
-      rejectWithValue('Something went wrong!')
-    }
-  }
-)

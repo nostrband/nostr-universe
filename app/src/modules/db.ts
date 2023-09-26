@@ -51,10 +51,10 @@ export const dbi = {
       console.log(`Update tab in DB error: ${JSON.stringify(error)}`)
     }
   },
-  updatePin: async (pin) => {
+  updatePinOrder: async (id, order) => {
     try {
-      await db.pins.where('id').equals(pin.id).modify({
-        order: pin.order
+      await db.pins.where('id').equals(id).modify({
+        order
       })
     } catch (error) {
       console.log(`Update pin in DB error: ${JSON.stringify(error)}`)
