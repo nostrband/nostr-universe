@@ -8,49 +8,29 @@ export interface ITab {
   icon: string
   order: number
   pubkey: string
-  pinned: string
+  pinned: boolean
   screenshot?: string
 }
 
 export interface ITabGroup {
+  id: string,
+  tabs: ITab[],
+}
+
+export interface IPin {
   id: string
-  info: {
-    id: string
-    url: string
-    appNaddr: string
-    title: string
-    icon: string
-    order: number
-    pubkey: string
-  }
-  tabs: string[]
-  pin: {
-    id: string
-    url: string
-    appNaddr: string
-    title: string
-    icon: string
-    order: number
-    pubkey: string
-  }
-  lastTabId: string
-  lastActive: number
+  url: string
+  appNaddr: string
+  title: string
+  icon: string
   order: number
+  pubkey: string
 }
 
 export type WorkSpace = {
   pubkey?: string
   tabs: ITab[]
-  pins: {
-    id: string
-    url: string
-    appNaddr: string
-    title: string
-    icon: string
-    order: number
-    pubkey: string
-  }[]
-  tabGroups: ITabGroup[]
+  pins: IPin[]
   lastKindApps: {
     [key: string]: string
   }

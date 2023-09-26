@@ -198,72 +198,6 @@ export const getTabGroupId = (pt) => {
   return pt.appNaddr || getOrigin(pt.url)
 }
 
-// function test(workspace, pt, isPin) {
-//   const id = getTabGroupId(pt)
-//   if (!(id in workspace.tabGroups))
-//     workspace.tabGroups[id] = {
-//       id,
-//       info: pt,
-//       tabs: [],
-//       lastTabId: '',
-//       lastActive: 0
-//     }
-
-//   const tg = workspace.tabGroups[id]
-//   if (isPin && !tg.pin) {
-//     tg.pin = pt
-//   }
-
-//   if (!isPin) {
-//     tg.tabs.push(pt.id)
-//   }
-// }
-
-export const addToTabGroup = (pins, tabs) => {
-  const groupTab = []
-
-  pins.forEach((pt) => {
-    const id = getTabGroupId(pt)
-    const tabIndex = groupTab.findIndex((tab) => tab.id === id)
-
-    if (tabIndex === -1) {
-      groupTab.push({
-        id,
-        info: pt,
-        tabs: [],
-        pin: pt,
-        lastTabId: '',
-        lastActive: 0,
-        order: pt.order
-      })
-    }
-  })
-
-  tabs.forEach((pt) => {
-    const id = getTabGroupId(pt)
-    const tabIndex = groupTab.findIndex((tab) => tab.id === id)
-
-    if (tabIndex !== -1) {
-      if (groupTab[tabIndex].lastActive < pt.lastActive) {
-        groupTab[tabIndex].lastActive = pt.lastActive
-      }
-      groupTab[tabIndex].tabs.push(pt.id)
-    } else {
-      groupTab.push({
-        id,
-        info: pt,
-        tabs: [pt.id],
-        pin: pt,
-        lastTabId: '',
-        lastActive: 0,
-        order: pt.order
-      })
-    }
-  })
-
-  return groupTab
-}
-
 export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
   // ?? props
   await ensureBootstrapped(pubkey)
@@ -275,7 +209,6 @@ export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
 
   const pinsSort = pins.sort((a, b) => a.order - b.order)
   const tabsSort = tabs.sort((a, b) => a.order - b.order)
-  const tabGroups = addToTabGroup(pinsSort, tabsSort)
 
   const workspace = {
     pubkey,
@@ -284,7 +217,6 @@ export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
     longNotes: [],
     liveEvents: [],
     suggestedProfiles: [],
-    tabGroups: tabGroups,
     tabs: tabsSort,
     pins: pinsSort,
     lastKindApps: {},
