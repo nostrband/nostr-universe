@@ -1,10 +1,14 @@
 /* eslint-disable */
 // @ts-nocheck
 import { coracleIcon, irisIcon, nostrIcon, satelliteIcon, snortIcon } from '@/assets'
+import { DEFAULT_PUBKEY } from '@/consts'
 import { db, dbi } from '@/modules/db'
 import { keystore } from '@/modules/keystore'
 import { addWalletInfo, subscribeProfiles } from '@/modules/nostr'
 import { walletstore } from '@/modules/walletstore'
+import { setCurrentPubkey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
+import { addTabs } from '@/store/reducers/tab.slice'
+import { addWorkspaces } from '@/store/reducers/workspaces.slice'
 import { WorkSpace } from '@/types/workspace'
 
 // ?? зачем дефолтные аппы ??
@@ -198,73 +202,7 @@ export const getTabGroupId = (pt) => {
   return pt.appNaddr || getOrigin(pt.url)
 }
 
-// function test(workspace, pt, isPin) {
-//   const id = getTabGroupId(pt)
-//   if (!(id in workspace.tabGroups))
-//     workspace.tabGroups[id] = {
-//       id,
-//       info: pt,
-//       tabs: [],
-//       lastTabId: '',
-//       lastActive: 0
-//     }
-
-//   const tg = workspace.tabGroups[id]
-//   if (isPin && !tg.pin) {
-//     tg.pin = pt
-//   }
-
-//   if (!isPin) {
-//     tg.tabs.push(pt.id)
-//   }
-// }
-
-export const addToTabGroup = (pins, tabs) => {
-  const groupTab = []
-
-  pins.forEach((pt) => {
-    const id = getTabGroupId(pt)
-    const tabIndex = groupTab.findIndex((tab) => tab.id === id)
-
-    if (tabIndex === -1) {
-      groupTab.push({
-        id,
-        info: pt,
-        tabs: [],
-        pin: pt,
-        lastTabId: '',
-        lastActive: 0,
-        order: pt.order
-      })
-    }
-  })
-
-  tabs.forEach((pt) => {
-    const id = getTabGroupId(pt)
-    const tabIndex = groupTab.findIndex((tab) => tab.id === id)
-
-    if (tabIndex !== -1) {
-      if (groupTab[tabIndex].lastActive < pt.lastActive) {
-        groupTab[tabIndex].lastActive = pt.lastActive
-      }
-      groupTab[tabIndex].tabs.push(pt.id)
-    } else {
-      groupTab.push({
-        id,
-        info: pt,
-        tabs: [pt.id],
-        pin: pt,
-        lastTabId: '',
-        lastActive: 0,
-        order: pt.order
-      })
-    }
-  })
-
-  return groupTab
-}
-
-export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
+export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => {
   // ?? props
   await ensureBootstrapped(pubkey)
 
@@ -275,31 +213,23 @@ export const addWorkspace = async (pubkey): Promise<WorkSpace> => {
 
   const pinsSort = pins.sort((a, b) => a.order - b.order)
   const tabsSort = tabs.sort((a, b) => a.order - b.order)
-  const tabGroups = addToTabGroup(pinsSort, tabsSort)
 
-  const workspace = {
+  const workspace: WorkSpace = {
     pubkey,
-    trendingProfiles: [],
-    trendingNotes: [],
-    longNotes: [],
-    liveEvents: [],
-    suggestedProfiles: [],
-    tabGroups: tabGroups,
-    tabs: tabsSort,
+    // trendingProfiles: [],
+    // trendingNotes: [],
+    // longNotes: [],
+    // liveEvents: [],
+    // suggestedProfiles: [],
+    tabIds: tabsSort.map((t) => t.id),
     pins: pinsSort,
     lastKindApps: {},
     currentTabId: '',
     perms
-    // ...props
   }
 
-  return workspace
-}
-
-export const createSomeWorkspaces = async (keys: string[]): Promise<WorkSpace[]> => {
-  const workspaces = await Promise.all(keys.map((key) => addWorkspace(key)))
-
-  return workspaces
+  dispatch(addWorkspaces({ workspaces: [workspace] }))
+  dispatch(addTabs({ tabs }))
 }
 
 export const reloadWallets = async () => {
@@ -308,4 +238,45 @@ export const reloadWallets = async () => {
   Object.values(r)
     .filter((w) => typeof w === 'object') // exclude 'currentAlias'
     .forEach((w) => addWalletInfo(w))
+}
+
+export const writeCurrentPubkey = async (pubkey: string) => {
+  await dbi.setFlag('', 'currentPubkey', pubkey)
+}
+
+export const loadKeys = async (dispatch): Promise<[keys: string[], currentPubkey: string, readKeys: string[]]> => {
+  // can be writeKey or readKey
+  let currentPubkey = await dbi.getFlag('', 'currentPubkey')
+  console.log('currentPubkey', currentPubkey)
+
+  // write-keys from native plugin
+  const list = await keystore.listKeys()
+  console.log('listKeys', list)
+
+  // ensure
+  if (list.currentAlias && !currentPubkey) {
+    await writeCurrentPubkey(list.currentAlias)
+    currentPubkey = list.currentAlias
+  }
+
+  const writeKeys = Object.keys(list).filter((key) => key !== 'currentAlias')
+  const readKeys = (await dbi.listReadOnlyKeys()).filter((k) => !writeKeys.includes(k))
+
+  if (!currentPubkey) {
+    if (readKeys.length) currentPubkey = readKeys[0]
+    else if (writeKeys.length) currentPubkey = writeKeys[0]
+    else {
+      currentPubkey = DEFAULT_PUBKEY
+      readKeys.push(DEFAULT_PUBKEY)
+    }
+  }
+
+  const keys = [...new Set([...writeKeys, ...readKeys])]
+  console.log('load keys cur', currentPubkey, 'writeKeys', writeKeys, 'readKeys', readKeys)
+
+  dispatch(setKeys({ keys }))
+  dispatch(setReadKeys({ readKeys }))
+  dispatch(setCurrentPubkey({ currentPubkey }))
+
+  return [keys, currentPubkey, readKeys]
 }

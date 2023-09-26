@@ -1,37 +1,33 @@
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
 import { useAppSelector } from '@/store/hooks/redux'
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
-import FlashOnIcon from '@mui/icons-material/FlashOn'
 import { StyledInfoItem, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
 import { useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { stringToBech32 } from '@/modules/nostr'
+import { selectCurrentWorkspace } from '@/store/store'
+import { selectTab } from '@/store/reducers/tab.slice'
 
-export const ModaTabMenu = () => {
+export const ModalTabMenu = () => {
   const [searchParams] = useSearchParams()
-  const { onCloseTab, openZap, onPinTab, onUnPinTab } = useOpenApp()
-  const { getModalOpened, handleClose, handleOpen } = useOpenModalSearchParams()
-  const [eventAddr, setEventAddr] = useState('')
+  const { onCloseTab, onPinTab, onUnPinTab } = useOpenApp()
+  const { getModalOpened, handleClose } = useOpenModalSearchParams()
+  const [, setEventAddr] = useState('')
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MENU)
   const id = searchParams.get('tabId') || ''
 
-  const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
-  const currentTab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
+  const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
+  const currentTab = useAppSelector((state) => selectTab(state, id))
 
   const isPin = currentWorkSpace?.pins.find((pin) => pin.appNaddr === currentTab?.appNaddr)
   const url = currentTab?.url
-
-  console.log({ PINS: currentWorkSpace })
 
   useEffect(() => {
     if (url) {
@@ -57,16 +53,6 @@ export const ModaTabMenu = () => {
         onPinTab(currentTab)
       }
     }
-  }
-
-  const handleOpenModalSelect = () => {
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: eventAddr } })
-  }
-
-  const handleZap = async () => {
-    if (!url) return
-    const addr = stringToBech32(url)
-    openZap(addr)
   }
 
   return (
@@ -96,30 +82,6 @@ export const ModaTabMenu = () => {
               <StyledItemText primary={isPin ? 'Unpin' : 'Pin'} />
             </StyledItemButton>
           </ListItem>
-          {eventAddr && (
-            <>
-              <ListItem disablePadding>
-                <StyledItemButton alignItems="center" onClick={handleOpenModalSelect}>
-                  <ListItemAvatar>
-                    <StyledItemIconAvatar>
-                      <OpenInNewOutlinedIcon />
-                    </StyledItemIconAvatar>
-                  </ListItemAvatar>
-                  <StyledItemText primary="Open with" />
-                </StyledItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <StyledItemButton alignItems="center" onClick={handleZap}>
-                  <ListItemAvatar>
-                    <StyledItemIconAvatar>
-                      <FlashOnIcon />
-                    </StyledItemIconAvatar>
-                  </ListItemAvatar>
-                  <StyledItemText primary="Zap" />
-                </StyledItemButton>
-              </ListItem>
-            </>
-          )}
         </StyledList>
       </Container>
     </Modal>

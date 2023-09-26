@@ -4,27 +4,39 @@ import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { nip19 } from '@nostrband/nostr-tools'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setIcontab, setLoadingTab, setOpenTab, setCurrentTabId } from '@/store/reducers/tab.slice'
 import {
-  clearTabGroup,
+  setTabIcon,
+  setTabIsLoading,
+  setOpenTab,
+  setCurrentTabId,
+  addTabs,
+  setTabScreenshot,
+  setTabUrl,
+  setTabCreated,
+  removeTab
+} from '@/store/reducers/tab.slice'
+import {
   deletePermWorkspace,
-  removePinFromPins,
-  removeTabFromTabs,
+  removePinWorkspace,
+  removeTabWorkspace,
   setLastKindApp,
   setPermsWorkspace,
-  setPinsWorkspace,
-  setScreenshotTab,
-  setTabsWorkspace,
-  setUrlTabWorkspace,
-  setWorkspaces
+  addTabWorkspace,
+  addWorkspaces,
+  addPinWorkspace
 } from '@/store/reducers/workspaces.slice'
 import { AppNostr, IOpenAppNostr } from '@/types/app-nostr'
-import { getKeys, writeCurrentPubkey } from '@/utils/keys'
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { v4 as uuidv4 } from 'uuid'
 import { useUpdateProfile } from './profile'
-import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
-import { addWorkspace, getOrigin, getTabGroupId } from '@/modules/AppInitialisation/utils'
+import { setCurrentPubkey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
+import {
+  loadWorkspace,
+  getOrigin,
+  getTabGroupId,
+  writeCurrentPubkey,
+  loadKeys
+} from '@/modules/AppInitialisation/utils'
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
@@ -34,21 +46,29 @@ import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
 import { sendPayment, stringToBech32 } from '@/modules/nostr'
 import { deletePermissionRequest, setPermissionRequest } from '@/store/reducers/permissionRequests.slice'
-import { ITab } from '@/types/workspace'
+import { ITab } from '@/types/tab'
+import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
+import { IPin } from '@/types/workspace'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey, readKeys } = useAppSelector((state) => state.keys)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
+  const { currentPubkey, readKeys } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const { apps } = useAppSelector((state) => state.apps)
-  const { openedTabs, currentTabId } = useAppSelector((state) => state.tab)
+  const { tabs, currentTabId } = useAppSelector((state) => state.tab)
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
+  const currentWorkSpaceTabs = useAppSelector(selectCurrentWorkspaceTabs)
 
-  const getTabAny = (id) => workspaces.map((ws) => ws.tabs.find((t) => t.id === id)).find((t) => t !== undefined) /// ???????????
-  const isReadOnly = () => currentPubKey === DEFAULT_PUBKEY || readKeys.includes(currentPubKey) //// ???????????
+  console.log(
+    'tabs',
+    tabs.map((t) => ({ id: t.id, created: t.created }))
+  )
+
+  const getTabAny = (id) => tabs.find((t) => t.id === id)
+  const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey) //// ???????????
   const hasPerm = (tab, name, value) => {
     const app = getTabGroupId(tab)
     const ws = workspaces.find((ws) => ws.pubkey === tab.pubkey)
@@ -59,7 +79,7 @@ export const useOpenApp = () => {
 
   const replyCurrentPermRequest = async (allow, remember, currentPermId) => {
     const currentPermRequest = permissionRequests.find((perm) => perm.id === currentPermId)
-    const tab = currentWorkSpace?.tabs.find((t) => t.id === currentPermRequest.tabId)
+    const tab = getTabAny(currentPermRequest.tabId)
 
     console.log('replyCurrentPermRequest', allow, remember, JSON.stringify(currentPermRequest))
     if (remember) {
@@ -135,12 +155,10 @@ export const useOpenApp = () => {
   }
 
   const deletePermission = async (id: string) => {
-    dispatch(deletePermWorkspace({ id, workspacePubkey: currentPubKey }))
+    dispatch(deletePermWorkspace({ id, workspacePubkey: currentPubkey }))
 
-    await dbi.deletePerms(currentPubKey, id)
+    await dbi.deletePerms(currentPubkey, id)
   }
-
-  const getTab = (id) => currentWorkSpace?.tabs.find((t) => t.id === id)
 
   const hide = async (id: string) => {
     dispatch(setCurrentTabId({ id: null }))
@@ -149,7 +167,7 @@ export const useOpenApp = () => {
     setTimeout(async () => {
       const screenshot = await browser.screenshot(id)
 
-      dispatch(setScreenshotTab({ id, screenshot, workspacePubkey: getTabAny(id)?.pubkey }))
+      dispatch(setTabScreenshot({ id, screenshot }))
 
       await dbi.updateTabScreenshot({ id, screenshot })
     }, 0)
@@ -157,8 +175,8 @@ export const useOpenApp = () => {
 
   const close = async (id: string) => {
     dispatch(setCurrentTabId({ id: null }))
-    await dbi.deleteTab(id)
     await browser.close(id)
+    dbi.deleteTab(id)
   }
 
   const onHideTabInBrowser = async (id: string) => {
@@ -173,24 +191,18 @@ export const useOpenApp = () => {
     const pubkey = getTabAny(id)?.pubkey
     await close(id)
 
+    dispatch(removeTab({ id }))
     dispatch(
-      removeTabFromTabs({
+      removeTabWorkspace({
         id,
         workspacePubkey: pubkey
       })
     )
   }
 
-  const onCloseAllGroupTabs = async (tabGroup) => {
-    const requestsCloseTabs = tabGroup.tabs.map((id) => close(id))
+  const onCloseTabs = async (tabs: ITab[]) => {
+    const requestsCloseTabs = tabs.map((t) => onCloseTab(t.id))
     await Promise.all(requestsCloseTabs)
-
-    dispatch(
-      clearTabGroup({
-        tabGroup,
-        workspacePubkey: tabGroup.info.pubkey
-      })
-    )
   }
 
   const onSwitchTab = async (tab) => {
@@ -200,21 +212,11 @@ export const useOpenApp = () => {
   const onStopLoadTab = async (id: string) => {
     await browser.stop(id)
 
-    dispatch(
-      setLoadingTab({
-        id,
-        isLoading: false
-      })
-    )
+    dispatch(setTabIsLoading({ id, isLoading: false }))
   }
 
   const onReloadTab = async (id: string) => {
-    dispatch(
-      setLoadingTab({
-        id,
-        isLoading: true
-      })
-    )
+    dispatch(setTabIsLoading({ id, isLoading: true }))
 
     await browser.reload(id)
   }
@@ -250,11 +252,11 @@ export const useOpenApp = () => {
     getPublicKey: async function (tabId) {
       const tab = getTabAny(tabId)
       if (!tab) throw new Error('Inactive tab')
-      if (currentPubKey === DEFAULT_PUBKEY) throw new Error('No pubkey')
+      if (currentPubkey === DEFAULT_PUBKEY) throw new Error('No pubkey')
       const error = 'Pubkey disallowed'
       if (hasPerm(tab, 'pubkey', '0')) throw new Error(error)
-      if (hasPerm(tab, 'pubkey', '1')) return currentPubKey
-      const exec = () => currentPubKey
+      if (hasPerm(tab, 'pubkey', '1')) return currentPubkey
+      const exec = () => currentPubkey
       return requestPermExec(tab, { perm: 'pubkey' }, exec, error)
     },
     signEvent: async function (tabId, event) {
@@ -377,18 +379,18 @@ export const useOpenApp = () => {
     setUrl: async (tabId, url) => {
       const tab = getTabAny(tabId)
       if (!tab) throw new Error('Inactive tab')
-      dispatch(setUrlTabWorkspace({ tabId, url, workspacePubkey: tab.pubkey }))
+      dispatch(setTabUrl({ id: tabId, url }))
       dbi.updateTab({ ...tab, url })
     },
     onLoadStart: async (tabId, event) => {
       console.log('loading', JSON.stringify(event))
       API.setUrl(tabId, event.url)
-      dispatch(setLoadingTab({ id: tabId, isLoading: true }))
+      dispatch(setTabIsLoading({ id: tabId, isLoading: true }))
     },
     onLoadStop: async (tabId, event) => {
       console.log('loaded', event.url)
       API.setUrl(tabId, event.url)
-      dispatch(setLoadingTab({ id: tabId, isLoading: false }))
+      dispatch(setTabIsLoading({ id: tabId, isLoading: false }))
     },
     onClick: (tabId, x, y) => {
       console.log('click', x, y)
@@ -415,7 +417,7 @@ export const useOpenApp = () => {
       return await handleCustomUrl(url, tab)
     },
     onIcon: async (tabId, icon) => {
-      setIcontab({ id: tabId, icon })
+      setTabIcon({ id: tabId, icon })
 
       const tab = getTabAny(tabId)
       if (tab) {
@@ -427,18 +429,17 @@ export const useOpenApp = () => {
   browser.setAPI(API)
 
   const onPinTab = async (currentTab: ITab) => {
-    const pin = {
+    const pin: IPin = {
       id: uuidv4(),
       url: currentTab.url,
       appNaddr: currentTab.appNaddr,
       title: currentTab.title,
       icon: currentTab.icon,
       order: currentWorkSpace.pins.length,
-      pubkey: currentPubKey,
-      perms: []
+      pubkey: currentPubkey
     }
 
-    dispatch(setPinsWorkspace({ pin, workspacePubkey: currentPubKey }))
+    dispatch(addPinWorkspace({ pin, workspacePubkey: currentPubkey }))
 
     await dbi.addPin(pin)
   }
@@ -446,21 +447,26 @@ export const useOpenApp = () => {
   const onUnPinTab = async (currentTab: ITab) => {
     const pin = currentWorkSpace.pins.find((p) => p.appNaddr === currentTab.appNaddr)
     console.log({ PIN: pin, currentWorkSpace: currentWorkSpace?.pins })
-    dispatch(removePinFromPins({ pin, workspacePubkey: currentPubKey }))
+    dispatch(removePinWorkspace({ pin, workspacePubkey: currentPubkey }))
 
     await dbi.deletePin(pin.id)
   }
 
   const openTabWindow = async (id) => {
-    const isOpened = openedTabs.find((tab) => id === tab.id)
-    dispatch(setCurrentTabId({ id: id }))
+    const tab = tabs.find((tab) => id === tab.id)
+    if (!tab) {
+      console.log(`Error: tab ${id} doesn't exist`)
+      return
+    }
 
-    if (isOpened) {
+    dispatch(setCurrentTabId({ id }))
+
+    if (tab.created) {
       console.log('show tab', id)
       await browser.show(id)
     } else {
-      const tab = currentWorkSpace?.tabs.find((tab) => id === tab.id)
       console.log('openTabWindow', id, tab)
+
       const dataTabForOpen = {
         id: tab.id,
         url: tab.url,
@@ -468,9 +474,7 @@ export const useOpenApp = () => {
         apiCtx: tab.id
       }
 
-      console.log('create tab', JSON.stringify(tab))
-
-      dispatch(setOpenTab({ tab: dataTabForOpen }))
+      dispatch(setTabCreated({ id }))
 
       await browser.open(dataTabForOpen)
       await browser.show(id)
@@ -478,25 +482,6 @@ export const useOpenApp = () => {
   }
 
   const show = (tab, options) => {
-    // const isOpened = openedTabs.find((openedTab) => tab.id === openedTab.id)
-
-    // let searchParams = {
-    //   id: tab.id,
-    //   method: 'show'
-    // }
-
-    // if (!isOpened) {
-    //   const dataTabForOpen = {
-    //     id: tab.id,
-    //     url: tab.url,
-    //     hidden: true,
-    //     apiCtx: tab.id
-    //   }
-
-    //   // searchParams.method = 'create'
-
-    //   dispatch(setOpenTab({ tab: dataTabForOpen }))
-    // }
     console.log('show', tab.id, JSON.stringify(options))
 
     handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {
@@ -518,20 +503,23 @@ export const useOpenApp = () => {
       if (!title) title = url
     }
 
-    const tab = {
+    const tab: ITab = {
       url,
       id: uuidv4(),
-      pubkey: currentPubKey,
+      pubkey: currentPubkey,
       title: title,
       icon: icon,
       appNaddr: params.appNaddr,
-      order: currentWorkSpace?.tabs.length,
-      pinned
+      order: tabs.length,
+      pinned,
+      created: false,
+      loading: true
     }
     // console.log("open", url, JSON.stringify(params), JSON.stringify(tab));
 
     // add to tab list
-    dispatch(setTabsWorkspace({ tab, workspacePubkey: currentPubKey }))
+    dispatch(addTabs({ tabs: [tab] }))
+    dispatch(addTabWorkspace({ id: tab.id, workspacePubkey: currentPubkey }))
 
     // add to db
     await dbi.addTab(tab)
@@ -541,7 +529,7 @@ export const useOpenApp = () => {
   }
 
   const openBlank = async (entity: object, options) => {
-    const tab = currentWorkSpace?.tabs.find((tab) => tab.url === entity.url)
+    const tab = currentWorkSpaceTabs.find((tab) => tab.url === entity.url)
 
     if (tab) {
       show(tab, options)
@@ -582,7 +570,7 @@ export const useOpenApp = () => {
 
   const openApp = async (app: IOpenAppNostr, options?: { replace?: boolean } = { replace: false }) => {
     if (app.kind !== undefined) {
-      dispatch(setLastKindApp({ kind: app.kind, naddr: app.naddr, workspacePubkey: currentPubKey }))
+      dispatch(setLastKindApp({ kind: app.kind, naddr: app.naddr, workspacePubkey: currentPubkey }))
     }
     const pin = currentWorkSpace?.pins.find((pin) => pin.appNaddr == app.naddr)
 
@@ -617,14 +605,9 @@ export const useOpenApp = () => {
     }
 
     // // reload the list
-    const [keys, pubkey, readKeys] = await getKeys()
-    dispatch(setKeys({ keys }))
-    dispatch(setReadKeys({ readKeys }))
-    dispatch(setCurrentPubKey({ currentPubKey: pubkey }))
+    const [keys, pubkey] = await loadKeys(dispatch)
 
-    const workspace = await addWorkspace(pubkey)
-
-    dispatch(setWorkspaces({ workspaces: [workspace] }))
+    await loadWorkspace(pubkey, dispatch)
 
     await updateProfile(keys, pubkey)
   }
@@ -647,7 +630,7 @@ export const useOpenApp = () => {
     openBlank,
     replyCurrentPermRequest,
     deletePermission,
-    onCloseAllGroupTabs,
+    onCloseTabs,
     openZap,
     onPinTab,
     onUnPinTab

@@ -9,7 +9,7 @@ import { TabMenu } from '@/components/TabMenu/TabMenu'
 import { StyledDialog, StyledViewName, StyledWrap } from './styled'
 import { useAppSelector } from '@/store/hooks/redux'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
-// import { Header } from '@/components/Header/Header' StyledAppBar
+import { selectTab } from '@/store/reducers/tab.slice'
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -25,27 +25,24 @@ export const TabPage = () => {
   const [searchParams] = useSearchParams()
   const { getModalOpened } = useOpenModalSearchParams()
   const navigate = useNavigate()
-  const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
-  const { openedTabs } = useAppSelector((state) => state.tab)
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
-  const id = searchParams.get('tabId')
-  const tab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
-  const tabState = openedTabs.find((tab) => tab.id === id)
+  const id = searchParams.get('tabId') || ''
+  const tab = useAppSelector((state) => selectTab(state, id))
+  const tabExists: boolean = !!tab
 
+  // return to home if we're trying to access a non-existent tab
   useEffect(() => {
-    if (isOpen && id && !tab) navigate('/', { replace: true })
+    if (isOpen && id && !tabExists) navigate('/', { replace: true })
   }, [isOpen, id, tab])
 
   useEffect(() => {
-    if (id && isOpen) {
+    if (id && isOpen && tabExists) {
       openTabWindow(id)
       return () => {
         onHideTabInBrowser(id)
       }
     }
-  }, [id, isOpen])
+  }, [id, isOpen, tabExists])
 
   return (
     <StyledDialog
@@ -55,9 +52,9 @@ export const TabPage = () => {
       TransitionComponent={Transition}
     >
       <StyledWrap>
-        <AppIcon size="medium" picture={tabState?.picture || tab?.icon} isOutline={false} alt={tab?.title} />
+        <AppIcon size="medium" picture={tab?.icon} isOutline={false} alt={tab?.title} />
         <StyledViewName>{tab?.title}</StyledViewName>
-        {tabState?.loading && <StyledViewName variant="body2">Loading...</StyledViewName>}
+        {tab?.loading && <StyledViewName variant="body2">Loading...</StyledViewName>}
       </StyledWrap>
 
       <TabMenu />

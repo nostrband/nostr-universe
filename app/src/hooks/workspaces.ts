@@ -1,56 +1,44 @@
 import { keystore } from '@/modules/keystore'
-import { addWorkspace } from '@/modules/AppInitialisation/utils'
+import { loadKeys, loadWorkspace, writeCurrentPubkey } from '@/modules/AppInitialisation/utils'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { db } from '@/modules/db'
-import { setWorkspaces } from '@/store/reducers/workspaces.slice'
+import { updateWorkspacePubkey } from '@/store/reducers/workspaces.slice'
 import { useUpdateProfile } from '@/hooks/profile'
-import { WorkSpace } from '@/types/workspace'
-import { writeCurrentPubkey, getKeys } from '@/utils/keys'
-
-const updateWorkspace = (workspaces: WorkSpace[], cbProps: { pubkey: string }, pubkey: string) => {
-  const updateWorkspaces = workspaces.map((workspace) =>
-    workspace.pubkey === pubkey ? { ...workspace, ...cbProps } : workspace
-  )
-
-  return updateWorkspaces
-}
 
 export const useAddKey = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
-  const { workspaces } = useAppSelector((state) => state.workspaces)
+  const wasPubkey = useAppSelector((state) => state.keys).currentPubkey
+  const wasGuest = wasPubkey === DEFAULT_PUBKEY
 
   const addKey = async () => {
+    // ask user for new key
     const r = await keystore.addKey()
 
-    await writeCurrentPubkey(r.pubkey)
+    // write to db
+    writeCurrentPubkey(r.pubkey)
 
-    const [keys, currentPubKey, readKeys] = await getKeys()
+    // reload keys
+    const [keys, currentPubkey] = await loadKeys(dispatch)
 
-    dispatch(setKeys({ keys }))
-    dispatch(setReadKeys({ readKeys }))
-
-    if (currentPubKey === DEFAULT_PUBKEY) {
-      await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubKey })
-      await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubKey })
-
-      const w = updateWorkspace(workspaces, { pubkey: currentPubKey }, DEFAULT_PUBKEY)
+    if (wasGuest) {
+      await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubkey })
+      await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubkey })
 
       dispatch(
-        setWorkspaces({
-          workspaces: w
+        updateWorkspacePubkey({
+          workspacePubkey: wasPubkey,
+          pubkey: currentPubkey
         })
       )
     } else {
-      const workspace = await addWorkspace(currentPubKey)
-
-      dispatch(setWorkspaces({ workspaces: [workspace] }))
+      // read workspace from db
+      await loadWorkspace(currentPubkey, dispatch)
     }
-    dispatch(setCurrentPubKey({ currentPubKey }))
 
-    await updateProfile(keys, currentPubKey)
+    // load info on this new key
+    await updateProfile(keys, currentPubkey)
   }
 
   return {
@@ -61,7 +49,7 @@ export const useAddKey = () => {
 export const useChangeAccount = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
-  const { currentPubKey, readKeys } = useAppSelector((state) => state.keys)
+  const { currentPubkey: currentPubKey, readKeys } = useAppSelector((state) => state.keys)
 
   const changeAccount = async (publicKey: string) => {
     if (!readKeys.includes(publicKey)) {
@@ -71,10 +59,7 @@ export const useChangeAccount = () => {
     await writeCurrentPubkey(publicKey)
 
     if (publicKey !== currentPubKey) {
-      const [keys, pubkey] = await getKeys()
-      dispatch(setKeys({ keys }))
-      dispatch(setCurrentPubKey({ currentPubKey: pubkey }))
-
+      const [keys, pubkey] = await loadKeys(dispatch)
       updateProfile(keys, pubkey)
     }
   }

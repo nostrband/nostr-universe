@@ -19,6 +19,7 @@ import { getRenderedUsername } from '@/utils/helpers/general'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { IPerm } from '@/types/permission-req'
+import { selectTab } from '@/store/reducers/tab.slice'
 
 export const ModalProfileTabMenu = () => {
   const [searchParams] = useSearchParams()
@@ -28,9 +29,9 @@ export const ModalProfileTabMenu = () => {
 
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
-  const currentTab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
+  const { currentPubkey } = useAppSelector((state) => state.keys)
+  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubkey)
+  const currentTab = useAppSelector((state) => selectTab(state, id))
 
   const perms = currentTab
     ? (currentWorkSpace?.perms.filter((perm) => perm.app === getTabGroupId(currentTab)) as IPerm[])
@@ -44,7 +45,7 @@ export const ModalProfileTabMenu = () => {
             <StyledViewAvatar src={getProfileImage(currentProfile)} />
           </StyledViewAvatarWrapper>
         </StyledViewBaner>
-        <StyledViewName>{getRenderedUsername(currentProfile, currentPubKey)}</StyledViewName>
+        <StyledViewName>{getRenderedUsername(currentProfile, currentPubkey)}</StyledViewName>
 
         <StyledViewTitle>Tab</StyledViewTitle>
         <List dense>

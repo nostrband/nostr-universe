@@ -15,6 +15,7 @@ import { IOpenAppNostr } from '@/types/app-nostr'
 import { AppNostroListItem } from '@/shared/AppNostroListItem/AppNostroListItem'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { NATIVE_NADDR } from '@/consts'
+import { selectCurrentWorkspace } from '@/store/store'
 
 export const ModalSelectApp = () => {
   const { openApp } = useOpenApp()
@@ -22,9 +23,7 @@ export const ModalSelectApp = () => {
   const [kind, setKind] = useState('')
   const [apps, setApps] = useState<IOpenAppNostr[]>([])
   const [isAppsLoading, setIsAppsLoading] = useState(false)
-  const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
+  const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const [searchParams] = useSearchParams()
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.SELECT_APP)

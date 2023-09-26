@@ -1,15 +1,11 @@
 import { useEffect, useCallback } from 'react'
 import { useAppDispatch } from '@/store/hooks/redux'
-import { setCurrentPubKey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
-import { setWorkspaces } from '@/store/reducers/workspaces.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { setProfiles } from '@/store/reducers/profile.slice'
-import { DEFAULT_PUBKEY } from '@/consts'
-import { getKeys } from '@/utils/keys'
 import { IInitialisationProvider } from './types'
 import { connect, fetchApps } from '../nostr'
-import { createSomeWorkspaces, reloadWallets } from './utils'
+import { loadKeys, loadWorkspace, reloadWallets } from './utils'
 import { dbi } from '../db'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
@@ -18,22 +14,9 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
 
   const initDevice = useCallback(async () => {
     try {
-      const [keys, currentPubKey, readKeys] = await getKeys()
+      const [keys, currentPubKey] = await loadKeys(dispatch)
 
-      dispatch(setKeys({ keys }))
-      dispatch(setReadKeys({ readKeys }))
-
-      if (!currentPubKey) {
-        dispatch(setCurrentPubKey({ currentPubKey: DEFAULT_PUBKEY }))
-
-        const workspaces = await createSomeWorkspaces([DEFAULT_PUBKEY])
-        dispatch(setWorkspaces({ workspaces }))
-      } else {
-        dispatch(setCurrentPubKey({ currentPubKey }))
-
-        const workspaces = await createSomeWorkspaces(keys)
-        dispatch(setWorkspaces({ workspaces }))
-      }
+      for (const key of keys) await loadWorkspace(key, dispatch)
 
       console.log('ndk connected')
 
@@ -53,7 +36,7 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       dispatch(setApps({ apps }))
       dispatch(setLoading({ isLoading: false }))
     } catch (err) {
-      console.log('error init app', JSON.stringify(err))
+      console.log('error init app', err)
     }
   }, [dispatch, updateProfile])
 

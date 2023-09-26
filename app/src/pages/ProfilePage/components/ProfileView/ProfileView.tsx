@@ -22,7 +22,7 @@ import { userService } from '@/store/services/user.service'
 export const ProfileView = () => {
   const { getModalOpened, handleOpen, handleClose } = useOpenModalSearchParams()
   const { currentProfile, profiles } = useAppSelector((state) => state.profile)
-  const { keys, currentPubKey } = useAppSelector((state) => state.keys)
+  const { keys, currentPubkey: currentPubKey } = useAppSelector((state) => state.keys)
   const { changeAccount } = useChangeAccount()
 
   const accounts = keys.map((key) => {

@@ -25,7 +25,7 @@ interface IWallet {
   relay: string
 }
 
-export const ModaWallet = () => {
+export const ModalWallet = () => {
   const { getModalOpened, handleClose } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.WALLET_MODAL)
 

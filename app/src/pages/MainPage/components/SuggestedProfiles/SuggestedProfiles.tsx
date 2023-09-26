@@ -10,7 +10,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { MetaEvent } from '@/types/meta-event'
 
 export const SuggestedProfiles = () => {
-  const { currentPubKey } = useAppSelector((state) => state.keys)
+  const { currentPubkey: currentPubKey } = useAppSelector((state) => state.keys)
   const {
     data,
     isFetching: isLoading,

@@ -12,23 +12,18 @@ import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
-import { ITab } from '@/types/workspace'
+import { selectTab } from '@/store/reducers/tab.slice'
 
 export const TabMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const [searchParams] = useSearchParams()
   const { onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
   const id = searchParams.get('tabId') || ''
-  const { openedTabs } = useAppSelector((state) => state.tab)
-  const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubKey } = useAppSelector((state) => state.keys)
   const { currentProfile } = useAppSelector((state) => state.profile)
-  const currentWorkSpace = workspaces.find((workspace) => workspace.pubkey === currentPubKey)
-  const currentTab = currentWorkSpace?.tabs.find((tab) => tab.id === id) as ITab
-  const tabState = openedTabs.find((t) => t.id === id)
+  const currentTab = useAppSelector((state) => selectTab(state, id))
 
   const handleStopReloadTab = async () => {
-    if (tabState?.loading) {
+    if (currentTab?.loading) {
       await onStopLoadTab(id)
     } else {
       await onReloadTab(id)
@@ -50,7 +45,7 @@ export const TabMenu = () => {
         <AppIcon
           isActive
           isPreviewTab
-          picture={tabState?.picture || currentTab?.icon}
+          picture={currentTab?.icon}
           alt={currentTab?.title}
           onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id }, replace: true })}
         />
@@ -62,7 +57,7 @@ export const TabMenu = () => {
           size="medium"
           onClick={() =>
             handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
-              search: { nostrId: currentTab.url },
+              search: { nostrId: currentTab?.url as string },
               replace: true
             })
           }
@@ -75,7 +70,7 @@ export const TabMenu = () => {
         </IconButton>
 
         <IconButton color="inherit" size="medium" onClick={handleStopReloadTab}>
-          {tabState?.loading ? <CloseOutlinedIcon /> : <ReplayOutlinedIcon />}
+          {currentTab?.loading ? <CloseOutlinedIcon /> : <ReplayOutlinedIcon />}
         </IconButton>
 
         <IconButton color="inherit" size="medium" onClick={onHideTab}>

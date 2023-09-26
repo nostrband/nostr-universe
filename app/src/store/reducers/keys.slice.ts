@@ -2,13 +2,13 @@ import { createSlice } from '@reduxjs/toolkit'
 
 interface IKeysState {
   keys: string[]
-  currentPubKey: string
+  currentPubkey: string
   readKeys: string[]
 }
 
 const initialState: IKeysState = {
   keys: [],
-  currentPubKey: '',
+  currentPubkey: '',
   readKeys: []
 }
 
@@ -24,10 +24,10 @@ export const keysSlice = createSlice({
       state.readKeys = action.payload.readKeys
     },
 
-    setCurrentPubKey: (state, action) => {
-      state.currentPubKey = action.payload.currentPubKey
+    setCurrentPubkey: (state, action) => {
+      state.currentPubkey = action.payload.currentPubkey
     }
   }
 })
 
-export const { setKeys, setCurrentPubKey, setReadKeys } = keysSlice.actions
+export const { setKeys, setCurrentPubkey, setReadKeys } = keysSlice.actions
