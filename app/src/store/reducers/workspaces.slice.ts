@@ -1,4 +1,3 @@
-import { addToTabGroup, getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { WorkSpace } from '@/types/workspace'
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { dbi } from '@/modules/db'
@@ -9,6 +8,21 @@ interface IWorkSpaceState {
 
 const initialState: IWorkSpaceState = {
   workspaces: []
+}
+
+function updateWorkspaceTab(workspace: WorkSpace, id: string, props: object) {
+  return {
+    ...workspace,
+    tabs: workspace.tabs.map((tab) => {
+      if (tab.id === id) {
+        return {
+          ...tab,
+          props
+        }
+      }
+      return tab
+    })
+  }
 }
 
 export const workspacesSlice = createSlice({
@@ -84,24 +98,9 @@ export const workspacesSlice = createSlice({
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
-          const currentTab = workspace.tabs.find((tab) => tab.id === id)
-          const pins = workspace.pins
-
           return {
             ...workspace,
             tabs: workspace.tabs.filter((tab) => tab.id !== id),
-            tabGroups: workspace.tabGroups
-              .map((tg) => {
-                if (tg.id === getTabGroupId(currentTab)) {
-                  return {
-                    ...tg,
-                    tabs: tg.tabs.filter((el) => el !== id)
-                  }
-                }
-
-                return tg
-              })
-              .filter((tg) => pins.find((pin) => pin.appNaddr === tg.id) || tg.tabs.length > 0)
           }
         }
 
@@ -125,48 +124,16 @@ export const workspacesSlice = createSlice({
       })
     },
 
-    clearTabGroup: (state, action) => {
-      const pubkey = action.payload.workspacePubkey
-      const tabGroup = action.payload.tabGroup
-
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            tabs: workspace.tabs.filter((tab) => getTabGroupId(tab) !== tabGroup.id),
-            tabGroups: workspace.tabGroups
-              .map((tg) => {
-                if (tg.id === tabGroup.id) {
-                  return {
-                    ...tg,
-                    tabs: []
-                  }
-                }
-
-                return tg
-              })
-              .filter((tg) => tg.pin || tg.tabs.length > 0)
-          }
-        }
-
-        return workspace
-      })
-    },
-
     setTabsWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
       const tab = action.payload.tab
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
-          const pins = workspace.pins
           const tabs = [...workspace.tabs, tab]
-          const tabGroups = addToTabGroup(pins, tabs)
-
           return {
             ...workspace,
             tabs: tabs,
-            tabGroups: tabGroups
           }
         }
 
@@ -181,13 +148,9 @@ export const workspacesSlice = createSlice({
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
           const pins = [...workspace.pins, pin]
-          const tabs = workspace.tabs
-          const tabGroups = addToTabGroup(pins, tabs)
-
           return {
             ...workspace,
             pins: pins,
-            tabGroups: tabGroups
           }
         }
 
@@ -200,24 +163,10 @@ export const workspacesSlice = createSlice({
 
       state.workspaces = state.workspaces.map((workspace) => {
         if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            tabs: workspace.tabs.map((tab) => {
-              if (tab.id === id) {
-                return {
-                  ...tab,
-                  url
-                }
-              }
-              return tab
-            })
-          }
+          return updateWorkspaceTab(workspace, id, { url })
         }
-
         return workspace
       })
-
-      // FIXME implement switch between tab groups
     },
 
     swapPins: (state, action) => {
@@ -275,7 +224,6 @@ export const {
   swapPins,
   setPermsWorkspace,
   deletePermWorkspace,
-  clearTabGroup,
   setScreenshotTab,
   setLastKindApp
 } = workspacesSlice.actions

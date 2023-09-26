@@ -6,7 +6,6 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setIcontab, setLoadingTab, setOpenTab, setCurrentTabId } from '@/store/reducers/tab.slice'
 import {
-  clearTabGroup,
   deletePermWorkspace,
   removePinFromPins,
   removeTabFromTabs,
@@ -181,16 +180,9 @@ export const useOpenApp = () => {
     )
   }
 
-  const onCloseAllGroupTabs = async (tabGroup) => {
-    const requestsCloseTabs = tabGroup.tabs.map((id) => close(id))
+  const onCloseTabs = async (tabs: ITab[]) => {
+    const requestsCloseTabs = tabs.map((t) => onCloseTab(t.id))
     await Promise.all(requestsCloseTabs)
-
-    dispatch(
-      clearTabGroup({
-        tabGroup,
-        workspacePubkey: tabGroup.info.pubkey
-      })
-    )
   }
 
   const onSwitchTab = async (tab) => {
@@ -647,7 +639,7 @@ export const useOpenApp = () => {
     openBlank,
     replyCurrentPermRequest,
     deletePermission,
-    onCloseAllGroupTabs,
+    onCloseTabs,
     openZap,
     onPinTab,
     onUnPinTab
