@@ -440,10 +440,10 @@ async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEve
     id = addr.kind + ':' + addr.pubkey + ':'
   }
 
-  const cachedEvents = addrCache.get(id)
-  if (cachedEvents) {
+  const cachedEvent = addrCache.get(id)
+  if (cachedEvent) {
     console.log('event in addr cache', id)
-    return cachedEvents
+    return { ...cachedEvent }
   }
 
   console.log('loading event by filter', JSON.stringify(filter))
@@ -700,6 +700,7 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null):
   // now fetch the apps for event kind
   let info = kindAppsCache.get(addr.kind)
   if (info) {
+    info = { ...info }
     console.log('apps for kind', addr.kind, 'in cache', info)
   }
   if (!info) info = await fetchAppsByKinds(ndk, [addr.kind])
@@ -772,7 +773,7 @@ async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   const reqPubkeys: string[] = []
   pubkeys.forEach((p) => {
     const meta = metaCache.get(p)
-    if (meta) metas.push({ meta })
+    if (meta) metas.push({ ...meta })
     else reqPubkeys.push(p)
   })
 
@@ -826,7 +827,7 @@ async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise
     const ne = eventCache.get(id)
     if (ne) {
       // make sure kinds match
-      if (kinds.includes(ne.kind)) results.push({ ne })
+      if (kinds.includes(ne.kind)) results.push({ ...ne })
     } else {
       reqIds.push(id)
     }
