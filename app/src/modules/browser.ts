@@ -273,8 +273,6 @@ export function open(params) {
 
   const header = document.getElementById('header')
   const main = document.getElementById('main')
-  const topOffset = 50
-  const top = Math.round(window.devicePixelRatio * (topOffset + (params.top || 0)))
   const footer = document.getElementById('tab-menu')
   const bottomOffset = 50 - 1
   const bottom = Math.round(window.devicePixelRatio * (bottomOffset + (params.bottom || 0)))
@@ -283,7 +281,7 @@ export function open(params) {
   const hidden = params.hidden ? 'yes' : 'no'
   const geticon = params.geticon ? 'yes' : 'no'
 
-  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,topoffset=${top},bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
+  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
   console.log('browser options', options)
 
   const ref = cordova.InAppBrowser.open(params.url, '_blank', options)

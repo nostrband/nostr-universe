@@ -6,10 +6,10 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useOpenApp } from '@/hooks/open-entity'
 import { TabMenu } from '@/components/TabMenu/TabMenu'
-import { StyledAppBar, StyledDialog, StyledViewName, StyledWrap } from './styled'
+import { StyledDialog, StyledViewName, StyledWrap } from './styled'
 import { useAppSelector } from '@/store/hooks/redux'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
-import { Header } from '@/components/Header/Header'
+// import { Header } from '@/components/Header/Header' StyledAppBar
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -34,12 +34,6 @@ export const TabPage = () => {
   const tab = currentWorkSpace?.tabs.find((tab) => tab.id === id)
   const tabState = openedTabs.find((tab) => tab.id === id)
 
-  // const handleOpen = () => { // use this method letter
-  //   if (id && method) {
-  //     openTabWindow(id, method)
-  //   }
-  // }
-
   useEffect(() => {
     if (isOpen && id && !tab) navigate('/', { replace: true })
   }, [isOpen, id, tab])
@@ -60,10 +54,6 @@ export const TabPage = () => {
       open={isOpen}
       TransitionComponent={Transition}
     >
-      <StyledAppBar>
-        <Header />
-      </StyledAppBar>
-
       <StyledWrap>
         <AppIcon size="medium" picture={tabState?.picture || tab?.icon} isOutline={false} alt={tab?.title} />
         <StyledViewName>{tab?.title}</StyledViewName>

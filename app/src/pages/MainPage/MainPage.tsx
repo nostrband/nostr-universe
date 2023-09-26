@@ -23,6 +23,7 @@ import { Header } from '@/components/Header/Header'
 import { AppsPage } from '../AppsPage/AppsPage'
 import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
 import { ModalImportKey } from '@/components/Modal/ModaImporKey/ModalImportKey'
+import { ModalProfileTabMenu } from '@/components/Modal/ModalProfileTabMenu/ModalProfileTabMenu'
 
 export const MainPage = () => {
   return (
@@ -53,6 +54,7 @@ export const MainPage = () => {
       <ModaContextMenu />
       <TabsSwitcherPage />
       <AppsPage />
+      <ModalProfileTabMenu />
 
       <NavigationBottom />
     </StyledWrapperMain>

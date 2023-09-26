@@ -2,8 +2,7 @@ import { useLocation } from 'react-router-dom'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
-
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
+import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
@@ -43,8 +42,8 @@ export const NavigationBottom = () => {
         }
       }}
     >
-      <BottomNavigationAction label="Home" icon={<HomeOutlinedIcon />} value="/" />
       <BottomNavigationAction label="Apps" icon={<AppsOutlinedIcon />} value={MODAL_PARAMS_KEYS.APPS_PAGE} />
+      <BottomNavigationAction label="Content" icon={<DashboardOutlinedIcon />} value="/" />
       <BottomNavigationAction
         label="Tabs"
         icon={<WidgetsOutlinedIcon />}

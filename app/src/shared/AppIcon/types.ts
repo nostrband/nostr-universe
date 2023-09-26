@@ -7,6 +7,7 @@ interface IAppIconProps {
   isPreviewTab?: boolean
   isNotLoaded?: boolean
   isOutline?: boolean
+  onClick?: () => void
 }
 
 export type IBoxStyled = IAppIconProps & BoxProps
