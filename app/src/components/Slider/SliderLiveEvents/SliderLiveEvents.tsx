@@ -8,13 +8,12 @@ import { SkeletonLiveEvents } from '@/components/Skeleton/SkeletonLiveEvents/Ske
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { memo } from 'react'
 
-export const SliderLiveEvents = memo(({
+export const SliderLiveEvents = memo(function SliderLiveEvents({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
-}: ISliderLiveEvents) => {
-
+}: ISliderLiveEvents) {
   // depends on all props, no need to useCallback
   const renderContent = () => {
     if (isLoading) {

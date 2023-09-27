@@ -473,8 +473,7 @@ export const useOpenApp = () => {
   const findTabPin = (tab: ITab): IPin | undefined => {
     const ws = workspaces.find((ws) => ws.pubkey === tab.pubkey)
     return ws?.pins.find(
-      (p) =>
-        p.url === tab.url // p.appNaddr === tab.appNaddr ||
+      (p) => p.url === tab.url // p.appNaddr === tab.appNaddr ||
     )
   }
 

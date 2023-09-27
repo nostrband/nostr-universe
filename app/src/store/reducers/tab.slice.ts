@@ -64,8 +64,7 @@ export const tabSlice = createSlice({
 
     setCurrentTabId: (state, action) => {
       state.currentTabId = action.payload.id
-      if (action.payload.id)
-        updateTab(state, action.payload.id, { lastActive: Date.now() })
+      if (action.payload.id) updateTab(state, action.payload.id, { lastActive: Date.now() })
     }
   }
 })

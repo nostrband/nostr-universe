@@ -3,16 +3,16 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import { StyledAppIcon, StyledAppImg } from './styled'
 import { IAppIcon } from './types'
 
-export const AppIcon = memo(({ 
-  picture = '', 
-  size, 
-  isActive, 
-  isPreviewTab, 
-  isOutline, 
-  alt, 
+export const AppIcon = memo(function AppIcon({
+  picture = '',
+  size,
+  isActive,
+  isPreviewTab,
+  isRounded,
+  isOutline,
+  alt,
   onClick
-}: IAppIcon) => {
-
+}: IAppIcon) {
   const [isFailed, setIsFailed] = useState(false)
 
   useEffect(() => {
@@ -27,6 +27,7 @@ export const AppIcon = memo(({
 
   return (
     <StyledAppIcon
+      isRounded={isRounded}
       isNotLoaded={isFailed}
       isOutline={isOutline}
       size={size}

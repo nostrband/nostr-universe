@@ -10,13 +10,19 @@ import { SkeletonApps } from '@/components/Skeleton/SkeletonApps/SkeletonApps'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { memo, useCallback } from 'react'
 
-export const SliderAppsNostro = memo(({ data, isLoading, handleReloadEntity = () => {} }
-: ISliderAppsNostro) => {
+export const SliderAppsNostro = memo(function SliderAppsNostro({
+  data,
+  isLoading,
+  handleReloadEntity = () => {}
+}: ISliderAppsNostro) {
   const { openApp } = useOpenApp()
 
-  const handleOpenApp = useCallback(async (app: AppNostroType) => {
-    await openApp(app)
-  }, [openApp])
+  const handleOpenApp = useCallback(
+    async (app: AppNostroType) => {
+      await openApp(app)
+    },
+    [openApp]
+  )
 
   const renderContent = useCallback(() => {
     if (isLoading && !data.length) {

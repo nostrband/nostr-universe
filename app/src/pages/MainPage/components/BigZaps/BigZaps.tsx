@@ -11,43 +11,46 @@ import { setBigZaps } from '@/store/reducers/contentWorkspace'
 import { MIN_ZAP_AMOUNT } from '@/consts'
 import { memo, useCallback } from 'react'
 
-export const BigZaps = memo(() => {
+export const BigZaps = memo(function BigZaps() {
   const { handleOpen } = useOpenModalSearchParams()
   const { bigZaps, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
-  const handleOpenHighlight = useCallback((bigZap: ZapEvent) => {
-    let addr = ''
-    if (bigZap.targetEvent) {
-      if (bigZap.targetEvent.kind === 0) {
-        addr = nip19.nprofileEncode({
-          pubkey: bigZap.targetEvent.pubkey,
-          relays: [nostrbandRelay]
-        })
-      } else if (
-        (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000) ||
-        (bigZap.targetEvent.kind >= 30000 && bigZap.targetEvent.kind < 40000)
-      ) {
-        addr = nip19.naddrEncode({
-          pubkey: bigZap.targetEvent.pubkey,
-          kind: bigZap.targetEvent.kind,
-          identifier: bigZap.targetEvent.identifier,
-          relays: [nostrbandRelay]
-        })
-      } else if (bigZap.targetMeta) {
-        addr = nip19.neventEncode({
-          id: bigZap.targetMeta.id,
-          relays: [nostrbandRelay]
-        })
-      } else {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        window.plugins.toast.showShortBottom(`Target events not found`)
+  const handleOpenHighlight = useCallback(
+    (bigZap: ZapEvent) => {
+      let addr = ''
+      if (bigZap.targetEvent) {
+        if (bigZap.targetEvent.kind === 0) {
+          addr = nip19.nprofileEncode({
+            pubkey: bigZap.targetEvent.pubkey,
+            relays: [nostrbandRelay]
+          })
+        } else if (
+          (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000) ||
+          (bigZap.targetEvent.kind >= 30000 && bigZap.targetEvent.kind < 40000)
+        ) {
+          addr = nip19.naddrEncode({
+            pubkey: bigZap.targetEvent.pubkey,
+            kind: bigZap.targetEvent.kind,
+            identifier: bigZap.targetEvent.identifier,
+            relays: [nostrbandRelay]
+          })
+        } else if (bigZap.targetMeta) {
+          addr = nip19.neventEncode({
+            id: bigZap.targetMeta.id,
+            relays: [nostrbandRelay]
+          })
+        } else {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          window.plugins.toast.showShortBottom(`Target events not found`)
+        }
       }
-    }
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
-  }, [handleOpen])
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
+    },
+    [handleOpen]
+  )
 
   const handleReloadBigZaps = useCallback(async () => {
     if (contactList) {

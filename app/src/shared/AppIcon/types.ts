@@ -7,6 +7,7 @@ interface IAppIconProps {
   isPreviewTab?: boolean
   isNotLoaded?: boolean
   isOutline?: boolean
+  isRounded?: boolean
   onClick?: () => void
 }
 

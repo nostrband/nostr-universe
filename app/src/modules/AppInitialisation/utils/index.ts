@@ -199,7 +199,7 @@ export const getOrigin = (url) => {
 }
 
 export const getTabGroupId = (pt) => {
-  return getOrigin(pt.url) // pt.appNaddr || 
+  return getOrigin(pt.url) // pt.appNaddr ||
 }
 
 export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => {

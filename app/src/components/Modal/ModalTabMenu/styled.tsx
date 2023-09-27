@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import { styled } from '@mui/material/styles'
-import { Typography, TypographyProps, ListItemText, ListItemButton, Avatar, List } from '@mui/material'
+import { Typography, TypographyProps, ListItemText, ListItemButton, Avatar, List, Box } from '@mui/material'
 
 export const StyledInfoItem = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
@@ -29,4 +29,8 @@ export const StyledItemIconAvatar = styled(Avatar)(({ theme }) => ({
 
 export const StyledList = styled(List)(() => ({
   padding: 0
+}))
+
+export const StyledWrapInput = styled(Box)(() => ({
+  padding: '10px 0 15px 0'
 }))

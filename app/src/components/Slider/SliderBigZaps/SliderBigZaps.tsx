@@ -8,12 +8,12 @@ import { SkeletonBigZaps } from '@/components/Skeleton/SkeletonBigZaps/SkeletonB
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { memo } from 'react'
 
-export const SliderBigZaps = memo(({
+export const SliderBigZaps = memo(function SliderBigZaps({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
-}: ISliderBigZaps) => {
+}: ISliderBigZaps) {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonBigZaps />

@@ -9,18 +9,21 @@ import { StyledTitle, StyledWrapper } from './styled'
 import { MetaEvent } from '@/types/meta-event'
 import { memo, useCallback } from 'react'
 
-export const ContactList = memo(() => {
+export const ContactList = memo(function ContactList() {
   const { handleOpen } = useOpenModalSearchParams()
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
 
-  const handleOpenProfile = useCallback((profile: MetaEvent) => {
-    const nprofile = nip19.nprofileEncode({
-      pubkey: profile.pubkey,
-      relays: [nostrbandRelay]
-    })
+  const handleOpenProfile = useCallback(
+    (profile: MetaEvent) => {
+      const nprofile = nip19.nprofileEncode({
+        pubkey: profile.pubkey,
+        relays: [nostrbandRelay]
+      })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
-  }, [handleOpen])
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
+    },
+    [handleOpen]
+  )
 
   return (
     <StyledWrapper>

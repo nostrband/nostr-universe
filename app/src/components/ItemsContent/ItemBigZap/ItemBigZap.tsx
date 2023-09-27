@@ -6,7 +6,7 @@ import { IItemBigZap } from './types'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 import { memo } from 'react'
 
-export const ItemBigZap = memo(({ targetPubkey, targetMeta, time, subtitle }: IItemBigZap) => {
+export const ItemBigZap = memo(function ItemBigZap({ targetPubkey, targetMeta, time, subtitle }: IItemBigZap) {
   return (
     <Wrapper>
       <Head>

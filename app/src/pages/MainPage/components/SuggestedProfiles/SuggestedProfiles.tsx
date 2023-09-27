@@ -10,7 +10,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { MetaEvent } from '@/types/meta-event'
 import { memo, useCallback } from 'react'
 
-export const SuggestedProfiles = memo(() => {
+export const SuggestedProfiles = memo(function SuggestedProfiles() {
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const {
     data,
@@ -21,14 +21,17 @@ export const SuggestedProfiles = memo(() => {
   })
   const { handleOpen } = useOpenModalSearchParams()
 
-  const handleOpenProfile = useCallback((profile: MetaEvent) => {
-    const nprofile = nip19.nprofileEncode({
-      pubkey: profile.pubkey,
-      relays: [nostrbandRelay]
-    })
+  const handleOpenProfile = useCallback(
+    (profile: MetaEvent) => {
+      const nprofile = nip19.nprofileEncode({
+        pubkey: profile.pubkey,
+        relays: [nostrbandRelay]
+      })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
-  }, [handleOpen])
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
+    },
+    [handleOpen]
+  )
 
   const handleReloadSuggestedProfiles = () => refetchSuggestedProfiles()
 

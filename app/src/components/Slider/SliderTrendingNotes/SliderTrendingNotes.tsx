@@ -8,12 +8,12 @@ import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNot
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { memo } from 'react'
 
-export const SliderTrendingNotes = memo(({
+export const SliderTrendingNotes = memo(function SliderTrendingNotes({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
-}: ISliderTrendingNotes) => {
+}: ISliderTrendingNotes) {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonTrendingNotes />

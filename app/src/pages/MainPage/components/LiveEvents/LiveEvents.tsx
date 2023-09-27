@@ -10,21 +10,24 @@ import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { setLiveEvents } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback } from 'react'
 
-export const LiveEvents = memo(() => {
+export const LiveEvents = memo(function LiveEvents() {
   const { liveEvents, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const { handleOpen } = useOpenModalSearchParams()
   const dispatch = useAppDispatch()
 
-  const handleOpenLiveEvent = useCallback((event: LiveEvent) => {
-    const naddr = nip19.naddrEncode({
-      pubkey: event.pubkey,
-      kind: event.kind,
-      identifier: getTagValue(event, 'd'),
-      relays: [nostrbandRelay]
-    })
+  const handleOpenLiveEvent = useCallback(
+    (event: LiveEvent) => {
+      const naddr = nip19.naddrEncode({
+        pubkey: event.pubkey,
+        kind: event.kind,
+        identifier: getTagValue(event, 'd'),
+        relays: [nostrbandRelay]
+      })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
-  }, [handleOpen])
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
+    },
+    [handleOpen]
+  )
 
   const handleReloadLiveEvents = useCallback(async () => {
     if (contactList) {

@@ -17,12 +17,14 @@ export const userService = createApi({
         url: '/trending/profiles'
       }),
       transformResponse: (response: { profiles: ReturnTypeTrendingProfiles }) => {
-        const trendingProfiles: MetaEvent[] = response.profiles.map((el) => {
-          if (!el.profile) return {} as MetaEvent
-          const meta = createMetaEvent(createAugmentedEvent(createEvent(el.profile)))
-          meta.profile = parseProfileJson(meta)
-          return meta
-        }).filter((m) => !!m.pubkey)
+        const trendingProfiles: MetaEvent[] = response.profiles
+          .map((el) => {
+            if (!el.profile) return {} as MetaEvent
+            const meta = createMetaEvent(createAugmentedEvent(createEvent(el.profile)))
+            meta.profile = parseProfileJson(meta)
+            return meta
+          })
+          .filter((m) => !!m.pubkey)
 
         trendingProfiles.forEach((e) => putEventToCache(e))
 
@@ -35,13 +37,15 @@ export const userService = createApi({
         url: '/trending/notes'
       }),
       transformResponse: (response: { notes: ReturnTypeTrendingNotes }) => {
-        const trendingNotes: AuthoredEvent[] = response.notes.map((el) => {
-          if (!el.event) return {} as AuthoredEvent
-          const note = createAuthoredEvent(createAugmentedEvent(createEvent(el.event)))
-          note.author = createMetaEvent(createAugmentedEvent(createEvent(el.author)))
-          note.author.profile = parseProfileJson(note.author)
-          return note
-        }).filter((a) => !!a.pubkey)
+        const trendingNotes: AuthoredEvent[] = response.notes
+          .map((el) => {
+            if (!el.event) return {} as AuthoredEvent
+            const note = createAuthoredEvent(createAugmentedEvent(createEvent(el.event)))
+            note.author = createMetaEvent(createAugmentedEvent(createEvent(el.author)))
+            note.author.profile = parseProfileJson(note.author)
+            return note
+          })
+          .filter((a) => !!a.pubkey)
 
         trendingNotes.forEach((e) => putEventToCache(e))
 
@@ -54,12 +58,14 @@ export const userService = createApi({
         url: `/suggested/profiles/${pubkey}`
       }),
       transformResponse: (response: { profiles: ReturnTypeSuggestedProfiles }) => {
-        const suggestedProfiles: MetaEvent[] = response.profiles.map((el) => {
-          if (!el.profile) return {} as MetaEvent
-          const meta = createMetaEvent(createAugmentedEvent(createEvent(el.profile)))
-          meta.profile = parseProfileJson(meta)
-          return meta
-        }).filter((m) => !!m.pubkey)
+        const suggestedProfiles: MetaEvent[] = response.profiles
+          .map((el) => {
+            if (!el.profile) return {} as MetaEvent
+            const meta = createMetaEvent(createAugmentedEvent(createEvent(el.profile)))
+            meta.profile = parseProfileJson(meta)
+            return meta
+          })
+          .filter((m) => !!m.pubkey)
 
         suggestedProfiles.forEach((e) => putEventToCache(e))
 

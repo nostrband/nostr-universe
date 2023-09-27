@@ -9,7 +9,14 @@ import { Status } from '@/shared/ContentComponents/Status/Status'
 import { Time } from '@/shared/ContentComponents/Time/Time'
 import { memo } from 'react'
 
-export const ItemLiveEvent = memo(({ content, hostPubkey, host, subtitle, time, status }: IItemLiveEvent) => {
+export const ItemLiveEvent = memo(function ItemLiveEvent({
+  content,
+  hostPubkey,
+  host,
+  subtitle,
+  time,
+  status
+}: IItemLiveEvent) {
   const isLiveEvent = status === EVENT_LIVE_STATUS
   return (
     <Wrapper>

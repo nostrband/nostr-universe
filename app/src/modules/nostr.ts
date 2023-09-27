@@ -1615,8 +1615,7 @@ export async function sendPayment(info: WalletInfo, payreq: string) {
 }
 
 export function putEventToCache(e: AugmentedEvent | MetaEvent) {
-  if (e.kind === KIND_META)
-    metaCache.set(e.pubkey, e)
+  if (e.kind === KIND_META) metaCache.set(e.pubkey, e)
   eventCache.set(e.id, e)
   addrCache.set(getEventAddr(e), e)
 }

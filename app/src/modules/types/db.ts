@@ -4,7 +4,7 @@ interface Tab {
   id: number
   pubkey: string
   url: string
-//  appNaddr: string
+  //  appNaddr: string
   order: number
   title: string
   icon: string
