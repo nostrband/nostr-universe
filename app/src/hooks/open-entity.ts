@@ -62,11 +62,6 @@ export const useOpenApp = () => {
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
   const currentWorkSpaceTabs = useAppSelector(selectCurrentWorkspaceTabs)
 
-  console.log(
-    'tabs',
-    tabs.map((t) => ({ id: t.id, created: t.created }))
-  )
-
   const getTabAny = (id) => tabs.find((t) => t.id === id)
   const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey) //// ???????????
   const hasPerm = (tab, name, value) => {
