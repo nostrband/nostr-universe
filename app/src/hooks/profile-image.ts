@@ -22,10 +22,15 @@ export const useProfileImageSource = ({
 }) => {
   const [isFailed, setIsFailed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [wasInView, setWasInView] = useState(false)
 
-  const { ref, inView } = useInView({
+  const { ref, inView: currentInView } = useInView({
     threshold: 0
   })
+
+  useEffect(() => {
+    if (currentInView) setWasInView(true)
+  }, [currentInView])
 
   const last4Chars = isGuest(pubkey) ? '' : getPubkeyLast4Chars(pubkey)
   const generatedURL = `${MEDIA_NOSTR_BAND_BASE_URL}/${last4Chars}/${pubkey}-${mediaType}-${size}`
@@ -33,7 +38,7 @@ export const useProfileImageSource = ({
 
   useEffect(() => {
     if (!pubkey || !originalImage || isGuest(pubkey)) return
-    if (!inView) return
+    if (!wasInView) return
 
     const image = new Image()
     image.onloadstart = function () {
@@ -51,13 +56,13 @@ export const useProfileImageSource = ({
 
     image.src = generatedURL
     image.loading = 'lazy'
-  }, [pubkey, originalImage, generatedURL, inView])
+  }, [pubkey, originalImage, generatedURL, wasInView])
 
   const returnedObject = {
     viewRef: ref
   }
 
-  if (!pubkey || !originalImage || isGuest(pubkey)) {
+  if (!wasInView || !pubkey || !originalImage || isGuest(pubkey)) {
     return { ...returnedObject, url: defaultUserImage }
   }
 

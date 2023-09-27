@@ -6,6 +6,7 @@ import { memo } from 'react'
 
 export const Profile = memo(({ profile, isContact, onClick = () => {} }: IProfile) => {
   const name = getProfileName(profile.pubkey, profile)
+
   const { url, viewRef } = useProfileImageSource({
     pubkey: profile.pubkey,
     originalImage: profile.profile?.picture

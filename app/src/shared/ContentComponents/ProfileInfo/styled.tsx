@@ -1,10 +1,15 @@
 import { forwardRef } from 'react'
 import { styled } from '@mui/material/styles'
-import { Box, BoxProps, TypographyProps, Typography } from '@mui/material'
+import { Box, BoxProps, TypographyProps, Typography, Avatar } from '@mui/material'
 
 export interface IBoxStyled extends BoxProps {
   isNotRounded?: boolean
 }
+
+export const StyledProfileAvatar = styled(Avatar)(() => ({
+  height: 32,
+  width: 32
+}))
 
 export const StyledPicture = styled(
   forwardRef<HTMLAnchorElement, IBoxStyled>(function BoxDisplayName(props, ref) {

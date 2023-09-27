@@ -1,16 +1,14 @@
 import { MetaEvent } from '@/types/meta-event'
-import { StyledImg, StyledName, StyledPicture, StyledProfileInfo } from './styled'
+import { StyledName, StyledProfileAvatar, StyledProfileInfo } from './styled'
 import { getProfileName } from '@/utils/helpers/prepare-data'
 import { useProfileImageSource } from '@/hooks/profile-image'
 
 export const ProfileInfo = ({
   pubkey,
   profile,
-  isNotRounded
 }: {
   pubkey: string
   profile?: MetaEvent
-  isNotRounded?: boolean
 }) => {
   const name = getProfileName(pubkey, profile)
 
@@ -21,9 +19,7 @@ export const ProfileInfo = ({
 
   return (
     <StyledProfileInfo>
-      <StyledPicture isNotRounded={isNotRounded}>
-        <StyledImg loading="lazy" src={url} ref={viewRef} />
-      </StyledPicture>
+      <StyledProfileAvatar src={url} ref={viewRef} imgProps={{ loading: 'lazy' }} />
       <StyledName>{name}</StyledName>
     </StyledProfileInfo>
   )
