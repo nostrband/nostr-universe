@@ -72,12 +72,7 @@ export const ModalProfileTabMenu = () => {
             <ListItemText primary={currentTab?.title} />
           </StyledListItem>
           <StyledListItem disablePadding>
-            <ListItemAvatar>
-              <Avatar>
-                <InsertLinkOutlinedIcon />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={getOrigin(currentTab?.url || '')} />
+            <ListItemText primary={"Address: " + getOrigin(currentTab?.url || '')} />
           </StyledListItem>
         </List>
 
