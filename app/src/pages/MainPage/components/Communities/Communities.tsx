@@ -10,21 +10,24 @@ import { SliderCommunities } from '@/components/Slider/SliderCommunities/SliderC
 import { setCommunities } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback } from 'react'
 
-export const Communities = memo(() => {
+export const Communities = memo(function Communities() {
   const { communities, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const { handleOpen } = useOpenModalSearchParams()
   const dispatch = useAppDispatch()
 
-  const handleOpenCommuniti = useCallback((note: CommunityEvent) => {
-    const naddr = nip19.naddrEncode({
-      pubkey: note.pubkey,
-      kind: note.kind,
-      identifier: getTagValue(note, 'd'),
-      relays: [nostrbandRelay]
-    })
+  const handleOpenCommuniti = useCallback(
+    (note: CommunityEvent) => {
+      const naddr = nip19.naddrEncode({
+        pubkey: note.pubkey,
+        kind: note.kind,
+        identifier: getTagValue(note, 'd'),
+        relays: [nostrbandRelay]
+      })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
-  }, [handleOpen])
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
+    },
+    [handleOpen]
+  )
 
   const handleReloadCommunities = useCallback(async () => {
     if (contactList) {

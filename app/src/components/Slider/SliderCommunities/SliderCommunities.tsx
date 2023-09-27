@@ -8,12 +8,12 @@ import { SkeletonCommunities } from '@/components/Skeleton/SkeletonCommunties/Sk
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { memo } from 'react'
 
-export const SliderCommunities = memo(({
+export const SliderCommunities = memo(function SliderCommunities({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
-}: ISliderCommunities) => {
+}: ISliderCommunities) {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonCommunities />

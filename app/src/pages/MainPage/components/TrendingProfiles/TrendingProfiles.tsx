@@ -9,7 +9,7 @@ import { nostrbandRelay } from '@/modules/nostr'
 import { MetaEvent } from '@/types/meta-event'
 import { memo, useCallback } from 'react'
 
-export const TrendingProfiles = memo(() => {
+export const TrendingProfiles = memo(function TrendingProfiles() {
   const {
     data,
     isFetching: isLoading,
@@ -17,14 +17,17 @@ export const TrendingProfiles = memo(() => {
   } = userService.useFetchTrendingProfilesQuery('')
   const { handleOpen } = useOpenModalSearchParams()
 
-  const handleOpenProfile = useCallback((profile: MetaEvent) => {
-    const nprofile = nip19.nprofileEncode({
-      pubkey: profile.pubkey,
-      relays: [nostrbandRelay]
-    })
+  const handleOpenProfile = useCallback(
+    (profile: MetaEvent) => {
+      const nprofile = nip19.nprofileEncode({
+        pubkey: profile.pubkey,
+        relays: [nostrbandRelay]
+      })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
-  }, [handleOpen])
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
+    },
+    [handleOpen]
+  )
 
   const handleReloadTrendingProfiles = () => refetchTrendingProfiles()
 

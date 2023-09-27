@@ -8,13 +8,12 @@ import { SkeletonHighlights } from '@/components/Skeleton/SkeletonHighlights/Ske
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { memo } from 'react'
 
-export const SliderHighlights = memo(({
+export const SliderHighlights = memo(function SliderHighlights({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
-}: ISliderHighlights) => {
-
+}: ISliderHighlights) {
   // depends on all props, no need to useCallback
   const renderContent = () => {
     if (isLoading) {

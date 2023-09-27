@@ -44,6 +44,7 @@ export const TabMenu = () => {
         </StyledIconButton>
         <AppIcon
           isPreviewTab
+          isRounded={true}
           picture={currentTab?.icon}
           alt={currentTab?.title}
           onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id }, replace: true })}

@@ -8,13 +8,12 @@ import { SkeletonLongPosts } from '@/components/Skeleton/SkeletonLongPosts/Skele
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { memo } from 'react'
 
-export const SliderLongNotes = memo(({
+export const SliderLongNotes = memo(function SliderLongNotes({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
-}: ISliderLongNotes) => {
-
+}: ISliderLongNotes) {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonLongPosts />

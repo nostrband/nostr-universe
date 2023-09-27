@@ -10,21 +10,24 @@ import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongN
 import { setLongPosts } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback } from 'react'
 
-export const LongPosts = memo(() => {
+export const LongPosts = memo(function LongPosts() {
   const { handleOpen } = useOpenModalSearchParams()
   const { longPosts, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
-  const handleOpenLongPosts = useCallback((longPost: LongNoteEvent) => {
-    const naddr = nip19.naddrEncode({
-      pubkey: longPost.pubkey,
-      kind: longPost.kind,
-      identifier: getTagValue(longPost, 'd'),
-      relays: [nostrbandRelay]
-    })
+  const handleOpenLongPosts = useCallback(
+    (longPost: LongNoteEvent) => {
+      const naddr = nip19.naddrEncode({
+        pubkey: longPost.pubkey,
+        kind: longPost.kind,
+        identifier: getTagValue(longPost, 'd'),
+        relays: [nostrbandRelay]
+      })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
-  }, [handleOpen])
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
+    },
+    [handleOpen]
+  )
 
   const handleReloadLongPosts = useCallback(async () => {
     if (contactList) {

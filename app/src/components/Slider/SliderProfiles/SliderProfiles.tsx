@@ -8,12 +8,12 @@ import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/Skeleto
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { memo } from 'react'
 
-export const SliderProfiles = memo(({
+export const SliderProfiles = memo(function SliderProfiles({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
-}: ISliderProfiles) => {
+}: ISliderProfiles) {
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonProfiles />
