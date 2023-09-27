@@ -10,7 +10,7 @@ import { IconButton } from '@mui/material'
 import { fetchAppsForEvent } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
-import { StyledForm, StyledInput } from './styled'
+import { StyledForm, StyledInput, StyledNoAppsMessage } from './styled'
 import { IOpenAppNostr } from '@/types/app-nostr'
 import { AppNostroListItem } from '@/shared/AppNostroListItem/AppNostroListItem'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
@@ -22,6 +22,7 @@ export const ModalSelectApp = () => {
   const [searchValue, setSearchValue] = useState('')
   const [kind, setKind] = useState('')
   const [apps, setApps] = useState<IOpenAppNostr[]>([])
+  const [isAppsFailed, setIsAppsFailed] = useState(false)
   const [isAppsLoading, setIsAppsLoading] = useState(false)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const [searchParams] = useSearchParams()
@@ -41,6 +42,7 @@ export const ModalSelectApp = () => {
 
   const load = useCallback(async () => {
     try {
+      setIsAppsFailed(false)
       setIsAppsLoading(true)
 
       const nativeApp: IOpenAppNostr = {
@@ -84,7 +86,7 @@ export const ModalSelectApp = () => {
         const lastUsed = app.naddr === lastAppNaddr
 
         let order = app.order
-        // last app always at the top
+        // last app always at the topw
         if (lastUsed) order = 1000
         // // pinned are a priority
         else if (pinned) order += 100
@@ -112,11 +114,16 @@ export const ModalSelectApp = () => {
 
       apps.sort((a, b) => b.order - a.order)
 
+      // only native?
+      if (apps.length === 1) {
+        setIsAppsFailed(true)
+      }
       setApps(apps)
       setIsAppsLoading(false)
     } catch (error) {
-      console.log("error", error)
+      console.log('error', error)
       setIsAppsLoading(false)
+      setIsAppsFailed(true)
     }
   }, [currentWorkSpace?.lastKindApps, currentWorkSpace?.pins, getParamAddr])
 
@@ -189,6 +196,9 @@ export const ModalSelectApp = () => {
             return <AppNostroListItem app={app} key={index} onClick={() => handleOpen(app)} />
           })}
         </Container>
+        {(isAppsFailed || !filteredApps.length) && !isAppsLoading && (
+          <StyledNoAppsMessage message="No apps" onReload={load} />
+        )}
         {isAppsLoading && (
           <LoadingContainer>
             <LoadingSpinner />

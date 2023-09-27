@@ -380,11 +380,11 @@ export const useOpenApp = () => {
       if (getOrigin(tab.url) != getOrigin(url)) {
         const app = apps?.find((a) => url.startsWith(a.url))
         if (app) {
-          dispatch(setTabTitle({ id: tabId, title: app.name}))
-          dispatch(setTabIcon({ id: tabId, icon: app.picture}))
+          dispatch(setTabTitle({ id: tabId, title: app.name }))
+          dispatch(setTabIcon({ id: tabId, icon: app.picture }))
         } else {
-          dispatch(setTabTitle({ id: tabId, title: getOrigin(url)}))
-          dispatch(setTabIcon({ id: tabId, icon: ''}))
+          dispatch(setTabTitle({ id: tabId, title: getOrigin(url) }))
+          dispatch(setTabIcon({ id: tabId, icon: '' }))
         }
       }
 
@@ -441,7 +441,7 @@ export const useOpenApp = () => {
     const pin: IPin = {
       id: uuidv4(),
       url: currentTab.url,
-//      appNaddr: currentTab.appNaddr,
+      //      appNaddr: currentTab.appNaddr,
       title: currentTab.title,
       icon: currentTab.icon,
       order: currentWorkSpace.pins.length,
@@ -455,17 +455,16 @@ export const useOpenApp = () => {
 
   const findTabPin = (tab: ITab): IPin | undefined => {
     const ws = workspaces.find((ws) => ws.pubkey === tab.pubkey)
-    return ws?.pins.find((p) => (
-      p.url === tab.url // p.appNaddr === tab.appNaddr || 
-    ))
+    return ws?.pins.find(
+      (p) =>
+        p.url === tab.url // p.appNaddr === tab.appNaddr ||
+    )
   }
 
   const findAppPin = (app: AppNostr | AppHandlerEvent): IPin | undefined => {
-    return currentWorkSpace?.pins.find((p) => (
-      p.appNaddr === app.appNaddr 
-      || app.url?.startsWith(p.url)
-      || app.eventUrl?.startsWith(p.url)
-    ))
+    return currentWorkSpace?.pins.find(
+      (p) => p.appNaddr === app.appNaddr || app.url?.startsWith(p.url) || app.eventUrl?.startsWith(p.url)
+    )
   }
 
   const onUnPinTab = async (currentTab: ITab) => {
@@ -531,11 +530,11 @@ export const useOpenApp = () => {
       pubkey: currentPubkey,
       title: title,
       icon: icon,
-//      appNaddr: params.appNaddr,
+      //      appNaddr: params.appNaddr,
       order: tabs.length,
       created: false,
       loading: true,
-      lastActive: Date.now(),
+      lastActive: Date.now()
     }
     // console.log("open", url, JSON.stringify(params), JSON.stringify(tab));
 
@@ -575,8 +574,8 @@ export const useOpenApp = () => {
         {
           url: entity.url,
           icon: app.picture,
-          title: app.name,
-//          appNaddr: app.naddr,
+          title: app.name
+          //          appNaddr: app.naddr,
         },
         options
       )
@@ -598,7 +597,7 @@ export const useOpenApp = () => {
         url: app.url,
         appNaddr: app.naddr,
         title: app.name,
-        icon: app.picture,
+        icon: app.picture
       },
       options
     )

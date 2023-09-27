@@ -1,5 +1,6 @@
 import { styled } from '@mui/material/styles'
 import { InputBase } from '@mui/material'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
 export const StyledInput = styled(InputBase)(({ theme }) => ({
   background: theme.palette.secondary.main,
@@ -21,3 +22,8 @@ export const StyledForm = styled('div')(() => ({
   flexDirection: 'column',
   gap: '0.5rem'
 }))
+
+export const StyledNoAppsMessage = styled(EmptyListMessage)({
+  justifyContent: 'center',
+  fontSize: '1rem'
+})
