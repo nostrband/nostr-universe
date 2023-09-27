@@ -1,4 +1,4 @@
-import { parseProfileJson } from '@/modules/nostr'
+import { parseProfileJson, putEventToCache } from '@/modules/nostr'
 import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
 import { AuthoredEvent, createAuthoredEvent } from '@/types/authored-event'
 import { MetaEvent, createMetaEvent } from '@/types/meta-event'
@@ -18,10 +18,13 @@ export const userService = createApi({
       }),
       transformResponse: (response: { profiles: ReturnTypeTrendingProfiles }) => {
         const trendingProfiles: MetaEvent[] = response.profiles.map((el) => {
+          if (!el.profile) return {} as MetaEvent
           const meta = createMetaEvent(createAugmentedEvent(createEvent(el.profile)))
           meta.profile = parseProfileJson(meta)
           return meta
-        })
+        }).filter((m) => !!m.pubkey)
+
+        trendingProfiles.forEach((e) => putEventToCache(e))
 
         return trendingProfiles
       },
@@ -33,11 +36,14 @@ export const userService = createApi({
       }),
       transformResponse: (response: { notes: ReturnTypeTrendingNotes }) => {
         const trendingNotes: AuthoredEvent[] = response.notes.map((el) => {
+          if (!el.event) return {} as AuthoredEvent
           const note = createAuthoredEvent(createAugmentedEvent(createEvent(el.event)))
           note.author = createMetaEvent(createAugmentedEvent(createEvent(el.author)))
           note.author.profile = parseProfileJson(note.author)
           return note
-        })
+        }).filter((a) => !!a.pubkey)
+
+        trendingNotes.forEach((e) => putEventToCache(e))
 
         return trendingNotes
       },
@@ -49,10 +55,13 @@ export const userService = createApi({
       }),
       transformResponse: (response: { profiles: ReturnTypeSuggestedProfiles }) => {
         const suggestedProfiles: MetaEvent[] = response.profiles.map((el) => {
+          if (!el.profile) return {} as MetaEvent
           const meta = createMetaEvent(createAugmentedEvent(createEvent(el.profile)))
           meta.profile = parseProfileJson(meta)
           return meta
-        })
+        }).filter((m) => !!m.pubkey)
+
+        suggestedProfiles.forEach((e) => putEventToCache(e))
 
         return suggestedProfiles
       }

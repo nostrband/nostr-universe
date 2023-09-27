@@ -16,9 +16,12 @@ export const ModalContextMenu = () => {
   const { openZap } = useOpenApp()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
   const id = searchParams.get('nostrId') || ''
+  const addr = stringToBech32(id)
+
+  if (isOpen)
+    console.log("addr", id, addr)
 
   const handleOpenModalSelect = () => {
-    const addr = stringToBech32(id)
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
   }
 

@@ -25,12 +25,12 @@ export const BigZaps = () => {
         })
       } else if (
         (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000) ||
-        (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000)
+        (bigZap.targetEvent.kind >= 30000 && bigZap.targetEvent.kind < 40000)
       ) {
-        addr = nip19.neventEncode({
-          id: bigZap.targetEvent.pubkey,
-          // kind: bigZap.targetEvent.kind,
-          // identifier: bigZap.targetEvent.identifier,
+        addr = nip19.naddrEncode({
+          pubkey: bigZap.targetEvent.pubkey,
+          kind: bigZap.targetEvent.kind,
+          identifier: bigZap.targetEvent.identifier,
           relays: [nostrbandRelay]
         })
       } else if (bigZap.targetMeta) {

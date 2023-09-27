@@ -64,8 +64,7 @@ export const generateSkeletonItems = <T>(fill: T, length = 10): T[] => {
 export const getOrigin = (url: string) => {
   try {
     return new URL(url).origin
-  } catch (e) {
-    console.log("Bad url", url, e)
+  } catch {
     return url
   }
 }
