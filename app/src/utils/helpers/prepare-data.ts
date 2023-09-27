@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { MetaEvent } from '@/types/meta-event'
 import { nip19 } from '@nostrband/nostr-tools'
 
@@ -66,5 +67,24 @@ export const getOrigin = (url: string) => {
     return new URL(url).origin
   } catch {
     return url
+  }
+}
+
+export const copyToClipBoard = (copyValue: string) => {
+  // @ts-ignore
+  if (window.cordova) {
+    // @ts-ignore
+    window.cordova.plugins.clipboard.copy(copyValue)
+    // @ts-ignore
+    window.plugins.toast.showShortBottom('Copied')
+  } else {
+    navigator.clipboard
+      .writeText(copyValue)
+      .then(() => {
+        alert('Copied')
+      })
+      .catch((error) => {
+        console.error('Copy failed: ', error)
+      })
   }
 }

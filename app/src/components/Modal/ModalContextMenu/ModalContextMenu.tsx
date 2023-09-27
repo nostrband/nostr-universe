@@ -4,11 +4,13 @@ import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
 import FlashOnIcon from '@mui/icons-material/FlashOn'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
-import { StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
-import { ListItem, ListItemAvatar } from '@mui/material'
+import { StyledInput, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
+import { IconButton, ListItem, ListItemAvatar } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
 import { stringToBech32 } from '@/modules/nostr'
 import { useOpenApp } from '@/hooks/open-entity'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 
 export const ModalContextMenu = () => {
   const [searchParams] = useSearchParams()
@@ -18,8 +20,7 @@ export const ModalContextMenu = () => {
   const id = searchParams.get('nostrId') || ''
   const addr = stringToBech32(id)
 
-  if (isOpen)
-    console.log("addr", id, addr)
+  if (isOpen) console.log('addr', id, addr)
 
   const handleOpenModalSelect = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
@@ -34,6 +35,15 @@ export const ModalContextMenu = () => {
   return (
     <Modal title="Context Menu (WIP)" open={isOpen} handleClose={() => handleClose()}>
       <Container>
+        <StyledInput
+          endAdornment={
+            <IconButton color="inherit" size="medium" onClick={() => copyToClipBoard(id)}>
+              <ContentCopyIcon />
+            </IconButton>
+          }
+          readOnly
+          value={id || ''}
+        />
         <StyledList>
           <ListItem disablePadding>
             <StyledItemButton alignItems="center" onClick={handleOpenModalSelect}>

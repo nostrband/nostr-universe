@@ -16,6 +16,7 @@ import { AppNostroListItem } from '@/shared/AppNostroListItem/AppNostroListItem'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { NATIVE_NADDR } from '@/consts'
 import { selectCurrentWorkspace } from '@/store/store'
+import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 
 export const ModalSelectApp = () => {
   const { openApp, findAppPin } = useOpenApp()
@@ -152,15 +153,6 @@ export const ModalSelectApp = () => {
     }
   }, [isOpen, resetStates])
 
-  const copyAddrHandler = () => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.cordova.plugins.clipboard.copy(getParamAddr)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.plugins.toast.showShortBottom('Copied')
-  }
-
   const renderContent = () => {
     return (
       <>
@@ -168,7 +160,7 @@ export const ModalSelectApp = () => {
           <StyledForm>
             <StyledInput
               endAdornment={
-                <IconButton color="inherit" size="medium" onClick={copyAddrHandler}>
+                <IconButton color="inherit" size="medium" onClick={() => copyToClipBoard(getParamAddr)}>
                   <ContentCopyIcon />
                 </IconButton>
               }
