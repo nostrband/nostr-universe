@@ -19,7 +19,7 @@ const Transition = forwardRef(function Transition(
 
 export const Modal = ({ open, children, handleClose, title }: IModal) => {
   return (
-    <StyledDialog fullScreen open={open} TransitionComponent={Transition}>
+    <StyledDialog fullScreen open={open} TransitionComponent={Transition} keepMounted>
       <StyledAppBar>
         <Toolbar>
           <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">

@@ -13,7 +13,8 @@ export const ProfileInfo = ({
   isNotRounded?: boolean
 }) => {
   const name = getProfileName(pubkey, profile)
-  const src = useProfileImageSource({
+
+  const { url, viewRef } = useProfileImageSource({
     pubkey: pubkey,
     originalImage: profile?.profile?.picture
   })
@@ -21,7 +22,7 @@ export const ProfileInfo = ({
   return (
     <StyledProfileInfo>
       <StyledPicture isNotRounded={isNotRounded}>
-        <StyledImg src={src} />
+        <StyledImg loading="lazy" src={url} ref={viewRef} />
       </StyledPicture>
       <StyledName>{name}</StyledName>
     </StyledProfileInfo>

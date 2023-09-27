@@ -5,7 +5,7 @@ import { useProfileImageSource } from '@/hooks/profile-image'
 
 export const Profile = ({ profile, isContact, onClick = () => {} }: IProfile) => {
   const name = getProfileName(profile.pubkey, profile)
-  const src = useProfileImageSource({
+  const { url, viewRef } = useProfileImageSource({
     pubkey: profile.pubkey,
     originalImage: profile.profile?.picture
   })
@@ -14,7 +14,7 @@ export const Profile = ({ profile, isContact, onClick = () => {} }: IProfile) =>
 
   return (
     <StyledProfile onClick={() => onClick(profile)}>
-      <StyledProfileAvatar src={src} />
+      <StyledProfileAvatar src={url} ref={viewRef} imgProps={{ loading: 'lazy' }} />
       <StyledProfileName>{name}</StyledProfileName>
       {!isContact && <StyledAboutProfile variant="caption">{about}</StyledAboutProfile>}
     </StyledProfile>
