@@ -8,13 +8,14 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { CommunityEvent } from '@/types/communities'
 import { SliderCommunities } from '@/components/Slider/SliderCommunities/SliderCommunities'
 import { setCommunities } from '@/store/reducers/contentWorkspace'
+import { memo, useCallback } from 'react'
 
-export const Communities = () => {
+export const Communities = memo(() => {
   const { communities, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const { handleOpen } = useOpenModalSearchParams()
   const dispatch = useAppDispatch()
 
-  const handleOpenCommuniti = (note: CommunityEvent) => {
+  const handleOpenCommuniti = useCallback((note: CommunityEvent) => {
     const naddr = nip19.naddrEncode({
       pubkey: note.pubkey,
       kind: note.kind,
@@ -23,9 +24,9 @@ export const Communities = () => {
     })
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
-  }
+  }, [handleOpen])
 
-  const handleReloadCommunities = async () => {
+  const handleReloadCommunities = useCallback(async () => {
     if (contactList) {
       dispatch(setCommunities({ communities: null }))
       const communities = await fetchFollowedCommunities(contactList.contactPubkeys).catch(() => {
@@ -33,7 +34,7 @@ export const Communities = () => {
       })
       dispatch(setCommunities({ communities }))
     }
-  }
+  }, [dispatch, contactList])
 
   return (
     <StyledWrapper>
@@ -51,4 +52,4 @@ export const Communities = () => {
       />
     </StyledWrapper>
   )
-}
+})

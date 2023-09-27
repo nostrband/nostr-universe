@@ -6,8 +6,9 @@ import { ISliderCommunities } from './types'
 import 'swiper/css'
 import { SkeletonCommunities } from '@/components/Skeleton/SkeletonCommunties/SkeletonCommunities'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { memo } from 'react'
 
-export const SliderCommunities = ({
+export const SliderCommunities = memo(({
   data,
   isLoading,
   handleClickEntity = () => {},
@@ -37,4 +38,4 @@ export const SliderCommunities = ({
       {renderContent()}
     </Swiper>
   )
-}
+})

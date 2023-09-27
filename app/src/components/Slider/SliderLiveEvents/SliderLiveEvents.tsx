@@ -6,13 +6,16 @@ import { ISliderLiveEvents } from './types'
 import { ItemLiveEvent } from '@/components/ItemsContent/ItemLiveEvent/ItemLiveEvent'
 import { SkeletonLiveEvents } from '@/components/Skeleton/SkeletonLiveEvents/SkeletonLiveEvents'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { memo } from 'react'
 
-export const SliderLiveEvents = ({
+export const SliderLiveEvents = memo(({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
 }: ISliderLiveEvents) => {
+
+  // depends on all props, no need to useCallback
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonLiveEvents />
@@ -39,4 +42,4 @@ export const SliderLiveEvents = ({
       {renderContent()}
     </Swiper>
   )
-}
+})

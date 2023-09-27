@@ -2,8 +2,9 @@ import { getProfileName } from '@/utils/helpers/prepare-data'
 import { StyledProfile, StyledProfileAvatar, StyledProfileName, StyledAboutProfile } from './styled'
 import { IProfile } from './types'
 import { useProfileImageSource } from '@/hooks/profile-image'
+import { memo } from 'react'
 
-export const Profile = ({ profile, isContact, onClick = () => {} }: IProfile) => {
+export const Profile = memo(({ profile, isContact, onClick = () => {} }: IProfile) => {
   const name = getProfileName(profile.pubkey, profile)
   const src = useProfileImageSource({
     pubkey: profile.pubkey,
@@ -19,4 +20,4 @@ export const Profile = ({ profile, isContact, onClick = () => {} }: IProfile) =>
       {!isContact && <StyledAboutProfile variant="caption">{about}</StyledAboutProfile>}
     </StyledProfile>
   )
-}
+})

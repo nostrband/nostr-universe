@@ -5,8 +5,9 @@ import { Time } from '@/shared/ContentComponents/Time/Time'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemLongNote } from './types'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
+import { memo } from 'react'
 
-export const ItemLongNote = ({ pubkey, author, time, content, subtitle }: IItemLongNote) => {
+export const ItemLongNote = memo(({ pubkey, author, time, content, subtitle }: IItemLongNote) => {
   return (
     <Wrapper>
       <Head>
@@ -17,4 +18,4 @@ export const ItemLongNote = ({ pubkey, author, time, content, subtitle }: IItemL
       <Content contentLine={2}>{content}</Content>
     </Wrapper>
   )
-}
+})

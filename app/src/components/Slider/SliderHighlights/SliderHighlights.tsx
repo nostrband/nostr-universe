@@ -6,13 +6,16 @@ import 'swiper/css'
 import styles from './slider.module.scss'
 import { SkeletonHighlights } from '@/components/Skeleton/SkeletonHighlights/SkeletonHighlights'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { memo } from 'react'
 
-export const SliderHighlights = ({
+export const SliderHighlights = memo(({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
 }: ISliderHighlights) => {
+
+  // depends on all props, no need to useCallback
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonHighlights />
@@ -36,4 +39,4 @@ export const SliderHighlights = ({
       {renderContent()}
     </Swiper>
   )
-}
+})

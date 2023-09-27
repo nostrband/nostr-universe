@@ -8,15 +8,17 @@ import styles from './slider.module.scss'
 import 'swiper/css'
 import { SkeletonApps } from '@/components/Skeleton/SkeletonApps/SkeletonApps'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { memo, useCallback } from 'react'
 
-export const SliderAppsNostro = ({ data, isLoading, handleReloadEntity = () => {} }: ISliderAppsNostro) => {
+export const SliderAppsNostro = memo(({ data, isLoading, handleReloadEntity = () => {} }
+: ISliderAppsNostro) => {
   const { openApp } = useOpenApp()
 
-  const handleOpenApp = async (app: AppNostroType) => {
+  const handleOpenApp = useCallback(async (app: AppNostroType) => {
     await openApp(app)
-  }
+  }, [openApp])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (isLoading && !data.length) {
       return <SkeletonApps />
     }
@@ -28,11 +30,11 @@ export const SliderAppsNostro = ({ data, isLoading, handleReloadEntity = () => {
         <AppNostro app={app} onOpen={handleOpenApp} />
       </SwiperSlide>
     ))
-  }
+  }, [handleOpenApp, data, isLoading, handleReloadEntity])
 
   return (
     <Swiper slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
       {renderContent()}
     </Swiper>
   )
-}
+})

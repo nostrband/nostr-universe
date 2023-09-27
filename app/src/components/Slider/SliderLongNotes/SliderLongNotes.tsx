@@ -6,13 +6,15 @@ import styles from './slider.module.scss'
 import { ItemLongNote } from '../../ItemsContent/ItemLongNote/ItemLongNote'
 import { SkeletonLongPosts } from '@/components/Skeleton/SkeletonLongPosts/SkeletonLongPosts'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { memo } from 'react'
 
-export const SliderLongNotes = ({
+export const SliderLongNotes = memo(({
   data,
   isLoading,
   handleClickEntity = () => {},
   handleReloadEntity = () => {}
 }: ISliderLongNotes) => {
+
   const renderContent = () => {
     if (isLoading) {
       return <SkeletonLongPosts />
@@ -37,4 +39,4 @@ export const SliderLongNotes = ({
       {renderContent()}
     </Swiper>
   )
-}
+})
