@@ -4,6 +4,7 @@ import { Modal } from '@/modules/Modal/Modal'
 import { Container } from '@/layout/Container/Conatiner'
 import FlashOnIcon from '@mui/icons-material/FlashOn'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
+import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
 import { StyledInput, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
 import { IconButton, ListItem, ListItemAvatar } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
@@ -17,7 +18,8 @@ export const ModalContextMenu = () => {
   const { getModalOpened, handleClose, handleOpen } = useOpenModalSearchParams()
   const { openZap } = useOpenApp()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
-  const id = searchParams.get('nostrId') || ''
+  const tabUrl = searchParams.get('tabUrl') || ''
+  const id = searchParams.get('nostrId') || tabUrl
   const addr = stringToBech32(id)
 
   const handleOpenModalSelect = () => {
@@ -28,6 +30,11 @@ export const ModalContextMenu = () => {
     const addr = stringToBech32(id)
     //    const event = await fetchEventByBech32(addr)
     openZap(addr)
+  }
+
+  const handleShareTabUrl = async () => {
+    await handleClose()
+    window.navigator.share({ url: tabUrl })
   }
 
   return (
@@ -44,26 +51,40 @@ export const ModalContextMenu = () => {
         />
         <StyledList>
           <ListItem disablePadding>
-            <StyledItemButton alignItems="center" onClick={handleOpenModalSelect}>
+            <StyledItemButton alignItems="center" onClick={handleShareTabUrl}>
               <ListItemAvatar>
                 <StyledItemIconAvatar>
-                  <OpenInNewOutlinedIcon />
+                  <IosShareOutlinedIcon />
                 </StyledItemIconAvatar>
               </ListItemAvatar>
-              <StyledItemText primary="Open with" />
+              <StyledItemText primary="Share URL" />
             </StyledItemButton>
           </ListItem>
+          {addr && (
+            <>
+              <ListItem disablePadding>
+                <StyledItemButton alignItems="center" onClick={handleOpenModalSelect}>
+                  <ListItemAvatar>
+                    <StyledItemIconAvatar>
+                      <OpenInNewOutlinedIcon />
+                    </StyledItemIconAvatar>
+                  </ListItemAvatar>
+                  <StyledItemText primary="Open with" />
+                </StyledItemButton>
+              </ListItem>
 
-          <ListItem disablePadding>
-            <StyledItemButton alignItems="center" onClick={handleZap}>
-              <ListItemAvatar>
-                <StyledItemIconAvatar>
-                  <FlashOnIcon />
-                </StyledItemIconAvatar>
-              </ListItemAvatar>
-              <StyledItemText primary="Zap" />
-            </StyledItemButton>
-          </ListItem>
+              <ListItem disablePadding>
+                <StyledItemButton alignItems="center" onClick={handleZap}>
+                  <ListItemAvatar>
+                    <StyledItemIconAvatar>
+                      <FlashOnIcon />
+                    </StyledItemIconAvatar>
+                  </ListItemAvatar>
+                  <StyledItemText primary="Zap" />
+                </StyledItemButton>
+              </ListItem>
+            </>
+          )}
         </StyledList>
       </Container>
     </Modal>

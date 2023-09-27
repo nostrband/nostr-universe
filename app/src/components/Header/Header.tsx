@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { Avatar, IconButton } from '@mui/material'
-// import SearchIcon from '@mui/icons-material/Search'
+import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 
@@ -17,7 +17,6 @@ import {
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { FC } from 'react'
-import { SearchIcon } from '@/assets'
 
 type HeaderProps = {
   title: string | React.ReactNode
