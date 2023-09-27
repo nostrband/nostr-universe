@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { isGuest } from '@/utils/helpers/prepare-data'
+import { useInView } from 'react-intersection-observer'
 
 const MEDIA_NOSTR_BAND_BASE_URL = 'https://media.nostr.band/thumbs'
 
@@ -22,12 +23,17 @@ export const useProfileImageSource = ({
   const [isFailed, setIsFailed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  const { ref, inView } = useInView({
+    threshold: 0
+  })
+
   const last4Chars = isGuest(pubkey) ? '' : getPubkeyLast4Chars(pubkey)
   const generatedURL = `${MEDIA_NOSTR_BAND_BASE_URL}/${last4Chars}/${pubkey}-${mediaType}-${size}`
   const defaultUserImage = ''
 
   useEffect(() => {
     if (!pubkey || !originalImage || isGuest(pubkey)) return
+    if (!inView) return
 
     const image = new Image()
     image.onloadstart = function () {
@@ -44,19 +50,27 @@ export const useProfileImageSource = ({
     }
 
     image.src = generatedURL
-  }, [pubkey, originalImage, generatedURL])
+    image.loading = 'lazy'
+  }, [pubkey, originalImage, generatedURL, inView])
+
+  const returnedObject = {
+    viewRef: ref
+  }
 
   if (!pubkey || !originalImage || isGuest(pubkey)) {
-    return defaultUserImage
+    return { ...returnedObject, url: defaultUserImage }
   }
 
   if (isLoading) {
-    return defaultUserImage
+    return { ...returnedObject, url: defaultUserImage }
   }
 
   if (isFailed) {
-    return originalImage
+    return { ...returnedObject, url: originalImage }
   }
 
-  return generatedURL
+  return {
+    ...returnedObject,
+    url: generatedURL
+  }
 }
