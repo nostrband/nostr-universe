@@ -20,8 +20,6 @@ export const ModalContextMenu = () => {
   const id = searchParams.get('nostrId') || ''
   const addr = stringToBech32(id)
 
-  if (isOpen) console.log('addr', id, addr)
-
   const handleOpenModalSelect = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
   }
