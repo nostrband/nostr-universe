@@ -114,7 +114,8 @@ export const ModalSelectApp = () => {
 
       apps.sort((a, b) => b.order - a.order)
 
-      if (apps.length === 0) {
+      // only native?
+      if (apps.length === 1) {
         setIsAppsFailed(true)
       }
       setApps(apps)
