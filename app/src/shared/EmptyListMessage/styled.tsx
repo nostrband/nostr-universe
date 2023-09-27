@@ -26,5 +26,6 @@ export const StyledReloadButton = styled(
   textDecoration: 'underline',
   '&:hover': {
     textDecoration: 'underline'
-  }
+  },
+  fontSize: 'inherit'
 }))

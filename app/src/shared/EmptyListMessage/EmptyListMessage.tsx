@@ -3,12 +3,17 @@ import { StyledMessage, StyledReloadButton } from './styled'
 
 type EmptyListMessageProps = {
   onReload?: () => void
+  message?: string
 }
 
-export const EmptyListMessage: FC<EmptyListMessageProps> = ({ onReload = () => {} }) => {
+export const EmptyListMessage: FC<EmptyListMessageProps> = ({
+  onReload = () => {},
+  message = 'Nothing here',
+  ...restProps
+}) => {
   return (
-    <StyledMessage>
-      Nothing here, <StyledReloadButton onClick={onReload}>reload</StyledReloadButton>
+    <StyledMessage {...restProps}>
+      {message}, <StyledReloadButton onClick={onReload}>reload</StyledReloadButton>
     </StyledMessage>
   )
 }
