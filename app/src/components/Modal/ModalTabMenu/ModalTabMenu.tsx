@@ -12,21 +12,19 @@ import { useOpenApp } from '@/hooks/open-entity'
 import { useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { stringToBech32 } from '@/modules/nostr'
-import { selectCurrentWorkspace } from '@/store/store'
 import { selectTab } from '@/store/reducers/tab.slice'
 
 export const ModalTabMenu = () => {
   const [searchParams] = useSearchParams()
-  const { onCloseTab, onPinTab, onUnPinTab } = useOpenApp()
+  const { onCloseTab, onPinTab, onUnPinTab, findTabPin } = useOpenApp()
   const { getModalOpened, handleClose } = useOpenModalSearchParams()
   const [, setEventAddr] = useState('')
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MENU)
   const id = searchParams.get('tabId') || ''
 
-  const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const currentTab = useAppSelector((state) => selectTab(state, id))
 
-  const isPin = currentWorkSpace?.pins.find((pin) => pin.appNaddr === currentTab?.appNaddr)
+  const isPin = currentTab ? !!findTabPin(currentTab) : false
   const url = currentTab?.url
 
   useEffect(() => {

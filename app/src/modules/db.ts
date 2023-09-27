@@ -1,21 +1,13 @@
 /* eslint-disable */
 // @ts-nocheck
 
-/* 
-pins are known apps that are attached to the taskbar,
-when pin is clicked, a tab is created that has same appNaddr,
-when close is clicked, tab is destroyed,
-when pin is clicked for which a tab exists - tab is shown
-
- */
-
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(9).stores({
-  tabs: 'id,pubkey,url,appNaddr,order,title,icon',
+db.version(10).stores({
+  tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
   profiles: '&id,pubkey,kind,created_at',

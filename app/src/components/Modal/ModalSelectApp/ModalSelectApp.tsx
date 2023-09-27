@@ -18,7 +18,7 @@ import { NATIVE_NADDR } from '@/consts'
 import { selectCurrentWorkspace } from '@/store/store'
 
 export const ModalSelectApp = () => {
-  const { openApp } = useOpenApp()
+  const { openApp, findAppPin } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [kind, setKind] = useState('')
   const [apps, setApps] = useState<IOpenAppNostr[]>([])
@@ -79,7 +79,7 @@ export const ModalSelectApp = () => {
         const app = appHandlers.handlers[0]
         if (!app.eventUrl) continue
 
-        const pinned = currentWorkSpace?.pins.find((p) => p.appNaddr === app.naddr)
+        const pinned = !!findAppPin(app)
 
         const lastUsed = app.naddr === lastAppNaddr
 
@@ -105,7 +105,7 @@ export const ModalSelectApp = () => {
           about: app.profile?.about || '',
           picture: app.profile?.picture || '',
           lastUsed,
-          pinned: Boolean(pinned),
+          pinned,
           order
         })
       }
@@ -115,6 +115,7 @@ export const ModalSelectApp = () => {
       setApps(apps)
       setIsAppsLoading(false)
     } catch (error) {
+      console.log("error", error)
       setIsAppsLoading(false)
     }
   }, [currentWorkSpace?.lastKindApps, currentWorkSpace?.pins, getParamAddr])

@@ -75,7 +75,7 @@ interface AppUrl {
   type: string
 }
 
-interface AppHandlerEvent extends AugmentedEvent {
+export interface AppHandlerEvent extends AugmentedEvent {
   naddr: string
   meta: MetaEvent | null
   inheritedProfile: boolean
@@ -708,7 +708,9 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null):
   if (!info) info = await fetchAppsByKinds(ndk, [addr.kind])
 
   // put to cache
-  if (info.apps.size > 0) kindAppsCache.set(addr.kind, info)
+  if (info.apps.size > 0) {
+    kindAppsCache.set(addr.kind, info)
+  }
 
   // init convenient url property for each handler
   // to redirect to this event
