@@ -92,7 +92,7 @@ export const AppsPage = () => {
   return (
     <StyledDialog fullScreen open={isOpen}>
       <StyledAppBar>
-        <Header />
+        <Header title="Apps" />
       </StyledAppBar>
 
       <StyledWrap>

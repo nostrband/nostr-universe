@@ -28,7 +28,7 @@ import { ModalImportKey } from '@/components/Modal/ModalImporKey/ModalImportKey'
 export const MainPage = () => {
   return (
     <StyledWrapperMain>
-      <Header />
+      <Header title="Content" />
       <WelcomeWidget />
       <TrendingNotes />
       <TrendingProfiles />
