@@ -46,6 +46,10 @@ export const tabSlice = createSlice({
       updateTab(state, action.payload.id, { url: action.payload.url })
     },
 
+    setTabTitle: (state, action) => {
+      updateTab(state, action.payload.id, { title: action.payload.title })
+    },
+
     setTabIcon: (state, action) => {
       updateTab(state, action.payload.id, { icon: action.payload.icon })
     },
@@ -72,6 +76,7 @@ export const {
   setTabCreated,
   setTabIsLoading,
   setTabUrl,
+  setTabTitle,
   setTabIcon,
   setTabScreenshot,
   setCurrentTabId

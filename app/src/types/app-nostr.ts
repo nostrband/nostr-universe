@@ -21,7 +21,6 @@ export type AppNostr = {
 
 export interface IOpenAppNostr extends AppNostr {
   kind?: string
-  replace?: boolean
   lastUsed?: boolean
 }
 

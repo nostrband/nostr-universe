@@ -84,7 +84,7 @@ export const workspacesSlice = createSlice({
     },
 
     removePinWorkspace: (state, action) => {
-      const { id } = action.payload.pin
+      const id = action.payload.id
       const pubkey = action.payload.workspacePubkey
 
       state.workspaces = state.workspaces.map((workspace) => {
