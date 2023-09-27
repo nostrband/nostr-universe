@@ -202,6 +202,7 @@ const nostrMenuConnect = () => {
       return (
         (await menuByAttr(t, 'href')) ||
         (await menuByAttr(t, 'id')) ||
+        (await menuByAttr(t, 'value')) ||
         (await menuByAttr(t, 'data-npub')) ||
         (await menuByAttr(t, 'data-id')) ||
         (await menuByAttr(t, 'data-note-id'))
