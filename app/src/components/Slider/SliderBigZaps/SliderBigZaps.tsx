@@ -6,8 +6,9 @@ import 'swiper/css'
 import styles from './slider.module.scss'
 import { SkeletonBigZaps } from '@/components/Skeleton/SkeletonBigZaps/SkeletonBigZaps'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { memo } from 'react'
 
-export const SliderBigZaps = ({
+export const SliderBigZaps = memo(({
   data,
   isLoading,
   handleClickEntity = () => {},
@@ -36,4 +37,4 @@ export const SliderBigZaps = ({
       {renderContent()}
     </Swiper>
   )
-}
+})

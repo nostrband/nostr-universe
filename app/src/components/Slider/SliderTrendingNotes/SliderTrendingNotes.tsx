@@ -6,8 +6,9 @@ import styles from './slider.module.scss'
 import { ItemTrendingNote } from '../../ItemsContent/ItemTrendingNote/ItemTrendingNote'
 import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNotes/SkeletonTrendingNotes'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { memo } from 'react'
 
-export const SliderTrendingNotes = ({
+export const SliderTrendingNotes = memo(({
   data,
   isLoading,
   handleClickEntity = () => {},
@@ -32,4 +33,4 @@ export const SliderTrendingNotes = ({
       {renderContent()}
     </Swiper>
   )
-}
+})

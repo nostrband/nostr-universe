@@ -13,7 +13,6 @@ export const useAddKey = () => {
   const wasGuest = wasPubkey === DEFAULT_PUBKEY
 
   const addKey = async () => {
-
     // ask user for new key
     const r = await keystore.addKey()
 
@@ -27,12 +26,13 @@ export const useAddKey = () => {
       await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubkey })
       await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubkey })
 
-      dispatch(updateWorkspacePubkey({
-        workspacePubkey: wasPubkey,
-        pubkey: currentPubkey
-      }))
+      dispatch(
+        updateWorkspacePubkey({
+          workspacePubkey: wasPubkey,
+          pubkey: currentPubkey
+        })
+      )
     } else {
-
       // read workspace from db
       await loadWorkspace(currentPubkey, dispatch)
     }

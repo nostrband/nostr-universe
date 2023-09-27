@@ -10,7 +10,7 @@ export function createEvent(o: object): Event {
   if (!c.pubkey) c.pubkey = ''
   if (!c.content) c.content = ''
   if (!c.created_at) c.created_at = 0
-  if (!c.kind) c.kind = -1 as Kind
+  if (c.kind === undefined) c.kind = -1 as Kind
   if (!c.sig) c.sig = ''
   if (!c.id) c.id = ''
   if (!c.tags) c.tags = []

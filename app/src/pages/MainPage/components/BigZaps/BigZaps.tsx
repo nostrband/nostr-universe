@@ -9,13 +9,14 @@ import { StyledTitle, StyledWrapper } from './styled'
 import { ZapEvent } from '@/types/zap-event'
 import { setBigZaps } from '@/store/reducers/contentWorkspace'
 import { MIN_ZAP_AMOUNT } from '@/consts'
+import { memo, useCallback } from 'react'
 
-export const BigZaps = () => {
+export const BigZaps = memo(() => {
   const { handleOpen } = useOpenModalSearchParams()
   const { bigZaps, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
-  const handleOpenHighlight = (bigZap: ZapEvent) => {
+  const handleOpenHighlight = useCallback((bigZap: ZapEvent) => {
     let addr = ''
     if (bigZap.targetEvent) {
       if (bigZap.targetEvent.kind === 0) {
@@ -25,12 +26,12 @@ export const BigZaps = () => {
         })
       } else if (
         (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000) ||
-        (bigZap.targetEvent.kind >= 10000 && bigZap.targetEvent.kind < 20000)
+        (bigZap.targetEvent.kind >= 30000 && bigZap.targetEvent.kind < 40000)
       ) {
-        addr = nip19.neventEncode({
-          id: bigZap.targetEvent.pubkey,
-          // kind: bigZap.targetEvent.kind,
-          // identifier: bigZap.targetEvent.identifier,
+        addr = nip19.naddrEncode({
+          pubkey: bigZap.targetEvent.pubkey,
+          kind: bigZap.targetEvent.kind,
+          identifier: bigZap.targetEvent.identifier,
           relays: [nostrbandRelay]
         })
       } else if (bigZap.targetMeta) {
@@ -46,9 +47,9 @@ export const BigZaps = () => {
     }
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
-  }
+  }, [handleOpen])
 
-  const handleReloadBigZaps = async () => {
+  const handleReloadBigZaps = useCallback(async () => {
     if (contactList) {
       dispatch(setBigZaps({ bigZaps: null }))
       const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT).catch(() => {
@@ -56,7 +57,7 @@ export const BigZaps = () => {
       })
       dispatch(setBigZaps({ bigZaps }))
     }
-  }
+  }, [contactList, dispatch])
 
   return (
     <StyledWrapper>
@@ -74,4 +75,4 @@ export const BigZaps = () => {
       />
     </StyledWrapper>
   )
-}
+})

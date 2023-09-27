@@ -4,8 +4,9 @@ import { Time } from '@/shared/ContentComponents/Time/Time'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemBigZap } from './types'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
+import { memo } from 'react'
 
-export const ItemBigZap = ({ targetPubkey, targetMeta, time, subtitle }: IItemBigZap) => {
+export const ItemBigZap = memo(({ targetPubkey, targetMeta, time, subtitle }: IItemBigZap) => {
   return (
     <Wrapper>
       <Head>
@@ -15,4 +16,4 @@ export const ItemBigZap = ({ targetPubkey, targetMeta, time, subtitle }: IItemBi
       <SubTitle>{subtitle}</SubTitle>
     </Wrapper>
   )
-}
+})

@@ -8,13 +8,14 @@ import { StyledTitle, StyledWrapper } from './styled'
 import { LongNoteEvent } from '@/types/long-note-event'
 import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongNotes'
 import { setLongPosts } from '@/store/reducers/contentWorkspace'
+import { memo, useCallback } from 'react'
 
-export const LongPosts = () => {
+export const LongPosts = memo(() => {
   const { handleOpen } = useOpenModalSearchParams()
   const { longPosts, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
-  const handleOpenLongPosts = (longPost: LongNoteEvent) => {
+  const handleOpenLongPosts = useCallback((longPost: LongNoteEvent) => {
     const naddr = nip19.naddrEncode({
       pubkey: longPost.pubkey,
       kind: longPost.kind,
@@ -23,13 +24,9 @@ export const LongPosts = () => {
     })
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
-  }
+  }, [handleOpen])
 
-  if (!longPosts?.length) {
-    return null
-  }
-
-  const handleReloadLongPosts = async () => {
+  const handleReloadLongPosts = useCallback(async () => {
     if (contactList) {
       dispatch(setLongPosts({ longPosts: null }))
       const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys).catch(() => {
@@ -37,7 +34,7 @@ export const LongPosts = () => {
       })
       dispatch(setLongPosts({ longPosts }))
     }
-  }
+  }, [dispatch, contactList])
 
   return (
     <StyledWrapper>
@@ -55,4 +52,4 @@ export const LongPosts = () => {
       />
     </StyledWrapper>
   )
-}
+})

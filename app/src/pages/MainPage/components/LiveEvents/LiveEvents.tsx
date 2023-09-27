@@ -8,13 +8,14 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedLiveEvents, getTagValue, nostrbandRelay } from '@/modules/nostr'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { setLiveEvents } from '@/store/reducers/contentWorkspace'
+import { memo, useCallback } from 'react'
 
-export const LiveEvents = () => {
+export const LiveEvents = memo(() => {
   const { liveEvents, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const { handleOpen } = useOpenModalSearchParams()
   const dispatch = useAppDispatch()
 
-  const handleOpenLiveEvent = (event: LiveEvent) => {
+  const handleOpenLiveEvent = useCallback((event: LiveEvent) => {
     const naddr = nip19.naddrEncode({
       pubkey: event.pubkey,
       kind: event.kind,
@@ -23,9 +24,9 @@ export const LiveEvents = () => {
     })
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
-  }
+  }, [handleOpen])
 
-  const handleReloadLiveEvents = async () => {
+  const handleReloadLiveEvents = useCallback(async () => {
     if (contactList) {
       dispatch(setLiveEvents({ liveEvents: null }))
       const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys).catch(() => {
@@ -33,7 +34,7 @@ export const LiveEvents = () => {
       })
       dispatch(setLiveEvents({ liveEvents }))
     }
-  }
+  }, [dispatch, contactList])
 
   return (
     <StyledWrapper>
@@ -50,4 +51,4 @@ export const LiveEvents = () => {
       />
     </StyledWrapper>
   )
-}
+})

@@ -46,6 +46,10 @@ export const tabSlice = createSlice({
       updateTab(state, action.payload.id, { url: action.payload.url })
     },
 
+    setTabTitle: (state, action) => {
+      updateTab(state, action.payload.id, { title: action.payload.title })
+    },
+
     setTabIcon: (state, action) => {
       updateTab(state, action.payload.id, { icon: action.payload.icon })
     },
@@ -60,6 +64,8 @@ export const tabSlice = createSlice({
 
     setCurrentTabId: (state, action) => {
       state.currentTabId = action.payload.id
+      if (action.payload.id)
+        updateTab(state, action.payload.id, { lastActive: Date.now() })
     }
   }
 })
@@ -70,11 +76,12 @@ export const {
   setTabCreated,
   setTabIsLoading,
   setTabUrl,
+  setTabTitle,
   setTabIcon,
   setTabScreenshot,
   setCurrentTabId
 } = tabSlice.actions
 
 export const selectTab = (state: RootState, id: string): ITab | undefined => {
-  return state.tab.tabs.find((tab) => tab.id === id)
+  return state.tab.tabs.find((tab: ITab) => tab.id === id)
 }

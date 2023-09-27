@@ -18,7 +18,7 @@ import { NATIVE_NADDR } from '@/consts'
 import { selectCurrentWorkspace } from '@/store/store'
 
 export const ModalSelectApp = () => {
-  const { openApp } = useOpenApp()
+  const { openApp, findAppPin } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [kind, setKind] = useState('')
   const [apps, setApps] = useState<IOpenAppNostr[]>([])
@@ -42,6 +42,19 @@ export const ModalSelectApp = () => {
   const load = useCallback(async () => {
     try {
       setIsAppsLoading(true)
+
+      const nativeApp: IOpenAppNostr = {
+        naddr: NATIVE_NADDR,
+        url: 'nostr:' + getParamAddr,
+        name: 'Native app',
+        about: 'Any native Nostr app installed on your device',
+        picture: '',
+        lastUsed: false,
+        pinned: false,
+        order: 0
+      }
+      setApps([nativeApp])
+
       const [info, addr] = await fetchAppsForEvent(getParamAddr)
       if (addr.kind === undefined) {
         setIsAppsLoading(false)
@@ -50,21 +63,15 @@ export const ModalSelectApp = () => {
 
       setKind('' + addr.kind)
 
-      const apps: IOpenAppNostr[] = []
-
       let lastAppNaddr = ''
       if (currentWorkSpace && addr.kind in currentWorkSpace.lastKindApps) {
         lastAppNaddr = currentWorkSpace?.lastKindApps[addr.kind]
       }
 
+      const apps: IOpenAppNostr[] = []
       apps.push({
-        naddr: NATIVE_NADDR,
-        url: 'nostr:' + getParamAddr,
-        name: 'Native app',
-        about: 'Any native Nostr app installed on your device',
-        picture: '',
+        ...nativeApp,
         lastUsed: NATIVE_NADDR === lastAppNaddr,
-        pinned: false,
         order: NATIVE_NADDR === lastAppNaddr ? 1000 : 999
       })
 
@@ -72,7 +79,7 @@ export const ModalSelectApp = () => {
         const app = appHandlers.handlers[0]
         if (!app.eventUrl) continue
 
-        const pinned = currentWorkSpace?.pins.find((p) => p.appNaddr === app.naddr)
+        const pinned = !!findAppPin(app)
 
         const lastUsed = app.naddr === lastAppNaddr
 
@@ -98,7 +105,7 @@ export const ModalSelectApp = () => {
           about: app.profile?.about || '',
           picture: app.profile?.picture || '',
           lastUsed,
-          pinned: Boolean(pinned),
+          pinned,
           order
         })
       }
@@ -108,6 +115,7 @@ export const ModalSelectApp = () => {
       setApps(apps)
       setIsAppsLoading(false)
     } catch (error) {
+      console.log("error", error)
       setIsAppsLoading(false)
     }
   }, [currentWorkSpace?.lastKindApps, currentWorkSpace?.pins, getParamAddr])
@@ -147,13 +155,6 @@ export const ModalSelectApp = () => {
   }
 
   const renderContent = () => {
-    if (isAppsLoading) {
-      return (
-        <LoadingContainer>
-          <LoadingSpinner />
-        </LoadingContainer>
-      )
-    }
     return (
       <>
         <Container>
@@ -188,12 +189,17 @@ export const ModalSelectApp = () => {
             return <AppNostroListItem app={app} key={index} onClick={() => handleOpen(app)} />
           })}
         </Container>
+        {isAppsLoading && (
+          <LoadingContainer>
+            <LoadingSpinner />
+          </LoadingContainer>
+        )}
       </>
     )
   }
 
   return (
-    <Modal title="Select App" open={isOpen} handleClose={() => handleClose()}>
+    <Modal title={kind ? `Select app for kind ${kind}` : `Select app`} open={isOpen} handleClose={() => handleClose()}>
       {renderContent()}
     </Modal>
   )

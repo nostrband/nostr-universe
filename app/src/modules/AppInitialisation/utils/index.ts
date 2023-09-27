@@ -199,7 +199,7 @@ export const getOrigin = (url) => {
 }
 
 export const getTabGroupId = (pt) => {
-  return pt.appNaddr || getOrigin(pt.url)
+  return getOrigin(pt.url) // pt.appNaddr || 
 }
 
 export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => {
@@ -245,7 +245,6 @@ export const writeCurrentPubkey = async (pubkey: string) => {
 }
 
 export const loadKeys = async (dispatch): Promise<[keys: string[], currentPubkey: string, readKeys: string[]]> => {
-
   // can be writeKey or readKey
   let currentPubkey = await dbi.getFlag('', 'currentPubkey')
   console.log('currentPubkey', currentPubkey)
@@ -264,10 +263,8 @@ export const loadKeys = async (dispatch): Promise<[keys: string[], currentPubkey
   const readKeys = (await dbi.listReadOnlyKeys()).filter((k) => !writeKeys.includes(k))
 
   if (!currentPubkey) {
-    if (readKeys.length)
-      currentPubkey = readKeys[0]
-    else if (writeKeys.length)
-      currentPubkey = writeKeys[0]
+    if (readKeys.length) currentPubkey = readKeys[0]
+    else if (writeKeys.length) currentPubkey = writeKeys[0]
     else {
       currentPubkey = DEFAULT_PUBKEY
       readKeys.push(DEFAULT_PUBKEY)

@@ -4,8 +4,9 @@ import { ProfileInfo } from '@/shared/ContentComponents/ProfileInfo/ProfileInfo'
 import { Time } from '@/shared/ContentComponents/Time/Time'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemHighlight } from './types'
+import { memo } from 'react'
 
-export const ItemHighlight = ({ pubkey, author, time, content }: IItemHighlight) => {
+export const ItemHighlight = memo(({ pubkey, author, time, content }: IItemHighlight) => {
   return (
     <Wrapper>
       <Head>
@@ -15,4 +16,4 @@ export const ItemHighlight = ({ pubkey, author, time, content }: IItemHighlight)
       <Content isHighlight>{content}</Content>
     </Wrapper>
   )
-}
+})

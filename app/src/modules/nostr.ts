@@ -75,7 +75,7 @@ interface AppUrl {
   type: string
 }
 
-interface AppHandlerEvent extends AugmentedEvent {
+export interface AppHandlerEvent extends AugmentedEvent {
   naddr: string
   meta: MetaEvent | null
   inheritedProfile: boolean
@@ -152,23 +152,25 @@ export function parseProfileJson(e: Event): Meta {
   return profile
 }
 
+function getEventAddr(e: NDKEvent | AugmentedEvent): string {
+  let addr = e.id
+  if (
+    e.kind === KIND_META ||
+    e.kind === KIND_CONTACT_LIST ||
+    (e.kind >= 10000 && e.kind < 20000) ||
+    (e.kind >= 10000 && e.kind < 20000)
+  ) {
+    addr = e.kind + ':' + e.pubkey + ':' + getTagValue(e, 'd')
+  }
+  return addr
+}
+
 function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
   return new Promise(async (ok) => {
     const events = await ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
     for (const e of events.values()) {
-      let addr = e.id
-      if (
-        e.kind === KIND_META ||
-        e.kind === KIND_CONTACT_LIST ||
-        (e.kind >= 10000 && e.kind < 20000) ||
-        (e.kind >= 10000 && e.kind < 20000)
-      ) {
-        addr = e.kind + ':' + e.pubkey + ':' + getTagValue(e, 'd')
-      }
-
       const augmentedEvent = rawEvent(e)
-      eventCache.set(e.id, augmentedEvent)
-      addrCache.set(addr, augmentedEvent)
+      putEventToCache(augmentedEvent)
     }
     ok(events)
   })
@@ -460,7 +462,7 @@ async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEve
 
   const events = await collectEvents(reqs)
   const event = events.length > 0 ? rawEvent(events[0]) : null
-  if (event) addrCache.set(id, event)
+  if (event) putEventToCache(event)
   return event
 }
 
@@ -695,7 +697,7 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null):
       addr.d_tag = getTagValue(event, 'd')
     }
   }
-  console.log('resolved addr', addr)
+  console.log('resolved addr', addr, event)
 
   // now fetch the apps for event kind
   let info = kindAppsCache.get(addr.kind)
@@ -706,7 +708,9 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null):
   if (!info) info = await fetchAppsByKinds(ndk, [addr.kind])
 
   // put to cache
-  if (info.handlers.length > 0) kindAppsCache.set(addr.kind, info)
+  if (info.apps.size > 0) {
+    kindAppsCache.set(addr.kind, info)
+  }
 
   // init convenient url property for each handler
   // to redirect to this event
@@ -753,7 +757,7 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
     })
 
     // put to cache
-    metaEvents.forEach((e) => metaCache.set(e.pubkey, e))
+    metaEvents.forEach((e) => putEventToCache(e))
 
     events.push(...metaEvents)
   }
@@ -792,7 +796,7 @@ async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
     })
 
     // put to cache
-    metaEvents.forEach((e) => metaCache.set(e.pubkey, e))
+    metaEvents.forEach((e) => putEventToCache(e))
 
     // merge with cached results
     metas.push(...metaEvents)
@@ -846,7 +850,7 @@ async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise
 
     const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e)).filter((e) => ids.includes(e.id))
 
-    augmentedEvents.forEach((e) => eventCache.set(e.id, e))
+    augmentedEvents.forEach((e) => putEventToCache(e))
 
     results.push(...augmentedEvents)
 
@@ -1608,4 +1612,11 @@ export async function sendPayment(info: WalletInfo, payreq: string) {
     // subscribe before publishing
     sub.start()
   })
+}
+
+export function putEventToCache(e: AugmentedEvent | MetaEvent) {
+  if (e.kind === KIND_META)
+    metaCache.set(e.pubkey, e)
+  eventCache.set(e.id, e)
+  addrCache.set(getEventAddr(e), e)
 }
