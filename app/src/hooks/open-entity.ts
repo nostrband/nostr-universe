@@ -437,6 +437,23 @@ export const useOpenApp = () => {
 
   browser.setAPI(API)
 
+  const onPinApp = async (app: AppNostr) => {
+    const pin: IPin = {
+      id: uuidv4(),
+      url: app.url,
+      appNaddr: app.naddr,
+      title: app.title,
+      icon: app.picture,
+      order: currentWorkSpace.pins.length,
+      pubkey: currentWorkSpace.pubkey
+    }
+
+    dispatch(addPinWorkspace({ pin, workspacePubkey: currentWorkSpace.pubkey }))
+
+    await dbi.addPin(pin)
+  }
+
+
   const onPinTab = async (currentTab: ITab) => {
     const pin: IPin = {
       id: uuidv4(),
@@ -647,6 +664,7 @@ export const useOpenApp = () => {
     deletePermission,
     onCloseTabs,
     openZap,
+    onPinApp,
     onPinTab,
     onUnPinTab,
     findTabPin,

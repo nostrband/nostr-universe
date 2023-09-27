@@ -90,7 +90,7 @@ export const AppsPageContent = () => {
   return (
     <>
       <StyledAppBar>
-        <Header />
+        <Header title="Apps" />
       </StyledAppBar>
 
       <StyledWrap>

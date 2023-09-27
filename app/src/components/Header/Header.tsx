@@ -3,14 +3,26 @@ import { Avatar, IconButton } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
-import { Header as HeaderLayout } from '@/layout/Header/Header'
+
 import { useAppSelector } from '@/store/hooks/redux'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
-import { StyledContainerButton, StyledIconButton, StyledWrapper } from './styled'
+import {
+  StyledAppLogo,
+  StyledContainerButton,
+  StyledHeader,
+  StyledIconButton,
+  StyledPageTitle,
+  StyledWrapper
+} from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { FC } from 'react'
 
-export const Header = () => {
+type HeaderProps = {
+  title: string | React.ReactNode
+}
+
+export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
   const [searchParams] = useSearchParams()
   const { handleOpen } = useOpenModalSearchParams()
   const { currentProfile } = useAppSelector((state) => state.profile)
@@ -19,11 +31,9 @@ export const Header = () => {
 
   return (
     <StyledWrapper>
-      <HeaderLayout>
-        <StyledIconButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_PAGE, { replace: true })}>
-          <Avatar src={getProfileImage(currentProfile)} />
-        </StyledIconButton>
-
+      <StyledHeader>
+        <StyledAppLogo />
+        <StyledPageTitle>{title}</StyledPageTitle>
         <StyledContainerButton>
           <IconButton
             color="inherit"
@@ -50,7 +60,10 @@ export const Header = () => {
             </IconButton>
           )}
         </StyledContainerButton>
-      </HeaderLayout>
+        <StyledIconButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_PAGE, { replace: true })}>
+          <Avatar src={getProfileImage(currentProfile)} />
+        </StyledIconButton>
+      </StyledHeader>
     </StyledWrapper>
   )
 }

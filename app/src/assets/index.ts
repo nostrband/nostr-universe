@@ -29,3 +29,5 @@ export { default as homeIcon } from './icons/home.svg'
 export { default as unpinIcon } from './icons/unpin.svg'
 export { default as pinIcon } from './icons/pin.svg'
 export { default as closeIcon } from './icons/close.svg'
+
+export { default as AppLogo } from './icons/spring.png'

@@ -33,7 +33,7 @@ export const TabsSwitcherPageContent = () => {
   return (
     <>
       <StyledAppBar>
-        <Header />
+        <Header title="Tabs" />
       </StyledAppBar>
 
       <StyledWrap>
