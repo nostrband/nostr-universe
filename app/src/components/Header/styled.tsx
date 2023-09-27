@@ -28,7 +28,8 @@ export const StyledAppLogo = styled((props: AvatarProps) => {
   return <Avatar {...props} src={AppLogo} />
 })({
   width: 32,
-  height: 32
+  height: 32,
+  backgroundColor: "#ccc",
 })
 
 export const StyledHeader = styled(Header)({
@@ -38,7 +39,7 @@ export const StyledHeader = styled(Header)({
 export const StyledPageTitle = styled((props: TypographyProps) => {
   return <Typography {...props} variant="h1" />
 })(({ theme }) => ({
-  fontSize: '1.5rem',
+  fontSize: '1.3rem',
   fontWeight: '600',
   color: theme.palette.light.light,
   lineHeight: '18px',

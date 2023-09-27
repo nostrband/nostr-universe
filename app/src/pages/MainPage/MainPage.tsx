@@ -24,11 +24,14 @@ import { AppsPage } from '../AppsPage/AppsPage'
 import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
 import { ModalProfileTabMenu } from '@/components/Modal/ModalProfileTabMenu/ModalProfileTabMenu'
 import { ModalImportKey } from '@/components/Modal/ModalImporKey/ModalImportKey'
+import { StyledAppBar } from '../AppsPage/styled'
 
 export const MainPage = () => {
   return (
     <StyledWrapperMain>
-      <Header title="Content" />
+      <StyledAppBar>
+        <Header title="Content" />
+      </StyledAppBar>
       <WelcomeWidget />
       <TrendingNotes />
       <TrendingProfiles />
