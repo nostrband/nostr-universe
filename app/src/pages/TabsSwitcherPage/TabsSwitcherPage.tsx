@@ -47,7 +47,7 @@ export const TabsSwitcherPage = () => {
   return (
     <StyledDialog fullScreen open={isOpen}>
       <StyledAppBar>
-        <Header />
+        <Header title="Tabs" />
       </StyledAppBar>
 
       <StyledWrap>
