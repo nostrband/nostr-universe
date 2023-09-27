@@ -17,6 +17,7 @@ import {
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { FC } from 'react'
+import { SearchIcon } from '@/assets'
 
 type HeaderProps = {
   title: string | React.ReactNode
@@ -42,13 +43,13 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
           >
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
-          {/* <IconButton
+          <IconButton
             color="inherit"
             size="medium"
             onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { replace: true })}
           >
             <SearchIcon />
-          </IconButton> */}
+          </IconButton>
 
           {currentTabId && (
             <IconButton
