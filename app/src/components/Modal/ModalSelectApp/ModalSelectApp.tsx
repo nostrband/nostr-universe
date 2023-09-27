@@ -45,8 +45,6 @@ export const ModalSelectApp = () => {
       setIsAppsFailed(false)
       setIsAppsLoading(true)
 
-      console.log('working')
-
       const nativeApp: IOpenAppNostr = {
         naddr: NATIVE_NADDR,
         url: 'nostr:' + getParamAddr,
