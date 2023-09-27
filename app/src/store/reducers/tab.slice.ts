@@ -83,5 +83,5 @@ export const {
 } = tabSlice.actions
 
 export const selectTab = (state: RootState, id: string): ITab | undefined => {
-  return state.tab.tabs.find((tab) => tab.id === id)
+  return state.tab.tabs.find((tab: ITab) => tab.id === id)
 }

@@ -5,8 +5,9 @@ import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemCommunity } from './types'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 import { CommunityInfo } from '@/shared/ContentComponents/CommunityInfo/CommunityInfo'
+import { memo } from 'react'
 
-export const ItemCommunity = ({ name, picture, time, content, subtitle }: IItemCommunity) => {
+export const ItemCommunity = memo(({ name, picture, time, content, subtitle }: IItemCommunity) => {
   return (
     <Wrapper>
       <Head>
@@ -17,4 +18,4 @@ export const ItemCommunity = ({ name, picture, time, content, subtitle }: IItemC
       <Content contentLine={2}>{content}</Content>
     </Wrapper>
   )
-}
+})

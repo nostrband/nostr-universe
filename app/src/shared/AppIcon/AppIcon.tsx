@@ -1,9 +1,18 @@
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import { StyledAppIcon, StyledAppImg } from './styled'
 import { IAppIcon } from './types'
 
-export const AppIcon = ({ picture = '', size, isActive, isPreviewTab, isOutline, alt, onClick }: IAppIcon) => {
+export const AppIcon = memo(({ 
+  picture = '', 
+  size, 
+  isActive, 
+  isPreviewTab, 
+  isOutline, 
+  alt, 
+  onClick
+}: IAppIcon) => {
+
   const [isFailed, setIsFailed] = useState(false)
 
   useEffect(() => {
@@ -34,4 +43,4 @@ export const AppIcon = ({ picture = '', size, isActive, isPreviewTab, isOutline,
       )}
     </StyledAppIcon>
   )
-}
+})

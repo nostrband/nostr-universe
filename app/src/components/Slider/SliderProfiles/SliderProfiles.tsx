@@ -6,8 +6,9 @@ import 'swiper/css'
 import styles from './slider.module.scss'
 import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/SkeletonProfiles'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { memo } from 'react'
 
-export const SliderProfiles = ({
+export const SliderProfiles = memo(({
   data,
   isLoading,
   handleClickEntity = () => {},
@@ -31,4 +32,4 @@ export const SliderProfiles = ({
       {renderContent()}
     </Swiper>
   )
-}
+})

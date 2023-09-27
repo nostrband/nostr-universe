@@ -8,22 +8,23 @@ import { SliderHighlights } from '@/components/Slider/SliderHighlights/SliderHig
 import { StyledTitle, StyledWrapper } from './styled'
 import { HighlightEvent } from '@/types/highlight-event'
 import { setHighlights } from '@/store/reducers/contentWorkspace'
+import { memo, useCallback } from 'react'
 
-export const Highlights = () => {
+export const Highlights = memo(() => {
   const { handleOpen } = useOpenModalSearchParams()
   const { highlights, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
-  const handleOpenHighlight = (highlight: HighlightEvent) => {
+  const handleOpenHighlight = useCallback((highlight: HighlightEvent) => {
     const nevent = nip19.neventEncode({
       id: highlight.id,
       relays: [nostrbandRelay]
     })
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
-  }
+  }, [handleOpen])
 
-  const handleReloadHighlights = async () => {
+  const handleReloadHighlights = useCallback(async () => {
     if (contactList) {
       dispatch(setHighlights({ highlights: null }))
       const highlights = await fetchFollowedHighlights(contactList.contactPubkeys).catch(() => {
@@ -31,7 +32,7 @@ export const Highlights = () => {
       })
       dispatch(setHighlights({ highlights }))
     }
-  }
+  }, [dispatch, contactList])
 
   return (
     <StyledWrapper>
@@ -49,4 +50,4 @@ export const Highlights = () => {
       />
     </StyledWrapper>
   )
-}
+})

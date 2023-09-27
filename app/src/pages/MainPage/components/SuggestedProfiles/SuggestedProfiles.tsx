@@ -8,26 +8,27 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { MetaEvent } from '@/types/meta-event'
+import { memo, useCallback } from 'react'
 
-export const SuggestedProfiles = () => {
-  const { currentPubkey: currentPubKey } = useAppSelector((state) => state.keys)
+export const SuggestedProfiles = memo(() => {
+  const { currentPubkey } = useAppSelector((state) => state.keys)
   const {
     data,
     isFetching: isLoading,
     refetch: refetchSuggestedProfiles
-  } = userService.useFetchSuggestedProfilesQuery(currentPubKey, {
-    skip: !currentPubKey
+  } = userService.useFetchSuggestedProfilesQuery(currentPubkey, {
+    skip: !currentPubkey
   })
   const { handleOpen } = useOpenModalSearchParams()
 
-  const handleOpenProfile = (profile: MetaEvent) => {
+  const handleOpenProfile = useCallback((profile: MetaEvent) => {
     const nprofile = nip19.nprofileEncode({
       pubkey: profile.pubkey,
       relays: [nostrbandRelay]
     })
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
-  }
+  }, [handleOpen])
 
   const handleReloadSuggestedProfiles = () => refetchSuggestedProfiles()
 
@@ -47,4 +48,4 @@ export const SuggestedProfiles = () => {
       />
     </StyledWrapper>
   )
-}
+})

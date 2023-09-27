@@ -7,12 +7,13 @@ import { nostrbandRelay } from '@/modules/nostr'
 import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/SliderTrendingNotes'
 import { StyledTitle, StyledWrapper } from './styled'
 import { AuthoredEvent } from '@/types/authored-event'
+import { useCallback } from 'react'
 
 export const TrendingNotes = () => {
   const { data, isFetching: isLoading, refetch: refetchTrendingNotes } = userService.useFetchTrendingNotesQuery('')
   const { handleOpen } = useOpenModalSearchParams()
 
-  const handleOpenNote = (note: AuthoredEvent) => {
+  const handleOpenNote = useCallback((note: AuthoredEvent) => {
     const ntrendingnote = nip19.neventEncode({
       relays: [nostrbandRelay],
       id: note.id
@@ -21,7 +22,7 @@ export const TrendingNotes = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
       search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: ntrendingnote }
     })
-  }
+  }, [])
 
   const handleReloadTrendingNotes = () => refetchTrendingNotes()
 
