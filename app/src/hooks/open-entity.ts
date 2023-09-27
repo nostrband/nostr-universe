@@ -508,7 +508,8 @@ export const useOpenApp = () => {
       order: tabs.length,
       pinned,
       created: false,
-      loading: true
+      loading: true,
+      lastActive: Date.now(),
     }
     // console.log("open", url, JSON.stringify(params), JSON.stringify(tab));
 

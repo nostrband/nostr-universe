@@ -59,6 +59,7 @@ export interface ITabGroup {
 // FIXME should be memoized
 export const selectTabGroups = (state: RootState): ITabGroup[] => {
   const tabs = selectCurrentWorkspaceTabs(state)
+  tabs.sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0))
   const groups: ITabGroup[] = []
   tabs.forEach((t) => {
     const id = getTabGroupId(t)

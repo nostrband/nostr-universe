@@ -11,4 +11,5 @@ export interface ITab {
 
   created: boolean
   loading: boolean
+  lastActive: number
 }
