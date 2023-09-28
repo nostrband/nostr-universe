@@ -5,7 +5,7 @@ import { IconButton } from '@mui/material'
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import ReplayOutlinedIcon from '@mui/icons-material/ReplayOutlined'
-import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
+//import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
 import AutoFixHighOutlinedIcon from '@mui/icons-material/AutoFixHighOutlined'
 import { StyledAvatar, StyledIconButton, StyledTabsActions, StyledWrapper } from './styled'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
@@ -30,8 +30,24 @@ export const TabMenu = () => {
     }
   }
 
-  const handleOpenTabsSwitcher = () => {
-    handleOpen(MODAL_PARAMS_KEYS.TABS_SWITCHER, { replace: true })
+  // const handleOpenTabsSwitcher = () => {
+  //   handleOpen(MODAL_PARAMS_KEYS.TABS_SWITCHER)
+  // }
+
+  const handleMagicMenu = () => {
+    handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
+      search: { 
+        tabUrl: currentTab?.url as string
+      }
+    })
+  }
+
+  const handleOpenTabMenu = () => {
+    handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id } })
+  }
+
+  const handleOpenProfileTabMenu = () => {
+    handleOpen(MODAL_PARAMS_KEYS.PROFILE_TAB_MENU_MODAL, { search: { tabId: id } })
   }
 
   return (
@@ -42,10 +58,10 @@ export const TabMenu = () => {
           isRounded={true}
           picture={currentTab?.icon}
           alt={currentTab?.title}
-          onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id }, replace: true })}
+          onClick={handleOpenTabMenu}
         />
         <StyledIconButton
-          onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_TAB_MENU_MODAL, { search: { tabId: id }, replace: true })}
+          onClick={handleOpenProfileTabMenu}
         >
           <StyledAvatar src={getProfileImage(currentProfile)} />
         </StyledIconButton>
@@ -55,21 +71,16 @@ export const TabMenu = () => {
         <IconButton
           color="inherit"
           size="medium"
-          onClick={() =>
-            handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
-              search: { 
-                tabUrl: currentTab?.url as string
-              },
-              replace: true
-            })
-          }
+          onClick={handleMagicMenu}
         >
           <AutoFixHighOutlinedIcon />
         </IconButton>
+      </StyledTabsActions>
 
-        <IconButton color="inherit" size="medium" onClick={handleOpenTabsSwitcher}>
+      <StyledTabsActions>
+        {/* <IconButton color="inherit" size="medium" onClick={handleOpenTabsSwitcher}>
           <WidgetsOutlinedIcon />
-        </IconButton>
+        </IconButton> */}
 
         <IconButton color="inherit" size="medium" onClick={handleStopReloadTab}>
           {currentTab?.loading ? <CloseOutlinedIcon /> : <ReplayOutlinedIcon />}

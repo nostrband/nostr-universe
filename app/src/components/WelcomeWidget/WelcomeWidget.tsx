@@ -16,6 +16,10 @@ export const WelcomeWidget = () => {
     return null
   }
 
+  const handleOpenImportKeys = () => {
+    handleOpen(MODAL_PARAMS_KEYS.KEY_IMPORT)
+  }
+
   return (
     <StyledContainer>
       <Container>
@@ -29,7 +33,7 @@ export const WelcomeWidget = () => {
               variant="contained"
               className="button"
               color="actionPrimary"
-              onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEY_IMPORT, { replace: true })}
+              onClick={handleOpenImportKeys}
             >
               Login with npub
             </Button>

@@ -10,6 +10,7 @@ type SearchParamsType = {
 type IExtraOptions = {
   search?: SearchParamsType
   replace?: boolean
+  append?: boolean
 }
 
 export const useOpenModalSearchParams = () => {
@@ -32,7 +33,7 @@ export const useOpenModalSearchParams = () => {
       }
 
       const searchString =
-        extraOptions?.replace || !getSearchParamsLength
+        !extraOptions?.append || !getSearchParamsLength
           ? createSearchParams(searchParamsData).toString()
           : `${location.search}&${createSearchParams(searchParamsData).toString()}`
 
@@ -41,7 +42,7 @@ export const useOpenModalSearchParams = () => {
           pathname: '/',
           search: searchString
         },
-        { replace: false }
+        { replace: extraOptions?.replace }
       )
     },
     [searchParams, location, navigate, getEnumParam]

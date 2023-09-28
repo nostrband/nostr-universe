@@ -1,6 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
 import { Avatar, IconButton } from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 
@@ -29,8 +28,6 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
   const { currentTabId } = useAppSelector((state) => state.tab)
   const id = searchParams.get('tabId') || ''
 
-  const isSearchPage = searchParams.get(MODAL_PARAMS_KEYS.SEARCH_PAGE)
-
   return (
     <StyledWrapper>
       <StyledHeader>
@@ -40,32 +37,22 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
           <IconButton
             color="inherit"
             size="medium"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.WALLET_MODAL, { replace: true })}
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.WALLET_MODAL)}
           >
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
-
-          {!isSearchPage && (
-            <IconButton
-              color="inherit"
-              size="medium"
-              onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_PAGE, { replace: true })}
-            >
-              <SearchIcon />
-            </IconButton>
-          )}
 
           {currentTabId && (
             <IconButton
               color="inherit"
               size="medium"
-              onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id }, replace: true })}
+              onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id } })}
             >
               <MoreVertIcon />
             </IconButton>
           )}
         </StyledContainerButton>
-        <StyledIconButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_PAGE, { replace: true })}>
+        <StyledIconButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_PAGE)}>
           <Avatar src={getProfileImage(currentProfile)} />
         </StyledIconButton>
       </StyledHeader>
