@@ -8,7 +8,7 @@ export const ModalTabMenu = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MENU)
 
   return (
-    <Modal title="Tab Menu (WIP)" open={isOpen} handleClose={() => handleClose()}>
+    <Modal title="Tab Menu" open={isOpen} handleClose={() => handleClose()}>
       {isOpen && <ModalTabMenuContent handleCloseModal={handleClose} />}
     </Modal>
   )

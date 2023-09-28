@@ -37,11 +37,6 @@ export const TabMenu = () => {
   return (
     <StyledWrapper>
       <StyledTabsActions>
-        <StyledIconButton
-          onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_TAB_MENU_MODAL, { search: { tabId: id }, replace: true })}
-        >
-          <StyledAvatar src={getProfileImage(currentProfile)} />
-        </StyledIconButton>
         <AppIcon
           isPreviewTab
           isRounded={true}
@@ -49,6 +44,11 @@ export const TabMenu = () => {
           alt={currentTab?.title}
           onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id }, replace: true })}
         />
+        <StyledIconButton
+          onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_TAB_MENU_MODAL, { search: { tabId: id }, replace: true })}
+        >
+          <StyledAvatar src={getProfileImage(currentProfile)} />
+        </StyledIconButton>
       </StyledTabsActions>
 
       <StyledTabsActions>

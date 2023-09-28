@@ -41,7 +41,7 @@ export const ModalTabSwitcherContent = () => {
             <Box key={tg.id}>
               <Container>
                 <StyledHeadTabGroup>
-                  <AppIcon isPreviewTab picture={info.icon} alt={info.title} />
+                  <AppIcon isPreviewTab isRounded={true} picture={info.icon} alt={info.title} />
                   <StyledTitle>{info.title}</StyledTitle>
                   <IconButton
                     size="small"

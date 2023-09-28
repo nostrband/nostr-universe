@@ -14,7 +14,7 @@ const getVariantApp = (isPreviewTab: boolean, isRounded: boolean, size: AppNostr
     return {
       height: 34,
       width: 34,
-      borderRadius: '5px'
+      borderRadius: '7px'
     }
   }
 
@@ -52,7 +52,7 @@ export const StyledAppIcon = styled(
     overflow: 'hidden',
     ...getVariantApp(isPreviewTab, isRounded, size),
     transition: theme.transitions.create(['border-color', 'transition']),
-    borderColor: isActive ? theme.palette.decorate.main : 'rgba(255, 255, 255, 0.1)',
+    borderColor: isActive ? theme.palette.decorate.main : 'rgba(80, 80, 80)',
     backgroundColor: isNotLoaded ? color : theme.palette.background.default,
     boxSizing: 'border-box',
     ':active': {

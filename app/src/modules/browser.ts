@@ -59,7 +59,17 @@ const initTab = () => {
 
     // override with out own implementation
     navigator.clipboard.writeText = async (text) => {
+      if (window.nostrCordovaPlugin.onClipboardWriteText) {
+        try {
+          window.nostrCordovaPlugin.onClipboardWriteText(text)
+        } catch (e) {
+          console.log("error", e)
+        }
+      }
       return await window.nostrCordovaPlugin.clipboardWriteText(text)
+    }
+    navigator.clipboard.readText = async () => {
+      return await window.nostrCordovaPlugin.clipboardReadText()
     }
 
     navigator.canShare = () => true
@@ -71,6 +81,7 @@ const initTab = () => {
     window.nostrCordovaPlugin.showContextMenu = _gen('showContextMenu')
     window.nostrCordovaPlugin.decodeBech32 = _gen('decodeBech32')
     window.nostrCordovaPlugin.clipboardWriteText = _gen('clipboardWriteText')
+    window.nostrCordovaPlugin.clipboardReadText = _gen('clipboardReadText')
     window.nostrCordovaPlugin.share = _gen('share')
 
     // for some clients that expect this
@@ -99,9 +110,139 @@ const initTab = () => {
 
 // executed in the tab
 const nostrMenuConnect = () => {
+
+
+  const getBech32 = async (value) => {
+    if (!value) return ''
+    // limit prefixes to small ascii chars
+    const BECH32_REGEX = /[a-z]{1,10}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g
+
+    const array = [...value.matchAll(BECH32_REGEX)].map((a) => a[0])
+
+    let bech32 = ''
+    for (let b32 of array) {
+      try {
+        const { type, data } = await window.nostrCordovaPlugin.decodeBech32(b32)
+        console.log('b32', b32, 'type', type, 'data', data)
+        switch (type) {
+          case 'npub':
+          case 'nprofile':
+          case 'note':
+          case 'nevent':
+          case 'naddr':
+          case 'lnbc':
+            bech32 = b32
+            break
+        }
+      } catch (e) {
+        console.log('bad b32', b32, 'e', e)
+      }
+
+      if (bech32) break
+    }
+
+    return bech32;
+  }
+
+  const getAttrBech32 = async (e, attrName) => {
+    const value = e.getAttribute(attrName)
+    console.log('attr', attrName, 'value', value)
+    return await getBech32(value)
+  }
+
+  const getAbsUrl = (s) => {
+    if (!s)
+      return '';
+    try {
+      const url = new URL(s, document.location);
+      return url.toString();
+    } catch {
+      return '';
+    }
+  }
+
+  const getMaybeUrl = (s) => {
+    try {
+      const url = new URL(text);
+      if (url.origin)
+        return url.toString();
+    } catch {}
+    return '';
+  }
+
+  const showMenu = async (data) => {
+    const hasData = Object.keys(data).some((i) => !!data[i]);
+    if (!hasData)
+      return
+
+    console.log("show menu", JSON.stringify(data))
+
+    const d = document.createElement('div')
+    d.style = `
+      font-family: sans-serif; 
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      z-index: 1000000;
+      border: 1px solid #853093; 
+      border-radius: 10px; 
+      box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px; 
+      position: fixed; 
+      top: 16px; 
+      left: 50%; 
+      width: auto; 
+      transform: translate(-50%, 0); 
+      padding: 5px 8px;
+      cursor: pointer;
+
+      background-image: linear-gradient(to right, #8d3093 0%, #ff44fb  51%, #853093  100%);
+      transition: 0.5s;
+      background-size: 200% auto;
+      color: white;
+      display: block;
+      opacity: 0;
+      transition: opacity 1s linear;
+    `
+
+    d.innerHTML = `
+      <nobr>
+        <svg style="vertical-align: middle" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#ffffff"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><polygon points="20,7 20.94,4.94 23,4 20.94,3.06 20,1 19.06,3.06 17,4 19.06,4.94"/><polygon points="8.5,7 9.44,4.94 11.5,4 9.44,3.06 8.5,1 7.56,3.06 5.5,4 7.56,4.94"/><polygon points="20,12.5 19.06,14.56 17,15.5 19.06,16.44 20,18.5 20.94,16.44 23,15.5 20.94,14.56"/><path d="M17.71,9.12l-2.83-2.83C14.68,6.1,14.43,6,14.17,6c-0.26,0-0.51,0.1-0.71,0.29L2.29,17.46c-0.39,0.39-0.39,1.02,0,1.41 l2.83,2.83C5.32,21.9,5.57,22,5.83,22s0.51-0.1,0.71-0.29l11.17-11.17C18.1,10.15,18.1,9.51,17.71,9.12z M14.17,8.42l1.41,1.41 L14.41,11L13,9.59L14.17,8.42z M5.83,19.59l-1.41-1.41L11.59,11L13,12.41L5.83,19.59z"/></g></g></svg>
+        <span style="vertical-align: middle">Context menu</span>
+      </nobr>
+    `
+    document.body.appendChild(d)
+
+    function onClick(e) {
+      d.remove()
+      document.body.removeEventListener('click', onClick)
+    }
+
+    d.addEventListener('click', (e) => {
+      window.nostrCordovaPlugin.showContextMenu(data)
+      e.stopPropagation()
+      document.body.removeEventListener('click', onClick)
+      d.remove()
+    })
+
+    document.body.addEventListener('click', onClick);
+
+    setTimeout(() => d.style.opacity = '1', 0);
+  }
+
+  window.nostrCordovaPlugin.onClipboardWriteText = async (text) => {
+    console.log("onClipboardWriteText", text);
+    const data = {
+      text,
+      bech32: await getBech32(text),
+      href: getMaybeUrl(text),
+    };
+
+    showMenu(data);
+  }
+
   let onlongtouch = null
   let timer = null
-  let touchduration = 1300 // length of time we want the user to touch before we do something
+  let touchduration = 1000 // length of time we want the user to touch before we do something
   let touchX = 0
   let touchY = 0
   let curX = 0
@@ -141,74 +282,44 @@ const nostrMenuConnect = () => {
     }
   }
 
-  const menu = async (value) => {
-    if (!value) return
-    // limit prefixes to small ascii chars
-    const BECH32_REGEX = /[a-z]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g
-
-    const array = [...value.matchAll(BECH32_REGEX)].map((a) => a[0])
-
-    let bech32 = ''
-    for (let b32 of array) {
-      try {
-        const { type, data } = await window.nostrCordovaPlugin.decodeBech32(b32)
-        console.log('b32', b32, 'type', type, 'data', data)
-        switch (type) {
-          case 'npub':
-          case 'nprofile':
-          case 'note':
-          case 'nevent':
-          case 'naddr':
-            bech32 = b32
-            break
-        }
-      } catch (e) {
-        console.log('bad b32', b32, 'e', e)
-      }
-
-      if (bech32) break
-    }
-
-    if (!bech32) return false
-
-    console.log('menu for event', bech32)
-
-    window.nostrCordovaPlugin.showContextMenu(bech32)
-
-    //    const d = document.createElement("div");
-    //    d.setAttribute("data-npub", bech32);
-    //    window.nostrZap.initTarget(d);
-    //    d.click();
-    //    d.remove();
-
-    return true
-  }
-
-  const menuByAttr = async (e, attrName) => {
-    const value = e.getAttribute(attrName)
-    console.log('attr', attrName, 'value', value)
-    if (!value) return false
-
-    return menu(value)
-  }
-
   onLongTouch = async (e) => {
     const t = e.target
     console.log('longtouch', t)
     try {
-      const sel = window.getSelection().toString()
-      if (sel) return await menu(sel)
 
-      return (
-        (await menuByAttr(t, 'href')) ||
-        (await menuByAttr(t, 'id')) ||
-        (await menuByAttr(t, 'value')) ||
-        (await menuByAttr(t, 'data-npub')) ||
-        (await menuByAttr(t, 'data-id')) ||
-        (await menuByAttr(t, 'data-note-id'))
-      )
+      const data = {
+        bech32: '',
+        text: '',
+      };
+
+      // text selection is a priority
+      const sel = window.getSelection().toString()
+      data.text = sel;
+      data.bech32 = await getBech32(sel);
+      data.href = getMaybeUrl(sel);
+
+      if (!data.href)
+        data.href = getAbsUrl(t.getAttribute('href')) || '';
+
+      data.imgSrc = t.tagName === 'IMG' ? getAbsUrl(t.getAttribute('src')) : '';
+      data.videoSrc = t.tagName === 'VIDEO' ? getAbsUrl(t.getAttribute('src')) : '';
+      data.audioSrc = t.tagName === 'AUDIO' ? getAbsUrl(t.getAttribute('src')) : '';
+
+      // attrs are next
+      if (!data.bech32) {
+        data.bech32 = 
+        (await getAttrBech32(t, 'href')) ||
+        (await getAttrBech32(t, 'id')) ||
+        (await getAttrBech32(t, 'value')) ||
+        (await getAttrBech32(t, 'data-npub')) ||
+        (await getAttrBech32(t, 'data-id')) ||
+        (await getAttrBech32(t, 'data-note-id'))
+        ;
+      }
+
+      showMenu(data)
     } catch (e) {
-      console.log('menu failed', t)
+      console.log('menu failed', t, e)
     }
   }
 

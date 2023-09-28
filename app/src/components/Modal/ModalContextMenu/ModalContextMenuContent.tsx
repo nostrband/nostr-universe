@@ -5,12 +5,14 @@ import FlashOnIcon from '@mui/icons-material/FlashOn'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
+import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
 import { StyledInput, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
 import { IconButton, ListItem, ListItemAvatar } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
 import { stringToBech32 } from '@/modules/nostr'
 import { useOpenApp } from '@/hooks/open-entity'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
+import { ReactNode } from 'react'
 
 export const ModalContextMenuContent = () => {
 
@@ -18,16 +20,19 @@ export const ModalContextMenuContent = () => {
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { openZap } = useOpenApp()
   const tabUrl = searchParams.get('tabUrl') || ''
-  const id = searchParams.get('nostrId') || tabUrl
-  const addr = stringToBech32(id)
+  const text = searchParams.get('text') || ''
+  const href = searchParams.get('href') || ''
+  const imgSrc = searchParams.get('imgSrc') || ''
+  const videoSrc = searchParams.get('videoSrc') || ''
+  const audioSrc = searchParams.get('audioSrc') || ''
+  const value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
+  const addr = stringToBech32(value || tabUrl)
 
   const handleOpenModalSelect = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
   }
 
   const handleZap = async () => {
-    const addr = stringToBech32(id)
-    //    const event = await fetchEventByBech32(addr)
     openZap(addr)
   }
 
@@ -36,53 +41,47 @@ export const ModalContextMenuContent = () => {
     window.navigator.share({ url: tabUrl })
   }
 
+  const handleShareValue = async () => {
+    await handleClose()
+    window.navigator.share({ text: value })
+  }
+
+  const handleCopyValue = () => {
+    copyToClipBoard(value)
+  }
+
+  const renderItem = (label: string, icon: ReactNode, handler: () => void) => {
+    return (
+      <ListItem disablePadding>
+        <StyledItemButton alignItems="center" onClick={handler}>
+          <ListItemAvatar>
+            <StyledItemIconAvatar>
+              {icon}
+            </StyledItemIconAvatar>
+          </ListItemAvatar>
+          <StyledItemText primary={label} />
+        </StyledItemButton>
+      </ListItem>
+
+    )
+  }
+
   return (
     <Container>
       <StyledInput
         endAdornment={
-          <IconButton color="inherit" size="medium" onClick={() => copyToClipBoard(id)}>
+          <IconButton color="inherit" size="medium" onClick={handleCopyValue}>
             <ContentCopyOutlinedIcon />
           </IconButton>
         }
         readOnly
-        value={id || ''}
+        value={value || ''}
       />
       <StyledList>
-        <ListItem disablePadding>
-          <StyledItemButton alignItems="center" onClick={handleShareTabUrl}>
-            <ListItemAvatar>
-              <StyledItemIconAvatar>
-                <IosShareOutlinedIcon />
-              </StyledItemIconAvatar>
-            </ListItemAvatar>
-            <StyledItemText primary="Share URL" />
-          </StyledItemButton>
-        </ListItem>
-        {addr && (
-          <>
-            <ListItem disablePadding>
-              <StyledItemButton alignItems="center" onClick={handleOpenModalSelect}>
-                <ListItemAvatar>
-                  <StyledItemIconAvatar>
-                    <OpenInNewOutlinedIcon />
-                  </StyledItemIconAvatar>
-                </ListItemAvatar>
-                <StyledItemText primary="Open with" />
-              </StyledItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <StyledItemButton alignItems="center" onClick={handleZap}>
-                <ListItemAvatar>
-                  <StyledItemIconAvatar>
-                    <FlashOnIcon />
-                  </StyledItemIconAvatar>
-                </ListItemAvatar>
-                <StyledItemText primary="Zap" />
-              </StyledItemButton>
-            </ListItem>
-          </>
-        )}
+        {value && renderItem("Share text", (<ShareOutlinedIcon />), handleShareValue)}
+        {addr && renderItem("Open with", (<OpenInNewOutlinedIcon />), handleOpenModalSelect)}
+        {addr && renderItem("Zap", (<FlashOnIcon />), handleZap)}
+        {renderItem("Share tab URL", (<IosShareOutlinedIcon />), handleShareTabUrl)}
       </StyledList>
     </Container>
   )
