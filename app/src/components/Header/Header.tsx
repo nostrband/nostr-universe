@@ -29,6 +29,8 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
   const { currentTabId } = useAppSelector((state) => state.tab)
   const id = searchParams.get('tabId') || ''
 
+  const isSearchPage = searchParams.get(MODAL_PARAMS_KEYS.SEARCH_PAGE)
+
   return (
     <StyledWrapper>
       <StyledHeader>
@@ -42,13 +44,16 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
           >
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
-          <IconButton
-            color="inherit"
-            size="medium"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { replace: true })}
-          >
-            <SearchIcon />
-          </IconButton>
+
+          {!isSearchPage && (
+            <IconButton
+              color="inherit"
+              size="medium"
+              onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_PAGE, { replace: true })}
+            >
+              <SearchIcon />
+            </IconButton>
+          )}
 
           {currentTabId && (
             <IconButton
