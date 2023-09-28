@@ -8,7 +8,7 @@ export const ModalContextMenu = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
 
   return (
-    <Modal title="Context Menu (WIP)" open={isOpen} handleClose={() => handleClose()}>
+    <Modal title="Context Menu" open={isOpen} handleClose={() => handleClose()}>
       {isOpen && <ModalContextMenuContent />}
     </Modal>
   )

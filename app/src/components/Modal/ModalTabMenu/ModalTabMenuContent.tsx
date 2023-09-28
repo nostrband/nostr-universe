@@ -6,7 +6,6 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import {
-  StyledInfoItem,
   StyledItemButton,
   StyledItemIconAvatar,
   StyledItemText,
@@ -21,6 +20,7 @@ import { stringToBech32 } from '@/modules/nostr'
 import { selectTab } from '@/store/reducers/tab.slice'
 import { Input } from '@/shared/Input/Input'
 import { IModalTabMenuContent } from './types'
+import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 
 export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) => {
   const [searchParams] = useSearchParams()
@@ -59,18 +59,11 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
   }
 
   const copyAddrHandler = () => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.cordova.plugins.clipboard.copy(url)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.plugins.toast.showShortBottom('Copied')
+    copyToClipBoard(url || '')
   }
 
   return (
     <Container>
-      <StyledInfoItem>URL: {url}</StyledInfoItem>
-      <StyledInfoItem>App: {currentTab?.title}</StyledInfoItem>
       <StyledWrapInput>
         <Input
           endAdornment={
