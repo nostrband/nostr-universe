@@ -173,13 +173,13 @@ const nostrMenuConnect = () => {
     console.log('show menu', JSON.stringify(data))
 
     function clear() {
-      window.nostrCordovaPlugin.magicMenu?.remove();
-      window.nostrCordovaPlugin.magicMenu = null;
+      window.nostrCordovaPlugin.magicMenu?.remove()
+      window.nostrCordovaPlugin.magicMenu = null
     }
 
     // clear previous menu, if any
-    const reopen = !!window.nostrCordovaPlugin.magicMenu;
-    clear();
+    const reopen = !!window.nostrCordovaPlugin.magicMenu
+    clear()
 
     const d = document.createElement('div')
     d.style = `
@@ -222,53 +222,50 @@ const nostrMenuConnect = () => {
     function remove() {
       // since this action happens in the future,
       // we must check if a newer menu was already created
-      if (!isActive()) return;
-      d.style.opacity = '0';
+      if (!isActive()) return
+      d.style.opacity = '0'
       setTimeout(() => {
-        if (isActive())
-          clear()
-      }, 3000);
+        if (isActive()) clear()
+      }, 3000)
     }
 
     function onClick(e) {
-      remove();
+      remove()
       document.body.removeEventListener('click', onClick)
     }
 
     d.addEventListener('click', (e) => {
-      if (isActive())
-        window.nostrCordovaPlugin.showContextMenu(data)
+      if (isActive()) window.nostrCordovaPlugin.showContextMenu(data)
       e.stopPropagation()
       document.body.removeEventListener('click', onClick)
-      remove();
+      remove()
     })
 
     document.body.addEventListener('click', onClick)
 
     window.nostrCordovaPlugin.magicMenu = d
     setTimeout(() => {
-      if (isActive())
-        d.style.opacity = '1'
-    }, 0);
+      if (isActive()) d.style.opacity = '1'
+    }, 0)
 
     // start watching text selection and
     // show another menu if selection changes
     const selectionMonitor = async () => {
-      if (!isActive()) return;
+      if (!isActive()) return
 
       const sel = window.getSelection().toString()
       if (data.text !== sel) {
-        data.text = sel;
-        data.bech32 = await getBech32(sel);
-        data.href = getMaybeUrl(sel);
-        showMenu(data);
-        return;
+        data.text = sel
+        data.bech32 = await getBech32(sel)
+        data.href = getMaybeUrl(sel)
+        showMenu(data)
+        return
       }
 
-      setTimeout(selectionMonitor, 200);
+      setTimeout(selectionMonitor, 200)
     }
 
-    selectionMonitor();
+    selectionMonitor()
   }
 
   window.nostrCordovaPlugin.onClipboardWriteText = async (text) => {
