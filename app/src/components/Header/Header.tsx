@@ -42,13 +42,6 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
           >
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
-          <IconButton
-            color="inherit"
-            size="medium"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL)}
-          >
-            <SearchIcon />
-          </IconButton>
 
           {currentTabId && (
             <IconButton
