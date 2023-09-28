@@ -20,12 +20,16 @@ import { Header } from './components/Header/Header'
 import { SearchPage } from './pages/SearchPage/SearchPage'
 import { ModalAddKey } from './components/Modal/ModalAddKey/ModalAddKey'
 import { ModalAbout } from './components/Modal/ModalAbout/ModalAbout'
+import { useAppDispatch, useAppSelector } from './store/hooks/redux'
+import { setPositionScroll } from './store/reducers/positionScrollPage.slice'
 
 export const App = () => {
   const { pathname } = useLocation()
+  const { position } = useAppSelector((state) => state.positionScrollPage)
+  const dispatch = useAppDispatch()
 
   const handleScroll = () => {
-    localStorage.setItem(pathname, String(window.scrollY))
+    dispatch(setPositionScroll({ page: pathname, value: window.scrollY }))
   }
 
   useEffect(() => {
@@ -36,12 +40,8 @@ export const App = () => {
   }, [pathname])
 
   useEffect(() => {
-    window.scrollTo(0, Number(localStorage.getItem(pathname)))
+    window.scrollTo(0, position[pathname])
   }, [pathname])
-
-  useEffect(() => {
-    localStorage.clear()
-  }, [])
 
   const getTitle = () => {
     switch (pathname) {

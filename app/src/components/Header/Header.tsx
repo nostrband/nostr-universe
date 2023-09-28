@@ -21,7 +21,7 @@ type HeaderProps = {
   title: string | React.ReactNode
 }
 
-export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
+export const Header: FC<HeaderProps> = ({ title = 'Apps' }) => {
   const [searchParams] = useSearchParams()
   const { handleOpen } = useOpenModalSearchParams()
   const { currentProfile } = useAppSelector((state) => state.profile)

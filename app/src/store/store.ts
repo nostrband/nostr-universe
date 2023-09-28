@@ -11,6 +11,8 @@ import { permissionRequestsSlice } from './reducers/permissionRequests.slice'
 import { WorkSpace } from '@/types/workspace'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { ITab } from '@/types/tab'
+import { positionScrollPageSlice } from './reducers/positionScrollPage.slice'
+import { searchModalSlice } from './reducers/searchModal.slice'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -21,6 +23,8 @@ export const rootReducer = combineReducers({
   contentWorkSpace: contentWorkSpaceSlice.reducer,
   workspaces: workspacesSlice.reducer,
   permissionRequests: permissionRequestsSlice.reducer,
+  positionScrollPage: positionScrollPageSlice.reducer,
+  searchModal: searchModalSlice.reducer,
   [userService.reducerPath]: userService.reducer
 })
 

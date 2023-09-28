@@ -26,10 +26,14 @@ import { StyledForm, StyledInput } from './styled'
 import { IconButton } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { ContactList } from '../MainPage/components/ContactList/ContactList'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { setSearchValue } from '@/store/reducers/searchModal.slice'
 
 export const SearchPageContent = () => {
   const { openBlank } = useOpenApp()
-  const [searchValue, setSearchValue] = useState('')
+  const { searchValue } = useAppSelector((state) => state.searchModal)
+  const dispatch = useAppDispatch()
+  // const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [notes, setNotes] = useState<AuthoredEvent[] | null>(null)
   const [longNotes, setLongNotes] = useState<LongNoteEvent[] | null>(null)
@@ -84,7 +88,7 @@ export const SearchPageContent = () => {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value)
+    dispatch(setSearchValue({ searchValue: e.target.value }))
   }
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -126,10 +130,8 @@ export const SearchPageContent = () => {
   // }, [isOpen])
 
   useEffect(() => {
-    const memoizedSearchValue = localStorage.getItem('searchValue') || ''
-    setSearchValue(memoizedSearchValue)
-    if (memoizedSearchValue.trim().length) {
-      loadEvents(memoizedSearchValue)
+    if (searchValue.trim().length) {
+      loadEvents(searchValue)
     }
   }, [loadEvents])
 
