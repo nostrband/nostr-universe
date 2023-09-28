@@ -18,6 +18,8 @@ import { ModalProfileTabMenu } from './components/Modal/ModalProfileTabMenu/Moda
 import { StyledWrapper } from './styled'
 import { Header } from './components/Header/Header'
 import { SearchPage } from './pages/SearchPage/SearchPage'
+import { ModalAddKey } from './components/Modal/ModalAddKey/ModalAddKey'
+import { ModalAbout } from './components/Modal/ModalAbout/ModalAbout'
 
 export const App = () => {
   const { pathname } = useLocation()
@@ -88,6 +90,8 @@ export const App = () => {
       <TabPage />
       <ModalContextMenu />
       <ModalProfileTabMenu />
+      <ModalAddKey />
+      <ModalAbout />
     </>
   )
 }
