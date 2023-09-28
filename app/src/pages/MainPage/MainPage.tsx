@@ -25,6 +25,7 @@ import { ModalProfileTabMenu } from '@/components/Modal/ModalProfileTabMenu/Moda
 import { ModalImportKey } from '@/components/Modal/ModalImporKey/ModalImportKey'
 import { StyledAppBar } from '../AppsPage/styled'
 import { SearchPage } from '../SearchPage/SearchPage'
+import { ModalFindApp } from '@/components/Modal/ModalFindApp/ModalFindApp'
 
 export const MainPage = () => {
   return (
@@ -50,6 +51,7 @@ export const MainPage = () => {
       <ModalTabSwitcher />
       <ModalTabMenu />
       <ModalWallet />
+      <ModalFindApp />
 
       <ModalSelectApp />
       <ModalPermissionsRequest />

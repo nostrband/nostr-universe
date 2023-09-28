@@ -14,7 +14,8 @@ export enum MODAL_PARAMS_KEYS {
   TABS_SWITCHER_PAGE = 'tabs-switcher-page',
   APPS_PAGE = 'apps-page',
   WALLET_MODAL = 'wallet-modal',
-  PROFILE_TAB_MENU_MODAL = 'profile-tab-menu-modal'
+  PROFILE_TAB_MENU_MODAL = 'profile-tab-menu-modal',
+  FIND_APP = 'find-app'
 }
 
 export const EXTRA_OPTIONS = {
