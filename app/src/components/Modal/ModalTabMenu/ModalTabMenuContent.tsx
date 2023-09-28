@@ -1,21 +1,15 @@
-import { IconButton } from '@mui/material'
+import { IconButton, List, ListItemButton } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
 import { useAppSelector } from '@/store/hooks/redux'
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import {
-  StyledItemButton,
-  StyledItemIconAvatar,
-  StyledItemText,
-  StyledList,
-  StyledWrapInput
-} from './styled'
+import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledWrapInput } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
 import { useSearchParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { stringToBech32 } from '@/modules/nostr'
 import { selectTab } from '@/store/reducers/tab.slice'
 import { Input } from '@/shared/Input/Input'
@@ -62,6 +56,19 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
     copyToClipBoard(url || '')
   }
 
+  const renderItem = useCallback((label: string, icon: React.ReactNode, handler: () => void) => {
+    return (
+      <ListItem disablePadding>
+        <ListItemButton alignItems="center" onClick={handler}>
+          <ListItemAvatar>
+            <StyledItemIconAvatar>{icon}</StyledItemIconAvatar>
+          </ListItemAvatar>
+          <StyledItemText primary={label} />
+        </ListItemButton>
+      </ListItem>
+    )
+  }, [])
+
   return (
     <Container>
       <StyledWrapInput>
@@ -75,28 +82,16 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
           defaultValue={url}
         />
       </StyledWrapInput>
-      <StyledList>
-        <ListItem disablePadding>
-          <StyledItemButton alignItems="center" onClick={handleCloseTab}>
-            <ListItemAvatar>
-              <StyledItemIconAvatar>
-                <CloseOutlinedIcon />
-              </StyledItemIconAvatar>
-            </ListItemAvatar>
-            <StyledItemText primary="Close tab" />
-          </StyledItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <StyledItemButton alignItems="center" onClick={handlePinUnPinTab}>
-            <ListItemAvatar>
-              <StyledItemIconAvatar>
-                {isPin ? <DeleteOutlineOutlinedIcon /> : <PushPinOutlinedIcon />}
-              </StyledItemIconAvatar>
-            </ListItemAvatar>
-            <StyledItemText primary={isPin ? 'Unpin' : 'Pin'} />
-          </StyledItemButton>
-        </ListItem>
-      </StyledList>
+      <StyledMenuWrapper>
+        <List>
+          {renderItem('Close tab', <CloseOutlinedIcon />, handleCloseTab)}
+          {renderItem(
+            isPin ? 'Unpin' : 'Pin',
+            isPin ? <DeleteOutlineOutlinedIcon /> : <PushPinOutlinedIcon />,
+            handlePinUnPinTab
+          )}
+        </List>
+      </StyledMenuWrapper>
     </Container>
   )
 }

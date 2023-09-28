@@ -3,19 +3,18 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { Container } from '@/layout/Container/Conatiner'
 import FlashOnIcon from '@mui/icons-material/FlashOn'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
-import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
-import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
-import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
-import { StyledInput, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
-import { IconButton, ListItem, ListItemAvatar } from '@mui/material'
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
+import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined'
+import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined'
+import { StyledInput, StyledItemIconAvatar, StyledItemText, StyledMenuWrapper } from './styled'
+import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
 import { stringToBech32 } from '@/modules/nostr'
 import { useOpenApp } from '@/hooks/open-entity'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
-import { ReactNode } from 'react'
+import { ReactNode, useCallback } from 'react'
 
 export const ModalContextMenuContent = () => {
-
   const [searchParams] = useSearchParams()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { openZap } = useOpenApp()
@@ -50,21 +49,18 @@ export const ModalContextMenuContent = () => {
     copyToClipBoard(value)
   }
 
-  const renderItem = (label: string, icon: ReactNode, handler: () => void) => {
+  const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void) => {
     return (
       <ListItem disablePadding>
-        <StyledItemButton alignItems="center" onClick={handler}>
+        <ListItemButton alignItems="center" onClick={handler}>
           <ListItemAvatar>
-            <StyledItemIconAvatar>
-              {icon}
-            </StyledItemIconAvatar>
+            <StyledItemIconAvatar>{icon}</StyledItemIconAvatar>
           </ListItemAvatar>
           <StyledItemText primary={label} />
-        </StyledItemButton>
+        </ListItemButton>
       </ListItem>
-
     )
-  }
+  }, [])
 
   return (
     <Container>
@@ -77,12 +73,14 @@ export const ModalContextMenuContent = () => {
         readOnly
         value={value || ''}
       />
-      <StyledList>
-        {value && renderItem("Share text", (<ShareOutlinedIcon />), handleShareValue)}
-        {addr && renderItem("Open with", (<OpenInNewOutlinedIcon />), handleOpenModalSelect)}
-        {addr && renderItem("Zap", (<FlashOnIcon />), handleZap)}
-        {renderItem("Share tab URL", (<IosShareOutlinedIcon />), handleShareTabUrl)}
-      </StyledList>
+      <StyledMenuWrapper>
+        <List>
+          {value && renderItem('Share text', <ShareOutlinedIcon />, handleShareValue)}
+          {addr && renderItem('Open with', <OpenInNewOutlinedIcon />, handleOpenModalSelect)}
+          {addr && renderItem('Zap', <FlashOnIcon />, handleZap)}
+          {renderItem('Share tab URL', <IosShareOutlinedIcon />, handleShareTabUrl)}
+        </List>
+      </StyledMenuWrapper>
     </Container>
   )
 }
