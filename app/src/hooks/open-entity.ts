@@ -461,7 +461,6 @@ export const useOpenApp = () => {
     await dbi.addPin(pin)
   }
 
-
   const onPinTab = async (currentTab: ITab) => {
     const pin: IPin = {
       id: uuidv4(),
