@@ -1,9 +1,6 @@
-import { useState, FC } from 'react'
+import React, { FC, useCallback, useEffect, useState } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
-import { Container } from '@/layout/Container/Conatiner'
-import { IconButton } from '@mui/material'
+import { useOpenApp } from '@/hooks/open-entity'
 import {
   getTagValue,
   nostrbandRelay,
@@ -12,26 +9,29 @@ import {
   searchProfiles,
   stringToBech32
 } from '@/modules/nostr'
-import { StyledForm, StyledInput } from './styled'
-import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
-import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/SuggestedProfiles/styled'
-import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
-import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
-import { nip19 } from '@nostrband/nostr-tools'
-import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/SliderTrendingNotes'
-import { ContactList } from '@/pages/MainPage/components/ContactList/ContactList'
-import { useOpenApp } from '@/hooks/open-entity'
-import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
 import { MetaEvent } from '@/types/meta-event'
+import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
+import { nip19 } from '@nostrband/nostr-tools'
+import { Container } from '@/layout/Container/Conatiner'
+import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/SuggestedProfiles/styled'
+import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
+import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
+import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
+import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/SliderTrendingNotes'
 import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongNotes'
+import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
+import { StyledForm, StyledInput } from './styled'
+import { IconButton } from '@mui/material'
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import { ContactList } from '../MainPage/components/ContactList/ContactList'
 
 type Props = {
-  isOpen: boolean
+  searchValueRef: React.MutableRefObject<string>
 }
 
-export const ModalSearch: FC<Props> = () => {
+export const SearchPageContent: FC<Props> = ({ searchValueRef }) => {
   const { openBlank } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
@@ -63,10 +63,7 @@ export const ModalSearch: FC<Props> = () => {
     return false
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    onSearch(searchValue)
+  const loadEvents = useCallback(async (searchValue: string) => {
     setIsLoading(true)
     searchProfiles(searchValue)
       .then((data) => {
@@ -81,6 +78,13 @@ export const ModalSearch: FC<Props> = () => {
         setLongNotes(data)
       })
       .finally(() => setIsLoading(false))
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    searchValueRef.current = searchValue
+    onSearch(searchValue)
+    loadEvents(searchValue)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,6 +128,14 @@ export const ModalSearch: FC<Props> = () => {
   //     setLongNotes(null)
   //   }
   // }, [isOpen])
+
+  useEffect(() => {
+    const memoizedSearchValue = searchValueRef.current
+    setSearchValue(memoizedSearchValue)
+    if (memoizedSearchValue.trim().length) {
+      loadEvents(memoizedSearchValue)
+    }
+  }, [searchValueRef, loadEvents])
 
   const renderContent = () => {
     return (

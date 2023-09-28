@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { Avatar, IconButton } from '@mui/material'
-// import SearchIcon from '@mui/icons-material/Search'
+import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 
@@ -17,7 +17,6 @@ import {
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { FC } from 'react'
-import { SearchIcon } from '@/assets'
 
 type HeaderProps = {
   title: string | React.ReactNode
@@ -29,6 +28,8 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { currentTabId } = useAppSelector((state) => state.tab)
   const id = searchParams.get('tabId') || ''
+
+  const isSearchPage = searchParams.get(MODAL_PARAMS_KEYS.SEARCH_PAGE)
 
   return (
     <StyledWrapper>
@@ -43,13 +44,16 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
           >
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
-          <IconButton
-            color="inherit"
-            size="medium"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { replace: true })}
-          >
-            <SearchIcon />
-          </IconButton>
+
+          {!isSearchPage && (
+            <IconButton
+              color="inherit"
+              size="medium"
+              onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_PAGE, { replace: true })}
+            >
+              <SearchIcon />
+            </IconButton>
+          )}
 
           {currentTabId && (
             <IconButton
