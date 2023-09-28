@@ -3,6 +3,7 @@
 import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { nip19 } from '@nostrband/nostr-tools'
+import { bech32 } from '@scure/base'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import {
   setTabIcon,
@@ -376,7 +377,20 @@ export const useOpenApp = () => {
       return await window.navigator.share(data)
     },
     decodeBech32: function (tabId, s) {
-      return nip19.decode(s)
+      if (s.startsWith("npub1")
+        || s.startsWith("note1")
+        || s.startsWith("nevent1")
+        || s.startsWith("naddr1")
+        || s.startsWith("nprofile1")
+      ) {
+        return nip19.decode(s)
+      } else {
+        console.log("decode", s)
+        const { prefix, words } = bech32.decode(s, s.length) 
+        console.log("decoded", prefix, words)
+        const data = new Uint8Array(bech32.fromWords(words))
+        return { type: prefix, data }
+      }
     },
     onHide: (tabId) => {
       handleClose('/')
@@ -655,7 +669,7 @@ export const useOpenApp = () => {
 
   const openZap = (id) => {
     const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
-    openBlank({ url: `${ZAP_URL}${id}`}, { replace: true })
+    openBlank({ url: `${ZAP_URL}${id}` }, { replace: true })
   }
 
   return {
