@@ -3,6 +3,7 @@
 import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { nip19 } from '@nostrband/nostr-tools'
+import { bech32 } from '@scure/base'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import {
   setTabIcon,
@@ -112,7 +113,7 @@ export const useOpenApp = () => {
     const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
 
     if (reqs.length > 1) {
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id }, replace: true })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id } })
     }
   }
 
@@ -130,7 +131,7 @@ export const useOpenApp = () => {
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log('show perm request modal', r.id)
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id }, replace: true })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id } })
       // show request perm modal right now
       // setCurrentPermRequest(r)
       // console.log(JSON.stringify({ permissions: refPermissionReq.current }))
@@ -365,16 +366,31 @@ export const useOpenApp = () => {
     },
     showContextMenu: async function (tabId, data) {
       console.log('event menu', JSON.stringify(data))
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error("Inactive tab")
+      data.tabUrl = tab.url
       handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
         search: data,
-        replace: true
       })
     },
     share: async function (tabId, data) {
       return await window.navigator.share(data)
     },
     decodeBech32: function (tabId, s) {
-      return nip19.decode(s)
+      if (s.startsWith("npub1")
+        || s.startsWith("note1")
+        || s.startsWith("nevent1")
+        || s.startsWith("naddr1")
+        || s.startsWith("nprofile1")
+      ) {
+        return nip19.decode(s)
+      } else {
+        console.log("decode", s)
+        const { prefix, words } = bech32.decode(s, s.length) 
+        console.log("decoded", prefix, words)
+        const data = new Uint8Array(bech32.fromWords(words))
+        return { type: prefix, data }
+      }
     },
     onHide: (tabId) => {
       handleClose('/')
@@ -653,7 +669,7 @@ export const useOpenApp = () => {
 
   const openZap = (id) => {
     const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
-    openBlank({ url: `${ZAP_URL}${id}` })
+    openBlank({ url: `${ZAP_URL}${id}` }, { replace: true })
   }
 
   return {

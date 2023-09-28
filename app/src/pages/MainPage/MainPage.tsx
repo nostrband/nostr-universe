@@ -9,7 +9,6 @@ import { LiveEvents } from './components/LiveEvents/LiveEvents'
 import { Communities } from './components/Communities/Communities'
 import { StyledWrapperMain } from './styled'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
-import { ModalSearch } from '@/components/Modal/ModalSearch/ModaSearch'
 import { ProfilePage } from '@/pages/ProfilePage/ProfilePage'
 import { ModalTabMenu } from '@/components/Modal/ModalTabMenu/ModalTabMenu'
 import { TabPage } from '../TabPage/TabPage'
@@ -25,6 +24,7 @@ import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
 import { ModalProfileTabMenu } from '@/components/Modal/ModalProfileTabMenu/ModalProfileTabMenu'
 import { ModalImportKey } from '@/components/Modal/ModalImporKey/ModalImportKey'
 import { StyledAppBar } from '../AppsPage/styled'
+import { SearchPage } from '../SearchPage/SearchPage'
 
 export const MainPage = () => {
   return (
@@ -50,7 +50,7 @@ export const MainPage = () => {
       <ModalTabSwitcher />
       <ModalTabMenu />
       <ModalWallet />
-      <ModalSearch />
+
       <ModalSelectApp />
       <ModalPermissionsRequest />
       <TabPage />
@@ -58,7 +58,7 @@ export const MainPage = () => {
       <TabsSwitcherPage />
       <AppsPage />
       <ModalProfileTabMenu />
-
+      <SearchPage />
       <NavigationBottom />
     </StyledWrapperMain>
   )

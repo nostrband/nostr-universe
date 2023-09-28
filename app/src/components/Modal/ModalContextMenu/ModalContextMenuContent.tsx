@@ -6,6 +6,7 @@ import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
 import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined'
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined'
+import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import { StyledInput, StyledItemIconAvatar, StyledItemText, StyledMenuWrapper } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
@@ -17,18 +18,23 @@ import { ReactNode, useCallback } from 'react'
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
-  const { openZap } = useOpenApp()
+  const { openZap, openBlank } = useOpenApp()
   const tabUrl = searchParams.get('tabUrl') || ''
   const text = searchParams.get('text') || ''
-  const href = searchParams.get('href') || ''
+  let href = searchParams.get('href') || ''
   const imgSrc = searchParams.get('imgSrc') || ''
   const videoSrc = searchParams.get('videoSrc') || ''
   const audioSrc = searchParams.get('audioSrc') || ''
-  const value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
+  let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
   const addr = stringToBech32(value || tabUrl)
+  if (!value)
+    value = addr // from tabUrl
 
   const handleOpenModalSelect = () => {
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr },
+      replace: true
+    })
   }
 
   const handleZap = async () => {
@@ -49,6 +55,10 @@ export const ModalContextMenuContent = () => {
     copyToClipBoard(value)
   }
 
+  const handleOpenHref = () => {
+    openBlank({ url: href }, { replace: true })
+  }
+
   const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void) => {
     return (
       <ListItem disablePadding>
@@ -64,21 +74,24 @@ export const ModalContextMenuContent = () => {
 
   return (
     <Container>
-      <StyledInput
-        endAdornment={
-          <IconButton color="inherit" size="medium" onClick={handleCopyValue}>
-            <ContentCopyOutlinedIcon />
-          </IconButton>
-        }
-        readOnly
-        value={value || ''}
-      />
+      {value && (
+        <StyledInput
+          endAdornment={
+            <IconButton color="inherit" size="medium" onClick={handleCopyValue}>
+              <ContentCopyOutlinedIcon />
+            </IconButton>
+          }
+          readOnly
+          value={value || ''}
+        />
+      )}
       <StyledMenuWrapper>
         <List>
-          {value && renderItem('Share text', <ShareOutlinedIcon />, handleShareValue)}
-          {addr && renderItem('Open with', <OpenInNewOutlinedIcon />, handleOpenModalSelect)}
-          {addr && renderItem('Zap', <FlashOnIcon />, handleZap)}
-          {renderItem('Share tab URL', <IosShareOutlinedIcon />, handleShareTabUrl)}
+          {addr && renderItem("Open with", (<AppsOutlinedIcon />), handleOpenModalSelect)}
+          {addr && renderItem("Zap", (<FlashOnIcon />), handleZap)}
+          {href && renderItem("Open in new tab", (<OpenInNewOutlinedIcon />), handleOpenHref)}
+          {value && renderItem("Share text", (<ShareOutlinedIcon />), handleShareValue)}
+          {renderItem("Share tab URL", (<IosShareOutlinedIcon />), handleShareTabUrl)}
         </List>
       </StyledMenuWrapper>
     </Container>
