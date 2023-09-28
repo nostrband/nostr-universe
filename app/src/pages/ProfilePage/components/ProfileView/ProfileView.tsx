@@ -18,12 +18,20 @@ import { getRenderedUsername } from '@/utils/helpers/general'
 import { createMetaEvent } from '@/types/meta-event'
 import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
 import { userService } from '@/store/services/user.service'
+import { useProfileImageSource } from '@/hooks/profile-image'
 
 export const ProfileView = () => {
   const { getModalOpened, handleOpen, handleClose } = useOpenModalSearchParams()
   const { currentProfile, profiles } = useAppSelector((state) => state.profile)
   const { keys, currentPubkey: currentPubKey } = useAppSelector((state) => state.keys)
   const { changeAccount } = useChangeAccount()
+
+  const { url, viewRef } = useProfileImageSource({
+    pubkey: currentProfile?.pubkey || '',
+    mediaType: 'banner',
+    size: 600,
+    originalImage: currentProfile?.profile?.banner || ''
+  })
 
   const accounts = keys.map((key) => {
     let p = profiles.find((p) => p.pubkey === key)
@@ -52,8 +60,11 @@ export const ProfileView = () => {
   return (
     <>
       <Container>
-        <StyledViewBaner>
-          <StyledViewAvatarWrapper onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEYS_PROFILE, { append: true })}>
+        <StyledViewBaner url={url}>
+          <StyledViewAvatarWrapper
+            ref={viewRef}
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEYS_PROFILE, { append: true })}
+          >
             <StyledViewAvatar src={getProfileImage(currentProfile)} />
             <StyledViewAvatarSwitch>
               <SyncAltOutlinedIcon fontSize="small" />
