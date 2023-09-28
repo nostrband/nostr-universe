@@ -1,6 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
 import { Avatar, IconButton } from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 
