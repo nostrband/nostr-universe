@@ -135,22 +135,14 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
 
   const handleOpen = (app: IOpenAppNostr) => {
     openApp({ ...app, kind }, { replace: true })
-    // handleClose()
-    resetStates()
-    // setSearchParams('')
   }
 
   useEffect(() => {
+    resetStates()
     if (getParamAddr) {
       load()
     }
   }, [getParamAddr, load])
-
-  useEffect(() => {
-    return () => {
-      resetStates()
-    }
-  }, [resetStates])
 
   const renderContent = () => {
     return (

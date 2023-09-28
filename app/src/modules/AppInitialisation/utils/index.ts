@@ -180,13 +180,13 @@ const bootstrap = async (pubkey) => {
     }
     pins.push(pin)
   })
-  await db.pins.bulkAdd(pins)
+  db.pins.bulkAdd(pins)
 }
 
 const ensureBootstrapped = async (workspaceKey) => {
   if (!(await dbi.getFlag(workspaceKey, 'bootstrapped'))) {
     await bootstrap(workspaceKey)
-    await dbi.setFlag(workspaceKey, 'bootstrapped', true)
+    dbi.setFlag(workspaceKey, 'bootstrapped', true)
   }
 }
 

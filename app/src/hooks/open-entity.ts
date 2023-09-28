@@ -90,7 +90,7 @@ export const useOpenApp = () => {
       dispatch(setPermsWorkspace({ perm, workspacePubkey: tab.pubkey }))
 
       console.log('adding perm', JSON.stringify(perm))
-      await dbi.updatePerm(perm)
+      dbi.updatePerm(perm)
     }
 
     // execute
@@ -154,7 +154,7 @@ export const useOpenApp = () => {
   const deletePermission = async (id: string) => {
     dispatch(deletePermWorkspace({ id, workspacePubkey: currentPubkey }))
 
-    await dbi.deletePerms(currentPubkey, id)
+    dbi.deletePerms(currentPubkey, id)
   }
 
   const hide = async (id: string) => {
@@ -166,7 +166,7 @@ export const useOpenApp = () => {
 
       dispatch(setTabScreenshot({ id, screenshot }))
 
-      await dbi.updateTabScreenshot({ id, screenshot })
+      dbi.updateTabScreenshot({ id, screenshot })
     }, 0)
   }
 
@@ -473,7 +473,7 @@ export const useOpenApp = () => {
 
     dispatch(addPinWorkspace({ pin, workspacePubkey: currentWorkSpace.pubkey }))
 
-    await dbi.addPin(pin)
+    dbi.addPin(pin)
   }
 
 
@@ -490,7 +490,7 @@ export const useOpenApp = () => {
 
     dispatch(addPinWorkspace({ pin, workspacePubkey: currentTab.pubkey }))
 
-    await dbi.addPin(pin)
+    dbi.addPin(pin)
   }
 
   const findTabPin = (tab: ITab): IPin | undefined => {
@@ -509,7 +509,7 @@ export const useOpenApp = () => {
   const onUnPinTab = async (currentTab: ITab) => {
     const pin = findTabPin(currentTab)
     dispatch(removePinWorkspace({ id: pin.id, workspacePubkey: currentTab.pubkey }))
-    await dbi.deletePin(pin.id)
+    dbi.deletePin(pin.id)
   }
 
   const openTabWindow = async (id) => {
@@ -582,7 +582,7 @@ export const useOpenApp = () => {
     dispatch(addTabWorkspace({ id: tab.id, workspacePubkey: currentPubkey }))
 
     // add to db
-    await dbi.addTab(tab)
+    dbi.addTab(tab)
 
     // it creates the tab and sets as current
     show(tab, options)
@@ -644,8 +644,8 @@ export const useOpenApp = () => {
 
   const onImportKey = async (importPubkey?: string) => {
     if (importPubkey) {
-      await dbi.putReadOnlyKey(importPubkey)
-      await writeCurrentPubkey(importPubkey)
+      dbi.putReadOnlyKey(importPubkey)
+      writeCurrentPubkey(importPubkey)
     } else {
       try {
         const r = await keystore.addKey()
