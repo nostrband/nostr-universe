@@ -354,12 +354,19 @@ export const useOpenApp = () => {
       )
     },
     clipboardWriteText: async function (tabId, text) {
-      return await window.cordova.plugins.clipboard.copy(text)
+      const r = await window.cordova.plugins.clipboard.copy(text)
+      window.plugins.toast.showShortBottom('Copied')
+      return r
     },
-    showContextMenu: async function (tabId, id) {
-      console.log('event menu', id)
+    clipboardReadText: async function (tabId) {
+      return new Promise((ok) => {
+        window.cordova.plugins.clipboard.paste(ok)
+      })
+    },
+    showContextMenu: async function (tabId, data) {
+      console.log('event menu', JSON.stringify(data))
       handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
-        search: { nostrId: id },
+        search: data,
         replace: true
       })
     },
@@ -473,8 +480,7 @@ export const useOpenApp = () => {
   const findTabPin = (tab: ITab): IPin | undefined => {
     const ws = workspaces.find((ws) => ws.pubkey === tab.pubkey)
     return ws?.pins.find(
-      (p) =>
-        p.url === tab.url // p.appNaddr === tab.appNaddr ||
+      (p) => p.url === tab.url // p.appNaddr === tab.appNaddr ||
     )
   }
 

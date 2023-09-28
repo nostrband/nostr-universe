@@ -6,7 +6,7 @@ import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { fetchApps } from '@/modules/nostr'
 import { memo, useCallback } from 'react'
 
-export const AppsNostro = memo(() => {
+export const AppsNostro = memo(function AppsNostro() {
   const { apps, isLoading } = useAppSelector((state) => state.apps)
   const dispatch = useAppDispatch()
 

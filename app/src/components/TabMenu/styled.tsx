@@ -25,6 +25,6 @@ export const StyledIconButton = styled(IconButton)(() => ({
 }))
 
 export const StyledAvatar = styled(Avatar)(() => ({
-  height: 34,
-  width: 34
+  height: 24,
+  width: 24
 }))

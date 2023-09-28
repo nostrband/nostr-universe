@@ -6,7 +6,7 @@ import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemTrendingNote } from './types'
 import { memo } from 'react'
 
-export const ItemTrendingNote = memo(({ author, pubkey, time, content }: IItemTrendingNote) => {
+export const ItemTrendingNote = memo(function ItemTrendingNote({ author, pubkey, time, content }: IItemTrendingNote) {
   return (
     <Wrapper>
       <Head>

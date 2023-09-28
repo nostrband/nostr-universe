@@ -10,19 +10,22 @@ import { HighlightEvent } from '@/types/highlight-event'
 import { setHighlights } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback } from 'react'
 
-export const Highlights = memo(() => {
+export const Highlights = memo(function Highlights() {
   const { handleOpen } = useOpenModalSearchParams()
   const { highlights, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
-  const handleOpenHighlight = useCallback((highlight: HighlightEvent) => {
-    const nevent = nip19.neventEncode({
-      id: highlight.id,
-      relays: [nostrbandRelay]
-    })
+  const handleOpenHighlight = useCallback(
+    (highlight: HighlightEvent) => {
+      const nevent = nip19.neventEncode({
+        id: highlight.id,
+        relays: [nostrbandRelay]
+      })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
-  }, [handleOpen])
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
+    },
+    [handleOpen]
+  )
 
   const handleReloadHighlights = useCallback(async () => {
     if (contactList) {

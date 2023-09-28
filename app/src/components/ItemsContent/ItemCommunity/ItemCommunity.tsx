@@ -7,7 +7,7 @@ import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 import { CommunityInfo } from '@/shared/ContentComponents/CommunityInfo/CommunityInfo'
 import { memo } from 'react'
 
-export const ItemCommunity = memo(({ name, picture, time, content, subtitle }: IItemCommunity) => {
+export const ItemCommunity = memo(function ItemCommunity({ name, picture, time, content, subtitle }: IItemCommunity) {
   return (
     <Wrapper>
       <Head>

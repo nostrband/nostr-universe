@@ -9,7 +9,15 @@ import { purple } from '@mui/material/colors'
 
 const color = purple[500]
 
-const getVariantApp = (isPreviewTab: boolean, size: AppNostrSize) => {
+const getVariantApp = (isPreviewTab: boolean, isRounded: boolean, size: AppNostrSize) => {
+  if (isRounded) {
+    return {
+      height: 34,
+      width: 34,
+      borderRadius: '7px'
+    }
+  }
+
   if (isPreviewTab) {
     return {
       height: 34,
@@ -23,7 +31,7 @@ const getVariantApp = (isPreviewTab: boolean, size: AppNostrSize) => {
 
 export const StyledAppIcon = styled(
   forwardRef<HTMLAnchorElement, IBoxStyled>(function BoxDisplayName(props, ref) {
-    const exclude = new Set(['isActive', 'isPreviewTab', 'isOutline', 'isNotLoaded'])
+    const exclude = new Set(['isActive', 'isPreviewTab', 'isOutline', 'isNotLoaded', 'isRounded'])
     const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
 
     return <Box ref={ref} {...omitProps} />
@@ -35,15 +43,16 @@ export const StyledAppIcon = styled(
     isActive = false,
     isPreviewTab = false,
     isOutline = true,
-    isNotLoaded = false
+    isNotLoaded = false,
+    isRounded = false
   }) => ({
     position: 'relative',
     border: isOutline ? '4px solid' : 0,
     borderRadius: theme.shape.borderRadius,
     overflow: 'hidden',
-    ...getVariantApp(isPreviewTab, size),
+    ...getVariantApp(isPreviewTab, isRounded, size),
     transition: theme.transitions.create(['border-color', 'transition']),
-    borderColor: isActive ? theme.palette.decorate.main : 'rgba(255, 255, 255, 0.1)',
+    borderColor: isActive ? theme.palette.decorate.main : 'rgba(80, 80, 80)',
     backgroundColor: isNotLoaded ? color : theme.palette.background.default,
     boxSizing: 'border-box',
     ':active': {

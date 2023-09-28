@@ -6,7 +6,11 @@ import 'swiper/css'
 import styles from './slider.module.scss'
 import { memo } from 'react'
 
-export const SliderContacts = memo(({ data, isLoading, handleClickEntity = () => {} }: ISliderContacts) => {
+export const SliderContacts = memo(function SliderContacts({
+  data,
+  isLoading,
+  handleClickEntity = () => {}
+}: ISliderContacts) {
   return (
     <Swiper slidesPerView="auto" freeMode={true} modules={[FreeMode]}>
       {isLoading || !data

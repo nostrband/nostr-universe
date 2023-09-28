@@ -3,16 +3,15 @@ import { AppIcon } from '../AppIcon/AppIcon'
 import { StyledAppWraper, StyledAppName } from './styled'
 import { IAppNostro } from './types'
 
-export const AppNostro = memo(({ 
-  app, 
-  size, 
-  hideName, 
-  onOpen, 
-  isActive, 
-  isPreviewTab, 
+export const AppNostro = memo(function AppNostro({
+  app,
+  size,
+  hideName,
+  onOpen,
+  isActive,
+  isPreviewTab,
   disabled
-}: IAppNostro) => {
-
+}: IAppNostro) {
   const handleAppClick = useCallback(() => {
     if (!disabled) {
       return onOpen(app)
