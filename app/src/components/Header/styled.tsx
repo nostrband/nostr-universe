@@ -29,7 +29,7 @@ export const StyledAppLogo = styled((props: AvatarProps) => {
 })({
   width: 32,
   height: 32,
-  backgroundColor: "#ccc",
+  backgroundColor: '#ccc'
 })
 
 export const StyledHeader = styled(Header)({

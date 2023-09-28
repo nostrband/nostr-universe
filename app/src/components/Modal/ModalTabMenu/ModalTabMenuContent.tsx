@@ -5,16 +5,10 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import {
-  StyledItemButton,
-  StyledItemIconAvatar,
-  StyledItemText,
-  StyledList,
-  StyledWrapInput
-} from './styled'
+import { StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList, StyledWrapInput } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { stringToBech32 } from '@/modules/nostr'
 import { selectTab } from '@/store/reducers/tab.slice'
@@ -28,7 +22,7 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
   const [, setEventAddr] = useState('')
   const id = searchParams.get('tabId') || ''
   const currentTab = useAppSelector((state) => selectTab(state, id))
-
+  const location = useLocation()
   const isPin = currentTab ? !!findTabPin(currentTab) : false
   const url = currentTab?.url
 
@@ -42,7 +36,7 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
   }, [url])
 
   const handleCloseTab = () => {
-    handleCloseModal('/')
+    handleCloseModal(location.pathname)
     onCloseTab(id)
   }
 

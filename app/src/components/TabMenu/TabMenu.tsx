@@ -57,7 +57,7 @@ export const TabMenu = () => {
           size="medium"
           onClick={() =>
             handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
-              search: { 
+              search: {
                 tabUrl: currentTab?.url as string
               },
               replace: true

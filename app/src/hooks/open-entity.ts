@@ -41,7 +41,7 @@ import {
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
@@ -53,6 +53,7 @@ import { IPin } from '@/types/workspace'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
+  const location = useLocation()
   const updateProfile = useUpdateProfile()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { workspaces } = useAppSelector((state) => state.workspaces)
@@ -180,7 +181,7 @@ export const useOpenApp = () => {
   }
 
   const onHideTab = () => {
-    handleClose('/')
+    handleClose(location.pathname)
   }
 
   const onCloseTab = async (id: string) => {
@@ -377,7 +378,7 @@ export const useOpenApp = () => {
       return nip19.decode(s)
     },
     onHide: (tabId) => {
-      handleClose('/')
+      handleClose(location.pathname)
     },
     setUrl: async (tabId, url) => {
       const tab = getTabAny(tabId)

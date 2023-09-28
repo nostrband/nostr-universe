@@ -3,9 +3,9 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { Container } from '@/layout/Container/Conatiner'
 import FlashOnIcon from '@mui/icons-material/FlashOn'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
-import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
-import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
-import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
+import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined'
+import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined'
 import { StyledInput, StyledItemButton, StyledItemIconAvatar, StyledItemText, StyledList } from './styled'
 import { IconButton, ListItem, ListItemAvatar } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
@@ -15,7 +15,6 @@ import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { ReactNode } from 'react'
 
 export const ModalContextMenuContent = () => {
-
   const [searchParams] = useSearchParams()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { openZap } = useOpenApp()
@@ -55,14 +54,11 @@ export const ModalContextMenuContent = () => {
       <ListItem disablePadding>
         <StyledItemButton alignItems="center" onClick={handler}>
           <ListItemAvatar>
-            <StyledItemIconAvatar>
-              {icon}
-            </StyledItemIconAvatar>
+            <StyledItemIconAvatar>{icon}</StyledItemIconAvatar>
           </ListItemAvatar>
           <StyledItemText primary={label} />
         </StyledItemButton>
       </ListItem>
-
     )
   }
 
@@ -78,10 +74,10 @@ export const ModalContextMenuContent = () => {
         value={value || ''}
       />
       <StyledList>
-        {value && renderItem("Share text", (<ShareOutlinedIcon />), handleShareValue)}
-        {addr && renderItem("Open with", (<OpenInNewOutlinedIcon />), handleOpenModalSelect)}
-        {addr && renderItem("Zap", (<FlashOnIcon />), handleZap)}
-        {renderItem("Share tab URL", (<IosShareOutlinedIcon />), handleShareTabUrl)}
+        {value && renderItem('Share text', <ShareOutlinedIcon />, handleShareValue)}
+        {addr && renderItem('Open with', <OpenInNewOutlinedIcon />, handleOpenModalSelect)}
+        {addr && renderItem('Zap', <FlashOnIcon />, handleZap)}
+        {renderItem('Share tab URL', <IosShareOutlinedIcon />, handleShareTabUrl)}
       </StyledList>
     </Container>
   )
