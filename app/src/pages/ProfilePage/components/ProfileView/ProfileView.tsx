@@ -53,7 +53,7 @@ export const ProfileView = () => {
     <>
       <Container>
         <StyledViewBaner>
-          <StyledViewAvatarWrapper onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEYS_PROFILE)}>
+          <StyledViewAvatarWrapper onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEYS_PROFILE, { append: true })}>
             <StyledViewAvatar src={getProfileImage(currentProfile)} />
             <StyledViewAvatarSwitch>
               <SyncAltOutlinedIcon fontSize="small" />

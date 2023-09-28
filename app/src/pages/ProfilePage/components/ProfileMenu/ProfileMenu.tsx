@@ -20,7 +20,7 @@ export const ProfilMenu = () => {
             Tools
           </StyledMenuTitle>
           <StyledMenuList>
-            <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL)}>
+            <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL, { append: true })}>
               <ListItemAvatar>
                 <StyledListItemIcon>
                   <ChecklistOutlinedIcon />

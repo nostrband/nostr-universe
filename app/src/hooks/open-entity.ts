@@ -3,6 +3,7 @@
 import { browser } from '@/modules/browser'
 import { dbi } from '@/modules/db'
 import { nip19 } from '@nostrband/nostr-tools'
+import { bech32 } from '@scure/base'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import {
   setTabIcon,
@@ -90,7 +91,7 @@ export const useOpenApp = () => {
       dispatch(setPermsWorkspace({ perm, workspacePubkey: tab.pubkey }))
 
       console.log('adding perm', JSON.stringify(perm))
-      await dbi.updatePerm(perm)
+      dbi.updatePerm(perm)
     }
 
     // execute
@@ -113,7 +114,7 @@ export const useOpenApp = () => {
     const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
 
     if (reqs.length > 1) {
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id }, replace: true })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id } })
     }
   }
 
@@ -131,7 +132,7 @@ export const useOpenApp = () => {
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log('show perm request modal', r.id)
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id }, replace: true })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id } })
       // show request perm modal right now
       // setCurrentPermRequest(r)
       // console.log(JSON.stringify({ permissions: refPermissionReq.current }))
@@ -154,7 +155,7 @@ export const useOpenApp = () => {
   const deletePermission = async (id: string) => {
     dispatch(deletePermWorkspace({ id, workspacePubkey: currentPubkey }))
 
-    await dbi.deletePerms(currentPubkey, id)
+    dbi.deletePerms(currentPubkey, id)
   }
 
   const hide = async (id: string) => {
@@ -166,7 +167,7 @@ export const useOpenApp = () => {
 
       dispatch(setTabScreenshot({ id, screenshot }))
 
-      await dbi.updateTabScreenshot({ id, screenshot })
+      dbi.updateTabScreenshot({ id, screenshot })
     }, 0)
   }
 
@@ -366,16 +367,31 @@ export const useOpenApp = () => {
     },
     showContextMenu: async function (tabId, data) {
       console.log('event menu', JSON.stringify(data))
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error("Inactive tab")
+      data.tabUrl = tab.url
       handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
         search: data,
-        replace: true
       })
     },
     share: async function (tabId, data) {
       return await window.navigator.share(data)
     },
     decodeBech32: function (tabId, s) {
-      return nip19.decode(s)
+      if (s.startsWith("npub1")
+        || s.startsWith("note1")
+        || s.startsWith("nevent1")
+        || s.startsWith("naddr1")
+        || s.startsWith("nprofile1")
+      ) {
+        return nip19.decode(s)
+      } else {
+        console.log("decode", s)
+        const { prefix, words } = bech32.decode(s, s.length) 
+        console.log("decoded", prefix, words)
+        const data = new Uint8Array(bech32.fromWords(words))
+        return { type: prefix, data }
+      }
     },
     onHide: (tabId) => {
       handleClose(location.pathname)
@@ -458,7 +474,7 @@ export const useOpenApp = () => {
 
     dispatch(addPinWorkspace({ pin, workspacePubkey: currentWorkSpace.pubkey }))
 
-    await dbi.addPin(pin)
+    dbi.addPin(pin)
   }
 
   const onPinTab = async (currentTab: ITab) => {
@@ -474,7 +490,7 @@ export const useOpenApp = () => {
 
     dispatch(addPinWorkspace({ pin, workspacePubkey: currentTab.pubkey }))
 
-    await dbi.addPin(pin)
+    dbi.addPin(pin)
   }
 
   const findTabPin = (tab: ITab): IPin | undefined => {
@@ -493,7 +509,7 @@ export const useOpenApp = () => {
   const onUnPinTab = async (currentTab: ITab) => {
     const pin = findTabPin(currentTab)
     dispatch(removePinWorkspace({ id: pin.id, workspacePubkey: currentTab.pubkey }))
-    await dbi.deletePin(pin.id)
+    dbi.deletePin(pin.id)
   }
 
   const openTabWindow = async (id) => {
@@ -566,7 +582,7 @@ export const useOpenApp = () => {
     dispatch(addTabWorkspace({ id: tab.id, workspacePubkey: currentPubkey }))
 
     // add to db
-    await dbi.addTab(tab)
+    dbi.addTab(tab)
 
     // it creates the tab and sets as current
     show(tab, options)
@@ -628,8 +644,8 @@ export const useOpenApp = () => {
 
   const onImportKey = async (importPubkey?: string) => {
     if (importPubkey) {
-      await dbi.putReadOnlyKey(importPubkey)
-      await writeCurrentPubkey(importPubkey)
+      dbi.putReadOnlyKey(importPubkey)
+      writeCurrentPubkey(importPubkey)
     } else {
       try {
         const r = await keystore.addKey()
@@ -653,7 +669,7 @@ export const useOpenApp = () => {
 
   const openZap = (id) => {
     const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
-    openBlank({ url: `${ZAP_URL}${id}` })
+    openBlank({ url: `${ZAP_URL}${id}` }, { replace: true })
   }
 
   return {

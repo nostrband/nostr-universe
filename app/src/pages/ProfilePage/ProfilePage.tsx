@@ -12,7 +12,6 @@ export const ProfilePage = () => {
     <Modal title="My profile" open={isOpen} handleClose={() => handleClose()}>
       {isOpen && (
         <>
-          {' '}
           <ProfileView />
           <ProfilMenu />
         </>

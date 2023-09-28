@@ -4,6 +4,7 @@ import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 
 export const NavigationBottom = () => {
   const location = useLocation()
@@ -19,6 +20,7 @@ export const NavigationBottom = () => {
     >
       <BottomNavigationAction label="Apps" icon={<AppsOutlinedIcon />} value="/" />
       <BottomNavigationAction label="Content" icon={<DashboardOutlinedIcon />} value="/content" />
+      <BottomNavigationAction label="Search" icon={<SearchOutlinedIcon />} value="/search" />
       <BottomNavigationAction label="Tabs" icon={<WidgetsOutlinedIcon />} value="/tabs-switcher" />
     </BottomNavigation>
   )

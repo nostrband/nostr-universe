@@ -172,6 +172,15 @@ const nostrMenuConnect = () => {
 
     console.log('show menu', JSON.stringify(data))
 
+    function clear() {
+      window.nostrCordovaPlugin.magicMenu?.remove();
+      window.nostrCordovaPlugin.magicMenu = null;
+    }
+
+    // clear previous menu, if any
+    const reopen = !!window.nostrCordovaPlugin.magicMenu;
+    clear();
+
     const d = document.createElement('div')
     d.style = `
       font-family: sans-serif; 
@@ -185,43 +194,81 @@ const nostrMenuConnect = () => {
       position: fixed; 
       top: 16px; 
       left: 50%; 
-      width: auto; 
       transform: translate(-50%, 0); 
       padding: 5px 8px;
       cursor: pointer;
 
       background-image: linear-gradient(to right, #8d3093 0%, #ff44fb  51%, #853093  100%);
-      transition: 0.5s;
       background-size: 200% auto;
       color: white;
       display: block;
-      opacity: 0;
-      transition: opacity 1s linear;
+      opacity: ${reopen ? 1 : 0};
+      transition: opacity 0.5s linear;
+      white-space: nowrap;
     `
 
     d.innerHTML = `
       <nobr>
         <svg style="vertical-align: middle" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#ffffff"><g><rect fill="none" height="24" width="24" x="0"/></g><g><g><polygon points="20,7 20.94,4.94 23,4 20.94,3.06 20,1 19.06,3.06 17,4 19.06,4.94"/><polygon points="8.5,7 9.44,4.94 11.5,4 9.44,3.06 8.5,1 7.56,3.06 5.5,4 7.56,4.94"/><polygon points="20,12.5 19.06,14.56 17,15.5 19.06,16.44 20,18.5 20.94,16.44 23,15.5 20.94,14.56"/><path d="M17.71,9.12l-2.83-2.83C14.68,6.1,14.43,6,14.17,6c-0.26,0-0.51,0.1-0.71,0.29L2.29,17.46c-0.39,0.39-0.39,1.02,0,1.41 l2.83,2.83C5.32,21.9,5.57,22,5.83,22s0.51-0.1,0.71-0.29l11.17-11.17C18.1,10.15,18.1,9.51,17.71,9.12z M14.17,8.42l1.41,1.41 L14.41,11L13,9.59L14.17,8.42z M5.83,19.59l-1.41-1.41L11.59,11L13,12.41L5.83,19.59z"/></g></g></svg>
-        <span style="vertical-align: middle">Context menu</span>
+        <span style="vertical-align: middle">Magic menu</span>
       </nobr>
     `
     document.body.appendChild(d)
 
+    function isActive() {
+      return Object.is(window.nostrCordovaPlugin.magicMenu, d)
+    }
+
+    function remove() {
+      // since this action happens in the future,
+      // we must check if a newer menu was already created
+      if (!isActive()) return;
+      d.style.opacity = '0';
+      setTimeout(() => {
+        if (isActive())
+          clear()
+      }, 3000);
+    }
+
     function onClick(e) {
-      d.remove()
+      remove();
       document.body.removeEventListener('click', onClick)
     }
 
     d.addEventListener('click', (e) => {
-      window.nostrCordovaPlugin.showContextMenu(data)
+      if (isActive())
+        window.nostrCordovaPlugin.showContextMenu(data)
       e.stopPropagation()
       document.body.removeEventListener('click', onClick)
-      d.remove()
+      remove();
     })
 
     document.body.addEventListener('click', onClick)
 
-    setTimeout(() => (d.style.opacity = '1'), 0)
+    window.nostrCordovaPlugin.magicMenu = d
+    setTimeout(() => {
+      if (isActive())
+        d.style.opacity = '1'
+    }, 0);
+
+    // start watching text selection and
+    // show another menu if selection changes
+    const selectionMonitor = async () => {
+      if (!isActive()) return;
+
+      const sel = window.getSelection().toString()
+      if (data.text !== sel) {
+        data.text = sel;
+        data.bech32 = await getBech32(sel);
+        data.href = getMaybeUrl(sel);
+        showMenu(data);
+        return;
+      }
+
+      setTimeout(selectionMonitor, 200);
+    }
+
+    selectionMonitor();
   }
 
   window.nostrCordovaPlugin.onClipboardWriteText = async (text) => {

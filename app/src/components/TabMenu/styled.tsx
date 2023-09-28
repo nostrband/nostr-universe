@@ -21,7 +21,7 @@ export const StyledTabsActions = styled(Box)(() => ({
 }))
 
 export const StyledIconButton = styled(IconButton)(() => ({
-  padding: 0
+  padding: '0 18px'
 }))
 
 export const StyledAvatar = styled(Avatar)(() => ({

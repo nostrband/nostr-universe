@@ -17,6 +17,7 @@ import { ModalContextMenu } from './components/Modal/ModalContextMenu/ModalConte
 import { ModalProfileTabMenu } from './components/Modal/ModalProfileTabMenu/ModalProfileTabMenu'
 import { StyledWrapper } from './styled'
 import { Header } from './components/Header/Header'
+import { SearchPage } from './pages/SearchPage/SearchPage'
 
 export const App = () => {
   const { pathname } = useLocation()
@@ -51,6 +52,9 @@ export const App = () => {
       case '/tabs-switcher':
         return 'Tabs'
 
+      case '/search':
+        return 'Search'
+
       default:
         return 'Apps'
     }
@@ -65,6 +69,7 @@ export const App = () => {
           <Route index path="/" element={<AppsPage />} />
           <Route path="/content" element={<MainPage />} />
           <Route path="/tabs-switcher" element={<TabsSwitcherPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="*" element={<AppsPage />} />
         </Routes>
 
