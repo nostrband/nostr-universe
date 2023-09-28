@@ -38,14 +38,14 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
           <IconButton
             color="inherit"
             size="medium"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.WALLET_MODAL, { replace: true })}
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.WALLET_MODAL)}
           >
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
           <IconButton
             color="inherit"
             size="medium"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL, { replace: true })}
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.SEARCH_MODAL)}
           >
             <SearchIcon />
           </IconButton>
@@ -54,13 +54,13 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
             <IconButton
               color="inherit"
               size="medium"
-              onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id }, replace: true })}
+              onClick={() => handleOpen(MODAL_PARAMS_KEYS.TAB_MENU, { search: { tabId: id } })}
             >
               <MoreVertIcon />
             </IconButton>
           )}
         </StyledContainerButton>
-        <StyledIconButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_PAGE, { replace: true })}>
+        <StyledIconButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PROFILE_PAGE)}>
           <Avatar src={getProfileImage(currentProfile)} />
         </StyledIconButton>
       </StyledHeader>

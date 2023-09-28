@@ -112,7 +112,7 @@ export const useOpenApp = () => {
     const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
 
     if (reqs.length > 1) {
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id }, replace: true })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id } })
     }
   }
 
@@ -130,7 +130,7 @@ export const useOpenApp = () => {
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log('show perm request modal', r.id)
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id }, replace: true })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id } })
       // show request perm modal right now
       // setCurrentPermRequest(r)
       // console.log(JSON.stringify({ permissions: refPermissionReq.current }))
@@ -365,9 +365,11 @@ export const useOpenApp = () => {
     },
     showContextMenu: async function (tabId, data) {
       console.log('event menu', JSON.stringify(data))
+      const tab = getTabAny(tabId)
+      if (!tab) throw new Error("Inactive tab")
+      data.tabUrl = tab.url
       handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
         search: data,
-        replace: true
       })
     },
     share: async function (tabId, data) {
@@ -653,7 +655,7 @@ export const useOpenApp = () => {
 
   const openZap = (id) => {
     const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
-    openBlank({ url: `${ZAP_URL}${id}` })
+    openBlank({ url: `${ZAP_URL}${id}`}, { replace: true })
   }
 
   return {
