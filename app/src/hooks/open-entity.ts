@@ -267,12 +267,14 @@ export const useOpenApp = () => {
 
       // // allowed this kind or all kinds (if not kind-0)?
       if (hasPerm(tab, kindPerm, '1') || (event.kind != 0 && hasPerm(tab, allPerm, '1'))) {
+        console.log("has perm allow for ", kindPerm)
         return await exec()
       }
 
       // disallowed this kind or all kinds
       const error = 'Signing of kind ' + event.kind + ' disallowed'
       if (hasPerm(tab, kindPerm, '0') || hasPerm(tab, allPerm, '0')) {
+        console.log("has perm disallow for ", kindPerm)
         throw new Error(error)
       }
       return requestPermExec(tab, { perm: kindPerm, event }, exec, error)
@@ -316,12 +318,21 @@ export const useOpenApp = () => {
 
       const bolt11 = bolt11Decode(paymentRequest)
       const amount = Number(bolt11.sections?.find((s) => s.name === 'amount').value)
-      console.log('sendPayment', tabId, amount, paymentRequest)
 
-      const wallet = await walletstore.getInfo()
+      const error = 'Payment request disallowed'
+      let wallet = null
+      try {
+        wallet = await walletstore.getInfo()
+      } catch (e) {
+        window.plugins.toast.showShortBottom(`Add wallet first!`)
+        // don't let app distinguish btw no-wallet and disallowed
+        throw new Error(error)
+      }
+
       const perm = 'pay_invoice:' + wallet.id
       const exec = async () => {
         try {
+          console.log('sending payment', paymentRequest)
           const res = await sendPayment(wallet, paymentRequest)
           console.log('payment result', res)
           window.plugins.toast.showShortBottom(`Sent ${amount / 1000} sats`)
@@ -339,7 +350,6 @@ export const useOpenApp = () => {
       }
 
       // disallowed?
-      const error = 'Payment request disallowed'
       if (hasPerm(tab, perm, '0')) throw new Error(error)
 
       return requestPermExec(

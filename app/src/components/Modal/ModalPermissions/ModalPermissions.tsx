@@ -23,9 +23,7 @@ export const ModalPermissions = () => {
     try {
       const U = new URL(id)
       title = U.hostname.startsWith('www.') ? U.hostname.substring(4) : U.hostname
-    } catch {
-      console.log('err')
-    }
+    } catch {}
 
     return {
       id,
