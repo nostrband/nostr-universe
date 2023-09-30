@@ -8,7 +8,7 @@ export const ModalAbout = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.ABOUT_MODAL)
 
   return (
-    <Modal title="About app" open={isOpen} handleClose={() => handleClose()}>
+    <Modal title="About Spring" open={isOpen} handleClose={() => handleClose()}>
       {isOpen && <ModalAboutContent />}
     </Modal>
   )

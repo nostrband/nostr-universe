@@ -9,7 +9,7 @@ export const ModalAboutContent = () => {
       <StyledWrap>
         <AppIcon size="big" isOutline={false} picture={AppLogo} />
         <StyledViewTitle variant="h5">The Nostr Browser</StyledViewTitle>
-        <StyledViewTitle variant="body1">0.1.1</StyledViewTitle>
+        <StyledViewTitle variant="body1">0.2.0</StyledViewTitle>
       </StyledWrap>
     </Container>
   )
