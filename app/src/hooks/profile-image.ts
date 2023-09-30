@@ -18,7 +18,7 @@ export const useProfileImageSource = ({
   pubkey: string
   originalImage?: string
   mediaType?: 'picture' | 'banner'
-  size?: 64 | 192
+  size?: 64 | 192 | 600
 }) => {
   const [isFailed, setIsFailed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
