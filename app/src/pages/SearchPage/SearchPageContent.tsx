@@ -196,7 +196,7 @@ export const SearchPageContent = () => {
             onChange={handleChange}
             value={searchValue}
             inputProps={{
-              autoFocus: true
+              autoFocus: false
             }}
           />
         </StyledForm>
