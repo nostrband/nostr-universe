@@ -1,27 +1,43 @@
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import { useAppDispatch } from '@/store/hooks/redux'
+import { setPage } from '@/store/reducers/positionScrollPage.slice'
 
 export const NavigationBottom = () => {
-  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const dispatch = useAppDispatch()
   const navigate = useNavigate()
+
+  const activeTab = searchParams.get('page') ? searchParams.get('page') : 'apps'
 
   return (
     <BottomNavigation
       showLabels
-      value={location.pathname}
+      value={activeTab}
       onChange={(_, path) => {
-        navigate(path)
+        if (path === 'apps') {
+          navigate({
+            pathname: '/'
+          })
+          dispatch(setPage({ page: '/' }))
+        } else {
+          navigate({
+            pathname: '/',
+            search: `?page=${path}`
+          })
+          dispatch(setPage({ page: path }))
+        }
       }}
     >
-      <BottomNavigationAction label="Apps" icon={<AppsOutlinedIcon />} value="/" />
-      <BottomNavigationAction label="Content" icon={<DashboardOutlinedIcon />} value="/content" />
-      <BottomNavigationAction label="Search" icon={<SearchOutlinedIcon />} value="/search" />
-      <BottomNavigationAction label="Tabs" icon={<WidgetsOutlinedIcon />} value="/tabs-switcher" />
+      <BottomNavigationAction label="Apps" icon={<AppsOutlinedIcon />} value="apps" />
+      <BottomNavigationAction label="Content" icon={<DashboardOutlinedIcon />} value="content" />
+      <BottomNavigationAction label="Search" icon={<SearchOutlinedIcon />} value="search" />
+      <BottomNavigationAction label="Tabs" icon={<WidgetsOutlinedIcon />} value="tabs-switcher" />
     </BottomNavigation>
   )
 }

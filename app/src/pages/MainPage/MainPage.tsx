@@ -8,10 +8,15 @@ import { LiveEvents } from './components/LiveEvents/LiveEvents'
 import { Communities } from './components/Communities/Communities'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
 import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
+import { StyledWrapVisibility } from '../styled'
+import { useSearchParams } from 'react-router-dom'
 
 export const MainPage = () => {
+  const [searchParams] = useSearchParams()
+  const isShow = searchParams.get('page') === 'content'
+
   return (
-    <>
+    <StyledWrapVisibility isShow={isShow}>
       <WelcomeWidget />
       <TrendingNotes />
       <TrendingProfiles />
@@ -22,6 +27,6 @@ export const MainPage = () => {
       <Communities />
       <SuggestedProfiles />
       <AppsNostro />
-    </>
+    </StyledWrapVisibility>
   )
 }

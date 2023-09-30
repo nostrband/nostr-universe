@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Route, Routes, useSearchParams } from 'react-router-dom'
 import { NavigationBottom } from './components/NavigationBottom/NavigationBottom'
 import { AppsPage } from './pages/AppsPage/AppsPage'
 import { MainPage } from './pages/MainPage/MainPage'
@@ -21,41 +21,47 @@ import { SearchPage } from './pages/SearchPage/SearchPage'
 import { ModalAddKey } from './components/Modal/ModalAddKey/ModalAddKey'
 import { ModalAbout } from './components/Modal/ModalAbout/ModalAbout'
 import { useAppDispatch, useAppSelector } from './store/hooks/redux'
-import { setPositionScroll } from './store/reducers/positionScrollPage.slice'
+import { setPage } from './store/reducers/positionScrollPage.slice'
 import { ModalFindApp } from './components/Modal/ModalFindApp/ModalFindApp'
 
 export const App = () => {
-  const { pathname } = useLocation()
-  const { position } = useAppSelector((state) => state.positionScrollPage)
+  // const { pathname,search } = useLocation()
+  const { page } = useAppSelector((state) => state.positionScrollPage)
+  const [searchParams] = useSearchParams()
   const dispatch = useAppDispatch()
+  // const dispatch = useAppDispatch()
 
-  const handleScroll = () => {
-    dispatch(setPositionScroll({ page: pathname, value: window.scrollY }))
-  }
+  // const handleScroll = () => {
+  //   dispatch(setPositionScroll({ page: pathname, value: window.scrollY }))
+  // }
+
+  // useEffect(() => {
+  //   window.addEventListener('scroll', handleScroll)
+  //   return () => {
+  //     window.removeEventListener('scroll', handleScroll)
+  //   }
+  // }, [pathname])
+
+  // useEffect(() => {
+  //   window.scrollTo(0, position[pathname])
+  // }, [pathname])
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll)
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [pathname])
-
-  useEffect(() => {
-    window.scrollTo(0, position[pathname])
-  }, [pathname])
+    dispatch(setPage({ page: searchParams.get('page') }))
+  }, [])
 
   const getTitle = () => {
-    switch (pathname) {
+    switch (page) {
       case '/':
         return 'Apps'
 
-      case '/content':
+      case 'content':
         return 'Content'
 
-      case '/tabs-switcher':
+      case 'tabs-switcher':
         return 'Tabs'
 
-      case '/search':
+      case 'search':
         return 'Search'
 
       default:
@@ -68,13 +74,21 @@ export const App = () => {
       <StyledWrapper>
         <Header title={getTitle()} />
 
-        <Routes>
+        {/* <Routes>
           <Route index path="/" element={<AppsPage />} />
           <Route path="/content" element={<MainPage />} />
           <Route path="/tabs-switcher" element={<TabsSwitcherPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="*" element={<AppsPage />} />
+        </Routes> */}
+        <Routes>
+          <Route index path="/" element={<AppsPage />} />
+          <Route path="*" element={<AppsPage />} />
         </Routes>
+
+        <MainPage />
+        <TabsSwitcherPage />
+        <SearchPage />
 
         <NavigationBottom />
       </StyledWrapper>

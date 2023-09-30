@@ -10,11 +10,7 @@ import {
   useSensor,
   useSensors
 } from '@dnd-kit/core'
-import {
-  StyledSwipeableDrawerContent,
-  StyledAddButtonWrapper,
-  StyledIconButton
-} from './styled'
+import { StyledSwipeableDrawerContent, StyledAddButtonWrapper, StyledIconButton } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { AppNostr as AppNostroType } from '@/types/app-nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'

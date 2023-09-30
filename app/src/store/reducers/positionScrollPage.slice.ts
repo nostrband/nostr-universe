@@ -1,12 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 interface IPositionScrollPageState {
+  page: string
   position: {
     [key: string]: number
   }
 }
 
 const initialState: IPositionScrollPageState = {
+  page: '/',
   position: {
     '/': 0,
     '/content': 0,
@@ -24,8 +26,11 @@ export const positionScrollPageSlice = createSlice({
         ...state.position,
         [action.payload.page]: action.payload.value
       }
+    },
+    setPage: (state, action) => {
+      state.page = action.payload.page
     }
   }
 })
 
-export const { setPositionScroll } = positionScrollPageSlice.actions
+export const { setPositionScroll, setPage } = positionScrollPageSlice.actions

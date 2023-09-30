@@ -28,8 +28,13 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { ContactList } from '../MainPage/components/ContactList/ContactList'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
+import { useSearchParams } from 'react-router-dom'
+import { StyledWrapVisibility } from '../styled'
 
 export const SearchPageContent = () => {
+  const [searchParams] = useSearchParams()
+  const isShow = searchParams.get('page') === 'search'
+
   const { openBlank } = useOpenApp()
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const dispatch = useAppDispatch()
@@ -183,7 +188,7 @@ export const SearchPageContent = () => {
   }
 
   return (
-    <>
+    <StyledWrapVisibility isShow={isShow}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput
@@ -205,6 +210,6 @@ export const SearchPageContent = () => {
       {!searchValue && <ContactList />}
 
       {renderContent()}
-    </>
+    </StyledWrapVisibility>
   )
 }

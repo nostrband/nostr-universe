@@ -268,14 +268,14 @@ export const useOpenApp = () => {
 
       // // allowed this kind or all kinds (if not kind-0)?
       if (hasPerm(tab, kindPerm, '1') || (event.kind != 0 && hasPerm(tab, allPerm, '1'))) {
-        console.log("has perm allow for ", kindPerm)
+        console.log('has perm allow for ', kindPerm)
         return await exec()
       }
 
       // disallowed this kind or all kinds
       const error = 'Signing of kind ' + event.kind + ' disallowed'
       if (hasPerm(tab, kindPerm, '0') || hasPerm(tab, allPerm, '0')) {
-        console.log("has perm disallow for ", kindPerm)
+        console.log('has perm disallow for ', kindPerm)
         throw new Error(error)
       }
       return requestPermExec(tab, { perm: kindPerm, event }, exec, error)

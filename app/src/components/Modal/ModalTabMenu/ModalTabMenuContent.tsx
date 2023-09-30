@@ -8,7 +8,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledWrapInput } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import React, { useCallback, useEffect, useState } from 'react'
 import { stringToBech32 } from '@/modules/nostr'
 import { selectTab } from '@/store/reducers/tab.slice'
@@ -22,7 +22,8 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
   const [, setEventAddr] = useState('')
   const id = searchParams.get('tabId') || ''
   const currentTab = useAppSelector((state) => selectTab(state, id))
-  const location = useLocation()
+  const { page } = useAppSelector((state) => state.positionScrollPage)
+  // const location = useLocation()
   const isPin = currentTab ? !!findTabPin(currentTab) : false
   const url = currentTab?.url
 
@@ -36,7 +37,12 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
   }, [url])
 
   const handleCloseTab = () => {
-    handleCloseModal(location.pathname)
+    if (page === '/') {
+      handleCloseModal('/')
+    } else {
+      handleCloseModal(`?page=${page}`)
+    }
+
     onCloseTab(id)
   }
 

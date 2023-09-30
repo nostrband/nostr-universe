@@ -12,8 +12,12 @@ import styles from './slider.module.scss'
 import 'swiper/css'
 import { ITabGroup, selectTabGroups } from '@/store/store'
 import { ITab } from '@/types/tab'
+import { useSearchParams } from 'react-router-dom'
+import { StyledWrapVisibility } from '../styled'
 
 export const TabsSwitcherPageContent = () => {
+  const [searchParams] = useSearchParams()
+  const isShow = searchParams.get('page') === 'tabs-switcher'
   const { onSwitchTab, onCloseTab, onCloseTabs } = useOpenApp()
   const tgs = useAppSelector(selectTabGroups)
 
@@ -30,7 +34,7 @@ export const TabsSwitcherPageContent = () => {
     onCloseTabs(tg.tabs)
   }
   return (
-    <>
+    <StyledWrapVisibility isShow={isShow}>
       {!tgs.length ? (
         <>No active tabs.</>
       ) : (
@@ -75,6 +79,6 @@ export const TabsSwitcherPageContent = () => {
           )
         })
       )}
-    </>
+    </StyledWrapVisibility>
   )
 }
