@@ -377,27 +377,28 @@ export const useOpenApp = () => {
     showContextMenu: async function (tabId, data) {
       console.log('event menu', JSON.stringify(data))
       const tab = getTabAny(tabId)
-      if (!tab) throw new Error("Inactive tab")
+      if (!tab) throw new Error('Inactive tab')
       data.tabUrl = tab.url
       handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
-        search: data,
+        search: data
       })
     },
     share: async function (tabId, data) {
       return await window.navigator.share(data)
     },
     decodeBech32: function (tabId, s) {
-      if (s.startsWith("npub1")
-        || s.startsWith("note1")
-        || s.startsWith("nevent1")
-        || s.startsWith("naddr1")
-        || s.startsWith("nprofile1")
+      if (
+        s.startsWith('npub1') ||
+        s.startsWith('note1') ||
+        s.startsWith('nevent1') ||
+        s.startsWith('naddr1') ||
+        s.startsWith('nprofile1')
       ) {
         return nip19.decode(s)
       } else {
-        console.log("decode", s)
-        const { prefix, words } = bech32.decode(s, s.length) 
-        console.log("decoded", prefix, words)
+        console.log('decode', s)
+        const { prefix, words } = bech32.decode(s, s.length)
+        console.log('decoded', prefix, words)
         const data = new Uint8Array(bech32.fromWords(words))
         return { type: prefix, data }
       }
@@ -475,7 +476,7 @@ export const useOpenApp = () => {
       id: uuidv4(),
       url: app.url,
       appNaddr: app.naddr,
-      title: app.title,
+      title: app?.title || app?.name, // FIXME why there title instead name?
       icon: app.picture,
       order: currentWorkSpace.pins.length,
       pubkey: currentWorkSpace.pubkey
@@ -485,7 +486,6 @@ export const useOpenApp = () => {
 
     dbi.addPin(pin)
   }
-
 
   const onPinTab = async (currentTab: ITab) => {
     const pin: IPin = {
