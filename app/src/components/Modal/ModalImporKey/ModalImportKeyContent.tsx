@@ -13,7 +13,7 @@ import { IModalImportKeyContent } from './types'
 export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyContent) => {
   const { onImportKey } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
-  const [profiles, setProfiles] = useState<MetaEvent[]>([])
+  const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -25,7 +25,7 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
       setProfiles(data)
     } catch (error) {
       console.log(error)
-      setIsLoading(false)
+      setProfiles(null)
     } finally {
       setIsLoading(false)
     }
@@ -67,9 +67,11 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
       )}
       {!isLoading && (
         <>
-          <StyledSlider>
-            <SliderProfiles data={profiles} isLoading={false} handleClickEntity={handleProfileSetKey} />
-          </StyledSlider>
+          {searchValue && profiles !== null && (
+            <StyledSlider>
+              <SliderProfiles data={profiles} isLoading={false} handleClickEntity={handleProfileSetKey} />
+            </StyledSlider>
+          )}
           <Container>
             <StyledHint>Paste an npub of some existing user to log in.</StyledHint>
             <StyledHint>Or type something to search for matching profiles, then click on one to import it.</StyledHint>

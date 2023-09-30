@@ -10,7 +10,12 @@ import {
   useSensor,
   useSensors
 } from '@dnd-kit/core'
-import { StyledSwipeableDrawerContent } from './styled'
+import {
+  StyledSwipeableDrawerContent,
+  StyledAddButtonWrapper,
+  StyledIconButton
+} from './styled'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { AppNostr as AppNostroType } from '@/types/app-nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
@@ -19,6 +24,8 @@ import { swapPins } from '@/store/reducers/workspaces.slice'
 import { SortableContext, rectSwappingStrategy } from '@dnd-kit/sortable'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
+import AddIcon from '@mui/icons-material/Add'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 type PinID = string | number
 
@@ -27,6 +34,8 @@ export const AppsPageContent = () => {
   const dispatch = useAppDispatch()
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
+
+  const { handleOpen: handleOpenModal } = useOpenModalSearchParams()
 
   const [activeId, setActiveId] = useState<PinID | null>(null)
 
@@ -123,6 +132,11 @@ export const AppsPageContent = () => {
                   </Grid>
                 )
               })}
+              <StyledAddButtonWrapper>
+                <StyledIconButton onClick={() => handleOpenModal(MODAL_PARAMS_KEYS.FIND_APP)}>
+                  <AddIcon />
+                </StyledIconButton>
+              </StyledAddButtonWrapper>
             </Grid>
           </Container>
         </SortableContext>

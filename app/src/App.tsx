@@ -22,6 +22,7 @@ import { ModalAddKey } from './components/Modal/ModalAddKey/ModalAddKey'
 import { ModalAbout } from './components/Modal/ModalAbout/ModalAbout'
 import { useAppDispatch, useAppSelector } from './store/hooks/redux'
 import { setPositionScroll } from './store/reducers/positionScrollPage.slice'
+import { ModalFindApp } from './components/Modal/ModalFindApp/ModalFindApp'
 
 export const App = () => {
   const { pathname } = useLocation()
@@ -92,6 +93,7 @@ export const App = () => {
       <ModalProfileTabMenu />
       <ModalAddKey />
       <ModalAbout />
+      <ModalFindApp />
     </>
   )
 }

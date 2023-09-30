@@ -16,7 +16,8 @@ export enum MODAL_PARAMS_KEYS {
   WALLET_MODAL = 'wallet-modal',
   PROFILE_TAB_MENU_MODAL = 'profile-tab-menu-modal',
   ADD_KEY_MODAL = 'add-key-modal',
-  ABOUT_MODAL = 'about-modal'
+  ABOUT_MODAL = 'about-modal',
+  FIND_APP = 'find-app'
 }
 
 export const EXTRA_OPTIONS = {

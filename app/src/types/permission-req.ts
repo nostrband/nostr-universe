@@ -19,4 +19,5 @@ export interface IPerm {
   app: string
   name: string
   value: string
+  label: string
 }

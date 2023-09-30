@@ -22,7 +22,7 @@ export const ModalAddKeyContent = () => {
       <StyledViewTitle>Existing key</StyledViewTitle>
       <StyledList dense>
         <StyledListItem disablePadding>
-          <ListItemText primary="Import your existing nsec, it will be encrypted and stored securely.button: Import private key" />
+          <ListItemText primary="Import your existing nsec, it will be encrypted and stored securely." />
         </StyledListItem>
 
         <StyledListItem disablePadding>

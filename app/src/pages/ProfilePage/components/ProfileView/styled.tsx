@@ -1,12 +1,15 @@
 import { forwardRef } from 'react'
 import { styled } from '@mui/material/styles'
-import { Box, Avatar, Typography, TypographyProps, Button } from '@mui/material'
+import { Box, Avatar, Typography, TypographyProps, Button, BoxProps } from '@mui/material'
 
-export const StyledViewBaner = styled(Box)(({ theme }) => ({
+export const StyledViewBaner = styled((props: BoxProps & { url: string }) => <Box {...props} />)(({ theme, url }) => ({
   position: 'relative',
   height: 100,
-  background: 'linear-gradient(45deg, rgba(238,59,255,1) 0%, rgba(121,9,95,1) 35%, rgba(117,0,255,1) 100%)',
+  background: url
+    ? `url(${url})`
+    : 'linear-gradient(45deg, rgba(238,59,255,1) 0%, rgba(121,9,95,1) 35%, rgba(117,0,255,1) 100%)',
   borderRadius: theme.shape.borderRadius,
+  backgroundSize: 'cover',
   marginBottom: 50
 }))
 
