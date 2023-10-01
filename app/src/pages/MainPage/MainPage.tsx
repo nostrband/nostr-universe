@@ -10,22 +10,31 @@ import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfi
 import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
 import { StyledWrapVisibility } from '../styled'
 import { useSearchParams } from 'react-router-dom'
+import { useAppSelector } from '@/store/hooks/redux'
+import { isGuest } from '@/utils/helpers/prepare-data'
 
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'content'
 
+  const { keys } = useAppSelector((state) => state.keys)
+  const guest = !keys.length || isGuest(keys[0])
+
   return (
     <StyledWrapVisibility isShow={isShow}>
-      <WelcomeWidget />
+      {guest && (<WelcomeWidget />)}
       <TrendingNotes />
       <TrendingProfiles />
-      <Highlights />
-      <BigZaps />
-      <LongPosts />
-      <LiveEvents />
-      <Communities />
-      <SuggestedProfiles />
+      {!guest && (
+        <>
+          <Highlights />
+          <BigZaps />
+          <LongPosts />
+          <LiveEvents />
+          <Communities />
+          <SuggestedProfiles />
+        </>
+      )}
       <AppsNostro />
     </StyledWrapVisibility>
   )

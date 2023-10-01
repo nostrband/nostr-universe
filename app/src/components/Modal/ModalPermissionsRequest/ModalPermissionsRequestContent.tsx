@@ -9,7 +9,7 @@ import { Container } from '@/layout/Container/Conatiner'
 import { selectTab } from '@/store/reducers/tab.slice'
 import { IModalPermissionsRequestContent } from './types'
 
-export const ModalPermissionsRequestContent = ({ handleCloseModal }: IModalPermissionsRequestContent) => {
+export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IModalPermissionsRequestContent) => {
   const { replyCurrentPermRequest } = useOpenApp()
   const [isRemember, setIsRemember] = useState(false)
   const [lastPermRequestId, setLastPermRequestId] = useState('')
@@ -22,7 +22,7 @@ export const ModalPermissionsRequestContent = ({ handleCloseModal }: IModalPermi
   // reset flag for new input
   useEffect(() => {
     setIsRemember(false)
-  }, [currentPermId])
+  }, [currentPermId, isOpen])
 
   // remember last request so that if user presses the system 'Back'
   // button we could react to it and execute disallow reply below
@@ -32,8 +32,8 @@ export const ModalPermissionsRequestContent = ({ handleCloseModal }: IModalPermi
 
   // disallow last request if it wasn't processed and the modal is closed
   useEffect(() => {
-    if (lastPermRequestId) reply(false, false, lastPermRequestId)
-  }, [])
+    if (!isOpen && lastPermRequestId) reply(false, false, lastPermRequestId)
+  }, [isOpen])
 
   const reply = async (allow: boolean, remember: boolean, reqId: string) => {
     console.log('reply perm req ', reqId, 'allow', allow, 'remember', remember)

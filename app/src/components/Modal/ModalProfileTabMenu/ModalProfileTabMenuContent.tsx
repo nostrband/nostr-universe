@@ -24,20 +24,20 @@ export const ModalProfileTabMenuContent = () => {
   const currentTab = useAppSelector((state) => selectTab(state, id))
 
   useEffect(() => {
-    const prepareLabel = (perm: string, wallets: { [key: string]: Record<string, unknown> }): string => {
-      if (perm === 'pubkey') {
+    const prepareLabel = (perm: IPerm, wallets: { [key: string]: Record<string, unknown> }): string => {
+      if (perm.name === 'pubkey') {
         return 'Read your public key'
-      } else if (perm?.startsWith('pay_invoice:')) {
-        const id = perm?.split(':')[1]
+      } else if (perm.name.startsWith('pay_invoice:')) {
+        const id = perm.name.split(':')[1]
         const info = wallets ? wallets[id] : {}
         const name = info.name || id
         return `Payment from wallet '${name}'`
-      } else if (perm?.startsWith('sign:')) {
-        const kind = perm?.split(':')[1]
+      } else if (perm.name.startsWith('sign:')) {
+        const kind = perm.name.split(':')[1]
         return 'Sign event of kind ' + kind
-      } else if (perm === 'encrypt') {
+      } else if (perm.name === 'encrypt') {
         return 'Encrypt a message'
-      } else if (perm === 'decrypt') {
+      } else if (perm.name === 'decrypt') {
         return 'Decrypt a message'
       }
       return ''
@@ -53,7 +53,10 @@ export const ModalProfileTabMenuContent = () => {
               .map((p) => ({ ...p }) as IPerm)
           : []
 
-      for (const p of perms) p.label = prepareLabel(p.name, wallets)
+      for (const p of perms) {
+        p.label = (p.value === '1' ? "Allow: " : "Disallow: ")
+          + prepareLabel(p, wallets)
+      }
 
       setPerms(perms)
     }

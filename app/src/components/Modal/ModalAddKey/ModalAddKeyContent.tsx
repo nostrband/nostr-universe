@@ -13,9 +13,14 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useOpenApp } from '@/hooks/open-entity'
 
-export const ModalAddKeyContent = () => {
+export const ModalAddKeyContent = ({ handleClose }: { handleClose: () => void}) => {
   const { handleOpen } = useOpenModalSearchParams()
   const { onImportKey } = useOpenApp()
+
+  const handleAddKey = async () => {
+    await onImportKey()
+    handleClose()
+  }
 
   return (
     <Container>
@@ -26,7 +31,7 @@ export const ModalAddKeyContent = () => {
         </StyledListItem>
 
         <StyledListItem disablePadding>
-          <StyledItemButton alignItems="center" onClick={() => onImportKey()}>
+          <StyledItemButton alignItems="center" onClick={handleAddKey}>
             <ListItemAvatar>
               <StyledItemIconAvatar>
                 <AddIcon />
@@ -45,7 +50,7 @@ export const ModalAddKeyContent = () => {
         <StyledListItem disablePadding>
           <StyledItemButton
             alignItems="center"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEY_IMPORT, { append: true })}
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEY_IMPORT, { replace: true })}
           >
             <ListItemAvatar>
               <StyledItemIconAvatar>

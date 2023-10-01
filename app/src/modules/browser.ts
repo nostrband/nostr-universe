@@ -45,7 +45,7 @@ const initTab = () => {
     const weblnKey = {
       sendPayment: _gen('sendPayment'),
       getInfo: _gen('getWalletInfo'),
-      enable: () => {
+      enable: (): Promise<void> => {
         return Promise.resolve(undefined)
       }
     }

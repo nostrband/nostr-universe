@@ -7,13 +7,9 @@ export const ModalImportKey = () => {
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.KEY_IMPORT)
 
-  const handleCloseModal = () => {
-    handleClose()
-  }
-
   return (
-    <Modal title="Add read-only keys" open={isOpen} handleClose={handleCloseModal}>
-      {isOpen && <ModalImportKeyContent handleCloseModal={handleCloseModal} />}
+    <Modal title="Add read-only keys" open={isOpen} handleClose={handleClose}>
+      {isOpen && <ModalImportKeyContent handleCloseModal={handleClose} />}
     </Modal>
   )
 }

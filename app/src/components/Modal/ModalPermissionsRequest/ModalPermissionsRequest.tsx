@@ -7,9 +7,11 @@ export const ModalPermissionsRequest = () => {
   const { handleClose, getModalOpened } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PERMISSIONS_REQ)
 
+  // NOTE: always render the content, it must work even
+  // if !isOpen
   return (
     <Modal title="Permission request" open={isOpen} handleClose={() => handleClose()}>
-      {isOpen && <ModalPermissionsRequestContent handleCloseModal={handleClose} />}
+      <ModalPermissionsRequestContent isOpen={isOpen} handleCloseModal={handleClose} />
     </Modal>
   )
 }

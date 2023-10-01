@@ -46,7 +46,7 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
         <ListItem disablePadding>
           <StyledItemButton
             alignItems="center"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.ADD_KEY_MODAL, { append: true })}
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.ADD_KEY_MODAL, { replace: true })}
           >
             <ListItemAvatar>
               <StyledItemIconAvatar>

@@ -9,7 +9,7 @@ export const ModalAddKey = () => {
 
   return (
     <Modal title="Add key" open={isOpen} handleClose={() => handleClose()}>
-      {isOpen && <ModalAddKeyContent />}
+      {isOpen && <ModalAddKeyContent handleClose={handleClose} />}
     </Modal>
   )
 }

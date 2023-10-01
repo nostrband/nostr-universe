@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { IconButton } from '@mui/material'
@@ -15,9 +15,9 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
   const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const inputRef = useRef<HTMLElement>();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSearch = async () => {
     setIsLoading(true)
     try {
       const data = await searchProfiles(searchValue)
@@ -29,6 +29,12 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    inputRef.current?.blur()
+    handleSearch()
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +61,8 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
             onChange={handleChange}
             value={searchValue}
             inputProps={{
-              autoFocus: true
+              autoFocus: true,
+              ref: inputRef
             }}
           />
         </StyledForm>
@@ -69,7 +76,9 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
         <>
           {searchValue && profiles !== null && (
             <StyledSlider>
-              <SliderProfiles data={profiles} isLoading={false} handleClickEntity={handleProfileSetKey} />
+              <SliderProfiles data={profiles} isLoading={false} 
+                handleClickEntity={handleProfileSetKey} 
+                handleReloadEntity={handleSearch} />
             </StyledSlider>
           )}
           <Container>
