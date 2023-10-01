@@ -39,7 +39,7 @@ export const useOpenModalSearchParams = () => {
 
       navigate(
         {
-          pathname: '/',
+          pathname: location.pathname,
           search: searchString
         },
         { replace: extraOptions?.replace }

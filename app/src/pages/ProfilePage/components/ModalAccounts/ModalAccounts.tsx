@@ -15,10 +15,8 @@ import { IModalAccounts } from './types'
 // import { useAddKey } from '@/hooks/workspaces'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { useOpenApp } from '@/hooks/open-entity'
 
 export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, currentPubKey }: IModalAccounts) => {
-  const { onImportKey } = useOpenApp()
   const { handleOpen } = useOpenModalSearchParams()
 
   const handleCloseAccounts = () => {
@@ -46,23 +44,16 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
         ))}
 
         <ListItem disablePadding>
-          <StyledItemButton alignItems="center" onClick={() => handleOpen(MODAL_PARAMS_KEYS.KEY_IMPORT)}>
+          <StyledItemButton
+            alignItems="center"
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.ADD_KEY_MODAL, { append: true })}
+          >
             <ListItemAvatar>
               <StyledItemIconAvatar>
                 <AddIcon />
               </StyledItemIconAvatar>
             </ListItemAvatar>
-            <StyledItemText primary="Add read-only key" />
-          </StyledItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <StyledItemButton alignItems="center" onClick={() => onImportKey()}>
-            <ListItemAvatar>
-              <StyledItemIconAvatar>
-                <AddIcon />
-              </StyledItemIconAvatar>
-            </ListItemAvatar>
-            <StyledItemText primary="Add private key" />
+            <StyledItemText primary="Add key" />
           </StyledItemButton>
         </ListItem>
       </StyledList>

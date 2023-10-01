@@ -1,17 +1,4 @@
-import { Box, Dialog, styled, InputBase } from '@mui/material'
-
-export const StyledDialog = styled(Dialog)(({ theme }) => ({
-  '.MuiDialog-paper': {
-    backgroundColor: theme.palette.background.default
-  }
-}))
-
-export const StyledWrap = styled(Box)(() => ({
-  paddingBottom: 80,
-  paddingTop: 60,
-  maxHeight: '100%',
-  overflowY: 'auto'
-}))
+import { styled, InputBase } from '@mui/material'
 
 export const StyledInput = styled(InputBase)(({ theme }) => ({
   background: theme.palette.secondary.main,

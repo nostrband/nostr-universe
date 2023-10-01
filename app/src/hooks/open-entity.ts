@@ -42,7 +42,7 @@ import {
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
@@ -54,6 +54,7 @@ import { IPin } from '@/types/workspace'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
+  const location = useLocation()
   const updateProfile = useUpdateProfile()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { workspaces } = useAppSelector((state) => state.workspaces)
@@ -181,7 +182,7 @@ export const useOpenApp = () => {
   }
 
   const onHideTab = () => {
-    handleClose('/')
+    handleClose(location.pathname)
   }
 
   const onCloseTab = async (id: string) => {
@@ -267,14 +268,14 @@ export const useOpenApp = () => {
 
       // // allowed this kind or all kinds (if not kind-0)?
       if (hasPerm(tab, kindPerm, '1') || (event.kind != 0 && hasPerm(tab, allPerm, '1'))) {
-        console.log("has perm allow for ", kindPerm)
+        console.log('has perm allow for ', kindPerm)
         return await exec()
       }
 
       // disallowed this kind or all kinds
       const error = 'Signing of kind ' + event.kind + ' disallowed'
       if (hasPerm(tab, kindPerm, '0') || hasPerm(tab, allPerm, '0')) {
-        console.log("has perm disallow for ", kindPerm)
+        console.log('has perm disallow for ', kindPerm)
         throw new Error(error)
       }
       return requestPermExec(tab, { perm: kindPerm, event }, exec, error)
@@ -404,7 +405,7 @@ export const useOpenApp = () => {
       }
     },
     onHide: (tabId) => {
-      handleClose('/')
+      handleClose(location.pathname)
     },
     setUrl: async (tabId, url) => {
       const tab = getTabAny(tabId)

@@ -8,6 +8,7 @@ interface IAppIconProps {
   isNotLoaded?: boolean
   isOutline?: boolean
   isRounded?: boolean
+  isLight?: boolean
   onClick?: () => void
 }
 
@@ -16,6 +17,7 @@ export type IBoxStyled = IAppIconProps & BoxProps
 export interface IAvatarProps extends AvatarProps {
   size?: AppNostrSize
   isPreviewTab?: boolean
+  isLight?: boolean
 }
 
 export interface IAppIconBase {

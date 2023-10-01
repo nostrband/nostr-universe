@@ -24,8 +24,7 @@ export const ModalProfileTabMenuContent = () => {
   const currentTab = useAppSelector((state) => selectTab(state, id))
 
   useEffect(() => {
-
-    const prepareLabel = (perm: string, wallets: any): string => {
+    const prepareLabel = (perm: string, wallets: { [key: string]: Record<string, unknown> }): string => {
       if (perm === 'pubkey') {
         return 'Read your public key'
       } else if (perm?.startsWith('pay_invoice:')) {
@@ -44,24 +43,23 @@ export const ModalProfileTabMenuContent = () => {
       return ''
     }
 
-
     const load = async () => {
       const wallets = await walletstore.listWallets()
 
-      const perms = currentTab && currentWorkSpace
-        ? (currentWorkSpace.perms.filter((perm) => perm.app === getTabGroupId(currentTab))
-          .map((p) => ({ ...p } as IPerm)))
-        : []
+      const perms =
+        currentTab && currentWorkSpace
+          ? currentWorkSpace.perms
+              .filter((perm) => perm.app === getTabGroupId(currentTab))
+              .map((p) => ({ ...p }) as IPerm)
+          : []
 
-      for (const p of perms)
-        p.label = prepareLabel(p.name, wallets)
+      for (const p of perms) p.label = prepareLabel(p.name, wallets)
 
       setPerms(perms)
     }
 
     load()
   }, [id])
-
 
   return (
     <Container>

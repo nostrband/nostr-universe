@@ -31,7 +31,7 @@ const getVariantApp = (isPreviewTab: boolean, isRounded: boolean, size: AppNostr
 
 export const StyledAppIcon = styled(
   forwardRef<HTMLAnchorElement, IBoxStyled>(function BoxDisplayName(props, ref) {
-    const exclude = new Set(['isActive', 'isPreviewTab', 'isOutline', 'isNotLoaded', 'isRounded'])
+    const exclude = new Set(['isActive', 'isPreviewTab', 'isOutline', 'isNotLoaded', 'isRounded', 'isLight'])
     const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
 
     return <Box ref={ref} {...omitProps} />
@@ -64,20 +64,21 @@ export const StyledAppIcon = styled(
 export const StyledAppImg = styled(
   forwardRef<HTMLAnchorElement, IAvatarProps>(function BoxDisplayName(props) {
     // return <Avatar  {...props} />
-    const exclude = new Set(['isPreviewTab'])
+    const exclude = new Set(['isPreviewTab', 'isLight'])
     const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
 
     return <Avatar variant="square" {...omitProps} />
   })
-)(({ theme, isPreviewTab = false, size = APP_NOSTR_SIZE.MEDIUM }) => ({
+)(({ theme, isPreviewTab = false, isLight = false, size = APP_NOSTR_SIZE.MEDIUM }) => ({
   position: 'absolute',
   left: 0,
   top: 0,
   height: '100%',
   width: '100%',
   objectFit: 'cover',
-  background: 'none',
+  background: isLight ? '#fff' : 'none',
   color: theme.palette.light.light,
+  borderRadius: isLight ? '50%' : '0',
   fontWeight: 'bold',
   fontSize: isPreviewTab ? APP_NAME_FONT_SIZE_VALUE[APP_NOSTR_SIZE.EXTRA_SMALL] : APP_NAME_FONT_SIZE_VALUE[size]
 }))

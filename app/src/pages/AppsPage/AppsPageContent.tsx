@@ -10,16 +10,9 @@ import {
   useSensor,
   useSensors
 } from '@dnd-kit/core'
-import {
-  StyledAppBar,
-  StyledWrap,
-  StyledSwipeableDrawerContent,
-  StyledAddButtonWrapper,
-  StyledIconButton
-} from './styled'
+import { StyledSwipeableDrawerContent, StyledAddButtonWrapper, StyledIconButton } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { AppNostr as AppNostroType } from '@/types/app-nostr'
-import { Header } from '@/components/Header/Header'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
@@ -99,59 +92,51 @@ export const AppsPageContent = () => {
   const handleDragOver = () => setActiveId(null)
 
   return (
-    <>
-      <StyledAppBar>
-        <Header title="Apps" />
-      </StyledAppBar>
+    <StyledSwipeableDrawerContent>
+      <DndContext
+        sensors={sensors}
+        autoScroll={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragOver}
+      >
+        <SortableContext items={pinIds} strategy={rectSwappingStrategy}>
+          <Container>
+            <Grid columns={10} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+              {pins.map((pin, i) => {
+                const app = {
+                  picture: pin.icon,
+                  name: pin.title,
+                  naddr: pin.appNaddr,
+                  url: pin.url,
+                  order: pin.order
+                }
 
-      <StyledWrap>
-        <StyledSwipeableDrawerContent>
-          <DndContext
-            sensors={sensors}
-            autoScroll={false}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragOver}
-          >
-            <SortableContext items={pinIds} strategy={rectSwappingStrategy}>
-              <Container>
-                <Grid columns={10} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-                  {pins.map((pin, i) => {
-                    const app = {
-                      picture: pin.icon,
-                      name: pin.title,
-                      naddr: pin.appNaddr,
-                      url: pin.url,
-                      order: pin.order
-                    }
+                const gid = getTabGroupId(pin)
+                const isActive = !!tabs.find((t) => getTabGroupId(t) === gid)
 
-                    const gid = getTabGroupId(pin)
-                    const isActive = !!tabs.find((t) => getTabGroupId(t) === gid)
-
-                    return (
-                      <Grid key={i} item xs={2}>
-                        <AppNostroSortable
-                          isDragging={activeId === pin.id}
-                          id={pin.id}
-                          isActive={isActive}
-                          app={app}
-                          size="small"
-                          onOpen={handleOpen}
-                        />
-                      </Grid>
-                    )
-                  })}
-                  <StyledAddButtonWrapper>
-                    <StyledIconButton onClick={() => handleOpenModal(MODAL_PARAMS_KEYS.FIND_APP)}>
-                      <AddIcon />
-                    </StyledIconButton>
-                  </StyledAddButtonWrapper>
-                </Grid>
-              </Container>
-            </SortableContext>
-          </DndContext>
-        </StyledSwipeableDrawerContent>
-      </StyledWrap>
-    </>
+                return (
+                  <Grid key={i} item xs={2}>
+                    <AppNostroSortable
+                      isDragging={activeId === pin.id}
+                      id={pin.id}
+                      isActive={isActive}
+                      app={app}
+                      size="small"
+                      onOpen={handleOpen}
+                    />
+                  </Grid>
+                )
+              })}
+              <StyledAddButtonWrapper>
+                <StyledIconButton onClick={() => handleOpenModal(MODAL_PARAMS_KEYS.FIND_APP)}>
+                  <AddIcon />
+                </StyledIconButton>
+              </StyledAddButtonWrapper>
+            </Grid>
+          </Container>
+        </SortableContext>
+      </DndContext>
+    </StyledSwipeableDrawerContent>
   )
 }

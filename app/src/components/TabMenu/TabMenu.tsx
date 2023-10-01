@@ -15,9 +15,10 @@ import { getProfileImage } from '@/utils/helpers/prepare-data'
 import { selectTab } from '@/store/reducers/tab.slice'
 
 export const TabMenu = () => {
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpen, handleClose } = useOpenModalSearchParams()
   const [searchParams] = useSearchParams()
-  const { onStopLoadTab, onReloadTab, onHideTab } = useOpenApp()
+  const { onStopLoadTab, onReloadTab } = useOpenApp()
+  const { page } = useAppSelector((state) => state.positionScrollPage)
   const id = searchParams.get('tabId') || ''
   const { currentProfile } = useAppSelector((state) => state.profile)
   const currentTab = useAppSelector((state) => selectTab(state, id))
@@ -34,9 +35,17 @@ export const TabMenu = () => {
   //   handleOpen(MODAL_PARAMS_KEYS.TABS_SWITCHER)
   // }
 
+  const handleCloseTab = () => {
+    if (page === '/') {
+      handleClose('/')
+    } else {
+      handleClose(`?page=${page}`)
+    }
+  }
+
   const handleMagicMenu = () => {
     handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
-      search: { 
+      search: {
         tabUrl: currentTab?.url as string
       }
     })
@@ -60,19 +69,13 @@ export const TabMenu = () => {
           alt={currentTab?.title}
           onClick={handleOpenTabMenu}
         />
-        <StyledIconButton
-          onClick={handleOpenProfileTabMenu}
-        >
+        <StyledIconButton onClick={handleOpenProfileTabMenu}>
           <StyledAvatar src={getProfileImage(currentProfile)} />
         </StyledIconButton>
       </StyledTabsActions>
 
       <StyledTabsActions>
-        <IconButton
-          color="inherit"
-          size="medium"
-          onClick={handleMagicMenu}
-        >
+        <IconButton color="inherit" size="medium" onClick={handleMagicMenu}>
           <AutoFixHighOutlinedIcon />
         </IconButton>
       </StyledTabsActions>
@@ -86,7 +89,7 @@ export const TabMenu = () => {
           {currentTab?.loading ? <CloseOutlinedIcon /> : <ReplayOutlinedIcon />}
         </IconButton>
 
-        <IconButton color="inherit" size="medium" onClick={onHideTab}>
+        <IconButton color="inherit" size="medium" onClick={handleCloseTab}>
           <HomeOutlinedIcon />
         </IconButton>
       </StyledTabsActions>

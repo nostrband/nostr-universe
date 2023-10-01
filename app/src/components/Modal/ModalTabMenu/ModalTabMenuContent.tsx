@@ -22,7 +22,8 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
   const [, setEventAddr] = useState('')
   const id = searchParams.get('tabId') || ''
   const currentTab = useAppSelector((state) => selectTab(state, id))
-
+  const { page } = useAppSelector((state) => state.positionScrollPage)
+  // const location = useLocation()
   const isPin = currentTab ? !!findTabPin(currentTab) : false
   const url = currentTab?.url
 
@@ -36,7 +37,12 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
   }, [url])
 
   const handleCloseTab = () => {
-    handleCloseModal('/')
+    if (page === '/') {
+      handleCloseModal('/')
+    } else {
+      handleCloseModal(`?page=${page}`)
+    }
+
     onCloseTab(id)
   }
 

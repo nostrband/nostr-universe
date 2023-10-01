@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useOpenApp } from '@/hooks/open-entity'
 import {
@@ -26,14 +26,19 @@ import { StyledForm, StyledInput } from './styled'
 import { IconButton } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { ContactList } from '../MainPage/components/ContactList/ContactList'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { setSearchValue } from '@/store/reducers/searchModal.slice'
+import { useSearchParams } from 'react-router-dom'
+import { StyledWrapVisibility } from '../styled'
 
-type Props = {
-  searchValueRef: React.MutableRefObject<string>
-}
+export const SearchPageContent = () => {
+  const [searchParams] = useSearchParams()
+  const isShow = searchParams.get('page') === 'search'
 
-export const SearchPageContent: FC<Props> = ({ searchValueRef }) => {
   const { openBlank } = useOpenApp()
-  const [searchValue, setSearchValue] = useState('')
+  const { searchValue } = useAppSelector((state) => state.searchModal)
+  const dispatch = useAppDispatch()
+  // const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [notes, setNotes] = useState<AuthoredEvent[] | null>(null)
   const [longNotes, setLongNotes] = useState<LongNoteEvent[] | null>(null)
@@ -82,13 +87,13 @@ export const SearchPageContent: FC<Props> = ({ searchValueRef }) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    searchValueRef.current = searchValue
+    localStorage.setItem('searchValue', searchValue)
     onSearch(searchValue)
     loadEvents(searchValue)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value)
+    dispatch(setSearchValue({ searchValue: e.target.value }))
   }
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -130,12 +135,10 @@ export const SearchPageContent: FC<Props> = ({ searchValueRef }) => {
   // }, [isOpen])
 
   useEffect(() => {
-    const memoizedSearchValue = searchValueRef.current
-    setSearchValue(memoizedSearchValue)
-    if (memoizedSearchValue.trim().length) {
-      loadEvents(memoizedSearchValue)
+    if (searchValue.trim().length) {
+      loadEvents(searchValue)
     }
-  }, [searchValueRef, loadEvents])
+  }, [loadEvents])
 
   const renderContent = () => {
     return (
@@ -185,7 +188,7 @@ export const SearchPageContent: FC<Props> = ({ searchValueRef }) => {
   }
 
   return (
-    <>
+    <StyledWrapVisibility isShow={isShow}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput
@@ -198,7 +201,7 @@ export const SearchPageContent: FC<Props> = ({ searchValueRef }) => {
             onChange={handleChange}
             value={searchValue}
             inputProps={{
-              autoFocus: true
+              autoFocus: false
             }}
           />
         </StyledForm>
@@ -207,6 +210,6 @@ export const SearchPageContent: FC<Props> = ({ searchValueRef }) => {
       {!searchValue && <ContactList />}
 
       {renderContent()}
-    </>
+    </StyledWrapVisibility>
   )
 }

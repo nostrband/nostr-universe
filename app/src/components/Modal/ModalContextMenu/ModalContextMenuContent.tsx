@@ -21,14 +21,13 @@ export const ModalContextMenuContent = () => {
   const { openZap, openBlank } = useOpenApp()
   const tabUrl = searchParams.get('tabUrl') || ''
   const text = searchParams.get('text') || ''
-  let href = searchParams.get('href') || ''
+  const href = searchParams.get('href') || ''
   const imgSrc = searchParams.get('imgSrc') || ''
   const videoSrc = searchParams.get('videoSrc') || ''
   const audioSrc = searchParams.get('audioSrc') || ''
   let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
   const addr = stringToBech32(value || tabUrl)
-  if (!value)
-    value = addr // from tabUrl
+  if (!value) value = addr // from tabUrl
 
   const handleOpenModalSelect = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
@@ -87,11 +86,11 @@ export const ModalContextMenuContent = () => {
       )}
       <StyledMenuWrapper>
         <List>
-          {addr && renderItem("Open with", (<AppsOutlinedIcon />), handleOpenModalSelect)}
-          {addr && renderItem("Zap", (<FlashOnIcon />), handleZap)}
-          {href && renderItem("Open in new tab", (<OpenInNewOutlinedIcon />), handleOpenHref)}
-          {value && renderItem("Share text", (<ShareOutlinedIcon />), handleShareValue)}
-          {renderItem("Share tab URL", (<IosShareOutlinedIcon />), handleShareTabUrl)}
+          {addr && renderItem('Open with', <AppsOutlinedIcon />, handleOpenModalSelect)}
+          {addr && renderItem('Zap', <FlashOnIcon />, handleZap)}
+          {href && renderItem('Open in new tab', <OpenInNewOutlinedIcon />, handleOpenHref)}
+          {value && renderItem('Share text', <ShareOutlinedIcon />, handleShareValue)}
+          {renderItem('Share tab URL', <IosShareOutlinedIcon />, handleShareTabUrl)}
         </List>
       </StyledMenuWrapper>
     </Container>

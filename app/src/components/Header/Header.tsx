@@ -21,7 +21,7 @@ type HeaderProps = {
   title: string | React.ReactNode
 }
 
-export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
+export const Header: FC<HeaderProps> = ({ title = 'Apps' }) => {
   const [searchParams] = useSearchParams()
   const { handleOpen } = useOpenModalSearchParams()
   const { currentProfile } = useAppSelector((state) => state.profile)
@@ -31,14 +31,10 @@ export const Header: FC<HeaderProps> = ({ title = 'Content' }) => {
   return (
     <StyledWrapper>
       <StyledHeader>
-        <StyledAppLogo />
+        <StyledAppLogo onClick={() => handleOpen(MODAL_PARAMS_KEYS.ABOUT_MODAL)} />
         <StyledPageTitle>{title}</StyledPageTitle>
         <StyledContainerButton>
-          <IconButton
-            color="inherit"
-            size="medium"
-            onClick={() => handleOpen(MODAL_PARAMS_KEYS.WALLET_MODAL)}
-          >
+          <IconButton color="inherit" size="medium" onClick={() => handleOpen(MODAL_PARAMS_KEYS.WALLET_MODAL)}>
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
 

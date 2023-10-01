@@ -63,7 +63,7 @@ const initTab = () => {
         try {
           window.nostrCordovaPlugin.onClipboardWriteText(text)
         } catch (e) {
-          console.log("error", e)
+          console.log('error', e)
         }
       }
       return await window.nostrCordovaPlugin.clipboardWriteText(text)
@@ -110,8 +110,6 @@ const initTab = () => {
 
 // executed in the tab
 const nostrMenuConnect = () => {
-
-
   const getBech32 = async (value) => {
     if (!value) return ''
     // limit prefixes to small ascii chars
@@ -141,7 +139,7 @@ const nostrMenuConnect = () => {
       if (bech32) break
     }
 
-    return bech32;
+    return bech32
   }
 
   const getAttrBech32 = async (e, attrName) => {
@@ -151,40 +149,37 @@ const nostrMenuConnect = () => {
   }
 
   const getAbsUrl = (s) => {
-    if (!s)
-      return '';
+    if (!s) return ''
     try {
-      const url = new URL(s, document.location);
-      return url.toString();
+      const url = new URL(s, document.location)
+      return url.toString()
     } catch {
-      return '';
+      return ''
     }
   }
 
   const getMaybeUrl = (s) => {
     try {
-      const url = new URL(text);
-      if (url.origin)
-        return url.toString();
+      const url = new URL(text)
+      if (url.origin) return url.toString()
     } catch {}
-    return '';
+    return ''
   }
 
   const showMenu = async (data) => {
-    const hasData = Object.keys(data).some((i) => !!data[i]);
-    if (!hasData)
-      return
+    const hasData = Object.keys(data).some((i) => !!data[i])
+    if (!hasData) return
 
-    console.log("show menu", JSON.stringify(data))
+    console.log('show menu', JSON.stringify(data))
 
     function clear() {
-      window.nostrCordovaPlugin.magicMenu?.remove();
-      window.nostrCordovaPlugin.magicMenu = null;
+      window.nostrCordovaPlugin.magicMenu?.remove()
+      window.nostrCordovaPlugin.magicMenu = null
     }
 
     // clear previous menu, if any
-    const reopen = !!window.nostrCordovaPlugin.magicMenu;
-    clear();
+    const reopen = !!window.nostrCordovaPlugin.magicMenu
+    clear()
 
     const d = document.createElement('div')
     d.style = `
@@ -227,64 +222,61 @@ const nostrMenuConnect = () => {
     function remove() {
       // since this action happens in the future,
       // we must check if a newer menu was already created
-      if (!isActive()) return;
-      d.style.opacity = '0';
+      if (!isActive()) return
+      d.style.opacity = '0'
       setTimeout(() => {
-        if (isActive())
-          clear()
-      }, 3000);
+        if (isActive()) clear()
+      }, 3000)
     }
 
     function onClick(e) {
-      remove();
+      remove()
       document.body.removeEventListener('click', onClick)
     }
 
     d.addEventListener('click', (e) => {
-      if (isActive())
-        window.nostrCordovaPlugin.showContextMenu(data)
+      if (isActive()) window.nostrCordovaPlugin.showContextMenu(data)
       e.stopPropagation()
       document.body.removeEventListener('click', onClick)
-      remove();
+      remove()
     })
 
-    document.body.addEventListener('click', onClick);
+    document.body.addEventListener('click', onClick)
 
     window.nostrCordovaPlugin.magicMenu = d
     setTimeout(() => {
-      if (isActive())
-        d.style.opacity = '1'
-    }, 0);
+      if (isActive()) d.style.opacity = '1'
+    }, 0)
 
     // start watching text selection and
     // show another menu if selection changes
     const selectionMonitor = async () => {
-      if (!isActive()) return;
+      if (!isActive()) return
 
       const sel = window.getSelection().toString()
       if (data.text !== sel) {
-        data.text = sel;
-        data.bech32 = await getBech32(sel);
-        data.href = getMaybeUrl(sel);
-        showMenu(data);
-        return;
+        data.text = sel
+        data.bech32 = await getBech32(sel)
+        data.href = getMaybeUrl(sel)
+        showMenu(data)
+        return
       }
 
-      setTimeout(selectionMonitor, 200);
+      setTimeout(selectionMonitor, 200)
     }
 
-    selectionMonitor();
+    selectionMonitor()
   }
 
   window.nostrCordovaPlugin.onClipboardWriteText = async (text) => {
-    console.log("onClipboardWriteText", text);
+    console.log('onClipboardWriteText', text)
     const data = {
       text,
       bech32: await getBech32(text),
-      href: getMaybeUrl(text),
-    };
+      href: getMaybeUrl(text)
+    }
 
-    showMenu(data);
+    showMenu(data)
   }
 
   let onlongtouch = null
@@ -333,35 +325,32 @@ const nostrMenuConnect = () => {
     const t = e.target
     console.log('longtouch', t)
     try {
-
       const data = {
         bech32: '',
-        text: '',
-      };
+        text: ''
+      }
 
       // text selection is a priority
       const sel = window.getSelection().toString()
-      data.text = sel;
-      data.bech32 = await getBech32(sel);
-      data.href = getMaybeUrl(sel);
+      data.text = sel
+      data.bech32 = await getBech32(sel)
+      data.href = getMaybeUrl(sel)
 
-      if (!data.href)
-        data.href = getAbsUrl(t.getAttribute('href')) || '';
+      if (!data.href) data.href = getAbsUrl(t.getAttribute('href')) || ''
 
-      data.imgSrc = t.tagName === 'IMG' ? getAbsUrl(t.getAttribute('src')) : '';
-      data.videoSrc = t.tagName === 'VIDEO' ? getAbsUrl(t.getAttribute('src')) : '';
-      data.audioSrc = t.tagName === 'AUDIO' ? getAbsUrl(t.getAttribute('src')) : '';
+      data.imgSrc = t.tagName === 'IMG' ? getAbsUrl(t.getAttribute('src')) : ''
+      data.videoSrc = t.tagName === 'VIDEO' ? getAbsUrl(t.getAttribute('src')) : ''
+      data.audioSrc = t.tagName === 'AUDIO' ? getAbsUrl(t.getAttribute('src')) : ''
 
       // attrs are next
       if (!data.bech32) {
-        data.bech32 = 
-        (await getAttrBech32(t, 'href')) ||
-        (await getAttrBech32(t, 'id')) ||
-        (await getAttrBech32(t, 'value')) ||
-        (await getAttrBech32(t, 'data-npub')) ||
-        (await getAttrBech32(t, 'data-id')) ||
-        (await getAttrBech32(t, 'data-note-id'))
-        ;
+        data.bech32 =
+          (await getAttrBech32(t, 'href')) ||
+          (await getAttrBech32(t, 'id')) ||
+          (await getAttrBech32(t, 'value')) ||
+          (await getAttrBech32(t, 'data-npub')) ||
+          (await getAttrBech32(t, 'data-id')) ||
+          (await getAttrBech32(t, 'data-note-id'))
       }
 
       showMenu(data)

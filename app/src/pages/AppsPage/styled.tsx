@@ -16,11 +16,6 @@ export const StyledDialog = styled(Dialog)(({ theme }) => ({
   }
 }))
 
-export const StyledWrap = styled(Box)(() => ({
-  paddingBottom: 80,
-  paddingTop: 60
-}))
-
 export const StyledSwipeableDrawerContent = styled(Box)(() => ({
   height: '100%',
   overflow: 'auto',
