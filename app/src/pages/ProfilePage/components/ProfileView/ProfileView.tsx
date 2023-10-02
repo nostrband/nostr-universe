@@ -74,7 +74,7 @@ export const ProfileView = () => {
         <StyledViewName variant="h5" component="div">
           {getRenderedUsername(currentProfile, currentPubKey)}
         </StyledViewName>
-        <StyledViewAction
+        {/* <StyledViewAction
           // onClick={handleOpenKeyImport}
           disableElevation
           color="secondary"
@@ -82,7 +82,7 @@ export const ProfileView = () => {
           size="large"
         >
           LATER
-        </StyledViewAction>
+        </StyledViewAction> */}
       </Container>
 
       <ModalAccounts

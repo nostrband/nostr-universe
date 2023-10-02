@@ -16,9 +16,9 @@ export const ProfilMenu = () => {
     <>
       <Container>
         <StyledMenuWrapper>
-          <StyledMenuTitle variant="body1" component="div">
+          {/* <StyledMenuTitle variant="body1" component="div">
             Tools
-          </StyledMenuTitle>
+          </StyledMenuTitle> */}
           <StyledMenuList>
             <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL, { append: true })}>
               <ListItemAvatar>
