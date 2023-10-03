@@ -47,7 +47,11 @@ import { useState } from 'react'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
 import { AppHandlerEvent, nsbSignEvent, sendPayment, stringToBech32 } from '@/modules/nostr'
-import { deletePermissionRequest, setPermissionRequest, setPermissionRequestProcessing } from '@/store/reducers/permissionRequests.slice'
+import {
+  deletePermissionRequest,
+  setPermissionRequest,
+  setPermissionRequestProcessing
+} from '@/store/reducers/permissionRequests.slice'
 import { ITab } from '@/types/tab'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
 import { IPin } from '@/types/workspace'
@@ -131,7 +135,14 @@ export const useOpenApp = () => {
 
     dispatch(setPermissionRequest({ permissionRequest: r }))
 
-    console.log('perm request', tab.id, "currentTabId", currentTabId, JSON.stringify(r), JSON.stringify(permissionRequests))
+    console.log(
+      'perm request',
+      tab.id,
+      'currentTabId',
+      currentTabId,
+      JSON.stringify(r),
+      JSON.stringify(permissionRequests)
+    )
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log('show perm request modal', r.id)
@@ -232,7 +243,7 @@ export const useOpenApp = () => {
 
   const handleCustomUrl = async (url, tab) => {
     if (url.startsWith('intent:')) {
-      console.log("intent url disallowed", tab?.id, url)
+      console.log('intent url disallowed', tab?.id, url)
       return true
     }
 
@@ -338,10 +349,8 @@ export const useOpenApp = () => {
       const kindPerm = 'sign:' + event.kind
       const allPerm = 'sign'
       const exec = async () => {
-        if (nsbKeys.includes(tab.pubkey))
-          return await nsbSignEvent(tab.pubkey, event)
-        else
-          return await keystore.signEvent(event)
+        if (nsbKeys.includes(tab.pubkey)) return await nsbSignEvent(tab.pubkey, event)
+        else return await keystore.signEvent(event)
       }
       // return await exec()
 

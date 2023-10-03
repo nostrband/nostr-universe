@@ -6,9 +6,12 @@ import { fetchFollowedCommunities, getTagValue, nostrbandRelay } from '@/modules
 import { StyledTitle, StyledWrapper } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { CommunityEvent } from '@/types/communities'
-import { SliderCommunities } from '@/components/Slider/SliderCommunities/SliderCommunities'
 import { setCommunities } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback } from 'react'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { SkeletonCommunities } from '@/components/Skeleton/SkeletonCommunties/SkeletonCommunities'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { ItemCommunity } from '@/components/ItemsContent/ItemCommunity/ItemCommunity'
 
 export const Communities = memo(function Communities() {
   const { communities, contactList } = useAppSelector((state) => state.contentWorkSpace)
@@ -39,6 +42,26 @@ export const Communities = memo(function Communities() {
     }
   }, [dispatch, contactList])
 
+  const renderContent = () => {
+    if (communities === null) {
+      return <SkeletonCommunities />
+    }
+    if (!communities || !communities.length) {
+      return <EmptyListMessage onReload={handleReloadCommunities} />
+    }
+    return communities.map((community, i) => (
+      <ItemCommunity
+        key={i}
+        onClick={() => handleOpenCommuniti(community)}
+        time={community.last_post_tm}
+        content={community.description}
+        subtitle={`+${community.posts} posts`}
+        name={`/${community.name}`}
+        picture={community.image}
+      />
+    ))
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -47,12 +70,7 @@ export const Communities = memo(function Communities() {
         </StyledTitle>
       </Container>
 
-      <SliderCommunities
-        data={communities || []}
-        isLoading={communities === null}
-        handleClickEntity={handleOpenCommuniti}
-        handleReloadEntity={handleReloadCommunities}
-      />
+      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
     </StyledWrapper>
   )
 })

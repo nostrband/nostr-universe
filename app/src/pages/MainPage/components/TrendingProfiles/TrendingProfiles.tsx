@@ -1,4 +1,3 @@
-import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
 import { userService } from '@/store/services/user.service'
@@ -8,6 +7,10 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
 import { MetaEvent } from '@/types/meta-event'
 import { memo, useCallback } from 'react'
+import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/SkeletonProfiles'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { Profile } from '@/shared/Profile/Profile'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 
 export const TrendingProfiles = memo(function TrendingProfiles() {
   const {
@@ -31,6 +34,16 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
 
   const handleReloadTrendingProfiles = () => refetchTrendingProfiles()
 
+  const renderContent = () => {
+    if (isLoading) {
+      return <SkeletonProfiles />
+    }
+    if (!data || !data.length) {
+      return <EmptyListMessage onReload={handleReloadTrendingProfiles} />
+    }
+    return data.map((profile, i) => <Profile key={i} onClick={handleOpenProfile} profile={profile} />)
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -39,12 +52,7 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
         </StyledTitle>
       </Container>
 
-      <SliderProfiles
-        data={data}
-        isLoading={isLoading}
-        handleClickEntity={handleOpenProfile}
-        handleReloadEntity={handleReloadTrendingProfiles}
-      />
+      <HorizontalSwipeContent childrenWidth={140}>{renderContent()}</HorizontalSwipeContent>
     </StyledWrapper>
   )
 })

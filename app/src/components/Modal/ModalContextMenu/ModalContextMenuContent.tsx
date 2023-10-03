@@ -31,7 +31,7 @@ export const ModalContextMenuContent = () => {
   let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
   const addr = stringToBech32(value || tabUrl)
   const [invoice, bolt11] = stringToBolt11(value || tabUrl)
-  console.log("invoice", invoice, "bolt11", JSON.stringify(bolt11))
+  console.log('invoice', invoice, 'bolt11', JSON.stringify(bolt11))
   if (!value) value = addr || invoice // from tabUrl
 
   const handleOpenModalSelect = () => {
@@ -64,11 +64,11 @@ export const ModalContextMenuContent = () => {
   }
 
   const handleOpenTabUrlIntent = () => {
-    openBlank({ url: "intent:" + tabUrl }, {})
+    openBlank({ url: 'intent:' + tabUrl }, {})
   }
 
   const handleOpenHrefIntent = () => {
-    openBlank({ url: "intent:" + href }, {})
+    openBlank({ url: 'intent:' + href }, {})
   }
 
   const handlePayInvoice = async () => {

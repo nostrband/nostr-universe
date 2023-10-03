@@ -5,4 +5,5 @@ export interface IItemBigZap {
   targetMeta?: MetaEvent
   time: number
   subtitle: string
+  onClick: () => void
 }

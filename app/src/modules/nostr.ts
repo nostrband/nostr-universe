@@ -60,16 +60,15 @@ const readRelays = [
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 export const allRelays = [nostrbandRelayAll, ...writeRelays]
 
-const nsbRelays = [
-  'wss://relay.nsecbunker.com',
-]
+const nsbRelays = ['wss://relay.nsecbunker.com']
 
 // global ndk instance for now
 let ndk: NDK = null
 let nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
-nsbNDK.connect(2000)
-  .then(() => console.log("nsb ndk connected"))
-  .catch(() => console.log("nsb ndk connect error"))
+nsbNDK
+  .connect(2000)
+  .then(() => console.log('nsb ndk connected'))
+  .catch(() => console.log('nsb ndk connect error'))
 
 let nsbSigner: NDKNip46Signer = null
 
@@ -253,7 +252,7 @@ function sortDesc(arr: AugmentedEvent[] | AuthoredEvent[] | MetaEvent[]) {
 
 export async function fetchApps() {
   // try to fetch best apps list from our relay
-  const top = null 
+  const top = null
   // const top = await ndk.fetchTop(
   //   {
   //     kinds: [KIND_APP],
@@ -1495,8 +1494,8 @@ export function stringToBolt11(s: string): [string, any] {
 
   let invoice = null
   for (let b32 of array) {
-    console.log("maybe invoice", b32, s)
-    if (!b32.toLowerCase().startsWith("lnbc")) continue
+    console.log('maybe invoice', b32, s)
+    if (!b32.toLowerCase().startsWith('lnbc')) continue
     try {
       return [b32, bolt11Decode(b32)]
     } catch (e) {
@@ -1656,21 +1655,21 @@ export function putEventToCache(e: AugmentedEvent | MetaEvent) {
 }
 
 export function setNsbSigner(token: string) {
-  nsbSigner = new NDKNip46Signer(nsbNDK, token, new NDKNip07Signer());
+  nsbSigner = new NDKNip46Signer(nsbNDK, token, new NDKNip07Signer())
 }
 
 export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<NostrEvent> {
   if (!nsbSigner) throw new Error(`NSB signer not found for ${pubkey}`)
   if (!nsbSigner.connected) {
-    console.log("nsb connecting for pubkey", pubkey)
+    console.log('nsb connecting for pubkey', pubkey)
     await nsbSigner.blockUntilReady()
     nsbSigner.connected = true
   }
 
   event.pubkey = pubkey
   event.id = getEventHash(event)
-  console.log("nsb signing event ", event.id, "by", pubkey)
+  console.log('nsb signing event ', event.id, 'by', pubkey)
   event.sig = await nsbSigner.sign(event)
 
-  return event;
+  return event
 }

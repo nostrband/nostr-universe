@@ -36,9 +36,4 @@ export const keysSlice = createSlice({
   }
 })
 
-export const {
-  setKeys,
-  setCurrentPubkey,
-  setReadKeys,
-  setNsbKeys
-} = keysSlice.actions
+export const { setKeys, setCurrentPubkey, setReadKeys, setNsbKeys } = keysSlice.actions

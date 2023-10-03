@@ -22,7 +22,7 @@ export const MainPage = () => {
 
   return (
     <StyledWrapVisibility isShow={isShow}>
-      {guest && (<WelcomeWidget />)}
+      {guest && <WelcomeWidget />}
       <TrendingNotes />
       <TrendingProfiles />
       {!guest && (

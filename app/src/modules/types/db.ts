@@ -54,7 +54,7 @@ interface ReadOnlyKey {
 }
 
 interface NSBKey {
-  pubkey :string
+  pubkey: string
   localPubkey: string
   token: string
 }

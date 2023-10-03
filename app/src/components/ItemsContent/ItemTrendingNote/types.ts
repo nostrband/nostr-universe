@@ -5,4 +5,5 @@ export interface IItemTrendingNote {
   author?: MetaEvent
   time: number
   content: string
+  onClick: () => void
 }

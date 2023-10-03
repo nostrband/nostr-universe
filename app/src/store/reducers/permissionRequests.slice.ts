@@ -30,8 +30,5 @@ export const permissionRequestsSlice = createSlice({
   }
 })
 
-export const {
-  setPermissionRequest,
-  deletePermissionRequest,
-  setPermissionRequestProcessing
-} = permissionRequestsSlice.actions
+export const { setPermissionRequest, deletePermissionRequest, setPermissionRequestProcessing } =
+  permissionRequestsSlice.actions

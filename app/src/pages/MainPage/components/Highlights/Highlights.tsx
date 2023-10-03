@@ -4,11 +4,14 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedHighlights, nostrbandRelay } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { SliderHighlights } from '@/components/Slider/SliderHighlights/SliderHighlights'
 import { StyledTitle, StyledWrapper } from './styled'
 import { HighlightEvent } from '@/types/highlight-event'
 import { setHighlights } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback } from 'react'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { ItemHighlight } from '@/components/ItemsContent/ItemHighlight/ItemHighlight'
+import { SkeletonHighlights } from '@/components/Skeleton/SkeletonHighlights/SkeletonHighlights'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
 export const Highlights = memo(function Highlights() {
   const { handleOpen } = useOpenModalSearchParams()
@@ -37,6 +40,25 @@ export const Highlights = memo(function Highlights() {
     }
   }, [dispatch, contactList])
 
+  const renderContent = () => {
+    if (highlights === null) {
+      return <SkeletonHighlights />
+    }
+    if (!highlights || !highlights.length) {
+      return <EmptyListMessage onReload={handleReloadHighlights} />
+    }
+    return highlights.map((highlight, i) => (
+      <ItemHighlight
+        key={i}
+        onClick={() => handleOpenHighlight(highlight)}
+        time={highlight.created_at}
+        content={highlight.content}
+        pubkey={highlight.pubkey}
+        author={highlight.author}
+      />
+    ))
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -45,12 +67,7 @@ export const Highlights = memo(function Highlights() {
         </StyledTitle>
       </Container>
 
-      <SliderHighlights
-        data={highlights || []}
-        isLoading={highlights === null}
-        handleClickEntity={handleOpenHighlight}
-        handleReloadEntity={handleReloadHighlights}
-      />
+      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
     </StyledWrapper>
   )
 })

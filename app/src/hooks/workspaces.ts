@@ -14,7 +14,6 @@ export const useAddKey = () => {
   const wasGuest = wasPubkey === DEFAULT_PUBKEY
 
   const setPubkey = async (pubkey: string) => {
-
     // write to db, has to await to make sure loadKeys reads it
     await writeCurrentPubkey(pubkey)
 
@@ -48,7 +47,7 @@ export const useAddKey = () => {
     try {
       // ask user for new key
       const r = await keystore.addKey()
-      console.log("addKey", JSON.stringify(r))
+      console.log('addKey', JSON.stringify(r))
       await setPubkey(r.pubKey)
     } catch (e) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -67,8 +66,7 @@ export const useAddKey = () => {
     try {
       const npub = token.includes('#') ? token.split('#')[0] : token
       const { type, data } = nip19.decode(npub)
-      if (type !== 'npub')
-        throw new Error("Bad npub or token")
+      if (type !== 'npub') throw new Error('Bad npub or token')
 
       pubkey = data
     } catch (e) {
@@ -77,7 +75,7 @@ export const useAddKey = () => {
       window.plugins.toast.showShortBottom(`Error: ${e}`)
       return
     }
-    console.log("nsb pubkey", pubkey)
+    console.log('nsb pubkey', pubkey)
 
     if (keys.includes(pubkey)) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -89,7 +87,7 @@ export const useAddKey = () => {
     let localPubkey = ''
     try {
       const r = await keystore.generateKey()
-      console.log("generateKey", JSON.stringify(r))
+      console.log('generateKey', JSON.stringify(r))
       localPubkey = r.pubKey
     } catch (e) {
       console.log('generatekey error ', JSON.stringify(e))
@@ -98,7 +96,7 @@ export const useAddKey = () => {
       window.plugins.toast.showShortBottom(`Error: ${e}`)
       return
     }
-    console.log("localPubkey", localPubkey)
+    console.log('localPubkey', localPubkey)
 
     // write to db
     await dbi.addNsecBunkerKey({
@@ -125,11 +123,8 @@ export const useChangeAccount = () => {
   const changeAccount = async (publicKey: string) => {
     if (nsbKeys.includes(publicKey)) {
       const localPubkey = await dbi.getNsecBunkerLocalPubkey(publicKey)
-      if (localPubkey)
-        await keystore.selectKey({ publicKey: localPubkey })
-      else
-        throw new Error(`No local pubkey for ${publicKey}`)
-
+      if (localPubkey) await keystore.selectKey({ publicKey: localPubkey })
+      else throw new Error(`No local pubkey for ${publicKey}`)
     } else if (!readKeys.includes(publicKey)) {
       await keystore.selectKey({ publicKey })
     }

@@ -1,6 +1,3 @@
-import { SwiperSlide } from 'swiper/react'
-import 'swiper/css'
-import styles from './slider.module.scss'
 import { generateSkeletonItems } from '@/utils/helpers/prepare-data'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { Head } from '@/shared/ContentComponents/Head/Head'
@@ -13,19 +10,15 @@ export const SkeletonBigZaps = () => {
 
   return mockBigZaps.map((_, index) => {
     return (
-      <SwiperSlide key={`slide_${index}`} className={styles.slide}>
-        <Wrapper>
-          <Head>
-            <SkeletonAvatar />
-            <SkeletonText hasSpacing />
-          </Head>
-          <SubTitle>
-            <SkeletonText size="small" />
-          </SubTitle>
-        </Wrapper>
-      </SwiperSlide>
+      <Wrapper key={`slide_${index}`}>
+        <Head>
+          <SkeletonAvatar />
+          <SkeletonText hasSpacing />
+        </Head>
+        <SubTitle>
+          <SkeletonText size="small" />
+        </SubTitle>
+      </Wrapper>
     )
   })
 }
-
-SkeletonBigZaps.displayName = 'SwiperSlide_SkeletonBigZaps'

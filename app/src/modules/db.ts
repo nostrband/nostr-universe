@@ -160,7 +160,7 @@ export const dbi = {
   },
   listNsecbunkerKeys: async () => {
     try {
-      return (await db.nsecbunkerKeys.toCollection().toArray())
+      return await db.nsecbunkerKeys.toCollection().toArray()
     } catch (error) {
       console.log(`List nsecbunkerKeys error: ${JSON.stringify(error)}`)
       return []

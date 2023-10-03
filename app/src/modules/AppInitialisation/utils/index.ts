@@ -203,7 +203,7 @@ export const getTabGroupId = (pt) => {
 }
 
 export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => {
-  console.log("loadWorkspace", pubkey)
+  console.log('loadWorkspace', pubkey)
   // ?? props
   await ensureBootstrapped(pubkey)
 
@@ -245,14 +245,13 @@ export const writeCurrentPubkey = async (pubkey: string) => {
   await dbi.setFlag('', 'currentPubkey', pubkey)
 }
 
-export const loadKeys = async (dispatch)
-: Promise<[keys: string[], currentPubkey: string, readKeys: string[]]> => {
+export const loadKeys = async (dispatch): Promise<[keys: string[], currentPubkey: string, readKeys: string[]]> => {
   // can be writeKey or readKey
   let currentPubkey = await dbi.getFlag('', 'currentPubkey')
   console.log('currentPubkey', currentPubkey)
 
   // load nsb keys first
-  const nsbKeyInfos = (await dbi.listNsecbunkerKeys())
+  const nsbKeyInfos = await dbi.listNsecbunkerKeys()
   const nsbKeys = nsbKeyInfos.map((k) => k.pubkey)
   console.log('nsbKeyInfos', JSON.stringify(nsbKeyInfos))
 
@@ -266,8 +265,7 @@ export const loadKeys = async (dispatch)
     .filter((key) => !nsbKeys.includes(key))
 
   // read only keys from local db
-  const readKeys = (await dbi.listReadOnlyKeys()).filter((k) => 
-    !writeKeys.includes(k) && !nsbKeys.includes(k))
+  const readKeys = (await dbi.listReadOnlyKeys()).filter((k) => !writeKeys.includes(k) && !nsbKeys.includes(k))
 
   // merge all key types
   const keys = [...new Set([...writeKeys, ...readKeys, ...nsbKeys])]
@@ -288,19 +286,23 @@ export const loadKeys = async (dispatch)
   const nsbKey = nsbKeyInfos.find((i) => i.pubkey === currentPubkey)
 
   // ensure we select proper key in native plugin
-  if (currentPubkey !== DEFAULT_PUBKEY
-     && list.currentAlias != currentPubkey
-     && !readKeys.includes(currentPubkey)
-    ) {
+  if (currentPubkey !== DEFAULT_PUBKEY && list.currentAlias != currentPubkey && !readKeys.includes(currentPubkey)) {
     const pubkey = nsbKey ? nsbKey.localPubkey : currentPubkey
     await keystore.selectKey({ publicKey: pubkey })
   }
 
-  console.log('load keys cur', currentPubkey, 
-    'keys', JSON.stringify(keys), 
-    'writeKeys', JSON.stringify(writeKeys), 
-    'readKeys', JSON.stringify(readKeys), 
-    'nsbKeys', JSON.stringify(nsbKeys))
+  console.log(
+    'load keys cur',
+    currentPubkey,
+    'keys',
+    JSON.stringify(keys),
+    'writeKeys',
+    JSON.stringify(writeKeys),
+    'readKeys',
+    JSON.stringify(readKeys),
+    'nsbKeys',
+    JSON.stringify(nsbKeys)
+  )
 
   dispatch(setKeys({ keys }))
   dispatch(setReadKeys({ readKeys }))
