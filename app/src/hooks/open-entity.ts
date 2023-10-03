@@ -524,12 +524,12 @@ export const useOpenApp = () => {
     dbi.deletePin(pin.id)
   }
 
-  const onDeletePinnedTab = async (currentPin: IPin) => {
+  const onDeletePinnedApp = async (currentPin: IPin) => {
     dispatch(removePinWorkspace({ id: currentPin.id, workspacePubkey: currentPin.pubkey }))
     dbi.deletePin(currentPin.id)
   }
 
-  const onUpdatePinnedTab = async (currentPin: IPin) => {
+  const onUpdatePinnedApp = async (currentPin: IPin) => {
     dispatch(updatePinWorkspace({ pin: currentPin, workspacePubkey: currentPin.pubkey }))
     dbi.updatePin(currentPin)
   }
@@ -714,7 +714,7 @@ export const useOpenApp = () => {
     onUnPinTab,
     findTabPin,
     findAppPin,
-    onDeletePinnedTab,
-    onUpdatePinnedTab
+    onDeletePinnedApp,
+    onUpdatePinnedApp
   }
 }

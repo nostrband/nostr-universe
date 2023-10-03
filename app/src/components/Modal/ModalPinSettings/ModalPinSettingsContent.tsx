@@ -21,7 +21,7 @@ type ModalPinSettingsContentProps = {
 
 export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ handleClose, handleSetAppTitle }) => {
   const [searchParams] = useSearchParams()
-  const { onDeletePinnedTab, onUpdatePinnedTab } = useOpenApp()
+  const { onDeletePinnedApp, onUpdatePinnedApp } = useOpenApp()
 
   const id = searchParams.get('pinId') || ''
   const currentPin = useAppSelector((state) => selectPin(state, id))
@@ -55,7 +55,7 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
 
     if (!isConfirm) return
 
-    onDeletePinnedTab(currentPin).then(handleClose)
+    onDeletePinnedApp(currentPin).then(handleClose)
     // FIXME remake via "cordova-plugin-dialogs"
 
     // if (!window.cordova) {
@@ -75,7 +75,7 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
 
   const saveEdittedPinHandler = () => {
     if (!currentPin) return
-    onUpdatePinnedTab({
+    onUpdatePinnedApp({
       ...currentPin,
       title: enteredAppTitle
     }).then(handleClose)
