@@ -27,6 +27,7 @@ export const TabPageContent = () => {
       }
     }
   }, [id, tabExists])
+
   return (
     <>
       <StyledWrap>

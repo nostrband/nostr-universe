@@ -540,8 +540,7 @@ export function open(params) {
   })
 
   ref.addEventListener('blank', async (event) => {
-    if (event.url.startsWith('lightning:')) cordova.InAppBrowser.open(event.url, '_self')
-    else if (API.onBlank) await API.onBlank(params.apiCtx, event.url)
+    if (API.onBlank) await API.onBlank(params.apiCtx, event.url)
   })
 
   ref.addEventListener('beforeload', async (event, cb) => {

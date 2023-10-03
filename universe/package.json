@@ -32,11 +32,11 @@
       "cordova-plugin-device": {},
       "cordova-clipboard": {},
       "cordova-plugin-statusbar": {},
-      "nostr-keystore-cordova-plugin": {},
-      "cordova-plugin-inappbrowser": {},
       "cordova-plugin-x-socialsharing": {},
       "cordova-plugin-x-toast": {},
-      "nostr-walletstore-cordova-plugin": {}
+      "nostr-walletstore-cordova-plugin": {},
+      "nostr-keystore-cordova-plugin": {},
+      "cordova-plugin-inappbrowser": {}
     }
   }
 }

@@ -23,6 +23,7 @@ import { ModalAbout } from './components/Modal/ModalAbout/ModalAbout'
 import { useAppDispatch, useAppSelector } from './store/hooks/redux'
 import { setPage } from './store/reducers/positionScrollPage.slice'
 import { ModalFindApp } from './components/Modal/ModalFindApp/ModalFindApp'
+import { ModalAddNSBKey } from './components/Modal/ModalAddNSBKey/ModalAddNSBKey'
 import { ModalPinSettings } from './components/Modal/ModalPinSettings/ModalPinSettings'
 
 export const App = () => {
@@ -110,6 +111,7 @@ export const App = () => {
       <ModalAddKey />
       <ModalAbout />
       <ModalFindApp />
+      <ModalAddNSBKey />
       <ModalPinSettings />
     </>
   )
