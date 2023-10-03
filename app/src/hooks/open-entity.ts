@@ -46,7 +46,7 @@ import { useState } from 'react'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
 import { AppHandlerEvent, nsbSignEvent, sendPayment, stringToBech32 } from '@/modules/nostr'
-import { deletePermissionRequest, setPermissionRequest } from '@/store/reducers/permissionRequests.slice'
+import { deletePermissionRequest, setPermissionRequest, setPermissionRequestProcessing } from '@/store/reducers/permissionRequests.slice'
 import { ITab } from '@/types/tab'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
 import { IPin } from '@/types/workspace'
@@ -78,6 +78,9 @@ export const useOpenApp = () => {
   const replyCurrentPermRequest = async (allow, remember, currentPermId) => {
     const currentPermRequest = permissionRequests.find((perm) => perm.id === currentPermId)
     const tab = getTabAny(currentPermRequest.tabId)
+
+    // mark as active
+    dispatch(setPermissionRequestProcessing({ id: currentPermRequest.id }))
 
     console.log('replyCurrentPermRequest', allow, remember, JSON.stringify(currentPermRequest))
     if (remember) {
@@ -112,9 +115,8 @@ export const useOpenApp = () => {
 
     // more reqs?
     const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
-
     if (reqs.length > 1) {
-      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id } })
+       handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id } })
     }
   }
 
@@ -128,7 +130,7 @@ export const useOpenApp = () => {
 
     dispatch(setPermissionRequest({ permissionRequest: r }))
 
-    console.log('perm request', tab.id, JSON.stringify(r), JSON.stringify(permissionRequests))
+    console.log('perm request', tab.id, "currentTabId", currentTabId, JSON.stringify(r), JSON.stringify(permissionRequests))
     if (currentTabId === tab.id && !permissionRequests.find((perm) => tab.id === perm.tabId)) {
       // permRequests.current.length === 1
       console.log('show perm request modal', r.id)
@@ -137,6 +139,14 @@ export const useOpenApp = () => {
       // setCurrentPermRequest(r)
       // console.log(JSON.stringify({ permissions: refPermissionReq.current }))
     }
+  }
+
+  const showPendingPermRequest = (tabId) => {
+    const r = permissionRequests.find((perm) => tabId === perm.tabId)
+    if (!r || r.processing) return
+
+    console.log('show pending perm request modal', r.id)
+    handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id } })
   }
 
   const requestPermExec = (tab, perm, exec, error) => {
@@ -220,9 +230,14 @@ export const useOpenApp = () => {
   }
 
   const handleCustomUrl = async (url, tab) => {
-    if (url.startsWith('lightning:')) {
-      // just open some outside app for now
-      window.cordova.InAppBrowser.open(url, '_self')
+    if (url.startsWith('lightning:') && !!tab) {
+      try {
+        await walletstore.getInfo()
+        sendTabPayment(tab.id, url.split(':')[1])
+      } catch (e) {
+        // just open some outside app for now
+        window.cordova.InAppBrowser.open(url, '_self')
+      }
       return true
     }
 
@@ -245,7 +260,7 @@ export const useOpenApp = () => {
     return false
   }
 
-  const sendPayment = async (tabId, paymentRequest) => {
+  const sendTabPayment = async (tabId, paymentRequest) => {
     const tab = getTabAny(tabId)
     if (!tab) throw new Error('Inactive tab')
 
@@ -371,7 +386,7 @@ export const useOpenApp = () => {
       })
     },
 
-    sendPayment,
+    sendPayment: sendTabPayment,
 
     clipboardWriteText: async function (tabId, text) {
       const r = await window.cordova.plugins.clipboard.copy(text)
@@ -388,6 +403,7 @@ export const useOpenApp = () => {
       const tab = getTabAny(tabId)
       if (!tab) throw new Error('Inactive tab')
       data.tabUrl = tab.url
+      data.tabId = tab.id
       handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
         search: data
       })
@@ -558,6 +574,8 @@ export const useOpenApp = () => {
       await browser.open(dataTabForOpen)
       await browser.show(id)
     }
+
+    await showPendingPermRequest(id)
   }
 
   const show = (tab, options) => {
@@ -615,11 +633,11 @@ export const useOpenApp = () => {
       return
     }
 
-    if (entity.url.startsWith('nostr:')) {
-      // try some external app that might know this type of nostr: link
-      window.cordova.InAppBrowser.open(entity.url, '_self')
-      return
-    }
+    // if (entity.url.startsWith('nostr:')) {
+    //   // try some external app that might know this type of nostr: link
+    //   window.cordova.InAppBrowser.open(entity.url, '_self')
+    //   return
+    // }
 
     // // find an existing app for this url
     const origin = getOrigin(entity.url)
@@ -685,6 +703,6 @@ export const useOpenApp = () => {
     onUnPinTab,
     findTabPin,
     findAppPin,
-    sendPayment
+    sendTabPayment
   }
 }

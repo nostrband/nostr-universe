@@ -62,13 +62,14 @@ export const allRelays = [nostrbandRelayAll, ...writeRelays]
 
 const nsbRelays = [
   'wss://relay.nsecbunker.com',
-  'wss://nostr.vulpem.com',
 ]
 
 // global ndk instance for now
 let ndk: NDK = null
 let nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
 nsbNDK.connect(2000)
+  .then(() => console.log("nsb ndk connected"))
+  .finally(() => console.log("nsb ndk connect error"))
 
 let nsbSigner: NDKNip46Signer = null
 
@@ -1488,12 +1489,13 @@ export function stringToBech32(s: string, hex: boolean = false): string {
 export function stringToBolt11(s: string): [string, any] {
   if (!s) return ['', null]
 
-  const BECH32_REGEX = /[a-zA-Z]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/g
+  const INVOICE_REGEX = /^(lnbcrt|lntb|lnbc|LNBCRT|LNTB|LNBC)([0-9]{1,}[a-zA-Z0-9]+){1}$/g
 
-  const array = [...s.matchAll(BECH32_REGEX)].map((a) => a[0])
+  const array = [...s.matchAll(INVOICE_REGEX)].map((a) => a[0])
 
   let invoice = null
   for (let b32 of array) {
+    console.log("maybe invoice", b32, s)
     if (!b32.toLowerCase().startsWith("lnbc")) continue
     try {
       return [b32, bolt11Decode(b32)]
