@@ -1,6 +1,8 @@
 import { WorkSpace } from '@/types/workspace'
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { dbi } from '@/modules/db'
+import { RootState } from '../store'
+import { IPin } from '@/types/workspace'
 
 interface IWorkSpaceState {
   workspaces: WorkSpace[]
@@ -99,6 +101,22 @@ export const workspacesSlice = createSlice({
       })
     },
 
+    updatePinWorkspace: (state, action) => {
+      const edittedPin = action.payload.pin
+      const pubkey = action.payload.workspacePubkey
+
+      state.workspaces = state.workspaces.map((workspace) => {
+        if (workspace.pubkey === pubkey) {
+          return {
+            ...workspace,
+            pins: workspace.pins.map((pin) => (pin.id === edittedPin.id ? { ...pin, title: edittedPin.title } : pin))
+          }
+        }
+
+        return workspace
+      })
+    },
+
     addTabWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
       const id = action.payload.id
@@ -187,5 +205,16 @@ export const {
   swapPins,
   setPermsWorkspace,
   deletePermWorkspace,
-  setLastKindApp
+  setLastKindApp,
+  updatePinWorkspace
 } = workspacesSlice.actions
+
+export const selectPin = (state: RootState, id: string): IPin | undefined => {
+  const currentWorkspace = state.workspaces.workspaces.find(
+    (workspace) => workspace.pubkey === state.keys.currentPubkey
+  )
+  if (!currentWorkspace) return undefined
+
+  const currentPin = currentWorkspace.pins.find((pin) => pin.id === id)
+  return currentPin
+}

@@ -7,10 +7,12 @@ import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
 import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined'
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
+import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
+import OpenInBrowserOutlinedIcon from '@mui/icons-material/OpenInBrowserOutlined'
 import { StyledInput, StyledItemIconAvatar, StyledItemText, StyledMenuWrapper } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
-import { stringToBech32 } from '@/modules/nostr'
+import { stringToBech32, stringToBolt11 } from '@/modules/nostr'
 import { useOpenApp } from '@/hooks/open-entity'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { ReactNode, useCallback } from 'react'
@@ -18,7 +20,8 @@ import { ReactNode, useCallback } from 'react'
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
-  const { openZap, openBlank } = useOpenApp()
+  const { openZap, openBlank, sendTabPayment } = useOpenApp()
+  const tabId = searchParams.get('tabId') || ''
   const tabUrl = searchParams.get('tabUrl') || ''
   const text = searchParams.get('text') || ''
   const href = searchParams.get('href') || ''
@@ -27,7 +30,9 @@ export const ModalContextMenuContent = () => {
   const audioSrc = searchParams.get('audioSrc') || ''
   let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
   const addr = stringToBech32(value || tabUrl)
-  if (!value) value = addr // from tabUrl
+  const [invoice, bolt11] = stringToBolt11(value || tabUrl)
+  console.log('invoice', invoice, 'bolt11', JSON.stringify(bolt11))
+  if (!value) value = addr || invoice // from tabUrl
 
   const handleOpenModalSelect = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
@@ -58,6 +63,19 @@ export const ModalContextMenuContent = () => {
     openBlank({ url: href }, { replace: true })
   }
 
+  const handleOpenTabUrlIntent = () => {
+    openBlank({ url: 'intent:' + tabUrl }, {})
+  }
+
+  const handleOpenHrefIntent = () => {
+    openBlank({ url: 'intent:' + href }, {})
+  }
+
+  const handlePayInvoice = async () => {
+    await handleClose()
+    sendTabPayment(tabId, invoice)
+  }
+
   const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void) => {
     return (
       <ListItem disablePadding>
@@ -86,11 +104,14 @@ export const ModalContextMenuContent = () => {
       )}
       <StyledMenuWrapper>
         <List>
+          {invoice && renderItem('Pay invoice', <AccountBalanceWalletOutlinedIcon />, handlePayInvoice)}
           {addr && renderItem('Open with', <AppsOutlinedIcon />, handleOpenModalSelect)}
           {addr && renderItem('Zap', <FlashOnIcon />, handleZap)}
           {href && renderItem('Open in new tab', <OpenInNewOutlinedIcon />, handleOpenHref)}
+          {href && renderItem('Open in browser', <OpenInBrowserOutlinedIcon />, handleOpenHrefIntent)}
           {value && renderItem('Share text', <ShareOutlinedIcon />, handleShareValue)}
           {renderItem('Share tab URL', <IosShareOutlinedIcon />, handleShareTabUrl)}
+          {renderItem('Open tab URL in browser', <OpenInBrowserOutlinedIcon />, handleOpenTabUrlIntent)}
         </List>
       </StyledMenuWrapper>
     </Container>

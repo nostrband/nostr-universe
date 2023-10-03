@@ -4,9 +4,9 @@ import { coracleIcon, irisIcon, nostrIcon, satelliteIcon, snortIcon } from '@/as
 import { DEFAULT_PUBKEY } from '@/consts'
 import { db, dbi } from '@/modules/db'
 import { keystore } from '@/modules/keystore'
-import { addWalletInfo, subscribeProfiles } from '@/modules/nostr'
+import { addWalletInfo, setNsbSigner, subscribeProfiles } from '@/modules/nostr'
 import { walletstore } from '@/modules/walletstore'
-import { setCurrentPubkey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
+import { setCurrentPubkey, setKeys, setReadKeys, setNsbKeys } from '@/store/reducers/keys.slice'
 import { addTabs } from '@/store/reducers/tab.slice'
 import { addWorkspaces } from '@/store/reducers/workspaces.slice'
 import { WorkSpace } from '@/types/workspace'
@@ -203,6 +203,7 @@ export const getTabGroupId = (pt) => {
 }
 
 export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => {
+  console.log('loadWorkspace', pubkey)
   // ?? props
   await ensureBootstrapped(pubkey)
 
@@ -249,34 +250,66 @@ export const loadKeys = async (dispatch): Promise<[keys: string[], currentPubkey
   let currentPubkey = await dbi.getFlag('', 'currentPubkey')
   console.log('currentPubkey', currentPubkey)
 
+  // load nsb keys first
+  const nsbKeyInfos = await dbi.listNsecbunkerKeys()
+  const nsbKeys = nsbKeyInfos.map((k) => k.pubkey)
+  console.log('nsbKeyInfos', JSON.stringify(nsbKeyInfos))
+
   // write-keys from native plugin
   const list = await keystore.listKeys()
-  console.log('listKeys', list)
+  console.log('listKeys', JSON.stringify(list))
 
-  // ensure
-  if (list.currentAlias && !currentPubkey) {
-    await writeCurrentPubkey(list.currentAlias)
-    currentPubkey = list.currentAlias
-  }
+  // filter nsb keys
+  const writeKeys = Object.keys(list)
+    .filter((key) => key !== 'currentAlias')
+    .filter((key) => !nsbKeys.includes(key))
 
-  const writeKeys = Object.keys(list).filter((key) => key !== 'currentAlias')
-  const readKeys = (await dbi.listReadOnlyKeys()).filter((k) => !writeKeys.includes(k))
+  // read only keys from local db
+  const readKeys = (await dbi.listReadOnlyKeys()).filter((k) => !writeKeys.includes(k) && !nsbKeys.includes(k))
 
+  // merge all key types
+  const keys = [...new Set([...writeKeys, ...readKeys, ...nsbKeys])]
+
+  // ensure current pubkey is selected
   if (!currentPubkey) {
-    if (readKeys.length) currentPubkey = readKeys[0]
-    else if (writeKeys.length) currentPubkey = writeKeys[0]
-    else {
-      currentPubkey = DEFAULT_PUBKEY
-      readKeys.push(DEFAULT_PUBKEY)
-    }
+    if (keys.length) currentPubkey = keys[0]
+    else currentPubkey = DEFAULT_PUBKEY
+    await writeCurrentPubkey(currentPubkey)
   }
 
-  const keys = [...new Set([...writeKeys, ...readKeys])]
-  console.log('load keys cur', currentPubkey, 'writeKeys', writeKeys, 'readKeys', readKeys)
+  // add default to lists
+  if (currentPubkey === DEFAULT_PUBKEY && !keys.length) {
+    readKeys.push(DEFAULT_PUBKEY)
+    keys.push(DEFAULT_PUBKEY)
+  }
+
+  const nsbKey = nsbKeyInfos.find((i) => i.pubkey === currentPubkey)
+
+  // ensure we select proper key in native plugin
+  if (currentPubkey !== DEFAULT_PUBKEY && list.currentAlias != currentPubkey && !readKeys.includes(currentPubkey)) {
+    const pubkey = nsbKey ? nsbKey.localPubkey : currentPubkey
+    await keystore.selectKey({ publicKey: pubkey })
+  }
+
+  console.log(
+    'load keys cur',
+    currentPubkey,
+    'keys',
+    JSON.stringify(keys),
+    'writeKeys',
+    JSON.stringify(writeKeys),
+    'readKeys',
+    JSON.stringify(readKeys),
+    'nsbKeys',
+    JSON.stringify(nsbKeys)
+  )
 
   dispatch(setKeys({ keys }))
   dispatch(setReadKeys({ readKeys }))
+  dispatch(setNsbKeys({ nsbKeys }))
   dispatch(setCurrentPubkey({ currentPubkey }))
 
-  return [keys, currentPubkey, readKeys]
+  if (nsbKey) setNsbSigner(nsbKey.token)
+
+  return [keys, currentPubkey, readKeys, nsbKeys]
 }

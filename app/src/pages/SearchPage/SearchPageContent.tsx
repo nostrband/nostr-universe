@@ -139,6 +139,7 @@ export const SearchPageContent = () => {
     if (searchValue.trim().length) {
       loadEvents(searchValue)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEvents])
 
   const renderContent = () => {

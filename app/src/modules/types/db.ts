@@ -53,6 +53,12 @@ interface ReadOnlyKey {
   current: boolean
 }
 
+interface NSBKey {
+  pubkey: string
+  localPubkey: string
+  token: string
+}
+
 export interface DbSchema extends Dexie {
   tabs: Dexie.Table<Tab, number>
   pins: Dexie.Table<Pin, number>
@@ -61,4 +67,5 @@ export interface DbSchema extends Dexie {
   lastContacts: Dexie.Table<LastContact, number>
   flags: Dexie.Table<Flag, number>
   readOnlyKeys: Dexie.Table<ReadOnlyKey, number>
+  nsecbunkerKeys: Dexie.Table<NSBKey, number>
 }

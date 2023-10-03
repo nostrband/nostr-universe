@@ -9,6 +9,7 @@ export interface IAppNostro {
   isActive?: boolean
   disabled?: boolean
   onOpen: (app: AppNostr) => void
+  containerProps?: IBoxStyled
 }
 
 export interface IBoxStyled extends BoxProps {

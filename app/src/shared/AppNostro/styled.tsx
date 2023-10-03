@@ -8,7 +8,8 @@ import { APP_NOSTR_SIZE } from '@/consts'
 export const StyledAppWraper = styled(Box)(() => ({
   display: 'inline-flex',
   flexDirection: 'column',
-  alignItems: 'center'
+  alignItems: 'center',
+  transition: 'scale 0.1s linear'
 }))
 
 export const StyledAppName = styled(
