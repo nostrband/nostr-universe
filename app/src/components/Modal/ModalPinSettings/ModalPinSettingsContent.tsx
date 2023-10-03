@@ -75,10 +75,12 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
 
   const saveEdittedPinHandler = () => {
     if (!currentPin) return
-    onUpdatePinnedApp({
+
+    const edittedPin = {
       ...currentPin,
       title: enteredAppTitle
-    }).then(handleClose)
+    }
+    onUpdatePinnedApp(edittedPin).then(handleClose)
   }
 
   const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void, danger: boolean = false) => {
