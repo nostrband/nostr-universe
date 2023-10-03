@@ -17,7 +17,8 @@ export enum MODAL_PARAMS_KEYS {
   PROFILE_TAB_MENU_MODAL = 'profile-tab-menu-modal',
   ADD_KEY_MODAL = 'add-key-modal',
   ABOUT_MODAL = 'about-modal',
-  FIND_APP = 'find-app'
+  FIND_APP = 'find-app',
+  PIN_SETTINGS_MODAL = 'pin-settings-modal'
 }
 
 export const EXTRA_OPTIONS = {

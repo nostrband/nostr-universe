@@ -26,7 +26,7 @@ export const AppNostroSortable: FC<AppNostroSortableProps> = ({ id, ...restProps
   }
 
   const appLongPressHandler = () => {
-    handleOpen(MODAL_PARAMS_KEYS.FIND_APP)
+    handleOpen(MODAL_PARAMS_KEYS.PIN_SETTINGS_MODAL)
   }
 
   const bind = useLongPress(appLongPressHandler, {
