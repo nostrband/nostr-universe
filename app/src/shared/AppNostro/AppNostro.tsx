@@ -10,7 +10,8 @@ export const AppNostro = memo(function AppNostro({
   onOpen,
   isActive,
   isPreviewTab,
-  disabled
+  disabled,
+  containerProps
 }: IAppNostro) {
   const handleAppClick = useCallback(() => {
     if (!disabled) {
@@ -19,7 +20,7 @@ export const AppNostro = memo(function AppNostro({
   }, [disabled, onOpen])
 
   return (
-    <StyledAppWraper onClick={handleAppClick}>
+    <StyledAppWraper onClick={handleAppClick} {...containerProps}>
       <AppIcon size={size} isActive={isActive} isPreviewTab={isPreviewTab} picture={app.picture} alt={app.name} />
       {isPreviewTab ||
         (!hideName && (

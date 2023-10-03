@@ -1,15 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { Grid } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
-import {
-  DndContext,
-  DragEndEvent,
-  DragStartEvent,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors
-} from '@dnd-kit/core'
+import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { StyledSwipeableDrawerContent, StyledAddButtonWrapper, StyledIconButton } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { AppNostr as AppNostroType } from '@/types/app-nostr'
@@ -33,10 +25,7 @@ export const AppsPageContent = () => {
 
   const { handleOpen: handleOpenModal } = useOpenModalSearchParams()
 
-  const [activeId, setActiveId] = useState<PinID | null>(null)
-
   const pins = currentWorkSpace?.pins || []
-
   const pinIds = pins.map((p) => p.id)
 
   const handleOpen = async (app: AppNostroType) => {
@@ -54,11 +43,10 @@ export const AppsPageContent = () => {
   const touchSensor = useSensor(TouchSensor, {
     // Press delay of 300ms, with tolerance of 5px of movement.
     activationConstraint: {
-      delay: 300,
+      delay: 200,
       tolerance: 5
     }
   })
-
   const sensors = useSensors(mouseSensor, touchSensor)
 
   const onSortEnd = useCallback(
@@ -77,29 +65,15 @@ export const AppsPageContent = () => {
     [dispatch, currentWorkSpace]
   )
 
-  const handleDragStart = ({ active }: DragStartEvent) => {
-    if (active) {
-      setActiveId(active.id)
-    }
-  }
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (over && active.id !== over.id) {
       onSortEnd(active.id, over.id)
     }
-    setActiveId(null)
   }
-
-  const handleDragOver = () => setActiveId(null)
 
   return (
     <StyledSwipeableDrawerContent>
-      <DndContext
-        sensors={sensors}
-        autoScroll={false}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragCancel={handleDragOver}
-      >
+      <DndContext sensors={sensors} autoScroll={false} onDragEnd={handleDragEnd}>
         <SortableContext items={pinIds} strategy={rectSwappingStrategy}>
           <Container>
             <Grid columns={10} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
@@ -117,14 +91,7 @@ export const AppsPageContent = () => {
 
                 return (
                   <Grid key={i} item xs={2}>
-                    <AppNostroSortable
-                      isDragging={activeId === pin.id}
-                      id={pin.id}
-                      isActive={isActive}
-                      app={app}
-                      size="small"
-                      onOpen={handleOpen}
-                    />
+                    <AppNostroSortable id={pin.id} isActive={isActive} app={app} size="small" onOpen={handleOpen} />
                   </Grid>
                 )
               })}

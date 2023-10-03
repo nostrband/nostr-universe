@@ -60,6 +60,8 @@ export const ModalSearchContent = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
+    if (searchValue.trim().length === 0) return
+
     onSearch(searchValue)
     setIsLoading(true)
     searchProfiles(searchValue)

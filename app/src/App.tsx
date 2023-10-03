@@ -24,6 +24,7 @@ import { useAppDispatch, useAppSelector } from './store/hooks/redux'
 import { setPage } from './store/reducers/positionScrollPage.slice'
 import { ModalFindApp } from './components/Modal/ModalFindApp/ModalFindApp'
 import { ModalAddNSBKey } from './components/Modal/ModalAddNSBKey/ModalAddNSBKey'
+import { ModalPinSettings } from './components/Modal/ModalPinSettings/ModalPinSettings'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -49,6 +50,7 @@ export const App = () => {
 
   useEffect(() => {
     dispatch(setPage({ page: searchParams.get('page') }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const getTitle = () => {
@@ -110,6 +112,7 @@ export const App = () => {
       <ModalAbout />
       <ModalFindApp />
       <ModalAddNSBKey />
+      <ModalPinSettings />
     </>
   )
 }
