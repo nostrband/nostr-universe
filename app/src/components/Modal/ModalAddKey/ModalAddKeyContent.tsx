@@ -11,14 +11,14 @@ import {
 } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { useOpenApp } from '@/hooks/open-entity'
+import { useAddKey } from '@/hooks/workspaces'
 
 export const ModalAddKeyContent = ({ handleClose }: { handleClose: () => void}) => {
   const { handleOpen } = useOpenModalSearchParams()
-  const { onImportKey } = useOpenApp()
+  const { addKey } = useAddKey()
 
   const handleAddKey = async () => {
-    await onImportKey()
+    await addKey()
     handleClose()
   }
 
@@ -61,6 +61,27 @@ export const ModalAddKeyContent = ({ handleClose }: { handleClose: () => void}) 
           </StyledItemButton>
         </StyledListItem>
       </StyledList>
+
+      <StyledViewTitle>NsecBunker key</StyledViewTitle>
+      <StyledList dense>
+        <StyledListItem disablePadding>
+          <ListItemText primary="Events can be signed remotely by your nsecBunker" />
+        </StyledListItem>
+        <StyledListItem disablePadding>
+          <StyledItemButton
+            alignItems="center"
+            onClick={() => handleOpen(MODAL_PARAMS_KEYS.ADD_NSB_KEY_MODAL, { replace: true })}
+          >
+            <ListItemAvatar>
+              <StyledItemIconAvatar>
+                <AddIcon />
+              </StyledItemIconAvatar>
+            </ListItemAvatar>
+            <StyledItemText primary="Add nsecBunker key" />
+          </StyledItemButton>
+        </StyledListItem>
+      </StyledList>
+
     </Container>
   )
 }

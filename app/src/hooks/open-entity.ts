@@ -31,7 +31,6 @@ import { AppNostr, IOpenAppNostr } from '@/types/app-nostr'
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { v4 as uuidv4 } from 'uuid'
 import { useUpdateProfile } from './profile'
-import { setCurrentPubkey, setKeys, setReadKeys } from '@/store/reducers/keys.slice'
 import {
   loadWorkspace,
   getOrigin,
@@ -46,7 +45,7 @@ import { useLocation, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
-import { AppHandlerEvent, sendPayment, stringToBech32 } from '@/modules/nostr'
+import { AppHandlerEvent, nsbSignEvent, sendPayment, stringToBech32 } from '@/modules/nostr'
 import { deletePermissionRequest, setPermissionRequest } from '@/store/reducers/permissionRequests.slice'
 import { ITab } from '@/types/tab'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
@@ -58,7 +57,7 @@ export const useOpenApp = () => {
   const updateProfile = useUpdateProfile()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { workspaces } = useAppSelector((state) => state.workspaces)
-  const { currentPubkey, readKeys } = useAppSelector((state) => state.keys)
+  const { currentPubkey, keys, readKeys, nsbKeys } = useAppSelector((state) => state.keys)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const { apps } = useAppSelector((state) => state.apps)
   const { tabs, currentTabId } = useAppSelector((state) => state.tab)
@@ -66,7 +65,8 @@ export const useOpenApp = () => {
   const currentWorkSpaceTabs = useAppSelector(selectCurrentWorkspaceTabs)
 
   const getTabAny = (id) => tabs.find((t) => t.id === id)
-  const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey) //// ???????????
+  const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey)
+  const isNsbKey = () => nsbKeys.includes(currentPubkey)
   const hasPerm = (tab, name, value) => {
     const app = getTabGroupId(tab)
     const ws = workspaces.find((ws) => ws.pubkey === tab.pubkey)
@@ -245,6 +245,59 @@ export const useOpenApp = () => {
     return false
   }
 
+  const sendPayment = async (tabId, paymentRequest) => {
+    const tab = getTabAny(tabId)
+    if (!tab) throw new Error('Inactive tab')
+
+    const bolt11 = bolt11Decode(paymentRequest)
+    const amount = Number(bolt11.sections?.find((s) => s.name === 'amount').value)
+
+    const error = 'Payment request disallowed'
+    let wallet = null
+    try {
+      wallet = await walletstore.getInfo()
+    } catch (e) {
+      window.plugins.toast.showShortBottom(`Add wallet first!`)
+      // don't let app distinguish btw no-wallet and disallowed
+      throw new Error(error)
+    }
+
+    const perm = 'pay_invoice:' + wallet.id
+    const exec = async () => {
+      try {
+        console.log('sending payment', paymentRequest)
+        const res = await sendPayment(wallet, paymentRequest)
+        console.log('payment result', res)
+        window.plugins.toast.showShortBottom(`Sent ${amount / 1000} sats`)
+        return res // forward to the tab
+      } catch (e) {
+        window.plugins.toast.showShortBottom(`Payment failed: ${e}`)
+        throw e // forward to the tab
+      }
+    }
+
+    // allowed?
+    const MAX_ALLOW_AMOUNT = 10000 * 1000 // anything above 10k must be explicitly authorized
+    if (amount <= MAX_ALLOW_AMOUNT && hasPerm(tab, perm, '1')) {
+      return await exec()
+    }
+
+    // disallowed?
+    if (hasPerm(tab, perm, '0')) throw new Error(error)
+
+    return requestPermExec(
+      tab,
+      {
+        perm,
+        paymentRequest,
+        amount,
+        wallet
+      },
+      exec,
+      error
+    )
+  }
+
   const API = {
     // NIP-01
     getPublicKey: async function (tabId) {
@@ -263,7 +316,12 @@ export const useOpenApp = () => {
       if (isReadOnly()) throw new Error('No pubkey')
       const kindPerm = 'sign:' + event.kind
       const allPerm = 'sign'
-      const exec = async () => await keystore.signEvent(event)
+      const exec = async () => {
+        if (nsbKeys.includes(tab.pubkey))
+          return await nsbSignEvent(tab.pubkey, event)
+        else
+          return await keystore.signEvent(event)
+      }
       // return await exec()
 
       // // allowed this kind or all kinds (if not kind-0)?
@@ -312,59 +370,9 @@ export const useOpenApp = () => {
         }
       })
     },
-    sendPayment: async function (tabId, paymentRequest) {
-      const tab = getTabAny(tabId)
-      if (!tab) throw new Error('Inactive tab')
-      // if (isReadOnly()) throw new Error('No pubkey')
 
-      const bolt11 = bolt11Decode(paymentRequest)
-      const amount = Number(bolt11.sections?.find((s) => s.name === 'amount').value)
+    sendPayment,
 
-      const error = 'Payment request disallowed'
-      let wallet = null
-      try {
-        wallet = await walletstore.getInfo()
-      } catch (e) {
-        window.plugins.toast.showShortBottom(`Add wallet first!`)
-        // don't let app distinguish btw no-wallet and disallowed
-        throw new Error(error)
-      }
-
-      const perm = 'pay_invoice:' + wallet.id
-      const exec = async () => {
-        try {
-          console.log('sending payment', paymentRequest)
-          const res = await sendPayment(wallet, paymentRequest)
-          console.log('payment result', res)
-          window.plugins.toast.showShortBottom(`Sent ${amount / 1000} sats`)
-          return res // forward to the tab
-        } catch (e) {
-          window.plugins.toast.showShortBottom(`Payment failed: ${e}`)
-          throw e // forward to the tab
-        }
-      }
-
-      // allowed?
-      const MAX_ALLOW_AMOUNT = 10000 * 1000 // anything above 10k must be explicitly authorized
-      if (amount <= MAX_ALLOW_AMOUNT && hasPerm(tab, perm, '1')) {
-        return await exec()
-      }
-
-      // disallowed?
-      if (hasPerm(tab, perm, '0')) throw new Error(error)
-
-      return requestPermExec(
-        tab,
-        {
-          perm,
-          paymentRequest,
-          amount,
-          wallet
-        },
-        exec,
-        error
-      )
-    },
     clipboardWriteText: async function (tabId, text) {
       const r = await window.cordova.plugins.clipboard.copy(text)
       window.plugins.toast.showShortBottom('Copied')
@@ -653,31 +661,6 @@ export const useOpenApp = () => {
     )
   }
 
-  const onImportKey = async (importPubkey?: string) => {
-    if (importPubkey) {
-      dbi.putReadOnlyKey(importPubkey)
-      writeCurrentPubkey(importPubkey)
-    } else {
-      try {
-        const r = await keystore.addKey()
-        await writeCurrentPubkey(r.pubkey)
-      } catch (e) {
-        console.log('addkey error ', JSON.stringify(e))
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        window.plugins.toast.showShortBottom(`Error: ${e}`)
-        return
-      }
-    }
-
-    // // reload the list
-    const [keys, pubkey] = await loadKeys(dispatch)
-
-    await loadWorkspace(pubkey, dispatch)
-
-    await updateProfile(keys, pubkey)
-  }
-
   const openZap = (id) => {
     const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
     openBlank({ url: `${ZAP_URL}${id}` }, { replace: true })
@@ -690,7 +673,6 @@ export const useOpenApp = () => {
     onHideTab,
     onSwitchTab,
     onHideTabInBrowser,
-    onImportKey,
     onCloseTab,
     openTabWindow,
     openBlank,
@@ -702,6 +684,7 @@ export const useOpenApp = () => {
     onPinTab,
     onUnPinTab,
     findTabPin,
-    findAppPin
+    findAppPin,
+    sendPayment
   }
 }

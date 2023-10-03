@@ -10,7 +10,7 @@ import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import { StyledInput, StyledItemIconAvatar, StyledItemText, StyledMenuWrapper } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
-import { stringToBech32 } from '@/modules/nostr'
+import { stringToBech32, stringToBolt11 } from '@/modules/nostr'
 import { useOpenApp } from '@/hooks/open-entity'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { ReactNode, useCallback } from 'react'
@@ -27,6 +27,8 @@ export const ModalContextMenuContent = () => {
   const audioSrc = searchParams.get('audioSrc') || ''
   let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
   const addr = stringToBech32(value || tabUrl)
+  const [invoice, bolt11] = stringToBolt11(value || tabUrl)
+  console.log("invoice", invoice, "bolt11", JSON.stringify(bolt11))
   if (!value) value = addr // from tabUrl
 
   const handleOpenModalSelect = () => {

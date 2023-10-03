@@ -4,14 +4,14 @@ import { Container } from '@/layout/Container/Conatiner'
 import { IconButton } from '@mui/material'
 import { searchProfiles } from '@/modules/nostr'
 import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
-import { useOpenApp } from '@/hooks/open-entity'
 import { StyledForm, StyledHint, StyledInput, StyledSlider } from './styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { MetaEvent } from '@/types/meta-event'
 import { IModalImportKeyContent } from './types'
+import { useAddKey } from '@/hooks/workspaces'
 
 export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyContent) => {
-  const { onImportKey } = useOpenApp()
+  const { addReadOnlyKey } = useAddKey()
   const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -42,7 +42,7 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
   }
 
   const handleProfileSetKey = async (profile: MetaEvent) => {
-    await onImportKey(profile.pubkey)
+    await addReadOnlyKey(profile.pubkey)
     handleCloseModal()
   }
 

@@ -40,6 +40,10 @@ const stub = {
     console.log('ADD KEY')
   },
 
+  generateKey: async function () {
+    console.log('GENERATE KEY')
+  },
+
   showKey: async function () {
     console.log('SHOW KEY')
   },
@@ -97,6 +101,10 @@ export async function addKey() {
   return API('addKey')()
 }
 
+export async function generateKey() {
+  return API('generateKey')()
+}
+
 export async function showKey(req) {
   return API('showKey')(req)
 }
@@ -128,6 +136,7 @@ export async function decrypt(pubkey, ciphertext) {
 export const keystore = {
   listKeys,
   addKey,
+  generateKey,
   showKey,
   selectKey,
   editKey,
