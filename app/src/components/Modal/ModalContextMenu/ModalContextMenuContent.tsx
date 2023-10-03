@@ -8,6 +8,7 @@ import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined'
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
+import OpenInBrowserOutlinedIcon from '@mui/icons-material/OpenInBrowserOutlined'
 import { StyledInput, StyledItemIconAvatar, StyledItemText, StyledMenuWrapper } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
@@ -62,6 +63,14 @@ export const ModalContextMenuContent = () => {
     openBlank({ url: href }, { replace: true })
   }
 
+  const handleOpenTabUrlIntent = () => {
+    openBlank({ url: "intent:" + tabUrl }, {})
+  }
+
+  const handleOpenHrefIntent = () => {
+    openBlank({ url: "intent:" + href }, {})
+  }
+
   const handlePayInvoice = async () => {
     await handleClose()
     sendTabPayment(tabId, invoice)
@@ -99,8 +108,10 @@ export const ModalContextMenuContent = () => {
           {addr && renderItem('Open with', <AppsOutlinedIcon />, handleOpenModalSelect)}
           {addr && renderItem('Zap', <FlashOnIcon />, handleZap)}
           {href && renderItem('Open in new tab', <OpenInNewOutlinedIcon />, handleOpenHref)}
+          {href && renderItem('Open in browser', <OpenInBrowserOutlinedIcon />, handleOpenHrefIntent)}
           {value && renderItem('Share text', <ShareOutlinedIcon />, handleShareValue)}
           {renderItem('Share tab URL', <IosShareOutlinedIcon />, handleShareTabUrl)}
+          {renderItem('Open tab URL in browser', <OpenInBrowserOutlinedIcon />, handleOpenTabUrlIntent)}
         </List>
       </StyledMenuWrapper>
     </Container>

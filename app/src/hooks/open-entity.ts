@@ -116,7 +116,7 @@ export const useOpenApp = () => {
     // more reqs?
     const reqs = permissionRequests.filter((pr) => pr.tabId === currentPermRequest.tabId)
     if (reqs.length > 1) {
-       handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id } })
+      handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: reqs[1].id } })
     }
   }
 
@@ -230,6 +230,11 @@ export const useOpenApp = () => {
   }
 
   const handleCustomUrl = async (url, tab) => {
+    if (url.startsWith('intent:')) {
+      console.log("intent url disallowed", tab?.id, url)
+      return true
+    }
+
     if (url.startsWith('lightning:') && !!tab) {
       try {
         await walletstore.getInfo()
@@ -633,11 +638,11 @@ export const useOpenApp = () => {
       return
     }
 
-    // if (entity.url.startsWith('nostr:')) {
-    //   // try some external app that might know this type of nostr: link
-    //   window.cordova.InAppBrowser.open(entity.url, '_self')
-    //   return
-    // }
+    if (entity.url.startsWith('intent:')) {
+      // external browser
+      window.cordova.InAppBrowser.open(entity.url, '_self')
+      return
+    }
 
     // // find an existing app for this url
     const origin = getOrigin(entity.url)

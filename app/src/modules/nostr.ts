@@ -69,7 +69,7 @@ let ndk: NDK = null
 let nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
 nsbNDK.connect(2000)
   .then(() => console.log("nsb ndk connected"))
-  .finally(() => console.log("nsb ndk connect error"))
+  .catch(() => console.log("nsb ndk connect error"))
 
 let nsbSigner: NDKNip46Signer = null
 
