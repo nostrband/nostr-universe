@@ -28,6 +28,11 @@ export const ModalFindAppContent: FC<ModalFindAppContentProps> = ({ handleClose 
     return app.name.toLowerCase().includes(search) || app.about?.toLowerCase().includes(search)
   })
 
+  console.log({
+    apps,
+    filteredApps
+  })
+
   return (
     <Container>
       <StyledForm>

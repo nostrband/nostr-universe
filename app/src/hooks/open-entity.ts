@@ -25,7 +25,8 @@ import {
   setPermsWorkspace,
   addTabWorkspace,
   addWorkspaces,
-  addPinWorkspace
+  addPinWorkspace,
+  updatePinWorkspace
 } from '@/store/reducers/workspaces.slice'
 import { AppNostr, IOpenAppNostr } from '@/types/app-nostr'
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
@@ -528,6 +529,11 @@ export const useOpenApp = () => {
     dbi.deletePin(currentPin.id)
   }
 
+  const onUpdatePinnedTab = async (currentPin: IPin) => {
+    dispatch(updatePinWorkspace({ pin: currentPin, workspacePubkey: currentPin.pubkey }))
+    dbi.updatePin(currentPin)
+  }
+
   const openTabWindow = async (id) => {
     const tab = tabs.find((tab) => id === tab.id)
     if (!tab) {
@@ -708,6 +714,7 @@ export const useOpenApp = () => {
     onUnPinTab,
     findTabPin,
     findAppPin,
-    onDeletePinnedTab
+    onDeletePinnedTab,
+    onUpdatePinnedTab
   }
 }

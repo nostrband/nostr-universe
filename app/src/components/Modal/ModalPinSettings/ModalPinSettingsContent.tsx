@@ -21,7 +21,7 @@ type ModalPinSettingsContentProps = {
 
 export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ handleClose, handleSetAppTitle }) => {
   const [searchParams] = useSearchParams()
-  const { onDeletePinnedTab } = useOpenApp()
+  const { onDeletePinnedTab, onUpdatePinnedTab } = useOpenApp()
 
   const id = searchParams.get('pinId') || ''
   const currentPin = useAppSelector((state) => selectPin(state, id))
@@ -40,15 +40,24 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
     setEnteredAppTitle(e.target.value)
   }
 
+  const appTitleBlurHandler = () => {
+    if (enteredAppTitle.trim().length === 0) {
+      setEnteredAppTitle(title)
+    }
+    setEditMode(false)
+  }
+
   const removePinHandler = () => {
-    if (!currentPin) return undefined
+    if (!currentPin) return
 
     const confirmText = 'Are you sure to remove pin?'
     const isConfirm = confirm(confirmText)
 
-    if (!isConfirm) return undefined
+    if (!isConfirm) return
 
     onDeletePinnedTab(currentPin).then(handleClose)
+    // FIXME remake via "cordova-plugin-dialogs"
+
     // if (!window.cordova) {
     //   const isConfirm = confirm(confirmText)
     //   if (!isConfirm) return undefined
@@ -65,7 +74,11 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
   }
 
   const saveEdittedPinHandler = () => {
-    console.log('Saved!')
+    if (!currentPin) return
+    onUpdatePinnedTab({
+      ...currentPin,
+      title: enteredAppTitle
+    }).then(handleClose)
   }
 
   const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void, danger: boolean = false) => {
@@ -97,7 +110,7 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
           readOnly={!editMode}
           value={enteredAppTitle}
           onChange={editAppTitleHandler}
-          onBlur={() => setEditMode(false)}
+          onBlur={appTitleBlurHandler}
           endAdornment={
             <IconButton color="inherit" size="medium" type="button" onClick={() => setEditMode(true)}>
               <EditOutlinedIcon />

@@ -41,7 +41,7 @@ export const AppNostroSortable: FC<AppNostroSortableProps> = ({ id, ...restProps
     },
     //onMove: () => console.log("Detected mouse or touch movement"),
     filterEvents: () => true, // All events can potentially trigger long press
-    threshold: 1000,
+    threshold: 800,
     captureEvent: true,
     cancelOnMovement: true,
     cancelOutsideElement: true,

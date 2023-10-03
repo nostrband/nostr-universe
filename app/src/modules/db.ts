@@ -84,6 +84,15 @@ export const dbi = {
       console.log(`Delete pin in DB error: ${JSON.stringify(error)}`)
     }
   },
+  updatePin: async (pin) => {
+    try {
+      await db.pins.where('id').equals(pin.id).modify({
+        title: pin.title
+      })
+    } catch (error) {
+      console.log(`Update pin in DB error: ${JSON.stringify(error)}`)
+    }
+  },
   listTabs: async (pubkey) => {
     try {
       return await db.tabs.where('pubkey').equals(pubkey).toArray()
