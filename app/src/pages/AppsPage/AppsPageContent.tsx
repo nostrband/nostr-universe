@@ -43,7 +43,7 @@ export const AppsPageContent = () => {
   const touchSensor = useSensor(TouchSensor, {
     // Press delay of 300ms, with tolerance of 5px of movement.
     activationConstraint: {
-      delay: 300,
+      delay: 200,
       tolerance: 5
     }
   })
