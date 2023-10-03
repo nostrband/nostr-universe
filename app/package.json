@@ -38,6 +38,7 @@
     "react-router": "^6.15.0",
     "react-router-dom": "^6.15.0",
     "swiper": "^10.1.0",
+    "use-long-press": "^3.2.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

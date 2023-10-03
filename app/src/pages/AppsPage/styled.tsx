@@ -19,7 +19,7 @@ export const StyledDialog = styled(Dialog)(({ theme }) => ({
 export const StyledSwipeableDrawerContent = styled(Box)(() => ({
   height: '100%',
   overflow: 'auto',
-  paddingBottom: 10
+  padding: '10px 0'
 }))
 
 export const StyledAddButtonWrapper = styled((props: GridProps) => {
