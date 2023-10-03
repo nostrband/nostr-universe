@@ -7,7 +7,6 @@ import { useChangeAccount } from '@/hooks/workspaces'
 import { getProfileImage, isGuest } from '@/utils/helpers/prepare-data'
 import { ModalAccounts } from '../ModalAccounts/ModalAccounts'
 import {
-  StyledViewAction,
   StyledViewAvatar,
   StyledViewAvatarSwitch,
   StyledViewAvatarWrapper,

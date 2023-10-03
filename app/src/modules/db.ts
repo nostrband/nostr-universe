@@ -6,7 +6,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(10).stores({
+db.version(11).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -14,9 +14,7 @@ db.version(10).stores({
   lastContacts: '[pubkey+contactPubkey],tm',
   flags: 'id,pubkey,name,value',
   readOnlyKeys: '&pubkey,current',
-
-  // allow: pubkey=1,sign:0=1,encrypt=1,decrypt=1,sign:*=1,
-  // disallow: sign:*=0
+  nsecbunkerKeys: '&pubkey,localPubkey,token',
   perms: '[pubkey+app+name],[pubkey+app],value'
 })
 
@@ -84,6 +82,21 @@ export const dbi = {
       console.log(`Delete pin in DB error: ${JSON.stringify(error)}`)
     }
   },
+  addNsecBunkerKey: async (key: NSBKey) => {
+    try {
+      await db.nsecbunkerKeys.add(key)
+    } catch (error) {
+      console.log(`Add nsb key to DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  getNsecBunkerLocalPubkey: async (pubkey: string) => {
+    try {
+      const keys = await db.nsecbunkerKeys.where('pubkey').equals(pubkey).toArray()
+      return keys.length ? keys[0].localPubkey : ''
+    } catch (error) {
+      console.log(`List tabs error: ${JSON.stringify(error)}`)
+    }
+  },
   listTabs: async (pubkey) => {
     try {
       return await db.tabs.where('pubkey').equals(pubkey).toArray()
@@ -133,6 +146,14 @@ export const dbi = {
       return (await db.readOnlyKeys.toCollection().toArray()).map((k) => k.pubkey)
     } catch (error) {
       console.log(`List readOnlyKeys error: ${JSON.stringify(error)}`)
+      return []
+    }
+  },
+  listNsecbunkerKeys: async () => {
+    try {
+      return (await db.nsecbunkerKeys.toCollection().toArray())
+    } catch (error) {
+      console.log(`List nsecbunkerKeys error: ${JSON.stringify(error)}`)
       return []
     }
   },

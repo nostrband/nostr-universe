@@ -8,7 +8,7 @@ import { AuthoredEvent, createAuthoredEvent } from '@/types/authored-event'
 import { AugmentedEvent, createEvent } from '@/types/augmented-event'
 import { MetaEvent, createMetaEvent } from '@/types/meta-event'
 import { Meta, createMeta } from '@/types/meta'
-import { NDKFilter, NDKSubscription, NostrTop } from 'node_modules/@nostrband/ndk/dist'
+import { NDKFilter, NDKNip07Signer, NDKNip46Signer, NDKSubscription, NostrEvent, NostrTop } from '@nostrband/ndk'
 import { ZapEvent, createZapEvent } from '@/types/zap-event'
 import {
   CommunityApprovalInfo,
@@ -39,6 +39,8 @@ const KIND_COMMUNITY: number = 34550
 const KIND_NWC_PAYMENT_REQUEST: number = 23194
 const KIND_NWC_PAYMENT_REPLY: number = 23195
 
+const MAX_TOP_APPS = 200
+
 // we only care about web apps
 const PLATFORMS = ['web']
 
@@ -58,8 +60,18 @@ const readRelays = [
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 export const allRelays = [nostrbandRelayAll, ...writeRelays]
 
+const nsbRelays = [
+  'wss://relay.nsecbunker.com',
+]
+
 // global ndk instance for now
 let ndk: NDK = null
+let nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
+nsbNDK.connect(2000)
+  .then(() => console.log("nsb ndk connected"))
+  .catch(() => console.log("nsb ndk connect error"))
+
+let nsbSigner: NDKNip46Signer = null
 
 interface EventAddr {
   kind?: number
@@ -241,18 +253,19 @@ function sortDesc(arr: AugmentedEvent[] | AuthoredEvent[] | MetaEvent[]) {
 
 export async function fetchApps() {
   // try to fetch best apps list from our relay
-  const top = await ndk.fetchTop(
-    {
-      kinds: [KIND_APP],
-      limit: 50
-    },
-    // note: send to this separate endpoint bcs this req might be slow
-    NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk)
-  )
-  console.log('top apps', top?.ids.length)
+  const top = null 
+  // const top = await ndk.fetchTop(
+  //   {
+  //     kinds: [KIND_APP],
+  //     limit: MAX_TOP_APPS
+  //   },
+  //   // note: send to this separate endpoint bcs this req might be slow
+  //   NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk)
+  // )
+  // console.log('top apps', top?.ids.length)
 
   let events: AugmentedEvent[] = []
-  if (top.ids.length) {
+  if (top?.ids.length) {
     // fetch the app events themselves from the list
     events = await fetchEventsByIds({ ids: top.ids, kinds: [KIND_APP] })
   } else {
@@ -261,7 +274,7 @@ export async function fetchApps() {
     // completely breaking the UX due to our relay being down
     const ndkEvents = await fetchEventsRead(ndk, {
       kinds: [KIND_APP],
-      limit: 100
+      limit: MAX_TOP_APPS
     })
 
     events = [...ndkEvents.values()].map((e) => rawEvent(e))
@@ -1473,6 +1486,27 @@ export function stringToBech32(s: string, hex: boolean = false): string {
   return ''
 }
 
+export function stringToBolt11(s: string): [string, any] {
+  if (!s) return ['', null]
+
+  const INVOICE_REGEX = /^(lnbcrt|lntb|lnbc|LNBCRT|LNTB|LNBC)([0-9]{1,}[a-zA-Z0-9]+){1}$/g
+
+  const array = [...s.matchAll(INVOICE_REGEX)].map((a) => a[0])
+
+  let invoice = null
+  for (let b32 of array) {
+    console.log("maybe invoice", b32, s)
+    if (!b32.toLowerCase().startsWith("lnbc")) continue
+    try {
+      return [b32, bolt11Decode(b32)]
+    } catch (e) {
+      console.log('bad invoice', b32, 'e', e)
+    }
+  }
+
+  return ['', null]
+}
+
 export function createAddrOpener(cb: (addr: string) => void): (event: Event) => void {
   return (event: Event) => {
     let addr = event.id
@@ -1501,7 +1535,8 @@ export function createAddrOpener(cb: (addr: string) => void): (event: Event) => 
   }
 }
 
-export function connect(): void {
+export function connect(): Promise<void> {
+  // main instance
   ndk = new NDK({ explicitRelayUrls: allRelays })
 
   const scheduleStats = () => {
@@ -1618,4 +1653,24 @@ export function putEventToCache(e: AugmentedEvent | MetaEvent) {
   if (e.kind === KIND_META) metaCache.set(e.pubkey, e)
   eventCache.set(e.id, e)
   addrCache.set(getEventAddr(e), e)
+}
+
+export function setNsbSigner(token: string) {
+  nsbSigner = new NDKNip46Signer(nsbNDK, token, new NDKNip07Signer());
+}
+
+export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<NostrEvent> {
+  if (!nsbSigner) throw new Error(`NSB signer not found for ${pubkey}`)
+  if (!nsbSigner.connected) {
+    console.log("nsb connecting for pubkey", pubkey)
+    await nsbSigner.blockUntilReady()
+    nsbSigner.connected = true
+  }
+
+  event.pubkey = pubkey
+  event.id = getEventHash(event)
+  console.log("nsb signing event ", event.id, "by", pubkey)
+  event.sig = await nsbSigner.sign(event)
+
+  return event;
 }
