@@ -18,5 +18,10 @@ export const StyledAppName = styled(
 )(({ theme, size = APP_NOSTR_SIZE.MEDIUM }) => ({
   color: theme.palette.light.light,
   fontSize: APP_NAME_FONT_SIZE_VALUE[size],
-  marginTop: APP_NAME_GUTTER_VALUE[size]
+  marginTop: APP_NAME_GUTTER_VALUE[size],
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  display: '-webkit-box',
+  WebkitLineClamp: 1,
+  WebkitBoxOrient: 'vertical'
 }))

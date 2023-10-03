@@ -4,19 +4,22 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedZaps, nostrbandRelay } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { SliderBigZaps } from '@/components/Slider/SliderBigZaps/SliderBigZaps'
 import { StyledTitle, StyledWrapper } from './styled'
 import { ZapEvent } from '@/types/zap-event'
 import { setBigZaps } from '@/store/reducers/contentWorkspace'
 import { MIN_ZAP_AMOUNT } from '@/consts'
 import { memo, useCallback } from 'react'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { SkeletonBigZaps } from '@/components/Skeleton/SkeletonBigZaps/SkeletonBigZaps'
+import { ItemBigZap } from '@/components/ItemsContent/ItemBigZap/ItemBigZap'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 
 export const BigZaps = memo(function BigZaps() {
   const { handleOpen } = useOpenModalSearchParams()
   const { bigZaps, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
-  const handleOpenHighlight = useCallback(
+  const handleOpenBigZap = useCallback(
     (bigZap: ZapEvent) => {
       let addr = ''
       if (bigZap.targetEvent) {
@@ -62,6 +65,25 @@ export const BigZaps = memo(function BigZaps() {
     }
   }, [contactList, dispatch])
 
+  const renderContent = () => {
+    if (bigZaps === null) {
+      return <SkeletonBigZaps />
+    }
+    if (!bigZaps || !bigZaps.length) {
+      return <EmptyListMessage onReload={handleReloadBigZaps} />
+    }
+    return bigZaps.map((bigZap, i) => (
+      <ItemBigZap
+        key={i}
+        onClick={() => handleOpenBigZap(bigZap)}
+        time={bigZap.created_at}
+        subtitle={`+${Math.round(bigZap.amountMsat / 1000)} sats`}
+        targetPubkey={bigZap.targetPubkey}
+        targetMeta={bigZap.targetMeta}
+      />
+    ))
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -70,12 +92,7 @@ export const BigZaps = memo(function BigZaps() {
         </StyledTitle>
       </Container>
 
-      <SliderBigZaps
-        data={bigZaps || []}
-        isLoading={bigZaps === null}
-        handleClickEntity={handleOpenHighlight}
-        handleReloadEntity={handleReloadBigZaps}
-      />
+      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
     </StyledWrapper>
   )
 })

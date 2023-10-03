@@ -13,7 +13,7 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useOpenApp } from '@/hooks/open-entity'
 
-export const ModalAddKeyContent = ({ handleClose }: { handleClose: () => void}) => {
+export const ModalAddKeyContent = ({ handleClose }: { handleClose: () => void }) => {
   const { handleOpen } = useOpenModalSearchParams()
   const { onImportKey } = useOpenApp()
 

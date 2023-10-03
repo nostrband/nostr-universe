@@ -3,19 +3,22 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { IconButton } from '@mui/material'
 import { searchProfiles } from '@/modules/nostr'
-import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
 import { useOpenApp } from '@/hooks/open-entity'
 import { StyledForm, StyledHint, StyledInput, StyledSlider } from './styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { MetaEvent } from '@/types/meta-event'
 import { IModalImportKeyContent } from './types'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/SkeletonProfiles'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { Profile } from '@/shared/Profile/Profile'
 
 export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyContent) => {
   const { onImportKey } = useOpenApp()
   const [searchValue, setSearchValue] = useState('')
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const inputRef = useRef<HTMLElement>();
+  const inputRef = useRef<HTMLElement>()
 
   const handleSearch = async () => {
     setIsLoading(true)
@@ -46,9 +49,18 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
     handleCloseModal()
   }
 
+  const renderContent = () => {
+    if (isLoading) {
+      return <SkeletonProfiles />
+    }
+    if (!profiles || !profiles.length) {
+      return <EmptyListMessage onReload={handleSearch} />
+    }
+    return profiles.map((profile, i) => <Profile key={i} onClick={handleProfileSetKey} profile={profile} />)
+  }
+
   return (
     <>
-      {' '}
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput
@@ -76,9 +88,7 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
         <>
           {searchValue && profiles !== null && (
             <StyledSlider>
-              <SliderProfiles data={profiles} isLoading={false} 
-                handleClickEntity={handleProfileSetKey} 
-                handleReloadEntity={handleSearch} />
+              <HorizontalSwipeContent childrenWidth={140}>{renderContent()}</HorizontalSwipeContent>
             </StyledSlider>
           )}
           <Container>

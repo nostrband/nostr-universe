@@ -54,8 +54,7 @@ export const ModalProfileTabMenuContent = () => {
           : []
 
       for (const p of perms) {
-        p.label = (p.value === '1' ? "Allow: " : "Disallow: ")
-          + prepareLabel(p, wallets)
+        p.label = (p.value === '1' ? 'Allow: ' : 'Disallow: ') + prepareLabel(p, wallets)
       }
 
       setPerms(perms)

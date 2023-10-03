@@ -6,9 +6,9 @@ import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { IItemHighlight } from './types'
 import { memo } from 'react'
 
-export const ItemHighlight = memo(function ItemHighlight({ pubkey, author, time, content }: IItemHighlight) {
+export const ItemHighlight = memo(function ItemHighlight({ pubkey, author, time, content, onClick }: IItemHighlight) {
   return (
-    <Wrapper>
+    <Wrapper onClick={onClick}>
       <Head>
         <ProfileInfo pubkey={pubkey} profile={author} />
         <Time date={time} />

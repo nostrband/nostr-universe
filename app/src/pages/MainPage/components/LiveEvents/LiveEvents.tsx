@@ -1,7 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { Container } from '@/layout/Container/Conatiner'
-import { SliderLiveEvents } from '@/components/Slider/SliderLiveEvents/SliderLiveEvents'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { LiveEvent } from '@/types/live-events'
 import { nip19 } from '@nostrband/nostr-tools'
@@ -9,6 +8,10 @@ import { fetchFollowedLiveEvents, getTagValue, nostrbandRelay } from '@/modules/
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { setLiveEvents } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback } from 'react'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { SkeletonLiveEvents } from '@/components/Skeleton/SkeletonLiveEvents/SkeletonLiveEvents'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { ItemLiveEvent } from '@/components/ItemsContent/ItemLiveEvent/ItemLiveEvent'
 
 export const LiveEvents = memo(function LiveEvents() {
   const { liveEvents, contactList } = useAppSelector((state) => state.contentWorkSpace)
@@ -39,6 +42,27 @@ export const LiveEvents = memo(function LiveEvents() {
     }
   }, [dispatch, contactList])
 
+  const renderContent = () => {
+    if (liveEvents === null) {
+      return <SkeletonLiveEvents />
+    }
+    if (!liveEvents || !liveEvents.length) {
+      return <EmptyListMessage onReload={handleReloadLiveEvents} />
+    }
+    return liveEvents.map((event, i) => (
+      <ItemLiveEvent
+        key={i}
+        onClick={() => handleOpenLiveEvent(event)}
+        time={event.starts || event.created_at}
+        hostPubkey={event.host}
+        host={event.hostMeta}
+        subtitle={event.title}
+        content={event.summary || event.content.substring(0, 300)}
+        status={event.status}
+      />
+    ))
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -46,12 +70,8 @@ export const LiveEvents = memo(function LiveEvents() {
           Live Streams
         </StyledTitle>
       </Container>
-      <SliderLiveEvents
-        data={liveEvents || []}
-        isLoading={liveEvents === null}
-        handleClickEntity={handleOpenLiveEvent}
-        handleReloadEntity={handleReloadLiveEvents}
-      />
+
+      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
     </StyledWrapper>
   )
 })

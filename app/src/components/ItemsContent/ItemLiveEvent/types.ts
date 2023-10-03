@@ -7,4 +7,5 @@ export interface IItemLiveEvent {
   content: string
   subtitle: string
   status: string
+  onClick: () => void
 }

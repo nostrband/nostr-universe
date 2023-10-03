@@ -7,9 +7,16 @@ import { IItemLongNote } from './types'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 import { memo } from 'react'
 
-export const ItemLongNote = memo(function ItemLongNote({ pubkey, author, time, content, subtitle }: IItemLongNote) {
+export const ItemLongNote = memo(function ItemLongNote({
+  pubkey,
+  author,
+  time,
+  content,
+  subtitle,
+  onClick
+}: IItemLongNote) {
   return (
-    <Wrapper>
+    <Wrapper onClick={onClick}>
       <Head>
         <ProfileInfo pubkey={pubkey} profile={author} />
         <Time date={time} />

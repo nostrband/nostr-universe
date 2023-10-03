@@ -4,10 +4,13 @@ import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
-import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/SliderTrendingNotes'
 import { StyledTitle, StyledWrapper } from './styled'
 import { AuthoredEvent } from '@/types/authored-event'
 import { useCallback } from 'react'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNotes/SkeletonTrendingNotes'
 
 export const TrendingNotes = () => {
   const { data, isFetching: isLoading, refetch: refetchTrendingNotes } = userService.useFetchTrendingNotesQuery('')
@@ -26,6 +29,25 @@ export const TrendingNotes = () => {
 
   const handleReloadTrendingNotes = () => refetchTrendingNotes()
 
+  const renderContent = () => {
+    if (isLoading) {
+      return <SkeletonTrendingNotes />
+    }
+    if (!data || !data.length) {
+      return <EmptyListMessage onReload={handleReloadTrendingNotes} />
+    }
+    return data.map((note, i) => (
+      <ItemTrendingNote
+        onClick={() => handleOpenNote(note)}
+        key={i}
+        time={note.created_at}
+        content={note.content}
+        pubkey={note.pubkey}
+        author={note.author}
+      />
+    ))
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -34,12 +56,7 @@ export const TrendingNotes = () => {
         </StyledTitle>
       </Container>
 
-      <SliderTrendingNotes
-        data={data}
-        isLoading={isLoading}
-        handleClickEntity={handleOpenNote}
-        handleReloadEntity={handleReloadTrendingNotes}
-      />
+      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
     </StyledWrapper>
   )
 }

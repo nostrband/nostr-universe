@@ -15,11 +15,12 @@ export const ItemLiveEvent = memo(function ItemLiveEvent({
   host,
   subtitle,
   time,
-  status
+  status,
+  onClick
 }: IItemLiveEvent) {
   const isLiveEvent = status === EVENT_LIVE_STATUS
   return (
-    <Wrapper>
+    <Wrapper onClick={onClick}>
       <Head>
         <ProfileInfo pubkey={hostPubkey} profile={host} />
         {isLiveEvent ? <Status status="Live" /> : <Time date={time} />}

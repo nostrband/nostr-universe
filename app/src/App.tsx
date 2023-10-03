@@ -7,9 +7,7 @@ import { TabsSwitcherPage } from './pages/TabsSwitcherPage/TabsSwitcherPage'
 import { ModalImportKey } from './components/Modal/ModalImporKey/ModalImportKey'
 import { ProfilePage } from './pages/ProfilePage/ProfilePage'
 import { ModalTabMenu } from './components/Modal/ModalTabMenu/ModalTabMenu'
-import { ModalTabSwitcher } from './components/Modal/ModalTabSwitcher/ModalTabSwitcher'
 import { ModalWallet } from './components/Modal/ModalWallet/ModalWallet'
-import { ModalSearch } from './components/Modal/ModalSearch/ModaSearch'
 import { ModalSelectApp } from './components/Modal/ModalSelectApp/ModalSelectApp'
 import { ModalPermissionsRequest } from './components/Modal/ModalPermissionsRequest/ModalPermissionsRequest'
 import { TabPage } from './pages/TabPage/TabPage'
@@ -96,10 +94,8 @@ export const App = () => {
       {/* Modal pages */}
       <ModalImportKey />
       <ProfilePage />
-      <ModalTabSwitcher />
       <ModalTabMenu />
       <ModalWallet />
-      <ModalSearch />
       <ModalSelectApp />
       <ModalPermissionsRequest />
       <TabPage />

@@ -23,7 +23,7 @@ export const StyledSwipeableDrawerContent = styled(Box)(() => ({
 }))
 
 export const StyledAddButtonWrapper = styled((props: GridProps) => {
-  return <Grid {...props} xs={2} />
+  return <Grid {...props} item xs={2} />
 })({
   display: 'grid',
   placeItems: 'center',

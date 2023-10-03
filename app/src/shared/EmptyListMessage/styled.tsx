@@ -7,7 +7,6 @@ export const StyledMessage = styled(
   })
 )(({ theme }) => ({
   color: theme.palette.text.primary,
-  paddingLeft: '1rem',
   display: 'flex',
   alignItems: 'center',
   fontSize: '14px'
