@@ -9,7 +9,9 @@ import { walletstore } from '@/modules/walletstore'
 import { setCurrentPubkey, setKeys, setReadKeys, setNsbKeys } from '@/store/reducers/keys.slice'
 import { addTabs } from '@/store/reducers/tab.slice'
 import { addWorkspaces } from '@/store/reducers/workspaces.slice'
+import { CONTENT_FEEDS } from '@/types/content-feed'
 import { WorkSpace } from '@/types/workspace'
+import { v4 as uuidv4 } from 'uuid'
 
 // ?? зачем дефолтные аппы ??
 const defaultApps = [
@@ -165,6 +167,54 @@ const defaultApps = [
   }
 ]
 
+const DEFAULT_CONTENT_FEED_SETTINGS = [
+  {
+    id: CONTENT_FEEDS.TRENDING_NOTES,
+    order: 0,
+    hidden: false
+  },
+  {
+    id: CONTENT_FEEDS.TRENDING_PROFILES,
+    order: 1,
+    hidden: false
+  },
+  {
+    id: CONTENT_FEEDS.HIGHLIGHTS,
+    order: 2,
+    hidden: false
+  },
+  {
+    id: CONTENT_FEEDS.BIG_ZAPS,
+    order: 3,
+    hidden: false
+  },
+  {
+    id: CONTENT_FEEDS.LONG_POSTS,
+    order: 4,
+    hidden: false
+  },
+  {
+    id: CONTENT_FEEDS.LIVE_EVENTS,
+    order: 5,
+    hidden: false
+  },
+  {
+    id: CONTENT_FEEDS.COMMUNITIES,
+    order: 6,
+    hidden: false
+  },
+  {
+    id: CONTENT_FEEDS.SUGGESTED_PROFILES,
+    order: 7,
+    hidden: false
+  },
+  {
+    id: CONTENT_FEEDS.APPS,
+    order: 8,
+    hidden: false
+  }
+]
+
 const bootstrap = async (pubkey) => {
   console.log('new workspace', pubkey, ' bootstrapping')
   let pins = []
@@ -202,6 +252,18 @@ export const getTabGroupId = (pt) => {
   return getOrigin(pt.url) // pt.appNaddr ||
 }
 
+export const bootstrapSettings = async (pubkey) => {
+  const isSettingsExist = await dbi.checkPresenceOfSettings(pubkey)
+
+  if (!isSettingsExist) {
+    await dbi.setContentFeedSettings({
+      id: uuidv4(),
+      pubkey,
+      settings_json: DEFAULT_CONTENT_FEED_SETTINGS
+    })
+  }
+}
+
 export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => {
   console.log('loadWorkspace', pubkey)
   // ?? props
@@ -210,6 +272,12 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
   const pins = await dbi.listPins(pubkey)
   const tabs = await dbi.listTabs(pubkey)
   const perms = await dbi.listPerms(pubkey)
+
+  await bootstrapSettings(pubkey)
+
+  const contentFeedSettings = (await dbi.getContentFeedSettingsByPubkey(pubkey)) || []
+  const contentFeedSettingsSort = contentFeedSettings.sort((a, b) => a.order - b.order)
+
   console.log('perms', JSON.stringify(perms))
 
   const pinsSort = pins.sort((a, b) => a.order - b.order)
@@ -226,7 +294,8 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
     pins: pinsSort,
     lastKindApps: {},
     currentTabId: '',
-    perms
+    perms,
+    contentFeedSettings: contentFeedSettings
   }
 
   dispatch(addWorkspaces({ workspaces: [workspace] }))

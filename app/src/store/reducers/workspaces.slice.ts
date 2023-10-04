@@ -218,3 +218,11 @@ export const selectPin = (state: RootState, id: string): IPin | undefined => {
   const currentPin = currentWorkspace.pins.find((pin) => pin.id === id)
   return currentPin
 }
+
+export const selectWorkspaceContentFeeds = (state: RootState) => {
+  const currentWorkspace = state.workspaces.workspaces.find(
+    (workspace) => workspace.pubkey === state.keys.currentPubkey
+  )
+  if (!currentWorkspace) return []
+  return currentWorkspace.contentFeedSettings
+}

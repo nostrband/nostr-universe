@@ -15,7 +15,8 @@ db.version(11).stores({
   flags: 'id,pubkey,name,value',
   readOnlyKeys: '&pubkey,current',
   nsecbunkerKeys: '&pubkey,localPubkey,token',
-  perms: '[pubkey+app+name],[pubkey+app],value'
+  perms: '[pubkey+app+name],[pubkey+app],value',
+  settings: 'id, pubkey, settings_json'
 })
 
 export const dbi = {
@@ -228,6 +229,29 @@ export const dbi = {
       if (!n) await db.flags.add({ id, pubkey, name, value })
     } catch (error) {
       console.log(`Set flag error: ${error}`)
+    }
+  },
+  setContentFeedSettings: async (settings) => {
+    try {
+      await db.settings.add(settings)
+    } catch (error) {
+      console.log(`Set content feed settings error: ${error}`)
+    }
+  },
+  checkPresenceOfSettings: async (pubkey) => {
+    try {
+      const count = await db.settings.where('pubkey').equals(pubkey).count()
+      return count !== 0
+    } catch (error) {
+      console.log(`Check presence of content feed settings error: ${error}`)
+    }
+  },
+  getContentFeedSettingsByPubkey: async (pubkey) => {
+    try {
+      const settings = await db.settings.where('pubkey').equals(pubkey).first()
+      return settings?.settings_json || []
+    } catch (error) {
+      console.log(`List content feed settings error: ${error}`)
     }
   }
 }

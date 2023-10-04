@@ -2,6 +2,7 @@ import { ListItemButton, ListItemAvatar } from '@mui/material'
 // import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 // import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined'
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined'
+import TocOutlinedIcon from '@mui/icons-material/TocOutlined'
 // import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapper } from './styled'
@@ -27,6 +28,16 @@ export const ProfilMenu = () => {
                 </StyledListItemIcon>
               </ListItemAvatar>
               <StyledListItemText primary="Key permissions" />
+            </ListItemButton>
+            <ListItemButton
+              onClick={() => handleOpen(MODAL_PARAMS_KEYS.CONTENT_FEEDS_SETTINGS_MODAL, { append: true })}
+            >
+              <ListItemAvatar>
+                <StyledListItemIcon>
+                  <TocOutlinedIcon />
+                </StyledListItemIcon>
+              </ListItemAvatar>
+              <StyledListItemText primary="Content feeds" />
             </ListItemButton>
             {/* <ListItemButton>
             <ListItemAvatar>

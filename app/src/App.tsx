@@ -23,6 +23,7 @@ import { setPage } from './store/reducers/positionScrollPage.slice'
 import { ModalFindApp } from './components/Modal/ModalFindApp/ModalFindApp'
 import { ModalAddNSBKey } from './components/Modal/ModalAddNSBKey/ModalAddNSBKey'
 import { ModalPinSettings } from './components/Modal/ModalPinSettings/ModalPinSettings'
+import { ModalContentFeedSettings } from './components/Modal/ModalContentFeedSettings/ModalContentFeedSettings'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -109,6 +110,7 @@ export const App = () => {
       <ModalFindApp />
       <ModalAddNSBKey />
       <ModalPinSettings />
+      <ModalContentFeedSettings />
     </>
   )
 }
