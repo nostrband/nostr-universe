@@ -589,7 +589,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   //  let events = await collectEvents(fetchEventsRead(ndk, filter));
   //  console.log('events', events);
 
-  const top: NostrTop | null = await ndk.fetchTop(filter, NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk))
+  const top: NostrTop | null = null // await ndk.fetchTop(filter, NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk))
   console.log('top kind apps', top?.ids.length)
 
   let ndkEvents: NDKEvent[] = []
@@ -611,7 +611,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
       const e = augmentedEvents.find((e) => e.id == id)
       if (e) e.order = top.ids.length - i
     })
-  else augmentedEvents.forEach((e) => (e.order = Number(getTagValue(e, 'published_at'))))
+  else augmentedEvents.forEach((e, i) => (e.order = augmentedEvents.length - i))
 
   // we need profiles in case app info inherits content
   // from it's profile

@@ -5,6 +5,8 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined'
+import OpenInBrowserOutlinedIcon from '@mui/icons-material/OpenInBrowserOutlined'
 import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledWrapInput } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
@@ -18,7 +20,7 @@ import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 
 export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) => {
   const [searchParams] = useSearchParams()
-  const { onCloseTab, onPinTab, onUnPinTab, findTabPin } = useOpenApp()
+  const { onCloseTab, onPinTab, onUnPinTab, findTabPin, openBlank } = useOpenApp()
   const [, setEventAddr] = useState('')
   const id = searchParams.get('tabId') || ''
   const currentTab = useAppSelector((state) => selectTab(state, id))
@@ -62,6 +64,15 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
     copyToClipBoard(url || '')
   }
 
+  const handleOpenTabUrlIntent = () => {
+    openBlank({ url: 'intent:' + url }, {})
+  }
+
+  const handleShareTabUrl = async () => {
+    await handleCloseModal()
+    window.navigator.share({ url })
+  }
+
   const renderItem = useCallback((label: string, icon: React.ReactNode, handler: () => void) => {
     return (
       <ListItem disablePadding>
@@ -96,6 +107,8 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
             isPin ? <DeleteOutlineOutlinedIcon /> : <PushPinOutlinedIcon />,
             handlePinUnPinTab
           )}
+          {renderItem('Share', <IosShareOutlinedIcon />, handleShareTabUrl)}
+          {renderItem('Open in system browser', <OpenInBrowserOutlinedIcon />, handleOpenTabUrlIntent)}
         </List>
       </StyledMenuWrapper>
     </Container>
