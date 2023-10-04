@@ -68,6 +68,7 @@ export const useOpenApp = () => {
   const { tabs, currentTabId } = useAppSelector((state) => state.tab)
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
   const currentWorkSpaceTabs = useAppSelector(selectCurrentWorkspaceTabs)
+  const { page } = useAppSelector((state) => state.positionScrollPage)
 
   const getTabAny = (id) => tabs.find((t) => t.id === id)
   const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey)
@@ -444,7 +445,12 @@ export const useOpenApp = () => {
       }
     },
     onHide: (tabId) => {
-      handleClose(location.pathname)
+      if (page === '/') {
+        handleClose('/')
+      } else {
+        handleClose(`?page=${page}`)
+      }
+//      handleClose(location.pathname)
     },
     setUrl: async (tabId, url) => {
       const tab = getTabAny(tabId)
