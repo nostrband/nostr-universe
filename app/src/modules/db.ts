@@ -253,5 +253,14 @@ export const dbi = {
     } catch (error) {
       console.log(`List content feed settings error: ${error}`)
     }
+  },
+  updateContentFeedSettings: async (pubkey, feedSettings) => {
+    try {
+      await db.settings.where('pubkey').equals(pubkey).modify({
+        settings_json: feedSettings
+      })
+    } catch (error) {
+      console.log(`Update content feed settings error: ${error}`)
+    }
   }
 }

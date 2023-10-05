@@ -50,7 +50,7 @@ export const MainPage = () => {
 
     const feeds: Record<string, JSX.Element> = {
       [CONTENT_FEEDS.TRENDING_NOTES]: <TrendingNotes />,
-      [CONTENT_FEEDS.TRENDING_PROFILES]: <TrendingNotes />,
+      [CONTENT_FEEDS.TRENDING_PROFILES]: <TrendingProfiles />,
       [CONTENT_FEEDS.APPS]: <AppsNostro />
     }
     if (!guest) {

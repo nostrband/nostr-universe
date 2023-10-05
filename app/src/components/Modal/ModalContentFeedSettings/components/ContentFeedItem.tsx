@@ -9,9 +9,10 @@ type ContentFeedItemProps = {
   title: string
   checked: boolean
   id: string
+  onSwitchFeedVisibility: () => void
 }
 
-export const ContentFeedItem: FC<ContentFeedItemProps> = ({ title, checked, id }) => {
+export const ContentFeedItem: FC<ContentFeedItemProps> = ({ title, checked, id, onSwitchFeedVisibility }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
 
   const style = {
@@ -22,7 +23,7 @@ export const ContentFeedItem: FC<ContentFeedItemProps> = ({ title, checked, id }
   return (
     <StyledListItem ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <ListItemText>{title}</ListItemText>
-      <SwitchControl checked={checked} />
+      <SwitchControl checked={checked} onChange={onSwitchFeedVisibility} />
       {/* <StyledListItemButton>
             <DragIndicatorOutlinedIcon color="inherit" />
          </StyledListItemButton> */}

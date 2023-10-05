@@ -191,6 +191,18 @@ export const workspacesSlice = createSlice({
 
       const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey)
       if (ws) ws.lastKindApps[kind] = naddr
+    },
+    updateWorkspaceContentFeedSettings: (state, action) => {
+      const { workspacePubkey, newSettings } = action.payload
+      const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey)
+      if (ws) ws.contentFeedSettings = newSettings
+    },
+    switchFeedVisibilityWorkspace: (state, action) => {
+      const { workspacePubkey, newContentFeedSettings } = action.payload
+      const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey)
+      if (ws) {
+        ws.contentFeedSettings = newContentFeedSettings
+      }
     }
   }
 })
@@ -206,7 +218,9 @@ export const {
   setPermsWorkspace,
   deletePermWorkspace,
   setLastKindApp,
-  updatePinWorkspace
+  updatePinWorkspace,
+  updateWorkspaceContentFeedSettings,
+  switchFeedVisibilityWorkspace
 } = workspacesSlice.actions
 
 export const selectPin = (state: RootState, id: string): IPin | undefined => {
