@@ -331,6 +331,25 @@ export const useOpenApp = () => {
     )
   }
 
+  const backToLastPage = () => {
+    if (page === '/') {
+      handleClose('/')
+    } else {
+      handleClose(`?page=${page}`)
+    }
+  }
+
+  const releaseTab = async (tabId) => {
+    console.log("releaseTab", tabId)
+    await browser.canRelease(tabId)
+  }
+
+  const signEvent = async (event, pubkey?: string) => {
+    if (!pubkey) pubkey = currentPubkey
+    if (nsbKeys.includes(pubkey)) return await nsbSignEvent(pubkey, event)
+    else return await keystore.signEvent(event)
+  }
+
   const API = {
     // NIP-01
     getPublicKey: async function (tabId) {
@@ -350,8 +369,7 @@ export const useOpenApp = () => {
       const kindPerm = 'sign:' + event.kind
       const allPerm = 'sign'
       const exec = async () => {
-        if (nsbKeys.includes(tab.pubkey)) return await nsbSignEvent(tab.pubkey, event)
-        else return await keystore.signEvent(event)
+        return await signEvent(event, tab.pubkey)
       }
       // return await exec()
 
@@ -445,12 +463,12 @@ export const useOpenApp = () => {
       }
     },
     onHide: (tabId) => {
-      if (page === '/') {
-        handleClose('/')
-      } else {
-        handleClose(`?page=${page}`)
-      }
-//      handleClose(location.pathname)
+      backToLastPage()
+      // it's very common to open a tab, read it and hit 'back',
+      // most of the time it means user won't need the tab any more,
+      // but we won't delete the tab, we just release the webview,
+      // it will be re-created if needed. 
+      releaseTab(tabId)
     },
     setUrl: async (tabId, url) => {
       const tab = getTabAny(tabId)
@@ -596,7 +614,6 @@ export const useOpenApp = () => {
       const dataTabForOpen = {
         id: tab.id,
         url: tab.url,
-        hidden: true,
         apiCtx: tab.id
       }
 
@@ -736,6 +753,8 @@ export const useOpenApp = () => {
     findAppPin,
     sendTabPayment,
     onDeletePinnedApp,
-    onUpdatePinnedApp
+    onUpdatePinnedApp,
+    backToLastPage,
+    signEvent
   }
 }

@@ -62,7 +62,7 @@ export const ModalAddKeyContent = ({ handleClose }: { handleClose: () => void })
         </StyledListItem>
       </StyledList>
 
-      {/* <StyledViewTitle>NsecBunker key</StyledViewTitle>
+      <StyledViewTitle>NsecBunker key</StyledViewTitle>
       <StyledList dense>
         <StyledListItem disablePadding>
           <ListItemText primary="Events can be signed remotely by your nsecBunker" />
@@ -81,7 +81,7 @@ export const ModalAddKeyContent = ({ handleClose }: { handleClose: () => void })
           </StyledItemButton>
         </StyledListItem>
       </StyledList>
- */}
+
     </Container>
   )
 }

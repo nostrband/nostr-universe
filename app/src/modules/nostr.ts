@@ -1,7 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
 import NDK, { NDKRelaySet, NDKRelay, NDKEvent } from '@nostrband/ndk'
-import { Event, nip19 } from '@nostrband/nostr-tools'
+import { Event, getEventHash, nip19 } from '@nostrband/nostr-tools'
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { walletstore } from './walletstore'
 import { AuthoredEvent, createAuthoredEvent } from '@/types/authored-event'
@@ -66,8 +66,12 @@ const nsbRelays = ['wss://relay.nsecbunker.com']
 let ndk: NDK = null
 let nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
 nsbNDK
-  .connect(2000)
-  .then(() => console.log('nsb ndk connected'))
+  .connect(5000)
+  .then(() => {
+    console.log('nsb ndk connected')
+//    const r = nsbNDK.pool.relays.get(nsbRelays[0])
+//    r.
+  })
   .catch(() => console.log('nsb ndk connect error'))
 
 let nsbSigner: NDKNip46Signer = null
@@ -1666,10 +1670,16 @@ export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<N
     nsbSigner.connected = true
   }
 
-  event.pubkey = pubkey
-  event.id = getEventHash(event)
-  console.log('nsb signing event ', event.id, 'by', pubkey)
-  event.sig = await nsbSigner.sign(event)
+  const signed = { 
+    ...event, 
+    pubkey
+  }
+  signed.id = getEventHash(signed)
+  console.log('nsb signing event ', signed.id, 'by', pubkey)
+  signed.sig = await nsbSigner.sign(signed)
+  console.log('nsb signed event ', signed.id, signed.sig)
 
-  return event
+  return signed
 }
+
+localStorage.debug = 'ndk:*'
