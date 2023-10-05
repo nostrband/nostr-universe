@@ -57,6 +57,17 @@ export const StyledViewName = styled(
   color: theme.palette.light.light
 }))
 
+export const StyledViewKey = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography ref={ref} {...props} />
+  })
+)(({ theme }) => ({
+  fontWeight: 'normal',
+  textAlign: 'center',
+  marginBottom: 10,
+  color: theme.palette.light.light
+}))
+
 export const StyledViewAction = styled(Button)(() => ({
   textTransform: 'capitalize',
   borderRadius: 50,
