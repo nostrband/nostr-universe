@@ -13,6 +13,7 @@ import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSenso
 import { SortableContext, arrayMove } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { dbi } from '@/modules/db'
+import { StyledHint } from './styled'
 
 type ModalContentFeedSettingsContentProps = {
   handleClose: () => void
@@ -45,7 +46,7 @@ export const ModalContentFeedSettingsContent: FC<ModalContentFeedSettingsContent
     const oldIndex = contentFeeds.findIndex((feed) => feed.id === active.id)
     const newIndex = contentFeeds.findIndex((feed) => feed.id === over.id)
     const newContentFeeds = arrayMove(contentFeeds, oldIndex, newIndex)
-    await dbi.updateContentFeedSettings(currentPubkey, newContentFeeds)
+    dbi.updateContentFeedSettings(currentPubkey, newContentFeeds)
     dispatch(updateWorkspaceContentFeedSettings({ workspacePubkey: currentPubkey, newSettings: newContentFeeds }))
   }
 
@@ -57,7 +58,7 @@ export const ModalContentFeedSettingsContent: FC<ModalContentFeedSettingsContent
         }
         return f
       })
-      await dbi.updateContentFeedSettings(currentPubkey, newContentFeedSettings)
+      dbi.updateContentFeedSettings(currentPubkey, newContentFeedSettings)
       dispatch(switchFeedVisibilityWorkspace({ workspacePubkey: currentPubkey, newContentFeedSettings }))
     } catch (error) {
       console.log(error)
@@ -66,6 +67,8 @@ export const ModalContentFeedSettingsContent: FC<ModalContentFeedSettingsContent
 
   return (
     <Container>
+      <StyledHint>Drag the feeds to change their order.</StyledHint>
+
       <DndContext
         sensors={sensors}
         modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}

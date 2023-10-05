@@ -1,4 +1,15 @@
-import { ListItem, ListItemButton, Switch, SwitchProps, styled } from '@mui/material'
+import { ListItem, ListItemButton, Switch, SwitchProps, Typography, TypographyProps, styled } from '@mui/material'
+import { forwardRef } from 'react'
+
+export const StyledHint = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography variant="body2" ref={ref} {...props} />
+  })
+)(({ theme }) => ({
+  color: theme.palette.primary.contrastText,
+  fontWeight: 'normal',
+  marginBottom: 5
+}))
 
 export const StyledListItem = styled(ListItem)(({ theme }) => ({
   background: theme.palette.secondary.main,
