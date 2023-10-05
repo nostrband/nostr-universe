@@ -344,6 +344,12 @@ export const useOpenApp = () => {
     await browser.canRelease(tabId)
   }
 
+  const signEvent = async (event, pubkey?: string) => {
+    if (!pubkey) pubkey = currentPubkey
+    if (nsbKeys.includes(pubkey)) return await nsbSignEvent(pubkey, event)
+    else return await keystore.signEvent(event)
+  }
+
   const API = {
     // NIP-01
     getPublicKey: async function (tabId) {
@@ -363,8 +369,7 @@ export const useOpenApp = () => {
       const kindPerm = 'sign:' + event.kind
       const allPerm = 'sign'
       const exec = async () => {
-        if (nsbKeys.includes(tab.pubkey)) return await nsbSignEvent(tab.pubkey, event)
-        else return await keystore.signEvent(event)
+        return await signEvent(event, tab.pubkey)
       }
       // return await exec()
 
@@ -750,5 +755,6 @@ export const useOpenApp = () => {
     onDeletePinnedApp,
     onUpdatePinnedApp,
     backToLastPage,
+    signEvent
   }
 }

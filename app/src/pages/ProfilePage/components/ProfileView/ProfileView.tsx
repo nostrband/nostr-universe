@@ -4,16 +4,17 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useChangeAccount } from '@/hooks/workspaces'
-import { getProfileImage, isGuest } from '@/utils/helpers/prepare-data'
+import { getNpub, getProfileImage, isGuest } from '@/utils/helpers/prepare-data'
 import { ModalAccounts } from '../ModalAccounts/ModalAccounts'
 import {
   StyledViewAvatar,
   StyledViewAvatarSwitch,
   StyledViewAvatarWrapper,
   StyledViewBaner,
+  StyledViewKey,
   StyledViewName
 } from './styled'
-import { getRenderedUsername } from '@/utils/helpers/general'
+import { getRenderedUsername, getShortenText } from '@/utils/helpers/general'
 import { createMetaEvent } from '@/types/meta-event'
 import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
 import { userService } from '@/store/services/user.service'
@@ -56,6 +57,10 @@ export const ProfileView = () => {
 
   const isOpenModalAccounts = getModalOpened(MODAL_PARAMS_KEYS.KEYS_PROFILE)
 
+  const name = getRenderedUsername(currentProfile, currentPubKey)
+
+  const key = isGuest(currentPubKey) ? '' : getShortenText(getNpub(currentPubKey))
+
   return (
     <>
       <Container>
@@ -71,8 +76,11 @@ export const ProfileView = () => {
           </StyledViewAvatarWrapper>
         </StyledViewBaner>
         <StyledViewName variant="h5" component="div">
-          {getRenderedUsername(currentProfile, currentPubKey)}
+          {name}
         </StyledViewName>
+        <StyledViewKey variant="h6" component="div">
+          {key != name && key}
+        </StyledViewKey>
         {/* <StyledViewAction
           // onClick={handleOpenKeyImport}
           disableElevation

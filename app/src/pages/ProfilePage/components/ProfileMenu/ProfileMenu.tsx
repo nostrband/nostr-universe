@@ -8,9 +8,24 @@ import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapp
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermissions'
+import { useOpenApp } from '@/hooks/open-entity'
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
+  const { signEvent } = useOpenApp()
+
+  const testSignEvent = async () => {
+
+    const event = {
+      kind: 1,
+      created_at: Math.round(Date.now() / 1000),
+      content: "Test",
+      tags: [],
+    }
+
+    const e = await signEvent(event)
+    console.log("signed", e)
+  }
 
   return (
     <>
@@ -27,6 +42,14 @@ export const ProfilMenu = () => {
                 </StyledListItemIcon>
               </ListItemAvatar>
               <StyledListItemText primary="Key permissions" />
+            </ListItemButton>
+            <ListItemButton onClick={() => testSignEvent()}>
+              <ListItemAvatar>
+                <StyledListItemIcon>
+                  <ChecklistOutlinedIcon />
+                </StyledListItemIcon>
+              </ListItemAvatar>
+              <StyledListItemText primary="Test sign event" />
             </ListItemButton>
             {/* <ListItemButton>
             <ListItemAvatar>
