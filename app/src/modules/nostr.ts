@@ -182,11 +182,13 @@ function getEventAddr(e: NDKEvent | AugmentedEvent): string {
 
 function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
   return new Promise(async (ok) => {
+    const start = Date.now()
     const events = await ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
     for (const e of events.values()) {
       const augmentedEvent = rawEvent(e)
       putEventToCache(augmentedEvent)
     }
+    console.log("fetched in", Date.now() - start, "ms from", readRelays.length, "relays", JSON.stringify(filter))
     ok(events)
   })
 }
@@ -1297,10 +1299,22 @@ class Subscription<OutputEventType> {
   lastSub: NDKSubscription | null = null
   label: string = ''
   onEvent: (e: AugmentedEvent) => Promise<OutputEventType>
+  filter: NDKFilter
+  cb: (e: OutputEventType) => Promise<void>
 
   constructor(label: string, onEvent: (e: AugmentedEvent) => Promise<OutputEventType>) {
     this.label = label
     this.onEvent = onEvent
+  }
+
+  async onReconnect(): Promise<void> {
+    if (!this.lastSub) return
+    this.lastSub.stop()
+
+    // let the unsubs happen
+    setTimeout(async () => {
+      await this.lastSub.start()
+    }, 300)
   }
 
   async restart(filter: NDKFilter, cb: (e: OutputEventType) => Promise<void>) {
@@ -1309,6 +1323,9 @@ class Subscription<OutputEventType> {
       this.lastSub.stop()
       this.lastSub = null
     }
+
+    this.filter = filter
+    this.cb = cb
 
     const events = new Map<string, NDKEvent>()
     let eose = false
@@ -1682,4 +1699,63 @@ export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<N
   return signed
 }
 
-localStorage.debug = 'ndk:*'
+async function checkReconnect(ndk: NDK, force: boolean = false) {
+  if (!ndk) return
+
+  // how do we check the connectivity?
+  let reconnected = false
+  for (const [url, r] of ndk.pool.relays) {
+    const alive = force ? false : await new Promise((ok) => {
+
+      const sub = ndk.subscribe({
+        kinds: [0,1,3],
+        limit: 1
+      }, {
+        closeOnEose: true
+      },
+      new NDKRelaySet(new Set([r]), ndk),
+      /* autoStart */false)
+  
+      let alive = false
+      sub.on('event', (e) => {
+        console.log("checkReconnect", url, "got event", e.id)
+        alive = true
+      })
+      sub.on('eose', () => {
+        console.log("checkReconnect", url, "alive", alive)
+        ok(alive)
+      })
+      sub.start()
+    })
+
+    if (!alive) {
+      await new Promise((ok) => {
+        console.log("reconnecting", url)
+        reconnected = true
+        r.disconnect()
+        setTimeout(async () => {
+          await r.connect()
+          ok()
+        }, 300)
+      })
+    }
+  }
+
+  if (reconnected) {
+    profileSub.onReconnect()
+    contactListSub.onReconnect()
+  }
+}
+
+export function nostrOnResume() {
+  checkReconnect(ndk)
+  checkReconnect(nsbNDK)
+}
+
+export function reconnect() {
+  window.plugins.toast.showShortBottom(`Reconnecting...`)
+  checkReconnect(ndk, true)
+  checkReconnect(nsbNDK, true)
+}
+
+localStorage.debug = ''

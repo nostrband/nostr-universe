@@ -3,6 +3,7 @@ import { ListItemButton, ListItemAvatar } from '@mui/material'
 // import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined'
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined'
 import TocOutlinedIcon from '@mui/icons-material/TocOutlined'
+import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined';
 // import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapper } from './styled'
@@ -10,6 +11,7 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermissions'
 import { useOpenApp } from '@/hooks/open-entity'
+import { reconnect } from '@/modules/nostr'
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
@@ -26,6 +28,10 @@ export const ProfilMenu = () => {
 
     const e = await signEvent(event)
     console.log("signed", e)
+  }
+
+  const handleReconnect = () => {
+    reconnect()
   }
 
   return (
@@ -54,13 +60,22 @@ export const ProfilMenu = () => {
               </ListItemAvatar>
               <StyledListItemText primary="Content feeds" />
             </ListItemButton>
-            <ListItemButton onClick={() => testSignEvent()}>
+            {false && (<ListItemButton onClick={() => testSignEvent()}>
               <ListItemAvatar>
                 <StyledListItemIcon>
                   <ChecklistOutlinedIcon />
                 </StyledListItemIcon>
               </ListItemAvatar>
               <StyledListItemText primary="Test sign event" />
+            </ListItemButton>
+            )}
+            <ListItemButton onClick={handleReconnect}>
+              <ListItemAvatar>
+                <StyledListItemIcon>
+                  <CachedOutlinedIcon />
+                </StyledListItemIcon>
+              </ListItemAvatar>
+              <StyledListItemText primary="Reconnect relays" />
             </ListItemButton>
             {/* <ListItemButton>
             <ListItemAvatar>
