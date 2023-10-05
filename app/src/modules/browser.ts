@@ -5,6 +5,82 @@ let API = {}
 const setAPI = (a) => (API = a)
 
 const refs = {}
+const infos = {}
+
+const freeRefs = []
+const MAX_REFS = 5
+
+function goToUrl(url) {
+  window.history.replaceState({}, null, url)
+  window.location.reload()
+}
+
+const destroy = async (id, idle) => {
+  console.log("destroy tab", id, "idle", idle)
+
+  // delete from refs first
+  const ref = refs[id]
+  delete refs[id]
+
+  if (!idle)
+    delete infos[id]
+
+  // wait until we release resources
+  if (ref) {
+    ref.info.released = true
+    await ref.navigate("about:blank")
+
+    // add to info list
+    freeRefs.push(ref)
+  }
+}
+
+const releaseIdle = () => {
+
+  console.log("infos ", Object.keys(infos).length)
+  console.log("refs ", Object.keys(refs).length)
+  console.log("freeRefs ", freeRefs.length)
+
+  // sort tabs by lastActive and canRelease
+  const tabs = Object.values(refs)
+  tabs.sort((ra, rb) => {
+    const a = ra.info
+    const b = rb.info
+    if (a.canRelease === b.canRelease)
+      // desc by time
+      return b.lastActiveTime - a.lastActiveTime
+    else
+      return a.canRelease ? -1 : 1
+  })
+  console.log("releaseIdle tabs", JSON.stringify(tabs.map(t => ({
+    id: t.id, 
+    url: t.info.url, 
+    lastActiveTime: t.info.lastActiveTime,
+    canRelease: t.info.canRelease,
+  }))))
+
+  // release active tabs that can/should be released
+  while (tabs.length > 0) {
+    const ref = tabs.shift()
+    if (ref.info.canRelease || tabs.length > MAX_REFS) {
+      destroy(ref.id, /* idle */true)
+    }
+  }
+
+  // drop freeRef tabs if there are too many
+  while (freeRefs.length > 0 
+    && (tabs.length + freeRefs.length) > MAX_REFS * 2) {
+      const ref = freeRefs.shift()
+      console.log("close released tab", ref.id)
+      ref.close()
+  }
+
+  // schedule next gc cycle
+  setTimeout(releaseIdle, 3000)
+}
+
+// launch GC
+releaseIdle()
 
 const initTab = () => {
   // this code will be executed in the opened tab,
@@ -412,82 +488,57 @@ async function executeFuncAsync(name, fn, ...args) {
   return this.executeScriptAsync(code, name)
 }
 
-// returns ref to the browser window
-export function open(params) {
-  if (params.id in refs) {
-    console.log('browser ', id, 'already opened')
-    return
-  }
-
-  const header = document.getElementById('header')
-  const main = document.getElementById('main')
-  const footer = document.getElementById('tab-menu')
-  const bottomOffset = 50 - 1
-  const bottom = Math.round(window.devicePixelRatio * (bottomOffset + (params.bottom || 0)))
-  const loc = 'no' // params.menu ? "no" : "yes";
-  const menu = params.menu ? 'no' : 'yes'
-  const hidden = params.hidden ? 'yes' : 'no'
-  const geticon = params.geticon ? 'yes' : 'no'
-
-  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
-  console.log('browser options', options)
-
-  const ref = cordova.InAppBrowser.open(params.url, '_blank', options)
-  ref.executeScriptAsync = executeScriptAsync
-  ref.executeFuncAsync = executeFuncAsync
-
-  // helper
-  const init = async () => {
+function setEventListeners(ref) {
+   // helper
+   const init = async (r) => {
     // inject our scripts
 
     // main init to enable comms interface
-    await ref.executeFuncAsync('initTab', initTab)
+    await r.executeFuncAsync('initTab', initTab)
 
-    if (!params.menu) {
-      // nostr-zap
-      //const asset = await getAsset("js/nostr-zap.js");
-      //console.log("nostr-zap asset", asset.length);
-      // await ref.executeScriptAsync(asset, "nostr-zap");
-
-      // init context menu
-      await ref.executeFuncAsync('nostrMenuConnect', nostrMenuConnect)
-    }
+    // init context menu
+    await r.executeFuncAsync('nostrMenuConnect', nostrMenuConnect)
   }
 
-  let state = ''
   ref.addEventListener('loadstart', async (event) => {
-    if (state === 'starting') return
+    console.log("loadstart ", event.url, "released", JSON.stringify(ref))
+    if (ref.info.released) return
+    if (ref.info.state === 'starting') return
 
-    state = 'starting'
-    if (API.onLoadStart) await API.onLoadStart(params.apiCtx, event)
+    ref.info.state = 'starting'
+    if (API.onLoadStart) await API.onLoadStart(ref.info.apiCtx, event)
   })
 
   ref.addEventListener('loadinit', async (event) => {
+    if (ref.info.released || event.url === 'about:blank') return
     console.log('loadinit', event.url)
-    if (state === 'init') return
-    state = 'init'
-    await init()
+    if (ref.info.state === 'init') return
+    ref.info.state = 'init'
+    ref.info.url = event.url
+    await init(ref)
   })
 
   ref.addEventListener('loadstop', async (event) => {
-    if (state !== 'init') {
-      state = 'init'
-      await init()
+    if (ref.info.released) return
+    if (ref.info.state !== 'init') {
+      ref.info.state = 'init'
+      await init(ref)
     }
 
     // after everything is done
-    if (API.onLoadStop) await API.onLoadStop(params.apiCtx, event)
+    if (API.onLoadStop) await API.onLoadStop(ref.info.apiCtx, event)
   })
 
   // handle api requests
   ref.addEventListener('message', async (msg) => {
+    if (ref.info.released) return
     // console.log("got iab message", JSON.stringify(msg));
     const id = msg.data.id.toString()
     const method = msg.data.method
     let target = null
     let targetArgs = msg.data.params
     if (method in API) target = API
-    if (params.apiCtx !== undefined) targetArgs = [params.apiCtx, ...targetArgs]
+    if (ref.info.apiCtx !== undefined) targetArgs = [ref.info.apiCtx, ...targetArgs]
 
     let err = null
     let reply = null
@@ -500,7 +551,7 @@ export function open(params) {
 
       // FIXME remove later when we switch to onboarding
       if (method === 'getPublicKey' && API.onGetPubkey) {
-        await API.onGetPubkey(params.apiCtx, reply)
+        await API.onGetPubkey(ref.info.apiCtx, reply)
       }
     } else {
       err = `Unknown method ${method}`
@@ -522,69 +573,161 @@ export function open(params) {
 
   // tab menu, for now just closes the tab
   ref.addEventListener('menu', async () => {
-    if (API.onMenu) await API.onMenu(params.apiCtx)
+    if (ref.info.released) return
+    if (API.onMenu) await API.onMenu(ref.info.apiCtx)
   })
 
   // tab is hidden
   ref.addEventListener('hide', async () => {
-    if (API.onHide) await API.onHide(params.apiCtx)
+    if (ref.info.released) return
+    if (API.onHide) await API.onHide(ref.info.apiCtx)
   })
 
   // handle clicks outside the inappbrowser to
   // intercept them and forward to our main window
   ref.addEventListener('click', async (event) => {
+    if (ref.info.released) return
     const x = event.x / window.devicePixelRatio
     const y = event.y / window.devicePixelRatio
     console.log('browser click', event.x, event.y, ' => ', x, y)
-    if (API.onClick) await API.onClick(params.apiCtx, x, y)
+    if (API.onClick) await API.onClick(ref.info.apiCtx, x, y)
   })
 
   ref.addEventListener('blank', async (event) => {
-    if (API.onBlank) await API.onBlank(params.apiCtx, event.url)
+    if (ref.info.released) return
+    if (API.onBlank) await API.onBlank(ref.info.apiCtx, event.url)
   })
 
   ref.addEventListener('beforeload', async (event, cb) => {
+    if (ref.info.released) return
     console.log('beforeload', JSON.stringify(event))
     if (API.onBeforeLoad) {
       // handled by our code?
-      if (await API.onBeforeLoad(params.apiCtx, event.url)) return
+      if (await API.onBeforeLoad(ref.info.apiCtx, event.url)) return
     }
     cb(event.url)
   })
 
   ref.addEventListener('icon', async (event) => {
-    if (API.onIcon) await API.onIcon(params.apiCtx, event.icon)
-  })
+    if (ref.info.released) return
+    if (API.onIcon) await API.onIcon(ref.info.apiCtx, event.icon)
+  }) 
+}
 
-  refs[params.id] = ref
+async function createRef(info) {
+  console.log("creating tab", JSON.stringify(info))
+
+  const bottomOffset = 50 - 1
+  const bottom = Math.round(window.devicePixelRatio * bottomOffset)
+  const loc = 'no' // params.menu ? "no" : "yes";
+  const menu = 'no' //params.menu ? 'no' : 'yes'
+  const hidden = 'yes' // params.hidden ? 'yes' : 'no'
+  const geticon = 'yes' //params.geticon ? 'yes' : 'no'
+
+  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
+  console.log('browser options', options)
+
+  const ref = cordova.InAppBrowser.open(info.url, '_blank', options)
+  ref.executeScriptAsync = executeScriptAsync;
+  ref.executeFuncAsync = executeFuncAsync;
+  ref.id = info.id
+  ref.info = info
+
+  setEventListeners(ref)
+
+  refs[ref.id] = ref
+}
+
+// returns ref to the browser window
+export async function open(params) {
+  if (params.id in refs) {
+    console.log('browser ', params.id, 'already opened')
+    return
+  }
+
+  const info = {
+    id: params.id,
+    apiCtx: params.apiCtx,
+    canRelease: false,
+    lastActiveTime: Date.now(),
+    shown: false,
+    released: false,
+    state: '',
+    url: params.url,
+  }
+  infos[info.id] = info
+
+  await ensureTab(info.id)
+}
+
+const ensureTab = async (id) => {
+  if (id in refs) return
+
+  const info = infos[id]
+  info.released = false
+
+  if (freeRefs.length > 0) {
+    const ref = freeRefs.shift()
+    console.log("reuse ref", ref.id, "url", info.url)
+    ref.id = info.id
+    ref.info = info
+    refs[ref.id] = ref
+    await ref.navigate(info.url)
+
+  } else {
+
+    await createRef(info)
+  }
 }
 
 const show = async (id) => {
-  await refs[id]?.show()
+  if (!(id in infos)) return
+  await ensureTab(id)
+  const ref = refs[id]
+  ref.info.lastActiveTime = Date.now()
+  ref.info.shown = true
+  ref.info.canRelease = false
+  await ref.show()
 }
 
 const hide = async (id) => {
-  await refs[id]?.hide()
+  if (!(id in infos)) return
+  const ref = refs[id]
+  if (ref)
+    await ref.hide()
+  const info = infos[id]
+  info.shown = false
 }
 
 const stop = async (id) => {
+  // ignore if tab is released
+  if (!(id in refs)) return
   await refs[id]?.stop()
 }
 
 const reload = async (id) => {
+  // ignore if tab is released
+  if (!(id in refs)) return
   await refs[id]?.reload()
 }
 
 const close = async (id) => {
-  if (!(id in refs)) return
+  if (!(id in infos)) return
+  destroy(id)
+}
 
-  const ref = refs[id]
-  await ref.close()
-  delete refs[id]
+const canRelease = (id) => {
+  if (!(id in infos)) return
+
+  const info = infos[id]
+  info.canRelease = true
 }
 
 const screenshot = async (id) => {
   if (!(id in refs)) return
+
+  const info = infos[id]
+  info.lastActiveTime = Date.now()
 
   const ref = refs[id]
   return new Promise((ok) => {
@@ -599,45 +742,6 @@ const screenshot = async (id) => {
   })
 }
 
-const generateMenu = () => {
-  document.body.innerHTML =
-    "<div style='border: 1px solid #000; width: 100%, height: 100%; background-color: white;'><button onclick='javascript:parent.nostrCordovaPlugin.setUrl(\"test1\")'>test</button><br><button onclick='javascript:parent.nostrCordovaPlugin.setUrl(\"test2\")'>test2</button></div>"
-}
-
-const createMenu = (code) => {
-  console.log('createMenu code ', code)
-  let iframe = document.createElement('iframe')
-  const html = `<body><script>${code}</script></body>`
-  iframe.style.position = 'absolute'
-  iframe.style.top = '50px'
-  iframe.style.right = '50px'
-  iframe.style.width = '300px'
-  iframe.style.height = '500px'
-  document.body.appendChild(iframe)
-  iframe.contentWindow.document.open()
-  iframe.contentWindow.document.write(html)
-  iframe.contentWindow.document.close()
-
-  function onClick() {
-    if (iframe) {
-      console.log('close iframe')
-      iframe.remove()
-      window.removeEventListener('click', onClick)
-    }
-  }
-
-  window.addEventListener('click', onClick)
-  iframe.addEventListener('click', (e) => {
-    e.stopPropagation()
-  })
-}
-
-export async function showMenu(ref) {
-  const args = []
-  const code = `(${generateMenu.toString()})(...${JSON.stringify(args)})`
-  await ref.executeFuncAsync('menu', createMenu, code)
-}
-
 export const browser = {
   open,
   show,
@@ -647,5 +751,5 @@ export const browser = {
   reload,
   screenshot,
   setAPI,
-  showMenu
+  canRelease
 }
