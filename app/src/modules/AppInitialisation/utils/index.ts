@@ -9,7 +9,9 @@ import { walletstore } from '@/modules/walletstore'
 import { setCurrentPubkey, setKeys, setReadKeys, setNsbKeys } from '@/store/reducers/keys.slice'
 import { addTabs } from '@/store/reducers/tab.slice'
 import { addWorkspaces } from '@/store/reducers/workspaces.slice'
+import { DEFAULT_CONTENT_FEED_SETTINGS } from '@/types/content-feed'
 import { WorkSpace } from '@/types/workspace'
+import { v4 as uuidv4 } from 'uuid'
 
 // ?? зачем дефолтные аппы ??
 const defaultApps = [
@@ -202,6 +204,19 @@ export const getTabGroupId = (pt) => {
   return getOrigin(pt.url) // pt.appNaddr ||
 }
 
+export const bootstrapSettings = async (pubkey) => {
+  const isSettingsExist = await dbi.checkPresenceOfSettings(pubkey)
+
+  if (!isSettingsExist) {
+    console.log("Creating default ContentFeedSettings")
+    await dbi.setContentFeedSettings({
+      id: uuidv4(),
+      pubkey,
+      settings_json: DEFAULT_CONTENT_FEED_SETTINGS
+    })
+  }
+}
+
 export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => {
   console.log('loadWorkspace', pubkey)
   // ?? props
@@ -210,6 +225,11 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
   const pins = await dbi.listPins(pubkey)
   const tabs = await dbi.listTabs(pubkey)
   const perms = await dbi.listPerms(pubkey)
+
+  await bootstrapSettings(pubkey)
+
+  const contentFeedSettings = (await dbi.getContentFeedSettingsByPubkey(pubkey)) || []
+
   console.log('perms', JSON.stringify(perms))
 
   const pinsSort = pins.sort((a, b) => a.order - b.order)
@@ -226,7 +246,8 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
     pins: pinsSort,
     lastKindApps: {},
     currentTabId: '',
-    perms
+    perms,
+    contentFeedSettings: contentFeedSettings
   }
 
   dispatch(addWorkspaces({ workspaces: [workspace] }))

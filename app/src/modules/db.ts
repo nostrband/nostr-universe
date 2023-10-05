@@ -6,7 +6,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(11).stores({
+db.version(12).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -15,7 +15,8 @@ db.version(11).stores({
   flags: 'id,pubkey,name,value',
   readOnlyKeys: '&pubkey,current',
   nsecbunkerKeys: '&pubkey,localPubkey,token',
-  perms: '[pubkey+app+name],[pubkey+app],value'
+  perms: '[pubkey+app+name],[pubkey+app],value',
+  contentFeedSettings: 'id, pubkey, settings_json'
 })
 
 export const dbi = {
@@ -228,6 +229,38 @@ export const dbi = {
       if (!n) await db.flags.add({ id, pubkey, name, value })
     } catch (error) {
       console.log(`Set flag error: ${error}`)
+    }
+  },
+  setContentFeedSettings: async (settings) => {
+    try {
+      await db.contentFeedSettings.add(settings)
+    } catch (error) {
+      console.log(`Set content feed settings error: ${error}`)
+    }
+  },
+  checkPresenceOfSettings: async (pubkey) => {
+    try {
+      const count = await db.contentFeedSettings.where('pubkey').equals(pubkey).count()
+      return count !== 0
+    } catch (error) {
+      console.log(`Check presence of content feed settings error: ${error}`)
+    }
+  },
+  getContentFeedSettingsByPubkey: async (pubkey) => {
+    try {
+      const settings = await db.contentFeedSettings.where('pubkey').equals(pubkey).first()
+      return settings?.settings_json || []
+    } catch (error) {
+      console.log(`List content feed settings error: ${error}`)
+    }
+  },
+  updateContentFeedSettings: async (pubkey, feedSettings) => {
+    try {
+      await db.contentFeedSettings.where('pubkey').equals(pubkey).modify({
+        settings_json: feedSettings
+      })
+    } catch (error) {
+      console.log(`Update content feed settings error: ${error}`)
     }
   }
 }

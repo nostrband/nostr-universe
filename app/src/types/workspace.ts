@@ -1,3 +1,4 @@
+import { IContentFeedSetting } from './content-feed'
 import { IPerm } from './permission-req'
 
 export interface IPin {
@@ -19,4 +20,5 @@ export type WorkSpace = {
   }
   currentTabId?: string
   perms: IPerm[]
+  contentFeedSettings: IContentFeedSetting[]
 }

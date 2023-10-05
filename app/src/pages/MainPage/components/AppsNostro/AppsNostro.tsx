@@ -1,5 +1,5 @@
 import { Container } from '@/layout/Container/Conatiner'
-import { StyledTitle } from './styled'
+import { StyledTitle, StyledWrapper } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { fetchApps } from '@/modules/nostr'
@@ -42,7 +42,7 @@ export const AppsNostro = memo(function AppsNostro() {
   }, [handleOpenApp, apps, isLoading, handleReloadApps])
 
   return (
-    <>
+    <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Apps
@@ -50,6 +50,6 @@ export const AppsNostro = memo(function AppsNostro() {
       </Container>
 
       <HorizontalSwipeContent>{renderContent()}</HorizontalSwipeContent>
-    </>
+    </StyledWrapper>
   )
 })
