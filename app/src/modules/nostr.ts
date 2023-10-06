@@ -1676,9 +1676,9 @@ export async function checkNsbSigner() {
     console.log('nsb check...')
     await nsbSigner.blockUntilReady()
     nsbSigner.connected = true
-    console.log("nsb connected")
+    console.log('nsb connected')
   } else {
-    console.log("nsb already connected")
+    console.log('nsb already connected')
   }
 }
 

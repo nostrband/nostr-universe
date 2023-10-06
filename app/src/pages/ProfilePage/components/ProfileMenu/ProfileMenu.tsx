@@ -14,9 +14,9 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermissions'
 import { useOpenApp } from '@/hooks/open-entity'
 import { checkNsbSigner, reconnect } from '@/modules/nostr'
-import { showToast } from '@/utils/helpers/general';
-import { useAppSelector } from '@/store/hooks/redux';
-import { useState } from 'react';
+import { showToast } from '@/utils/helpers/general'
+import { useAppSelector } from '@/store/hooks/redux'
+import { useState } from 'react'
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
@@ -46,10 +46,10 @@ export const ProfilMenu = () => {
     setCheckNSB(true)
     try {
       await checkNsbSigner()
-      showToast("NsecBunker connected!")
+      showToast('NsecBunker connected!')
     } catch (e) {
-      console.log("failed nsb: ", e)
-      showToast("Failed to check NsecBunker")
+      console.log('failed nsb: ', e)
+      showToast('Failed to check NsecBunker')
     }
     setCheckNSB(false)
   }
@@ -113,10 +113,7 @@ export const ProfilMenu = () => {
               <StyledListItemText primary="Signed events" />
             </ListItemButton>
             {isNsb && (
-              <ListItemButton
-                disabled={checkNSB}
-                onClick={handleNsbConnect}
-              >
+              <ListItemButton disabled={checkNSB} onClick={handleNsbConnect}>
                 <ListItemAvatar>
                   <StyledListItemIcon>
                     <PublishedWithChangesOutlinedIcon />

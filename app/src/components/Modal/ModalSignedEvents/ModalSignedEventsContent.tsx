@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Dialog, TextField } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
-import { StyledWrapDialogContent } from './styled'
+import { StyledFilterInput, StyledWrapDialogContent } from './styled'
 import { SignedEvent } from './SignedEvent'
 import { dbi } from '@/modules/db'
 import { Input } from '@/shared/Input/Input'
@@ -10,19 +10,21 @@ import { useAppSelector } from '@/store/hooks/redux'
 // const eventsMoc = [
 //   {
 //     id: '1',
-//     url: 'some url 1',
-//     kind: 'some kind 1',
-//     time: '10:30',
+//     url: 'http://www.test.com/3434343/',
+//     kind: '1',
+//     timestamp: 1696603164903,
 //     eventJson: 'some json 1',
-//     eventId: 'some event 1'
+//     eventId: 'some event 1',
+//     pubkey: 'pubkey'
 //   },
 //   {
 //     id: '2',
-//     url: 'some url 2',
-//     kind: 'some kind 2',
-//     time: '20:30',
+//     url: 'http://www.test.com/3434343/',
+//     kind: '30001',
+//     timestamp: 1696603164903,
 //     eventJson: 'some json 2',
-//     eventId: 'some event 2'
+//     eventId: 'some event 2',
+//     pubkey: 'pubkey'
 //   }
 // ]
 
@@ -64,8 +66,6 @@ export const ModalSignedEventsContent = () => {
     getEvents()
   }, [])
 
-  console.log(JSON.stringify({ events }))
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterContentValue(e.target.value)
   }
@@ -76,18 +76,19 @@ export const ModalSignedEventsContent = () => {
 
   return (
     <Container>
-      <Input
-        placeholder="Filter content"
-        onChange={handleChange}
-        value={filterContentValue}
-        inputProps={{
-          autoFocus: false
-        }}
-      />
+      <StyledFilterInput>
+        <Input
+          placeholder="Filter content"
+          onChange={handleChange}
+          value={filterContentValue}
+          inputProps={{
+            autoFocus: false
+          }}
+        />
+      </StyledFilterInput>
       {filteredEvents.map((event) => (
         <SignedEvent
           key={event.id}
-          id={event.id}
           url={event.url}
           kind={event.kind}
           time={event.timestamp}

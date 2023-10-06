@@ -108,13 +108,13 @@ export const useAddKey = () => {
 
     // launch a connection check
     checkNsbSigner()
-    .then(() => {
-      showToast("NsecBunker connected!")
-    })
-    .catch((e) => {
-      console.log("nsb error", e)
-      showToast("NsecBunker error!")
-    })
+      .then(() => {
+        showToast('NsecBunker connected!')
+      })
+      .catch((e) => {
+        console.log('nsb error', e)
+        showToast('NsecBunker error!')
+      })
   }
 
   return {
