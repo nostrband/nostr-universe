@@ -9,6 +9,7 @@ import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 import OpenInBrowserOutlinedIcon from '@mui/icons-material/OpenInBrowserOutlined'
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined'
 import { StyledInput, StyledItemIconAvatar, StyledItemText, StyledMenuWrapper } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
@@ -20,7 +21,7 @@ import { ReactNode, useCallback } from 'react'
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
-  const { openZap, openBlank, sendTabPayment } = useOpenApp()
+  const { openBlank, sendTabPayment } = useOpenApp()
   const tabId = searchParams.get('tabId') || ''
   const tabUrl = searchParams.get('tabUrl') || ''
   const text = searchParams.get('text') || ''
@@ -42,7 +43,13 @@ export const ModalContextMenuContent = () => {
   }
 
   const handleZap = async () => {
-    openZap(addr)
+    const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
+    openBlank({ url: `${ZAP_URL}${addr}` }, { replace: true })
+  }
+
+  const handleReplies = async () => {
+    const URL = 'https://replies.nostrapps.org/?id='
+    openBlank({ url: `${URL}${addr}` }, { replace: true })
   }
 
   const handleShareTabUrl = async () => {
@@ -107,6 +114,7 @@ export const ModalContextMenuContent = () => {
           {invoice && renderItem('Pay invoice', <AccountBalanceWalletOutlinedIcon />, handlePayInvoice)}
           {addr && renderItem('Open with', <AppsOutlinedIcon />, handleOpenModalSelect)}
           {addr && renderItem('Zap', <FlashOnIcon />, handleZap)}
+          {addr && renderItem('View replies', <ForumOutlinedIcon />, handleReplies)}
           {href && renderItem('Open in new tab', <OpenInNewOutlinedIcon />, handleOpenHref)}
           {href && renderItem('Open in browser', <OpenInBrowserOutlinedIcon />, handleOpenHrefIntent)}
           {value && renderItem('Share text', <ShareOutlinedIcon />, handleShareValue)}
