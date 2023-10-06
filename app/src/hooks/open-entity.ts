@@ -55,6 +55,7 @@ import {
 import { ITab } from '@/types/tab'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
 import { IPin } from '@/types/workspace'
+import { showToast } from '@/utils/helpers/general'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
@@ -290,7 +291,7 @@ export const useOpenApp = () => {
     try {
       wallet = await walletstore.getInfo()
     } catch (e) {
-      window.plugins.toast.showShortBottom(`Add wallet first!`)
+      showToast(`Add wallet first!`)
       // don't let app distinguish btw no-wallet and disallowed
       throw new Error(error)
     }
@@ -301,10 +302,10 @@ export const useOpenApp = () => {
         console.log('sending payment', paymentRequest)
         const res = await sendPayment(wallet, paymentRequest)
         console.log('payment result', res)
-        window.plugins.toast.showShortBottom(`Sent ${amount / 1000} sats`)
+        showToast(`Sent ${amount / 1000} sats`)
         return res // forward to the tab
       } catch (e) {
-        window.plugins.toast.showShortBottom(`Payment failed: ${e}`)
+        showToast(`Payment failed: ${e}`)
         throw e // forward to the tab
       }
     }
@@ -424,7 +425,7 @@ export const useOpenApp = () => {
 
     clipboardWriteText: async function (tabId, text) {
       const r = await window.cordova.plugins.clipboard.copy(text)
-      window.plugins.toast.showShortBottom('Copied')
+      showToast('Copied')
       return r
     },
     clipboardReadText: async function (tabId) {

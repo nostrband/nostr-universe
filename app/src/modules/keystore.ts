@@ -27,7 +27,10 @@ const keys = {
   }
 }
 
-const privateKeys = {}
+let privateKeys = {}
+try {
+  privateKeys = JSON.parse(window.localStorage.getItem('privateKeys')) || {}
+} catch {}
 
 let currentPubkey = '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd'
 
@@ -53,6 +56,11 @@ const stub = {
       name: 'GeneratedKey'
     }
     privateKeys[pk] = key
+    try {
+      window.localStorage.setItem('privateKeys', JSON.stringify(privateKeys))
+    } catch (e) {
+      console.log("Failed to write key to localStorage")
+    }
     currentPubkey = pk
     console.log('GENERATED KEY', pk)
     return {

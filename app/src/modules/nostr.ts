@@ -24,6 +24,7 @@ import { LiveEvent, createLiveEvent } from '@/types/live-events'
 import { WalletInfo } from '@/types/wallet-info'
 import { ContactListEvent, createContactListEvent } from '@/types/contact-list-event'
 import { AppNostr } from '@/types/app-nostr'
+import { showToast } from '@/utils/helpers/general'
 
 const KIND_META: number = 0
 const KIND_NOTE: number = 1
@@ -51,14 +52,13 @@ export const nostrbandRelayAll = 'wss://relay.nostr.band/all'
 
 const readRelays = [
   nostrbandRelay,
-  //  "wss://relay.damus.io", // too slow
-  'wss://eden.nostr.land',
+  'wss://relay.damus.io',
   'wss://nos.lol',
   'wss://relay.nostr.bg',
   'wss://nostr.mom'
 ]
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
-export const allRelays = [nostrbandRelayAll, ...writeRelays]
+const allRelays = [nostrbandRelayAll, ...writeRelays]
 
 const nsbRelays = ['wss://relay.nsecbunker.com']
 
@@ -69,8 +69,6 @@ nsbNDK
   .connect(5000)
   .then(() => {
     console.log('nsb ndk connected')
-//    const r = nsbNDK.pool.relays.get(nsbRelays[0])
-//    r.
   })
   .catch(() => console.log('nsb ndk connect error'))
 
@@ -1753,7 +1751,7 @@ export function nostrOnResume() {
 }
 
 export function reconnect() {
-  window.plugins.toast.showShortBottom(`Reconnecting...`)
+  showToast(`Reconnecting...`)
   checkReconnect(ndk, true)
   checkReconnect(nsbNDK, true)
 }

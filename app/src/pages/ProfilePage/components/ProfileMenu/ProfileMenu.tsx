@@ -12,6 +12,7 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermissions'
 import { useOpenApp } from '@/hooks/open-entity'
 import { reconnect } from '@/modules/nostr'
+import { showToast } from '@/utils/helpers/general';
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
@@ -26,8 +27,13 @@ export const ProfilMenu = () => {
       tags: [],
     }
 
-    const e = await signEvent(event)
-    console.log("signed", e)
+    try {
+      const e = await signEvent(event)
+      console.log("NSB signed ok", e)
+      showToast(`Signed!`)
+    } catch (e) {
+      showToast(`Error: ${e}`)
+    }
   }
 
   const handleReconnect = () => {

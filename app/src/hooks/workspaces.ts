@@ -6,6 +6,7 @@ import { db, dbi } from '@/modules/db'
 import { updateWorkspacePubkey } from '@/store/reducers/workspaces.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { nip19 } from '@nostrband/nostr-tools'
+import { showToast } from '@/utils/helpers/general'
 
 export const useAddKey = () => {
   const dispatch = useAppDispatch()
@@ -52,7 +53,7 @@ export const useAddKey = () => {
     } catch (e) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      window.plugins.toast.showShortBottom(`Error: ${e}`)
+      showToast(`Error: ${e}`)
     }
   }
 
@@ -70,17 +71,13 @@ export const useAddKey = () => {
 
       pubkey = data
     } catch (e) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      window.plugins.toast.showShortBottom(`Error: ${e}`)
+      showToast(`Error: ${e}`)
       return
     }
     console.log('nsb pubkey', pubkey)
 
     if (keys.includes(pubkey)) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      window.plugins.toast.showShortBottom(`Key already exists!`)
+      showToast(`Key already exists!`)
       return
     }
 
@@ -90,10 +87,8 @@ export const useAddKey = () => {
       console.log('generateKey', JSON.stringify(r))
       localPubkey = r.pubKey
     } catch (e) {
-      console.log('generatekey error ', JSON.stringify(e))
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      window.plugins.toast.showShortBottom(`Error: ${e}`)
+      console.log('generatekey error ', e)
+      showToast(`Error: ${e}`)
       return
     }
     console.log('localPubkey', localPubkey)
