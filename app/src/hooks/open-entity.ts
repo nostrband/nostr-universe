@@ -728,11 +728,6 @@ export const useOpenApp = () => {
     )
   }
 
-  const openZap = (id) => {
-    const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
-    openBlank({ url: `${ZAP_URL}${id}` }, { replace: true })
-  }
-
   return {
     openApp,
     onStopLoadTab,
@@ -746,7 +741,6 @@ export const useOpenApp = () => {
     replyCurrentPermRequest,
     deletePermission,
     onCloseTabs,
-    openZap,
     onPinApp,
     onPinTab,
     onUnPinTab,
