@@ -7,6 +7,8 @@ import { updateWorkspacePubkey } from '@/store/reducers/workspaces.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { nip19 } from '@nostrband/nostr-tools'
 import { showToast } from '@/utils/helpers/general'
+import { checkNsbSigner } from '@/modules/nostr'
+//import { checkNsbSigner, setNsbSigner } from '@/modules/nostr'
 
 export const useAddKey = () => {
   const dispatch = useAppDispatch()
@@ -101,6 +103,18 @@ export const useAddKey = () => {
     })
 
     await setPubkey(pubkey)
+
+    showToast('Authorize in NsecBunker')
+
+    // launch a connection check
+    checkNsbSigner()
+    .then(() => {
+      showToast("NsecBunker connected!")
+    })
+    .catch((e) => {
+      console.log("nsb error", e)
+      showToast("NsecBunker error!")
+    })
   }
 
   return {

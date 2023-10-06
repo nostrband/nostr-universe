@@ -1671,6 +1671,17 @@ export function setNsbSigner(token: string) {
   nsbSigner = new NDKNip46Signer(nsbNDK, token, new NDKNip07Signer())
 }
 
+export async function checkNsbSigner() {
+  if (!nsbSigner.connected) {
+    console.log('nsb check...')
+    await nsbSigner.blockUntilReady()
+    nsbSigner.connected = true
+    console.log("nsb connected")
+  } else {
+    console.log("nsb already connected")
+  }
+}
+
 export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<NostrEvent> {
   if (!nsbSigner) throw new Error(`NSB signer not found for ${pubkey}`)
   if (!nsbSigner.connected) {

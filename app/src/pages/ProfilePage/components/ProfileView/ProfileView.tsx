@@ -28,7 +28,7 @@ import { Input } from '@/shared/Input/Input'
 export const ProfileView = () => {
   const { getModalOpened, handleOpen, handleClose } = useOpenModalSearchParams()
   const { currentProfile, profiles } = useAppSelector((state) => state.profile)
-  const { keys, currentPubkey: currentPubKey, readKeys, nsbKeys } = useAppSelector((state) => state.keys)
+  const { keys, currentPubkey, readKeys, nsbKeys } = useAppSelector((state) => state.keys)
   const { changeAccount } = useChangeAccount()
 
   const { url, viewRef } = useProfileImageSource({
@@ -65,17 +65,17 @@ export const ProfileView = () => {
     handleClose()
   }
 
-  const getCurrentPubKey = isGuest(currentPubKey) ? '' : currentPubKey
+  const getCurrentPubKey = isGuest(currentPubkey) ? '' : currentPubkey
 
   const isOpenModalAccounts = getModalOpened(MODAL_PARAMS_KEYS.KEYS_PROFILE)
 
-  const name = getRenderedUsername(currentProfile, currentPubKey)
+  const name = getRenderedUsername(currentProfile, currentPubkey)
 
-  const npub = isGuest(currentPubKey) ? '' : getNpub(currentPubKey)
+  const npub = isGuest(currentPubkey) ? '' : getNpub(currentPubkey)
 
-  const type = readKeys.includes(currentPubKey)
+  const type = readKeys.includes(currentPubkey)
     ? 'Read-only key'
-    : nsbKeys.includes(currentPubKey)
+    : nsbKeys.includes(currentPubkey)
     ? 'NsecBunker key'
     : ''
 
@@ -106,7 +106,7 @@ export const ProfileView = () => {
                 </IconButton>
               }
               readOnly
-              defaultValue={npub}
+              value={npub}
             />
           </StyledForm>
         )}

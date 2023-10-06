@@ -5,6 +5,7 @@ import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined'
 import TocOutlinedIcon from '@mui/icons-material/TocOutlined'
 import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
+import PublishedWithChangesOutlinedIcon from '@mui/icons-material/PublishedWithChangesOutlined'
 // import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapper } from './styled'
@@ -12,12 +13,16 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermissions'
 import { useOpenApp } from '@/hooks/open-entity'
-import { reconnect } from '@/modules/nostr'
-import { showToast } from '@/utils/helpers/general'
+import { checkNsbSigner, reconnect } from '@/modules/nostr'
+import { showToast } from '@/utils/helpers/general';
+import { useAppSelector } from '@/store/hooks/redux';
+import { useState } from 'react';
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const { signEvent } = useOpenApp()
+  const { currentPubkey, nsbKeys } = useAppSelector((state) => state.keys)
+  const [checkNSB, setCheckNSB] = useState(false)
 
   const testSignEvent = async () => {
     const event = {
@@ -36,9 +41,24 @@ export const ProfilMenu = () => {
     }
   }
 
+  const handleNsbConnect = async () => {
+    if (checkNSB) return
+    setCheckNSB(true)
+    try {
+      await checkNsbSigner()
+      showToast("NsecBunker connected!")
+    } catch (e) {
+      console.log("failed nsb: ", e)
+      showToast("Failed to check NsecBunker")
+    }
+    setCheckNSB(false)
+  }
+
   const handleReconnect = () => {
     reconnect()
   }
+
+  const isNsb = nsbKeys.includes(currentPubkey)
 
   return (
     <>
@@ -92,6 +112,19 @@ export const ProfilMenu = () => {
               </ListItemAvatar>
               <StyledListItemText primary="Signed events" />
             </ListItemButton>
+            {isNsb && (
+              <ListItemButton
+                disabled={checkNSB}
+                onClick={handleNsbConnect}
+              >
+                <ListItemAvatar>
+                  <StyledListItemIcon>
+                    <PublishedWithChangesOutlinedIcon />
+                  </StyledListItemIcon>
+                </ListItemAvatar>
+                <StyledListItemText primary="Check NsecBunker" />
+              </ListItemButton>
+            )}
             {/* <ListItemButton>
             <ListItemAvatar>
               <StyledListItemIcon>
