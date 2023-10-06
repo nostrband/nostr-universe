@@ -16,19 +16,18 @@ function goToUrl(url) {
 }
 
 const destroy = async (id, idle) => {
-  console.log("destroy tab", id, "idle", idle)
+  console.log('destroy tab', id, 'idle', idle)
 
   // delete from refs first
   const ref = refs[id]
   delete refs[id]
 
-  if (!idle)
-    delete infos[id]
+  if (!idle) delete infos[id]
 
   // wait until we release resources
   if (ref) {
     ref.info.released = true
-    await ref.navigate("about:blank")
+    await ref.navigate('about:blank')
 
     // add to info list
     freeRefs.push(ref)
@@ -36,10 +35,9 @@ const destroy = async (id, idle) => {
 }
 
 const releaseIdle = () => {
-
-  console.log("infos ", Object.keys(infos).length)
-  console.log("refs ", Object.keys(refs).length)
-  console.log("freeRefs ", freeRefs.length)
+  console.log('infos ', Object.keys(infos).length)
+  console.log('refs ', Object.keys(refs).length)
+  console.log('freeRefs ', freeRefs.length)
 
   // sort tabs by lastActive and canRelease
   const tabs = Object.values(refs)
@@ -49,30 +47,33 @@ const releaseIdle = () => {
     if (a.canRelease === b.canRelease)
       // desc by time
       return b.lastActiveTime - a.lastActiveTime
-    else
-      return a.canRelease ? -1 : 1
+    else return a.canRelease ? -1 : 1
   })
-  console.log("releaseIdle tabs", JSON.stringify(tabs.map(t => ({
-    id: t.id, 
-    url: t.info.url, 
-    lastActiveTime: t.info.lastActiveTime,
-    canRelease: t.info.canRelease,
-  }))))
+  console.log(
+    'releaseIdle tabs',
+    JSON.stringify(
+      tabs.map((t) => ({
+        id: t.id,
+        url: t.info.url,
+        lastActiveTime: t.info.lastActiveTime,
+        canRelease: t.info.canRelease
+      }))
+    )
+  )
 
   // release active tabs that can/should be released
   while (tabs.length > 0) {
     const ref = tabs.shift()
     if (ref.info.canRelease || tabs.length > MAX_REFS) {
-      destroy(ref.id, /* idle */true)
+      destroy(ref.id, /* idle */ true)
     }
   }
 
   // drop freeRef tabs if there are too many
-  while (freeRefs.length > 0 
-    && (tabs.length + freeRefs.length) > MAX_REFS * 2) {
-      const ref = freeRefs.shift()
-      console.log("close released tab", ref.id)
-      ref.close()
+  while (freeRefs.length > 0 && tabs.length + freeRefs.length > MAX_REFS * 2) {
+    const ref = freeRefs.shift()
+    console.log('close released tab', ref.id)
+    ref.close()
   }
 
   // schedule next gc cycle
@@ -489,8 +490,8 @@ async function executeFuncAsync(name, fn, ...args) {
 }
 
 function setEventListeners(ref) {
-   // helper
-   const init = async (r) => {
+  // helper
+  const init = async (r) => {
     // inject our scripts
 
     // main init to enable comms interface
@@ -501,7 +502,7 @@ function setEventListeners(ref) {
   }
 
   ref.addEventListener('loadstart', async (event) => {
-    console.log("loadstart ", event.url, "released", JSON.stringify(ref))
+    console.log('loadstart ', event.url, 'released', JSON.stringify(ref))
     if (ref.info.released) return
     if (ref.info.state === 'starting') return
 
@@ -611,11 +612,11 @@ function setEventListeners(ref) {
   ref.addEventListener('icon', async (event) => {
     if (ref.info.released) return
     if (API.onIcon) await API.onIcon(ref.info.apiCtx, event.icon)
-  }) 
+  })
 }
 
 async function createRef(info) {
-  console.log("creating tab", JSON.stringify(info))
+  console.log('creating tab', JSON.stringify(info))
 
   const bottomOffset = 50 - 1
   const bottom = Math.round(window.devicePixelRatio * bottomOffset)
@@ -628,8 +629,8 @@ async function createRef(info) {
   console.log('browser options', options)
 
   const ref = cordova.InAppBrowser.open(info.url, '_blank', options)
-  ref.executeScriptAsync = executeScriptAsync;
-  ref.executeFuncAsync = executeFuncAsync;
+  ref.executeScriptAsync = executeScriptAsync
+  ref.executeFuncAsync = executeFuncAsync
   ref.id = info.id
   ref.info = info
 
@@ -653,7 +654,7 @@ export async function open(params) {
     shown: false,
     released: false,
     state: '',
-    url: params.url,
+    url: params.url
   }
   infos[info.id] = info
 
@@ -668,14 +669,12 @@ const ensureTab = async (id) => {
 
   if (freeRefs.length > 0) {
     const ref = freeRefs.shift()
-    console.log("reuse ref", ref.id, "url", info.url)
+    console.log('reuse ref', ref.id, 'url', info.url)
     ref.id = info.id
     ref.info = info
     refs[ref.id] = ref
     await ref.navigate(info.url)
-
   } else {
-
     await createRef(info)
   }
 }
@@ -693,8 +692,7 @@ const show = async (id) => {
 const hide = async (id) => {
   if (!(id in infos)) return
   const ref = refs[id]
-  if (ref)
-    await ref.hide()
+  if (ref) await ref.hide()
   const info = infos[id]
   info.shown = false
 }

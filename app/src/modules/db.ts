@@ -6,7 +6,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(12).stores({
+db.version(13).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -16,10 +16,26 @@ db.version(12).stores({
   readOnlyKeys: '&pubkey,current',
   nsecbunkerKeys: '&pubkey,localPubkey,token',
   perms: '[pubkey+app+name],[pubkey+app],value',
-  contentFeedSettings: 'id, pubkey, settings_json'
+  contentFeedSettings: 'id, pubkey, settings_json',
+  signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson'
 })
 
 export const dbi = {
+  addSignedEvent: async (signedEvent) => {
+    try {
+      await db.signedEvents.add(signedEvent)
+    } catch (error) {
+      console.log(`Add signedEvent to DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  getSignedEvents: async (pubkey: string) => {
+    try {
+      return await db.signedEvents.where('pubkey').equals(pubkey).toArray()
+    } catch (error) {
+      console.log(`List tabs error: ${JSON.stringify(error)}`)
+      return []
+    }
+  },
   addTab: async (tab) => {
     try {
       const keys = Object.keys(tab).filter((k) => k != 'ref')

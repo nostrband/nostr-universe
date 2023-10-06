@@ -3,7 +3,8 @@ import { ListItemButton, ListItemAvatar } from '@mui/material'
 // import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined'
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined'
 import TocOutlinedIcon from '@mui/icons-material/TocOutlined'
-import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined';
+import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined'
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 // import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapper } from './styled'
@@ -12,24 +13,23 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermissions'
 import { useOpenApp } from '@/hooks/open-entity'
 import { reconnect } from '@/modules/nostr'
-import { showToast } from '@/utils/helpers/general';
+import { showToast } from '@/utils/helpers/general'
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const { signEvent } = useOpenApp()
 
   const testSignEvent = async () => {
-
     const event = {
       kind: 1,
       created_at: Math.round(Date.now() / 1000),
-      content: "Test",
-      tags: [],
+      content: 'Test',
+      tags: []
     }
 
     try {
       const e = await signEvent(event)
-      console.log("NSB signed ok", e)
+      console.log('NSB signed ok', e)
       showToast(`Signed!`)
     } catch (e) {
       showToast(`Error: ${e}`)
@@ -66,14 +66,15 @@ export const ProfilMenu = () => {
               </ListItemAvatar>
               <StyledListItemText primary="Content feeds" />
             </ListItemButton>
-            {false && (<ListItemButton onClick={() => testSignEvent()}>
-              <ListItemAvatar>
-                <StyledListItemIcon>
-                  <ChecklistOutlinedIcon />
-                </StyledListItemIcon>
-              </ListItemAvatar>
-              <StyledListItemText primary="Test sign event" />
-            </ListItemButton>
+            {false && (
+              <ListItemButton onClick={() => testSignEvent()}>
+                <ListItemAvatar>
+                  <StyledListItemIcon>
+                    <ChecklistOutlinedIcon />
+                  </StyledListItemIcon>
+                </ListItemAvatar>
+                <StyledListItemText primary="Test sign event" />
+              </ListItemButton>
             )}
             <ListItemButton onClick={handleReconnect}>
               <ListItemAvatar>
@@ -82,6 +83,14 @@ export const ProfilMenu = () => {
                 </StyledListItemIcon>
               </ListItemAvatar>
               <StyledListItemText primary="Reconnect relays" />
+            </ListItemButton>
+            <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.SIGNED_EVENTS_MODAL, { append: true })}>
+              <ListItemAvatar>
+                <StyledListItemIcon>
+                  <AssignmentOutlinedIcon />
+                </StyledListItemIcon>
+              </ListItemAvatar>
+              <StyledListItemText primary="Signed events" />
             </ListItemButton>
             {/* <ListItemButton>
             <ListItemAvatar>

@@ -24,6 +24,7 @@ import { ModalFindApp } from './components/Modal/ModalFindApp/ModalFindApp'
 import { ModalAddNSBKey } from './components/Modal/ModalAddNSBKey/ModalAddNSBKey'
 import { ModalPinSettings } from './components/Modal/ModalPinSettings/ModalPinSettings'
 import { ModalContentFeedSettings } from './components/Modal/ModalContentFeedSettings/ModalContentFeedSettings'
+import { ModalSignedEvents } from './components/Modal/ModalSignedEvents/ModalSignedEvents'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -111,6 +112,7 @@ export const App = () => {
       <ModalAddNSBKey />
       <ModalPinSettings />
       <ModalContentFeedSettings />
+      <ModalSignedEvents />
     </>
   )
 }

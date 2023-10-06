@@ -20,7 +20,8 @@ export enum MODAL_PARAMS_KEYS {
   FIND_APP = 'find-app',
   ADD_NSB_KEY_MODAL = 'add-nsb-key-modal',
   PIN_SETTINGS_MODAL = 'pin-settings-modal',
-  CONTENT_FEEDS_SETTINGS_MODAL = 'content-feeds-settings-modal'
+  CONTENT_FEEDS_SETTINGS_MODAL = 'content-feeds-settings-modal',
+  SIGNED_EVENTS_MODAL = 'signed-events-modal'
 }
 
 export const EXTRA_OPTIONS = {
