@@ -96,7 +96,7 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
             </IconButton>
           }
           readOnly
-          defaultValue={url}
+          value={url}
         />
       </StyledWrapInput>
       <StyledMenuWrapper>

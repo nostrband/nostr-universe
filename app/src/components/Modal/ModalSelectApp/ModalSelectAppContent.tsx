@@ -156,7 +156,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
                 </IconButton>
               }
               readOnly
-              defaultValue={getParamAddr}
+              value={getParamAddr}
             />
             <Input
               placeholder="Search app"
