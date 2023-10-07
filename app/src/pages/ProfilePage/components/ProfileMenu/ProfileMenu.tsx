@@ -3,7 +3,8 @@ import { ListItemButton, ListItemAvatar } from '@mui/material'
 // import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined'
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined'
 import TocOutlinedIcon from '@mui/icons-material/TocOutlined'
-import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined';
+import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined'
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import PublishedWithChangesOutlinedIcon from '@mui/icons-material/PublishedWithChangesOutlined'
 // import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import { Container } from '@/layout/Container/Conatiner'
@@ -13,9 +14,9 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermissions'
 import { useOpenApp } from '@/hooks/open-entity'
 import { checkNsbSigner, reconnect } from '@/modules/nostr'
-import { showToast } from '@/utils/helpers/general';
-import { useAppSelector } from '@/store/hooks/redux';
-import { useState } from 'react';
+import { showToast } from '@/utils/helpers/general'
+import { useAppSelector } from '@/store/hooks/redux'
+import { useState } from 'react'
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
@@ -24,17 +25,16 @@ export const ProfilMenu = () => {
   const [checkNSB, setCheckNSB] = useState(false)
 
   const testSignEvent = async () => {
-
     const event = {
       kind: 1,
       created_at: Math.round(Date.now() / 1000),
-      content: "Test",
-      tags: [],
+      content: 'Test',
+      tags: []
     }
 
     try {
       const e = await signEvent(event)
-      console.log("NSB signed ok", e)
+      console.log('NSB signed ok', e)
       showToast(`Signed!`)
     } catch (e) {
       showToast(`Error: ${e}`)
@@ -46,10 +46,10 @@ export const ProfilMenu = () => {
     setCheckNSB(true)
     try {
       await checkNsbSigner()
-      showToast("NsecBunker connected!")
+      showToast('NsecBunker connected!')
     } catch (e) {
-      console.log("failed nsb: ", e)
-      showToast("Failed to check NsecBunker")
+      console.log('failed nsb: ', e)
+      showToast('Failed to check NsecBunker')
     }
     setCheckNSB(false)
   }
@@ -86,14 +86,15 @@ export const ProfilMenu = () => {
               </ListItemAvatar>
               <StyledListItemText primary="Content feeds" />
             </ListItemButton>
-            {false && (<ListItemButton onClick={() => testSignEvent()}>
-              <ListItemAvatar>
-                <StyledListItemIcon>
-                  <ChecklistOutlinedIcon />
-                </StyledListItemIcon>
-              </ListItemAvatar>
-              <StyledListItemText primary="Test sign event" />
-            </ListItemButton>
+            {false && (
+              <ListItemButton onClick={() => testSignEvent()}>
+                <ListItemAvatar>
+                  <StyledListItemIcon>
+                    <ChecklistOutlinedIcon />
+                  </StyledListItemIcon>
+                </ListItemAvatar>
+                <StyledListItemText primary="Test sign event" />
+              </ListItemButton>
             )}
             <ListItemButton onClick={handleReconnect}>
               <ListItemAvatar>
@@ -103,11 +104,16 @@ export const ProfilMenu = () => {
               </ListItemAvatar>
               <StyledListItemText primary="Reconnect relays" />
             </ListItemButton>
+            <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.SIGNED_EVENTS_MODAL, { append: true })}>
+              <ListItemAvatar>
+                <StyledListItemIcon>
+                  <AssignmentOutlinedIcon />
+                </StyledListItemIcon>
+              </ListItemAvatar>
+              <StyledListItemText primary="Signed events" />
+            </ListItemButton>
             {isNsb && (
-              <ListItemButton
-                disabled={checkNSB}
-                onClick={handleNsbConnect}
-              >
+              <ListItemButton disabled={checkNSB} onClick={handleNsbConnect}>
                 <ListItemAvatar>
                   <StyledListItemIcon>
                     <PublishedWithChangesOutlinedIcon />

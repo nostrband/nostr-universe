@@ -1,8 +1,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { generatePrivateKey, getEventHash, getPublicKey as getPublicKeyFromPrivateKey, getSignature, nip04 } from "@nostrband/nostr-tools"
-import { current } from "@reduxjs/toolkit"
+import {
+  generatePrivateKey,
+  getEventHash,
+  getPublicKey as getPublicKeyFromPrivateKey,
+  getSignature,
+  nip04
+} from '@nostrband/nostr-tools'
+import { current } from '@reduxjs/toolkit'
 
 const keys = {
   '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd': {
@@ -59,7 +65,7 @@ const stub = {
     try {
       window.localStorage.setItem('privateKeys', JSON.stringify(privateKeys))
     } catch (e) {
-      console.log("Failed to write key to localStorage")
+      console.log('Failed to write key to localStorage')
     }
     currentPubkey = pk
     console.log('GENERATED KEY', pk)
@@ -90,24 +96,22 @@ const stub = {
     console.log('signEvent', event)
 
     const key = privateKeys[currentPubkey]
-    if (!key)
-      throw new Error('Not implemented')
+    if (!key) throw new Error('Not implemented')
 
-    const e = { 
+    const e = {
       ...event,
       pubkey: currentPubkey
     }
     e.id = getEventHash(e)
     e.sig = getSignature(e, key)
-    console.log("signed event", e.id, "pubkey", currentPubkey, "sig", e.sig)
+    console.log('signed event', e.id, 'pubkey', currentPubkey, 'sig', e.sig)
     return e
   },
 
   encrypt: async function ({ pubkey, plaintext }) {
     console.log('encrypt', pubkey)
     const key = privateKeys[currentPubkey]
-    if (!key)
-      throw new Error('Not implemented')
+    if (!key) throw new Error('Not implemented')
 
     return await nip04.encrypt(key, pubkey, plaintext)
   },
@@ -115,8 +119,7 @@ const stub = {
   decrypt: async function ({ pubkey, ciphertext }) {
     console.log('decrypt', pubkey)
     const key = privateKeys[currentPubkey]
-    if (!key)
-      throw new Error('Not implemented')
+    if (!key) throw new Error('Not implemented')
 
     return await nip04.decrypt(key, pubkey, ciphertext)
   }

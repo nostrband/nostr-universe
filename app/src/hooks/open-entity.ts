@@ -370,7 +370,19 @@ export const useOpenApp = () => {
       const kindPerm = 'sign:' + event.kind
       const allPerm = 'sign'
       const exec = async () => {
-        return await signEvent(event, tab.pubkey)
+        const resSindEvend = await signEvent(event, tab.pubkey)
+
+        await dbi.addSignedEvent({
+          timestamp: Date.now(),
+          kind: resSindEvend.kind,
+          eventJson: JSON.stringify(resSindEvend, null, ' '),
+          eventId: resSindEvend.id,
+          url: tab?.url,
+          pubkey: currentPubkey,
+          id: uuidv4()
+        })
+
+        return resSindEvend
       }
       // return await exec()
 
@@ -730,11 +742,6 @@ export const useOpenApp = () => {
     )
   }
 
-  const openZap = (id) => {
-    const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
-    openBlank({ url: `${ZAP_URL}${id}` }, { replace: true })
-  }
-
   return {
     openApp,
     onStopLoadTab,
@@ -748,7 +755,6 @@ export const useOpenApp = () => {
     replyCurrentPermRequest,
     deletePermission,
     onCloseTabs,
-    openZap,
     onPinApp,
     onPinTab,
     onUnPinTab,

@@ -19,7 +19,7 @@ export const StyledWrapper = styled(
   overflowX: 'scroll',
   '& > *': {
     marginRight: '8px',
-    flex: childrenWidth ? `0 0 ${childrenWidth}px` : 'auto',
+    flex: childrenWidth ? `0 0 ${childrenWidth}px` : 'initial',
     '&:first-of-type': {
       marginLeft: '16px'
     }

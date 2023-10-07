@@ -45,7 +45,7 @@ export const ProfileView = () => {
     const acc: IAccount = {
       ...p,
       isReadOnly: readKeys.includes(key),
-      isNsb: nsbKeys.includes(key),
+      isNsb: nsbKeys.includes(key)
     }
 
     return acc
@@ -73,8 +73,11 @@ export const ProfileView = () => {
 
   const npub = isGuest(currentPubkey) ? '' : getNpub(currentPubkey)
 
-  const type = readKeys.includes(currentPubkey) ? 'Read-only key' 
-    : (nsbKeys.includes(currentPubkey) ? 'NsecBunker key' : '')
+  const type = readKeys.includes(currentPubkey)
+    ? 'Read-only key'
+    : nsbKeys.includes(currentPubkey)
+    ? 'NsecBunker key'
+    : ''
 
   return (
     <>
@@ -93,9 +96,7 @@ export const ProfileView = () => {
         <StyledViewName variant="h5" component="div">
           {name}
         </StyledViewName>
-        <StyledViewKey component="div">
-          {type}
-        </StyledViewKey>
+        <StyledViewKey component="div">{type}</StyledViewKey>
         {npub && (
           <StyledForm>
             <Input
