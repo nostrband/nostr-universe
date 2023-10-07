@@ -18,9 +18,6 @@ import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/SuggestedProfiles/styled'
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
-import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
-import { SliderTrendingNotes } from '@/components/Slider/SliderTrendingNotes/SliderTrendingNotes'
-import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongNotes'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { StyledForm, StyledInput } from './styled'
 import { IconButton } from '@mui/material'
@@ -30,6 +27,10 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
 import { StyledWrapVisibility } from '../styled'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
+import { Profile } from '@/shared/Profile/Profile'
+import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNote'
 
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
@@ -138,6 +139,7 @@ export const SearchPageContent = () => {
     if (searchValue.trim().length) {
       loadEvents(searchValue)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEvents])
 
   const renderContent = () => {
@@ -151,7 +153,11 @@ export const SearchPageContent = () => {
               </StyledTitle>
             </Container>
 
-            <SliderProfiles data={profiles} isLoading={false} handleClickEntity={handleOpenProfile} />
+            <HorizontalSwipeContent childrenWidth={140}>
+              {profiles.map((profile, i) => (
+                <Profile key={i} onClick={handleOpenProfile} profile={profile} />
+              ))}
+            </HorizontalSwipeContent>
           </StyledWrapper>
         )}
 
@@ -163,7 +169,18 @@ export const SearchPageContent = () => {
               </StyledTitleNotes>
             </Container>
 
-            <SliderTrendingNotes data={notes} isLoading={false} handleClickEntity={handleOpenNote} />
+            <HorizontalSwipeContent childrenWidth={225}>
+              {notes.map((note, i) => (
+                <ItemTrendingNote
+                  onClick={() => handleOpenNote(note)}
+                  key={i}
+                  time={note.created_at}
+                  content={note.content}
+                  pubkey={note.pubkey}
+                  author={note.author}
+                />
+              ))}
+            </HorizontalSwipeContent>
           </StyledWrapper>
         )}
 
@@ -175,7 +192,19 @@ export const SearchPageContent = () => {
               </StyledTitleLongPost>
             </Container>
 
-            <SliderLongNotes data={longNotes} isLoading={false} handleClickEntity={handleOpenLongNote} />
+            <HorizontalSwipeContent childrenWidth={225}>
+              {longNotes.map((longNote, i) => (
+                <ItemLongNote
+                  key={i}
+                  onClick={() => handleOpenLongNote(longNote)}
+                  time={longNote.created_at}
+                  content={longNote.content}
+                  subtitle={longNote.title}
+                  pubkey={longNote.pubkey}
+                  author={longNote.author}
+                />
+              ))}
+            </HorizontalSwipeContent>
           </StyledWrapper>
         )}
         {isLoading && (

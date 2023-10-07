@@ -1,6 +1,15 @@
 /* eslint-disable */
 // @ts-nocheck
 
+import {
+  generatePrivateKey,
+  getEventHash,
+  getPublicKey as getPublicKeyFromPrivateKey,
+  getSignature,
+  nip04
+} from '@nostrband/nostr-tools'
+import { current } from '@reduxjs/toolkit'
+
 const keys = {
   '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd': {
     publicKey: '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd',
@@ -24,6 +33,11 @@ const keys = {
   }
 }
 
+let privateKeys = {}
+try {
+  privateKeys = JSON.parse(window.localStorage.getItem('privateKeys')) || {}
+} catch {}
+
 let currentPubkey = '3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd'
 
 const listKeysStub = async () => {
@@ -38,6 +52,26 @@ const stub = {
 
   addKey: async function () {
     console.log('ADD KEY')
+  },
+
+  generateKey: async function () {
+    const key = generatePrivateKey()
+    const pk = getPublicKeyFromPrivateKey(key)
+    keys[pk] = {
+      publicKey: pk,
+      name: 'GeneratedKey'
+    }
+    privateKeys[pk] = key
+    try {
+      window.localStorage.setItem('privateKeys', JSON.stringify(privateKeys))
+    } catch (e) {
+      console.log('Failed to write key to localStorage')
+    }
+    currentPubkey = pk
+    console.log('GENERATED KEY', pk)
+    return {
+      pubKey: pk
+    }
   },
 
   showKey: async function () {
@@ -60,25 +94,43 @@ const stub = {
 
   signEvent: async function (event) {
     console.log('signEvent', event)
-    throw new Error('Not implemented')
+
+    const key = privateKeys[currentPubkey]
+    if (!key) throw new Error('Not implemented')
+
+    const e = {
+      ...event,
+      pubkey: currentPubkey
+    }
+    e.id = getEventHash(e)
+    e.sig = getSignature(e, key)
+    console.log('signed event', e.id, 'pubkey', currentPubkey, 'sig', e.sig)
+    return e
   },
 
   encrypt: async function ({ pubkey, plaintext }) {
     console.log('encrypt', pubkey)
-    throw new Error('Not implemented')
+    const key = privateKeys[currentPubkey]
+    if (!key) throw new Error('Not implemented')
+
+    return await nip04.encrypt(key, pubkey, plaintext)
   },
 
   decrypt: async function ({ pubkey, ciphertext }) {
     console.log('decrypt', pubkey)
-    throw new Error('Not implemented')
+    const key = privateKeys[currentPubkey]
+    if (!key) throw new Error('Not implemented')
+
+    return await nip04.decrypt(key, pubkey, ciphertext)
   }
 }
 
 const API = function (method) {
-  if (import.meta.env.DEV)
+  if (import.meta.env.DEV) {
     return function (...args) {
       return stub[method](...args)
     }
+  }
 
   const target = window.cordova.plugins.NostrKeyStore
   return (...args) => {
@@ -95,6 +147,10 @@ export async function listKeys() {
 
 export async function addKey() {
   return API('addKey')()
+}
+
+export async function generateKey() {
+  return API('generateKey')()
 }
 
 export async function showKey(req) {
@@ -125,9 +181,21 @@ export async function decrypt(pubkey, ciphertext) {
   return API('decrypt')({ pubkey, ciphertext })
 }
 
+if (import.meta.env.DEV) {
+  window.nostr = {
+    getPublicKey,
+    signEvent,
+    nip04: {
+      encrypt,
+      decrypt
+    }
+  }
+}
+
 export const keystore = {
   listKeys,
   addKey,
+  generateKey,
   showKey,
   selectKey,
   editKey,

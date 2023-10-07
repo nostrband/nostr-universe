@@ -7,9 +7,7 @@ import { TabsSwitcherPage } from './pages/TabsSwitcherPage/TabsSwitcherPage'
 import { ModalImportKey } from './components/Modal/ModalImporKey/ModalImportKey'
 import { ProfilePage } from './pages/ProfilePage/ProfilePage'
 import { ModalTabMenu } from './components/Modal/ModalTabMenu/ModalTabMenu'
-import { ModalTabSwitcher } from './components/Modal/ModalTabSwitcher/ModalTabSwitcher'
 import { ModalWallet } from './components/Modal/ModalWallet/ModalWallet'
-import { ModalSearch } from './components/Modal/ModalSearch/ModaSearch'
 import { ModalSelectApp } from './components/Modal/ModalSelectApp/ModalSelectApp'
 import { ModalPermissionsRequest } from './components/Modal/ModalPermissionsRequest/ModalPermissionsRequest'
 import { TabPage } from './pages/TabPage/TabPage'
@@ -23,6 +21,10 @@ import { ModalAbout } from './components/Modal/ModalAbout/ModalAbout'
 import { useAppDispatch, useAppSelector } from './store/hooks/redux'
 import { setPage } from './store/reducers/positionScrollPage.slice'
 import { ModalFindApp } from './components/Modal/ModalFindApp/ModalFindApp'
+import { ModalAddNSBKey } from './components/Modal/ModalAddNSBKey/ModalAddNSBKey'
+import { ModalPinSettings } from './components/Modal/ModalPinSettings/ModalPinSettings'
+import { ModalContentFeedSettings } from './components/Modal/ModalContentFeedSettings/ModalContentFeedSettings'
+import { ModalSignedEvents } from './components/Modal/ModalSignedEvents/ModalSignedEvents'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -48,6 +50,7 @@ export const App = () => {
 
   useEffect(() => {
     dispatch(setPage({ page: searchParams.get('page') }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const getTitle = () => {
@@ -96,10 +99,8 @@ export const App = () => {
       {/* Modal pages */}
       <ModalImportKey />
       <ProfilePage />
-      <ModalTabSwitcher />
       <ModalTabMenu />
       <ModalWallet />
-      <ModalSearch />
       <ModalSelectApp />
       <ModalPermissionsRequest />
       <TabPage />
@@ -108,6 +109,10 @@ export const App = () => {
       <ModalAddKey />
       <ModalAbout />
       <ModalFindApp />
+      <ModalAddNSBKey />
+      <ModalPinSettings />
+      <ModalContentFeedSettings />
+      <ModalSignedEvents />
     </>
   )
 }

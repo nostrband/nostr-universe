@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { MetaEvent } from '@/types/meta-event'
 import { nip19 } from '@nostrband/nostr-tools'
+import { showToast } from './general'
 
 export const getNpub = (key: string) => {
   return nip19.npubEncode(key)
@@ -75,8 +76,7 @@ export const copyToClipBoard = (copyValue: string) => {
   if (window.cordova) {
     // @ts-ignore
     window.cordova.plugins.clipboard.copy(copyValue)
-    // @ts-ignore
-    window.plugins.toast.showShortBottom('Copied')
+    showToast('Copied')
   } else {
     navigator.clipboard
       .writeText(copyValue)

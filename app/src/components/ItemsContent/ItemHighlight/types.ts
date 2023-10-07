@@ -5,4 +5,5 @@ export interface IItemHighlight {
   author?: MetaEvent
   time: number
   content: string
+  onClick: () => void
 }

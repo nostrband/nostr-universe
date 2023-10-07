@@ -8,7 +8,8 @@ import { APP_NOSTR_SIZE } from '@/consts'
 export const StyledAppWraper = styled(Box)(() => ({
   display: 'inline-flex',
   flexDirection: 'column',
-  alignItems: 'center'
+  alignItems: 'center',
+  transition: 'scale 0.1s linear'
 }))
 
 export const StyledAppName = styled(
@@ -18,5 +19,10 @@ export const StyledAppName = styled(
 )(({ theme, size = APP_NOSTR_SIZE.MEDIUM }) => ({
   color: theme.palette.light.light,
   fontSize: APP_NAME_FONT_SIZE_VALUE[size],
-  marginTop: APP_NAME_GUTTER_VALUE[size]
+  marginTop: APP_NAME_GUTTER_VALUE[size],
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  display: '-webkit-box',
+  WebkitLineClamp: 1,
+  WebkitBoxOrient: 'vertical'
 }))

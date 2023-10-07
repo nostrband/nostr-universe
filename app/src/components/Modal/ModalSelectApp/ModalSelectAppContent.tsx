@@ -73,7 +73,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       apps.push({
         ...nativeApp,
         lastUsed: NATIVE_NADDR === lastAppNaddr,
-        order: NATIVE_NADDR === lastAppNaddr ? 1000 : 999
+        order: NATIVE_NADDR === lastAppNaddr ? 10000 : 9999
       })
 
       for (const [, appHandlers] of info.apps) {
@@ -86,9 +86,9 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
 
         let order = app.order
         // last app always at the topw
-        if (lastUsed) order = 1000
+        if (lastUsed) order = 10000
         // // pinned are a priority
-        else if (pinned) order += 100
+        else if (pinned) order += 1000
 
         let hostname = ''
         try {
@@ -156,7 +156,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
                 </IconButton>
               }
               readOnly
-              defaultValue={getParamAddr}
+              value={getParamAddr}
             />
             <Input
               placeholder="Search app"

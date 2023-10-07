@@ -8,6 +8,7 @@ import { Avatar, IconButton, List, ListItem, ListItemAvatar, ListItemText } from
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenApp } from '@/hooks/open-entity'
 import { selectCurrentWorkspace } from '@/store/store'
+import { showToast } from '@/utils/helpers/general'
 
 export const ModalPermissions = () => {
   const { deletePermission } = useOpenApp()
@@ -42,9 +43,7 @@ export const ModalPermissions = () => {
 
   const handleDelete = (id: string) => {
     deletePermission(id)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.plugins.toast.showShortBottom(`Permission deleted`)
+    showToast(`Permission deleted`)
   }
 
   return (

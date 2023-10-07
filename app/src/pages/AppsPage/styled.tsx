@@ -19,15 +19,20 @@ export const StyledDialog = styled(Dialog)(({ theme }) => ({
 export const StyledSwipeableDrawerContent = styled(Box)(() => ({
   height: '100%',
   overflow: 'auto',
-  paddingBottom: 10
+  padding: '10px 0'
 }))
 
 export const StyledAddButtonWrapper = styled((props: GridProps) => {
-  return <Grid {...props} xs={2} />
+  return <Grid {...props} item xs={2} />
 })({
   display: 'grid',
   placeItems: 'center',
-  minHeight: '60px'
+  minHeight: '60px',
+  '@media (min-width: 0px)': {
+    '&.MuiGrid-root.MuiGrid-item ': {
+      padding: 0
+    }
+  }
 })
 
 export const StyledIconButton = styled(IconButton)(({ theme }) => ({

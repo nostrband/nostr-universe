@@ -13,6 +13,7 @@ import {
   StyledItemText,
   StyledList
 } from './styled'
+import { showToast } from '@/utils/helpers/general'
 
 interface IWallet {
   id: string
@@ -42,9 +43,7 @@ export const ModalWalletContent = () => {
       const r = await walletstore.addWallet()
       console.log('add result', JSON.stringify(r))
     } catch (e) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      window.plugins.toast.showShortBottom(`Operation failed: ${e}`)
+      showToast(`Operation failed: ${e}`)
     }
     loadWallet()
   }

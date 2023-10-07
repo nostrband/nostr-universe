@@ -4,4 +4,5 @@ export interface IItemCommunity {
   time: number
   content: string
   subtitle: string
+  onClick: () => void
 }

@@ -12,30 +12,66 @@ import { StyledWrapVisibility } from '../styled'
 import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
 import { isGuest } from '@/utils/helpers/prepare-data'
+import { CONTENT_FEEDS } from '@/types/content-feed'
 
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'content'
 
-  const { keys } = useAppSelector((state) => state.keys)
+  const { keys, currentPubkey } = useAppSelector((state) => state.keys)
   const guest = !keys.length || isGuest(keys[0])
+
+  const currentWorkspace = useAppSelector((state) =>
+    state.workspaces.workspaces.find((ws) => ws.pubkey === currentPubkey)
+  )
+
+  const contentFeedSettings = currentWorkspace?.contentFeedSettings || []
+
+  const renderFeeds = () => {
+    if (contentFeedSettings.length === 0) {
+      return (
+        <>
+          <TrendingNotes />
+          <TrendingProfiles />
+          {!guest && (
+            <>
+              <Highlights />
+              <BigZaps />
+              <LongPosts />
+              <LiveEvents />
+              <Communities />
+              <SuggestedProfiles />
+            </>
+          )}
+          <AppsNostro />
+        </>
+      )
+    }
+
+    const feeds: Record<string, JSX.Element> = {
+      [CONTENT_FEEDS.TRENDING_NOTES]: <TrendingNotes />,
+      [CONTENT_FEEDS.TRENDING_PROFILES]: <TrendingProfiles />,
+      [CONTENT_FEEDS.APPS]: <AppsNostro />
+    }
+    if (!guest) {
+      feeds[CONTENT_FEEDS.HIGHLIGHTS] = <Highlights />
+      feeds[CONTENT_FEEDS.BIG_ZAPS] = <BigZaps />
+      feeds[CONTENT_FEEDS.LONG_POSTS] = <LongPosts />
+      feeds[CONTENT_FEEDS.LIVE_EVENTS] = <LiveEvents />
+      feeds[CONTENT_FEEDS.COMMUNITIES] = <Communities />
+      feeds[CONTENT_FEEDS.SUGGESTED_PROFILES] = <SuggestedProfiles />
+    }
+
+    return contentFeedSettings.map((feed) => {
+      if (feed.hidden) return null
+      return feeds[feed.id]
+    })
+  }
 
   return (
     <StyledWrapVisibility isShow={isShow}>
-      {guest && (<WelcomeWidget />)}
-      <TrendingNotes />
-      <TrendingProfiles />
-      {!guest && (
-        <>
-          <Highlights />
-          <BigZaps />
-          <LongPosts />
-          <LiveEvents />
-          <Communities />
-          <SuggestedProfiles />
-        </>
-      )}
-      <AppsNostro />
+      {guest && <WelcomeWidget />}
+      {renderFeeds()}
     </StyledWrapVisibility>
   )
 }

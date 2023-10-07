@@ -6,9 +6,12 @@ import { fetchFollowedLongNotes, getTagValue, nostrbandRelay } from '@/modules/n
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { LongNoteEvent } from '@/types/long-note-event'
-import { SliderLongNotes } from '@/components/Slider/SliderLongNotes/SliderLongNotes'
 import { setLongPosts } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback } from 'react'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { SkeletonLongPosts } from '@/components/Skeleton/SkeletonLongPosts/SkeletonLongPosts'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNote'
 
 export const LongPosts = memo(function LongPosts() {
   const { handleOpen } = useOpenModalSearchParams()
@@ -39,6 +42,26 @@ export const LongPosts = memo(function LongPosts() {
     }
   }, [dispatch, contactList])
 
+  const renderContent = () => {
+    if (longPosts === null) {
+      return <SkeletonLongPosts />
+    }
+    if (!longPosts || !longPosts.length) {
+      return <EmptyListMessage onReload={handleReloadLongPosts} />
+    }
+    return longPosts.map((longPost, i) => (
+      <ItemLongNote
+        key={i}
+        onClick={() => handleOpenLongPosts(longPost)}
+        time={longPost.created_at}
+        content={longPost.content}
+        subtitle={longPost.title}
+        pubkey={longPost.pubkey}
+        author={longPost.author}
+      />
+    ))
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -47,12 +70,7 @@ export const LongPosts = memo(function LongPosts() {
         </StyledTitle>
       </Container>
 
-      <SliderLongNotes
-        data={longPosts || []}
-        isLoading={longPosts === null}
-        handleClickEntity={handleOpenLongPosts}
-        handleReloadEntity={handleReloadLongPosts}
-      />
+      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
     </StyledWrapper>
   )
 })

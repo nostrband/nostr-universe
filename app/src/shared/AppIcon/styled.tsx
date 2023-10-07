@@ -61,15 +61,12 @@ export const StyledAppIcon = styled(
   })
 )
 
-export const StyledAppImg = styled(
-  forwardRef<HTMLAnchorElement, IAvatarProps>(function BoxDisplayName(props) {
-    // return <Avatar  {...props} />
-    const exclude = new Set(['isPreviewTab', 'isLight'])
-    const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
+export const StyledAppImg = styled(function BoxDisplayName(props: IAvatarProps) {
+  const exclude = new Set(['isPreviewTab', 'isLight'])
+  const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
 
-    return <Avatar variant="square" {...omitProps} />
-  })
-)(({ theme, isPreviewTab = false, isLight = false, size = APP_NOSTR_SIZE.MEDIUM }) => ({
+  return <Avatar variant="square" {...omitProps} />
+})(({ theme, isPreviewTab = false, isLight = false, size = APP_NOSTR_SIZE.MEDIUM }) => ({
   position: 'absolute',
   left: 0,
   top: 0,

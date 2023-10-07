@@ -1,4 +1,3 @@
-import { SliderProfiles } from '@/components/Slider/SliderProfiles/SliderProfiles'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
 import { userService } from '@/store/services/user.service'
@@ -9,6 +8,10 @@ import { nostrbandRelay } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { MetaEvent } from '@/types/meta-event'
 import { memo, useCallback } from 'react'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/SkeletonProfiles'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { Profile } from '@/shared/Profile/Profile'
 
 export const SuggestedProfiles = memo(function SuggestedProfiles() {
   const { currentPubkey } = useAppSelector((state) => state.keys)
@@ -35,6 +38,16 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
 
   const handleReloadSuggestedProfiles = () => refetchSuggestedProfiles()
 
+  const renderContent = () => {
+    if (isLoading) {
+      return <SkeletonProfiles />
+    }
+    if (!data || !data.length) {
+      return <EmptyListMessage onReload={handleReloadSuggestedProfiles} />
+    }
+    return data.map((profile, i) => <Profile key={i} onClick={handleOpenProfile} profile={profile} />)
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -43,12 +56,7 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
         </StyledTitle>
       </Container>
 
-      <SliderProfiles
-        data={data || []}
-        isLoading={isLoading}
-        handleClickEntity={handleOpenProfile}
-        handleReloadEntity={handleReloadSuggestedProfiles}
-      />
+      <HorizontalSwipeContent childrenWidth={140}>{renderContent()}</HorizontalSwipeContent>
     </StyledWrapper>
   )
 })

@@ -4,7 +4,7 @@ import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { setProfiles } from '@/store/reducers/profile.slice'
 import { IInitialisationProvider } from './types'
-import { connect, fetchApps } from '../nostr'
+import { connect, fetchApps, nostrOnResume } from '../nostr'
 import { loadKeys, loadWorkspace, reloadWallets } from './utils'
 import { dbi } from '../db'
 
@@ -14,6 +14,14 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
 
   const initDevice = useCallback(async () => {
     try {
+      document.addEventListener(
+        'resume',
+        () => {
+          nostrOnResume()
+        },
+        false
+      )
+
       const [keys, currentPubKey] = await loadKeys(dispatch)
 
       for (const key of keys) await loadWorkspace(key, dispatch)

@@ -1,3 +1,4 @@
+import { IContentFeedSetting } from '@/types/content-feed'
 import Dexie from 'dexie'
 
 interface Tab {
@@ -53,6 +54,18 @@ interface ReadOnlyKey {
   current: boolean
 }
 
+interface NSBKey {
+  pubkey: string
+  localPubkey: string
+  token: string
+}
+
+interface Setting {
+  id: string
+  pubkey: string
+  settings_json: IContentFeedSetting[]
+}
+
 export interface DbSchema extends Dexie {
   tabs: Dexie.Table<Tab, number>
   pins: Dexie.Table<Pin, number>
@@ -61,4 +74,6 @@ export interface DbSchema extends Dexie {
   lastContacts: Dexie.Table<LastContact, number>
   flags: Dexie.Table<Flag, number>
   readOnlyKeys: Dexie.Table<ReadOnlyKey, number>
+  nsecbunkerKeys: Dexie.Table<NSBKey, number>
+  settings: Dexie.Table<Setting, number>
 }

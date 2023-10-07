@@ -6,7 +6,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(10).stores({
+db.version(13).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -14,13 +14,29 @@ db.version(10).stores({
   lastContacts: '[pubkey+contactPubkey],tm',
   flags: 'id,pubkey,name,value',
   readOnlyKeys: '&pubkey,current',
-
-  // allow: pubkey=1,sign:0=1,encrypt=1,decrypt=1,sign:*=1,
-  // disallow: sign:*=0
-  perms: '[pubkey+app+name],[pubkey+app],value'
+  nsecbunkerKeys: '&pubkey,localPubkey,token',
+  perms: '[pubkey+app+name],[pubkey+app],value',
+  contentFeedSettings: 'id, pubkey, settings_json',
+  signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson'
 })
 
 export const dbi = {
+  addSignedEvent: async (signedEvent) => {
+    try {
+      await db.signedEvents.add(signedEvent)
+    } catch (error) {
+      console.log(`Add signedEvent to DB error: ${error}`)
+    }
+  },
+  getSignedEvents: async (pubkey: string) => {
+    try {
+      return (await db.signedEvents.where('pubkey').equals(pubkey)
+        .toArray()).sort((a, b) => b.timestamp - a.timestamp)
+    } catch (error) {
+      console.log(`List signedEvents error: ${error}`)
+      return []
+    }
+  },
   addTab: async (tab) => {
     try {
       const keys = Object.keys(tab).filter((k) => k != 'ref')
@@ -84,6 +100,30 @@ export const dbi = {
       console.log(`Delete pin in DB error: ${JSON.stringify(error)}`)
     }
   },
+  addNsecBunkerKey: async (key: NSBKey) => {
+    try {
+      await db.nsecbunkerKeys.add(key)
+    } catch (error) {
+      console.log(`Add nsb key to DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  getNsecBunkerLocalPubkey: async (pubkey: string) => {
+    try {
+      const keys = await db.nsecbunkerKeys.where('pubkey').equals(pubkey).toArray()
+      return keys.length ? keys[0].localPubkey : ''
+    } catch (error) {
+      console.log(`List tabs error: ${JSON.stringify(error)}`)
+    }
+  },
+  updatePin: async (pin) => {
+    try {
+      await db.pins.where('id').equals(pin.id).modify({
+        title: pin.title
+      })
+    } catch (error) {
+      console.log(`Update pin in DB error: ${JSON.stringify(error)}`)
+    }
+  },
   listTabs: async (pubkey) => {
     try {
       return await db.tabs.where('pubkey').equals(pubkey).toArray()
@@ -133,6 +173,14 @@ export const dbi = {
       return (await db.readOnlyKeys.toCollection().toArray()).map((k) => k.pubkey)
     } catch (error) {
       console.log(`List readOnlyKeys error: ${JSON.stringify(error)}`)
+      return []
+    }
+  },
+  listNsecbunkerKeys: async () => {
+    try {
+      return await db.nsecbunkerKeys.toCollection().toArray()
+    } catch (error) {
+      console.log(`List nsecbunkerKeys error: ${JSON.stringify(error)}`)
       return []
     }
   },
@@ -198,6 +246,38 @@ export const dbi = {
       if (!n) await db.flags.add({ id, pubkey, name, value })
     } catch (error) {
       console.log(`Set flag error: ${error}`)
+    }
+  },
+  setContentFeedSettings: async (settings) => {
+    try {
+      await db.contentFeedSettings.add(settings)
+    } catch (error) {
+      console.log(`Set content feed settings error: ${error}`)
+    }
+  },
+  checkPresenceOfSettings: async (pubkey) => {
+    try {
+      const count = await db.contentFeedSettings.where('pubkey').equals(pubkey).count()
+      return count !== 0
+    } catch (error) {
+      console.log(`Check presence of content feed settings error: ${error}`)
+    }
+  },
+  getContentFeedSettingsByPubkey: async (pubkey) => {
+    try {
+      const settings = await db.contentFeedSettings.where('pubkey').equals(pubkey).first()
+      return settings?.settings_json || []
+    } catch (error) {
+      console.log(`List content feed settings error: ${error}`)
+    }
+  },
+  updateContentFeedSettings: async (pubkey, feedSettings) => {
+    try {
+      await db.contentFeedSettings.where('pubkey').equals(pubkey).modify({
+        settings_json: feedSettings
+      })
+    } catch (error) {
+      console.log(`Update content feed settings error: ${error}`)
     }
   }
 }

@@ -15,10 +15,9 @@ import { getProfileImage } from '@/utils/helpers/prepare-data'
 import { selectTab } from '@/store/reducers/tab.slice'
 
 export const TabMenu = () => {
-  const { handleOpen, handleClose } = useOpenModalSearchParams()
+  const { handleOpen } = useOpenModalSearchParams()
   const [searchParams] = useSearchParams()
-  const { onStopLoadTab, onReloadTab } = useOpenApp()
-  const { page } = useAppSelector((state) => state.positionScrollPage)
+  const { onStopLoadTab, onReloadTab, backToLastPage } = useOpenApp()
   const id = searchParams.get('tabId') || ''
   const { currentProfile } = useAppSelector((state) => state.profile)
   const currentTab = useAppSelector((state) => selectTab(state, id))
@@ -36,11 +35,7 @@ export const TabMenu = () => {
   // }
 
   const handleCloseTab = () => {
-    if (page === '/') {
-      handleClose('/')
-    } else {
-      handleClose(`?page=${page}`)
-    }
+    backToLastPage()
   }
 
   const handleMagicMenu = () => {

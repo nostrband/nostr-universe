@@ -1,14 +1,14 @@
 /* eslint-disable */
 // @ts-nocheck
 import NDK, { NDKRelaySet, NDKRelay, NDKEvent } from '@nostrband/ndk'
-import { Event, nip19 } from '@nostrband/nostr-tools'
+import { Event, getEventHash, nip19 } from '@nostrband/nostr-tools'
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { walletstore } from './walletstore'
 import { AuthoredEvent, createAuthoredEvent } from '@/types/authored-event'
 import { AugmentedEvent, createEvent } from '@/types/augmented-event'
 import { MetaEvent, createMetaEvent } from '@/types/meta-event'
 import { Meta, createMeta } from '@/types/meta'
-import { NDKFilter, NDKSubscription, NostrTop } from 'node_modules/@nostrband/ndk/dist'
+import { NDKFilter, NDKNip07Signer, NDKNip46Signer, NDKSubscription, NostrEvent, NostrTop } from '@nostrband/ndk'
 import { ZapEvent, createZapEvent } from '@/types/zap-event'
 import {
   CommunityApprovalInfo,
@@ -24,6 +24,7 @@ import { LiveEvent, createLiveEvent } from '@/types/live-events'
 import { WalletInfo } from '@/types/wallet-info'
 import { ContactListEvent, createContactListEvent } from '@/types/contact-list-event'
 import { AppNostr } from '@/types/app-nostr'
+import { showToast } from '@/utils/helpers/general'
 
 const KIND_META: number = 0
 const KIND_NOTE: number = 1
@@ -39,6 +40,8 @@ const KIND_COMMUNITY: number = 34550
 const KIND_NWC_PAYMENT_REQUEST: number = 23194
 const KIND_NWC_PAYMENT_REPLY: number = 23195
 
+const MAX_TOP_APPS = 200
+
 // we only care about web apps
 const PLATFORMS = ['web']
 
@@ -47,19 +50,23 @@ const ADDR_TYPES = ['', 'npub', 'note', 'nevent', 'nprofile', 'naddr']
 export const nostrbandRelay = 'wss://relay.nostr.band/'
 export const nostrbandRelayAll = 'wss://relay.nostr.band/all'
 
-const readRelays = [
-  nostrbandRelay,
-  //  "wss://relay.damus.io", // too slow
-  'wss://eden.nostr.land',
-  'wss://nos.lol',
-  'wss://relay.nostr.bg',
-  'wss://nostr.mom'
-]
+const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.bg', 'wss://nostr.mom']
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
-export const allRelays = [nostrbandRelayAll, ...writeRelays]
+const allRelays = [nostrbandRelayAll, ...writeRelays]
+
+const nsbRelays = ['wss://relay.nsecbunker.com']
 
 // global ndk instance for now
 let ndk: NDK = null
+let nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
+nsbNDK
+  .connect(5000)
+  .then(() => {
+    console.log('nsb ndk connected')
+  })
+  .catch(() => console.log('nsb ndk connect error'))
+
+let nsbSigner: NDKNip46Signer = null
 
 interface EventAddr {
   kind?: number
@@ -167,11 +174,13 @@ function getEventAddr(e: NDKEvent | AugmentedEvent): string {
 
 function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
   return new Promise(async (ok) => {
+    const start = Date.now()
     const events = await ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
     for (const e of events.values()) {
       const augmentedEvent = rawEvent(e)
       putEventToCache(augmentedEvent)
     }
+    console.log('fetched in', Date.now() - start, 'ms from', readRelays.length, 'relays', JSON.stringify(filter))
     ok(events)
   })
 }
@@ -241,18 +250,19 @@ function sortDesc(arr: AugmentedEvent[] | AuthoredEvent[] | MetaEvent[]) {
 
 export async function fetchApps() {
   // try to fetch best apps list from our relay
-  const top = await ndk.fetchTop(
-    {
-      kinds: [KIND_APP],
-      limit: 50
-    },
-    // note: send to this separate endpoint bcs this req might be slow
-    NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk)
-  )
-  console.log('top apps', top?.ids.length)
+  const top = null
+  // const top = await ndk.fetchTop(
+  //   {
+  //     kinds: [KIND_APP],
+  //     limit: MAX_TOP_APPS
+  //   },
+  //   // note: send to this separate endpoint bcs this req might be slow
+  //   NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk)
+  // )
+  // console.log('top apps', top?.ids.length)
 
   let events: AugmentedEvent[] = []
-  if (top.ids.length) {
+  if (top?.ids.length) {
     // fetch the app events themselves from the list
     events = await fetchEventsByIds({ ids: top.ids, kinds: [KIND_APP] })
   } else {
@@ -261,7 +271,7 @@ export async function fetchApps() {
     // completely breaking the UX due to our relay being down
     const ndkEvents = await fetchEventsRead(ndk, {
       kinds: [KIND_APP],
-      limit: 100
+      limit: MAX_TOP_APPS
     })
 
     events = [...ndkEvents.values()].map((e) => rawEvent(e))
@@ -577,7 +587,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   //  let events = await collectEvents(fetchEventsRead(ndk, filter));
   //  console.log('events', events);
 
-  const top: NostrTop | null = await ndk.fetchTop(filter, NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk))
+  const top: NostrTop | null = null // await ndk.fetchTop(filter, NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk))
   console.log('top kind apps', top?.ids.length)
 
   let ndkEvents: NDKEvent[] = []
@@ -599,7 +609,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
       const e = augmentedEvents.find((e) => e.id == id)
       if (e) e.order = top.ids.length - i
     })
-  else augmentedEvents.forEach((e) => (e.order = Number(getTagValue(e, 'published_at'))))
+  else augmentedEvents.forEach((e, i) => (e.order = augmentedEvents.length - i))
 
   // we need profiles in case app info inherits content
   // from it's profile
@@ -1281,10 +1291,22 @@ class Subscription<OutputEventType> {
   lastSub: NDKSubscription | null = null
   label: string = ''
   onEvent: (e: AugmentedEvent) => Promise<OutputEventType>
+  filter: NDKFilter
+  cb: (e: OutputEventType) => Promise<void>
 
   constructor(label: string, onEvent: (e: AugmentedEvent) => Promise<OutputEventType>) {
     this.label = label
     this.onEvent = onEvent
+  }
+
+  async onReconnect(): Promise<void> {
+    if (!this.lastSub) return
+    this.lastSub.stop()
+
+    // let the unsubs happen
+    setTimeout(async () => {
+      await this.lastSub.start()
+    }, 300)
   }
 
   async restart(filter: NDKFilter, cb: (e: OutputEventType) => Promise<void>) {
@@ -1293,6 +1315,9 @@ class Subscription<OutputEventType> {
       this.lastSub.stop()
       this.lastSub = null
     }
+
+    this.filter = filter
+    this.cb = cb
 
     const events = new Map<string, NDKEvent>()
     let eose = false
@@ -1473,6 +1498,27 @@ export function stringToBech32(s: string, hex: boolean = false): string {
   return ''
 }
 
+export function stringToBolt11(s: string): [string, any] {
+  if (!s) return ['', null]
+
+  const INVOICE_REGEX = /^(lnbcrt|lntb|lnbc|LNBCRT|LNTB|LNBC)([0-9]{1,}[a-zA-Z0-9]+){1}$/g
+
+  const array = [...s.matchAll(INVOICE_REGEX)].map((a) => a[0])
+
+  let invoice = null
+  for (let b32 of array) {
+    console.log('maybe invoice', b32, s)
+    if (!b32.toLowerCase().startsWith('lnbc')) continue
+    try {
+      return [b32, bolt11Decode(b32)]
+    } catch (e) {
+      console.log('bad invoice', b32, 'e', e)
+    }
+  }
+
+  return ['', null]
+}
+
 export function createAddrOpener(cb: (addr: string) => void): (event: Event) => void {
   return (event: Event) => {
     let addr = event.id
@@ -1501,7 +1547,8 @@ export function createAddrOpener(cb: (addr: string) => void): (event: Event) => 
   }
 }
 
-export function connect(): void {
+export function connect(): Promise<void> {
+  // main instance
   ndk = new NDK({ explicitRelayUrls: allRelays })
 
   const scheduleStats = () => {
@@ -1619,3 +1666,103 @@ export function putEventToCache(e: AugmentedEvent | MetaEvent) {
   eventCache.set(e.id, e)
   addrCache.set(getEventAddr(e), e)
 }
+
+export function setNsbSigner(token: string) {
+  nsbSigner = new NDKNip46Signer(nsbNDK, token, new NDKNip07Signer())
+}
+
+export async function checkNsbSigner() {
+  if (!nsbSigner.connected) {
+    console.log('nsb check...')
+    await nsbSigner.blockUntilReady()
+    nsbSigner.connected = true
+    console.log('nsb connected')
+  } else {
+    console.log('nsb already connected')
+  }
+}
+
+export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<NostrEvent> {
+  if (!nsbSigner) throw new Error(`NSB signer not found for ${pubkey}`)
+  if (!nsbSigner.connected) {
+    console.log('nsb connecting for pubkey', pubkey)
+    await nsbSigner.blockUntilReady()
+    nsbSigner.connected = true
+  }
+
+  const signed = {
+    ...event,
+    pubkey
+  }
+  signed.id = getEventHash(signed)
+  console.log('nsb signing event ', signed.id, 'by', pubkey)
+  signed.sig = await nsbSigner.sign(signed)
+  console.log('nsb signed event ', signed.id, signed.sig)
+
+  return signed
+}
+
+async function checkReconnect(ndk: NDK, force: boolean = false) {
+  if (!ndk) return
+
+  // how do we check the connectivity?
+  let reconnected = false
+  for (const [url, r] of ndk.pool.relays) {
+    const alive = force
+      ? false
+      : await new Promise((ok) => {
+          const sub = ndk.subscribe(
+            {
+              kinds: [0, 1, 3],
+              limit: 1
+            },
+            {
+              closeOnEose: true
+            },
+            new NDKRelaySet(new Set([r]), ndk),
+            /* autoStart */ false
+          )
+
+          let alive = false
+          sub.on('event', (e) => {
+            console.log('checkReconnect', url, 'got event', e.id)
+            alive = true
+          })
+          sub.on('eose', () => {
+            console.log('checkReconnect', url, 'alive', alive)
+            ok(alive)
+          })
+          sub.start()
+        })
+
+    if (!alive) {
+      await new Promise((ok) => {
+        console.log('reconnecting', url)
+        reconnected = true
+        r.disconnect()
+        setTimeout(async () => {
+          await r.connect()
+          ok()
+        }, 300)
+      })
+    }
+  }
+
+  if (reconnected) {
+    profileSub.onReconnect()
+    contactListSub.onReconnect()
+  }
+}
+
+export function nostrOnResume() {
+  checkReconnect(ndk)
+  checkReconnect(nsbNDK)
+}
+
+export function reconnect() {
+  showToast(`Reconnecting...`)
+  checkReconnect(ndk, true)
+  checkReconnect(nsbNDK, true)
+}
+
+localStorage.debug = ''

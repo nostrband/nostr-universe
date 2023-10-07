@@ -60,3 +60,13 @@ export const checkIsCurrentUser = (pubkey: string, account: MetaEvent | null) =>
   }
   return false
 }
+
+export const showToast = (message: string) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    window.plugins.toast.showShortBottom(message)
+  } catch {
+    console.log('Show toast failed')
+  }
+}

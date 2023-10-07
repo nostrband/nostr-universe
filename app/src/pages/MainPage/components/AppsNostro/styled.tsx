@@ -1,5 +1,5 @@
 import { styled } from '@mui/material/styles'
-import { Typography, TypographyProps } from '@mui/material'
+import { Box, Typography, TypographyProps } from '@mui/material'
 import { forwardRef } from 'react'
 
 export const StyledTitle = styled(
@@ -9,4 +9,8 @@ export const StyledTitle = styled(
 )(({ theme }) => ({
   color: theme.palette.textSecondaryDecorate.main,
   fontWeight: 'bold'
+}))
+
+export const StyledWrapper = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3)
 }))
