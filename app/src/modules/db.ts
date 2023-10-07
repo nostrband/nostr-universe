@@ -25,14 +25,15 @@ export const dbi = {
     try {
       await db.signedEvents.add(signedEvent)
     } catch (error) {
-      console.log(`Add signedEvent to DB error: ${JSON.stringify(error)}`)
+      console.log(`Add signedEvent to DB error: ${error}`)
     }
   },
   getSignedEvents: async (pubkey: string) => {
     try {
-      return await db.signedEvents.where('pubkey').equals(pubkey).toArray()
+      return (await db.signedEvents.where('pubkey').equals(pubkey)
+        .toArray()).sort((a, b) => b.timestamp - a.timestamp)
     } catch (error) {
-      console.log(`List tabs error: ${JSON.stringify(error)}`)
+      console.log(`List signedEvents error: ${error}`)
       return []
     }
   },

@@ -6,6 +6,7 @@ import { SignedEvent } from './SignedEvent'
 import { dbi } from '@/modules/db'
 import { Input } from '@/shared/Input/Input'
 import { useAppSelector } from '@/store/hooks/redux'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 // const eventsMoc = [
 //   {
@@ -40,6 +41,7 @@ type TypeSignEvent = {
 
 export const ModalSignedEventsContent = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
+  const { handleOpen } = useOpenModalSearchParams()
   const [content, setContent] = useState('')
   const [events, setEvents] = useState([])
   const [filterContentValue, setFilterContentValue] = useState('')
@@ -95,6 +97,7 @@ export const ModalSignedEventsContent = () => {
           eventId={event.eventId}
           eventJson={event.eventJson}
           handleShowContent={handleShowContent}
+          handleOpen={handleOpen}
         />
       ))}
 

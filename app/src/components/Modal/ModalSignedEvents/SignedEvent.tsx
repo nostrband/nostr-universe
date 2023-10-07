@@ -7,6 +7,9 @@ import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { kindEvents } from '@/consts/index'
 import { Input } from '@/shared/Input/Input'
 import { format } from 'date-fns'
+import { nip19 } from '@nostrband/nostr-tools'
+import { nostrbandRelay } from '@/modules/nostr'
+import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 interface ISignedEvent {
   url: string
   kind: string
@@ -15,8 +18,10 @@ interface ISignedEvent {
   eventId: string
   eventJson: string
   handleShowContent: (content: string) => void
+  handleOpen: (modal: MODAL_PARAMS_KEYS, extraOptions?: any) => void
+
 }
-export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowContent }: ISignedEvent) => {
+export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowContent, handleOpen }: ISignedEvent) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -29,21 +34,35 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
     copyToClipBoard(url)
     handleClose()
   }
-  const handleCopyEvent = () => {
+  const handleCopyId = () => {
     copyToClipBoard(eventId)
+    handleClose()
+  }
+  const handleCopyEvent = () => {
+    copyToClipBoard(eventJson)
     handleClose()
   }
   const handleShowDialogContent = () => {
     handleShowContent(eventJson)
     handleClose()
   }
-  const getKind = kindEvents[kind] || kind
-  const getUrl = new URL(url).origin
-  const getTime = format(new Date(time), 'MM.dd.yyyy | HH:mm')
+  const handleOpenWith = () => {
+    const addr = nip19.neventEncode({
+      id: eventId,
+      relays: [nostrbandRelay]
+    })
+
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr }
+    })
+  }
+  const getKind = kindEvents[kind] + ` (${kind})` || `Kind ${kind}`
+  const getUrl = new URL(url).hostname
+  const getTime = format(new Date(time), 'MM.dd.yyyy HH:mm:ss')
   return (
     <StyledWrapper>
       <StyledHead>
-        <StyledViewTitle>Kind {getKind}</StyledViewTitle>
+        <StyledViewTitle>{getKind}</StyledViewTitle>
         <IconButton
           color="inherit"
           size="medium"
@@ -84,7 +103,9 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
         }}
       >
         <MenuItem onClick={handleShowDialogContent}>Show</MenuItem>
-        <MenuItem onClick={handleCopyUrl}>Copy id</MenuItem>
+        <MenuItem onClick={handleOpenWith}>Open with</MenuItem>
+        <MenuItem onClick={handleCopyId}>Copy id</MenuItem>
+        <MenuItem onClick={handleCopyUrl}>Copy url</MenuItem>
         <MenuItem onClick={handleCopyEvent}>Copy event</MenuItem>
       </Menu>
     </StyledWrapper>
