@@ -6,7 +6,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(12).stores({
+db.version(13).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -16,7 +16,8 @@ db.version(12).stores({
   readOnlyKeys: '&pubkey,current',
   nsecbunkerKeys: '&pubkey,localPubkey,token',
   perms: '[pubkey+app+name],[pubkey+app],value',
-  contentFeedSettings: 'id, pubkey, settings_json'
+  contentFeedSettings: 'id, pubkey, settings_json',
+  lastKindApps: 'id,pubkey,kind,naddr,app_json'
 })
 
 export const dbi = {
@@ -261,6 +262,30 @@ export const dbi = {
       })
     } catch (error) {
       console.log(`Update content feed settings error: ${error}`)
+    }
+  },
+  putLastKindApp: async (app) => {
+    try {
+      await db.lastKindApps.put(app)
+    } catch (error) {
+      console.log(`Put lastKindApp error: ${error}`)
+    }
+  },
+  getLastKingApps: async (pubkey) => {
+    try {
+      const lastKindApps = await db.lastKindApps.where({ pubkey }).toArray()
+      return lastKindApps.reduce((acc, current) => {
+        return {
+          ...acc,
+          [current.kind]: {
+            ...current,
+            lastUsed: true,
+            order: 10000
+          }
+        }
+      }, {})
+    } catch (error) {
+      console.log(`Get lastKindApps error: ${error}`)
     }
   }
 }

@@ -208,7 +208,7 @@ export const bootstrapSettings = async (pubkey) => {
   const isSettingsExist = await dbi.checkPresenceOfSettings(pubkey)
 
   if (!isSettingsExist) {
-    console.log("Creating default ContentFeedSettings")
+    console.log('Creating default ContentFeedSettings')
     await dbi.setContentFeedSettings({
       id: uuidv4(),
       pubkey,
@@ -232,6 +232,10 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
 
   console.log('perms', JSON.stringify(perms))
 
+  const lastKindAppsCollection = await dbi.getLastKingApps(pubkey)
+
+  console.log('workspace lastKindApps', lastKindAppsCollection)
+
   const pinsSort = pins.sort((a, b) => a.order - b.order)
   const tabsSort = tabs.sort((a, b) => a.order - b.order)
 
@@ -244,7 +248,7 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
     // suggestedProfiles: [],
     tabIds: tabsSort.map((t) => t.id),
     pins: pinsSort,
-    lastKindApps: {},
+    lastKindApps: lastKindAppsCollection,
     currentTabId: '',
     perms,
     contentFeedSettings: contentFeedSettings

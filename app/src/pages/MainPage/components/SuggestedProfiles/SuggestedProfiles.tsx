@@ -31,7 +31,12 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(profile.kind)
+        }
+      })
     },
     [handleOpen]
   )

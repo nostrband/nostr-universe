@@ -187,10 +187,10 @@ export const workspacesSlice = createSlice({
       })
     },
     setLastKindApp: (state, action) => {
-      const { kind, naddr, workspacePubkey } = action.payload
+      const { app, workspacePubkey } = action.payload
 
       const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey)
-      if (ws) ws.lastKindApps[kind] = naddr
+      if (ws) ws.lastKindApps[app.kind] = app
     },
     updateWorkspaceContentFeedSettings: (state, action) => {
       const { workspacePubkey, newSettings } = action.payload

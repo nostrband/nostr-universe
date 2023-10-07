@@ -341,7 +341,7 @@ export const useOpenApp = () => {
   }
 
   const releaseTab = async (tabId) => {
-    console.log("releaseTab", tabId)
+    console.log('releaseTab', tabId)
     await browser.canRelease(tabId)
   }
 
@@ -468,7 +468,7 @@ export const useOpenApp = () => {
       // it's very common to open a tab, read it and hit 'back',
       // most of the time it means user won't need the tab any more,
       // but we won't delete the tab, we just release the webview,
-      // it will be re-created if needed. 
+      // it will be re-created if needed.
       releaseTab(tabId)
     },
     setUrl: async (tabId, url) => {
@@ -714,7 +714,9 @@ export const useOpenApp = () => {
 
   const openApp = async (app: IOpenAppNostr, options?: { replace?: boolean } = { replace: false }) => {
     if (app.kind !== undefined) {
-      dispatch(setLastKindApp({ kind: app.kind, naddr: app.naddr, workspacePubkey: currentPubkey }))
+      dispatch(setLastKindApp({ workspacePubkey: currentPubkey, app }))
+      const id = currentPubkey + app.kind
+      dbi.putLastKindApp({ id, pubkey: currentPubkey, ...app })
     }
 
     await openBlank(

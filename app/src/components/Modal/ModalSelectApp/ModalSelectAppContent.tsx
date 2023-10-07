@@ -26,8 +26,11 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
   const [isAppsFailed, setIsAppsFailed] = useState(false)
   const [isAppsLoading, setIsAppsLoading] = useState(false)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
+
   const [searchParams] = useSearchParams()
   const paramSearchUrl = EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]
+  const paramSearchKind = searchParams.get(MODAL_PARAMS_KEYS.KIND) || ''
+
   const getParamAddr = searchParams.get(paramSearchUrl) || ''
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +58,29 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       }
       setApps([nativeApp])
 
+      let lastAppNaddr = ''
+      let lastKindApp: IOpenAppNostr | null = null
+
+      if (paramSearchKind && currentWorkSpace) {
+        lastKindApp = currentWorkSpace?.lastKindApps[paramSearchKind]
+        if (lastKindApp) {
+          const kindApp = {
+            naddr: lastKindApp.naddr,
+            url: lastKindApp.url,
+            name: lastKindApp.name,
+            about: lastKindApp.about,
+            picture: lastKindApp.picture,
+            lastUsed: lastKindApp.lastUsed,
+            pinned: lastKindApp.pinned,
+            order: lastKindApp.order
+          }
+          lastAppNaddr = lastKindApp.naddr
+          setApps([nativeApp, kindApp])
+        }
+      }
+
       const [info, addr] = await fetchAppsForEvent(getParamAddr)
+
       if (addr.kind === undefined) {
         setIsAppsLoading(false)
         return
@@ -64,9 +89,8 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       setKind(`${addr.kind}`)
       handleSetKind(`${addr.kind}`)
 
-      let lastAppNaddr = ''
       if (currentWorkSpace && addr.kind in currentWorkSpace.lastKindApps) {
-        lastAppNaddr = currentWorkSpace?.lastKindApps[addr.kind]
+        lastAppNaddr = currentWorkSpace?.lastKindApps[addr.kind].naddr
       }
 
       const apps: IOpenAppNostr[] = []
@@ -76,9 +100,15 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
         order: NATIVE_NADDR === lastAppNaddr ? 10000 : 9999
       })
 
+      if (lastKindApp) {
+        apps.push(lastKindApp)
+      }
+
       for (const [, appHandlers] of info.apps) {
         const app = appHandlers.handlers[0]
         if (!app.eventUrl) continue
+
+        if (app.naddr === lastAppNaddr) continue
 
         const pinned = !!findAppPin(app)
 
@@ -124,7 +154,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       setIsAppsLoading(false)
       setIsAppsFailed(true)
     }
-  }, [currentWorkSpace?.lastKindApps, currentWorkSpace?.pins, getParamAddr])
+  }, [currentWorkSpace?.lastKindApps, currentWorkSpace?.pins, getParamAddr, paramSearchKind])
 
   const resetStates = useCallback(() => {
     setApps([])
