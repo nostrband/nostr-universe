@@ -50,13 +50,7 @@ const ADDR_TYPES = ['', 'npub', 'note', 'nevent', 'nprofile', 'naddr']
 export const nostrbandRelay = 'wss://relay.nostr.band/'
 export const nostrbandRelayAll = 'wss://relay.nostr.band/all'
 
-const readRelays = [
-  nostrbandRelay,
-  'wss://relay.damus.io',
-  'wss://nos.lol',
-  'wss://relay.nostr.bg',
-  'wss://nostr.mom'
-]
+const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.bg', 'wss://nostr.mom']
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 const allRelays = [nostrbandRelayAll, ...writeRelays]
 
@@ -186,7 +180,7 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
       const augmentedEvent = rawEvent(e)
       putEventToCache(augmentedEvent)
     }
-    console.log("fetched in", Date.now() - start, "ms from", readRelays.length, "relays", JSON.stringify(filter))
+    console.log('fetched in', Date.now() - start, 'ms from', readRelays.length, 'relays', JSON.stringify(filter))
     ok(events)
   })
 }
@@ -1682,9 +1676,9 @@ export async function checkNsbSigner() {
     console.log('nsb check...')
     await nsbSigner.blockUntilReady()
     nsbSigner.connected = true
-    console.log("nsb connected")
+    console.log('nsb connected')
   } else {
-    console.log("nsb already connected")
+    console.log('nsb already connected')
   }
 }
 
@@ -1696,8 +1690,8 @@ export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<N
     nsbSigner.connected = true
   }
 
-  const signed = { 
-    ...event, 
+  const signed = {
+    ...event,
     pubkey
   }
   signed.id = getEventHash(signed)
@@ -1714,32 +1708,36 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
   // how do we check the connectivity?
   let reconnected = false
   for (const [url, r] of ndk.pool.relays) {
-    const alive = force ? false : await new Promise((ok) => {
+    const alive = force
+      ? false
+      : await new Promise((ok) => {
+          const sub = ndk.subscribe(
+            {
+              kinds: [0, 1, 3],
+              limit: 1
+            },
+            {
+              closeOnEose: true
+            },
+            new NDKRelaySet(new Set([r]), ndk),
+            /* autoStart */ false
+          )
 
-      const sub = ndk.subscribe({
-        kinds: [0,1,3],
-        limit: 1
-      }, {
-        closeOnEose: true
-      },
-      new NDKRelaySet(new Set([r]), ndk),
-      /* autoStart */false)
-  
-      let alive = false
-      sub.on('event', (e) => {
-        console.log("checkReconnect", url, "got event", e.id)
-        alive = true
-      })
-      sub.on('eose', () => {
-        console.log("checkReconnect", url, "alive", alive)
-        ok(alive)
-      })
-      sub.start()
-    })
+          let alive = false
+          sub.on('event', (e) => {
+            console.log('checkReconnect', url, 'got event', e.id)
+            alive = true
+          })
+          sub.on('eose', () => {
+            console.log('checkReconnect', url, 'alive', alive)
+            ok(alive)
+          })
+          sub.start()
+        })
 
     if (!alive) {
       await new Promise((ok) => {
-        console.log("reconnecting", url)
+        console.log('reconnecting', url)
         reconnected = true
         r.disconnect()
         setTimeout(async () => {

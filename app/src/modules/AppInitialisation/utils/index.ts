@@ -208,7 +208,7 @@ export const bootstrapSettings = async (pubkey) => {
   const isSettingsExist = await dbi.checkPresenceOfSettings(pubkey)
 
   if (!isSettingsExist) {
-    console.log("Creating default ContentFeedSettings")
+    console.log('Creating default ContentFeedSettings')
     await dbi.setContentFeedSettings({
       id: uuidv4(),
       pubkey,

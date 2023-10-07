@@ -14,10 +14,13 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
 
   const initDevice = useCallback(async () => {
     try {
-
-      document.addEventListener("resume", () => {
-        nostrOnResume()
-      }, false);
+      document.addEventListener(
+        'resume',
+        () => {
+          nostrOnResume()
+        },
+        false
+      )
 
       const [keys, currentPubKey] = await loadKeys(dispatch)
 

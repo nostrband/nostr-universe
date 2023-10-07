@@ -67,6 +67,6 @@ export const showToast = (message: string) => {
     // @ts-ignore
     window.plugins.toast.showShortBottom(message)
   } catch {
-    console.log("Show toast failed")
+    console.log('Show toast failed')
   }
 }

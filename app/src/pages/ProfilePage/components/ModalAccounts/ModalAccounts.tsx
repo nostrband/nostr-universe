@@ -38,12 +38,10 @@ export const ModalAccounts = ({ handleClose, changeAccount, open, accounts, curr
               <ListItemAvatar>
                 <Avatar src={getProfileImage(account)}></Avatar>
               </ListItemAvatar>
-              <StyledItemText 
-                primary={getProfileName(account.pubkey, account)} 
-                secondary={account.isReadOnly ? 'read-only' : (account.isNsb ? 'nsecBunker' : '')}
-                secondaryTypographyProps={
-                  {color: '#bbb', fontSize: "0.8em"}
-                }
+              <StyledItemText
+                primary={getProfileName(account.pubkey, account)}
+                secondary={account.isReadOnly ? 'read-only' : account.isNsb ? 'nsecBunker' : ''}
+                secondaryTypographyProps={{ color: '#bbb', fontSize: '0.8em' }}
               />
             </ListItemButton>
           </StyledListItem>
