@@ -694,13 +694,14 @@ export const useOpenApp = () => {
       return
     }
 
-    if (entity.url.startsWith('intent:')) {
-      // external browser
+    // external browser or app
+    if (entity.url.startsWith('intent:')
+      || entity.url.startsWith('nostr:')) {
       window.cordova.InAppBrowser.open(entity.url, '_self')
       return
     }
 
-    // // find an existing app for this url
+    // find an existing app for this url
     const origin = getOrigin(entity.url)
     const app = entity.appNaddr
       ? apps.find((app) => app.naddr === entity.appNaddr)
