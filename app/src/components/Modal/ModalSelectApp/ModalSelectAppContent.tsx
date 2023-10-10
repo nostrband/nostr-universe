@@ -46,6 +46,11 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       setIsAppsFailed(false)
       setIsAppsLoading(true)
 
+      if (paramSearchKind) {
+        setKind(paramSearchKind)
+        handleSetKind(paramSearchKind)
+      }
+
       const nativeApp: IOpenAppNostr = {
         naddr: NATIVE_NADDR,
         url: 'nostr:' + getParamAddr,
@@ -56,28 +61,26 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
         pinned: false,
         order: 0
       }
-      setApps([nativeApp])
 
       let lastAppNaddr = ''
       let lastKindApp: IOpenAppNostr | null = null
 
       if (paramSearchKind && currentWorkSpace) {
-        lastKindApp = currentWorkSpace?.lastKindApps[paramSearchKind]
-        if (lastKindApp) {
-          const kindApp = {
-            naddr: lastKindApp.naddr,
-            url: lastKindApp.url,
-            name: lastKindApp.name,
-            about: lastKindApp.about,
-            picture: lastKindApp.picture,
-            lastUsed: lastKindApp.lastUsed,
-            pinned: lastKindApp.pinned,
-            order: lastKindApp.order
+        const app = currentWorkSpace?.lastKindApps[paramSearchKind]
+        if (app) {
+          lastKindApp = {
+            ...app,
+            order: 10000,
+            lastUsed: true,
           }
-          lastAppNaddr = lastKindApp.naddr
-          setApps([nativeApp, kindApp])
+          lastAppNaddr = app.naddr
         }
       }
+
+      if (lastKindApp)
+        setApps([lastKindApp, nativeApp])
+      else
+        setApps([nativeApp])
 
       const [info, addr] = await fetchAppsForEvent(getParamAddr)
 
@@ -94,15 +97,15 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       }
 
       const apps: IOpenAppNostr[] = []
+      if (lastKindApp) {
+        apps.push(lastKindApp)
+      }
+
       apps.push({
         ...nativeApp,
         lastUsed: NATIVE_NADDR === lastAppNaddr,
         order: NATIVE_NADDR === lastAppNaddr ? 10000 : 9999
       })
-
-      if (lastKindApp) {
-        apps.push(lastKindApp)
-      }
 
       for (const [, appHandlers] of info.apps) {
         const app = appHandlers.handlers[0]
