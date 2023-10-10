@@ -66,3 +66,16 @@ export const kindEvents: { [key: string]: string } = {
   '31337': 'Audio Track',
   '34550': 'Community Definition'
 }
+
+export interface KindOptionType {
+  label: string
+  kind: string
+}
+
+export const getTransformedKindEvents: KindOptionType[] = Object.entries(kindEvents).map(([key, value]) => ({
+  label: value,
+  kind: key
+}))
+
+export const formatDateHours = 'dd.MM.yyyy HH:mm:ss'
+export const formatDate = 'dd.MM.yyyy'

@@ -4,12 +4,14 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
 import { StyledViewTitle, StyledWrapper, StyledInputWrap, StyledHead } from './styled'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
-import { kindEvents } from '@/consts/index'
+import { formatDateHours, kindEvents } from '@/consts/index'
 import { Input } from '@/shared/Input/Input'
 import { format } from 'date-fns'
 import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
+import { IExtraOptions } from '@/hooks/modal'
+
 interface ISignedEvent {
   url: string
   kind: string
@@ -18,9 +20,9 @@ interface ISignedEvent {
   eventId: string
   eventJson: string
   handleShowContent: (content: string) => void
-  handleOpen: (modal: MODAL_PARAMS_KEYS, extraOptions?: any) => void
-
+  handleOpen: (modal: MODAL_PARAMS_KEYS, extraOptions?: IExtraOptions) => void
 }
+
 export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowContent, handleOpen }: ISignedEvent) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
@@ -58,7 +60,7 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
   }
   const getKind = kindEvents[kind] + ` (${kind})` || `Kind ${kind}`
   const getUrl = new URL(url).hostname
-  const getTime = format(new Date(time), 'MM.dd.yyyy HH:mm:ss')
+  const getTime = format(new Date(time), formatDateHours)
   return (
     <StyledWrapper>
       <StyledHead>

@@ -30,8 +30,7 @@ export const dbi = {
   },
   getSignedEvents: async (pubkey: string) => {
     try {
-      return (await db.signedEvents.where('pubkey').equals(pubkey)
-        .toArray()).sort((a, b) => b.timestamp - a.timestamp)
+      return (await db.signedEvents.where('pubkey').equals(pubkey).toArray()).sort((a, b) => b.timestamp - a.timestamp)
     } catch (error) {
       console.log(`List signedEvents error: ${error}`)
       return []
