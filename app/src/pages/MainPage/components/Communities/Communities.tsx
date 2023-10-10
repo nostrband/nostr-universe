@@ -27,7 +27,12 @@ export const Communities = memo(function Communities() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
+        }
+      })
     },
     [handleOpen]
   )

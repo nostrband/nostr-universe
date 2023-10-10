@@ -53,7 +53,10 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
     })
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-      search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr }
+      search: { 
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr,
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(kind)
+      }
     })
   }
   const getKind = kindEvents[kind] + ` (${kind})` || `Kind ${kind}`

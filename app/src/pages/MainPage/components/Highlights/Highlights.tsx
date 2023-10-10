@@ -25,7 +25,12 @@ export const Highlights = memo(function Highlights() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(highlight.kind)
+        }
+      })
     },
     [handleOpen]
   )

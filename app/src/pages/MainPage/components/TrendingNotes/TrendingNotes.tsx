@@ -23,7 +23,10 @@ export const TrendingNotes = () => {
     })
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-      search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: ntrendingnote }
+      search: {
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: ntrendingnote,
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
+      }
     })
   }, [])
 

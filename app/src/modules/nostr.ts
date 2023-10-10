@@ -733,6 +733,22 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null):
   return [info, addr]
 }
 
+// export const getEventKind = () => {
+//   const addr = parseAddr(id)
+//   if (!addr) throw new Error('Bad address')
+
+//   // if event content is known take kind from there
+
+//   // if kind unknown need to fetch event from network
+//   if (addr.kind === undefined) {
+//     const event = await fetchEventByAddr(ndk, addr)
+
+//     if (!event) throw new Error('Failed to fetch target event')
+
+//     addr.kind = event.kind
+//   }
+// }
+
 export async function fetchEventByBech32(b32: string): Promise<AugmentedEvent | null> {
   const addr = parseAddr(b32)
   console.log('b32', b32, 'addr', JSON.stringify(addr))

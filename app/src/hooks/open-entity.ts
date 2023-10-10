@@ -727,7 +727,9 @@ export const useOpenApp = () => {
 
   const openApp = async (app: IOpenAppNostr, options?: { replace?: boolean } = { replace: false }) => {
     if (app.kind !== undefined) {
-      dispatch(setLastKindApp({ kind: app.kind, naddr: app.naddr, workspacePubkey: currentPubkey }))
+      dispatch(setLastKindApp({ workspacePubkey: currentPubkey, app }))
+      const id = currentPubkey + app.kind
+      dbi.putLastKindApp({ id, pubkey: currentPubkey, ...app })
     }
 
     await openBlank(
