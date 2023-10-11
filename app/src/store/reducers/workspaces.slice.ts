@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
 import { WorkSpace } from '@/types/workspace'
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { dbi } from '@/modules/db'
@@ -14,7 +12,7 @@ const initialState: IWorkSpaceState = {
   workspaces: []
 }
 
-function updateWorkspace(state: IWorkSpaceState, pubkey: string, props: object | Function) {
+function updateWorkspace(state: IWorkSpaceState, pubkey: string, props: object | ((workspace: WorkSpace) => object)) {
   state.workspaces = state.workspaces.map((workspace: WorkSpace) => {
     if (workspace.pubkey === pubkey) {
       if (props instanceof Function) props = props(workspace)
