@@ -1,13 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useOpenApp } from '@/hooks/open-entity'
-import {
-  nostrbandRelay,
-  searchLongNotes,
-  searchNotes,
-  searchProfiles,
-  stringToBech32
-} from '@/modules/nostr'
+import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
 import { MetaEvent } from '@/types/meta-event'
@@ -18,9 +12,7 @@ import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/Suggeste
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
-import { StyledForm, StyledInput } from './styled'
-import { IconButton } from '@mui/material'
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import { StyledAutoComplete, StyledForm } from './styled'
 import { ContactList } from '../MainPage/components/ContactList/ContactList'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
@@ -30,6 +22,9 @@ import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/Horizont
 import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
 import { Profile } from '@/shared/Profile/Profile'
 import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNote'
+import { dbi } from '@/modules/db'
+import { v4 as uuidv4 } from 'uuid'
+import { SearchHistory } from '@/modules/types/db'
 
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
@@ -37,13 +32,17 @@ export const SearchPageContent = () => {
 
   const { openBlank } = useOpenApp()
   const { searchValue } = useAppSelector((state) => state.searchModal)
+  const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
-  // const [searchValue, setSearchValue] = useState('')
+
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [notes, setNotes] = useState<AuthoredEvent[] | null>(null)
   const [longNotes, setLongNotes] = useState<LongNoteEvent[] | null>(null)
 
   const [isLoading, setIsLoading] = useState(false)
+
+  const [searchHistoryOptions, setSearchHistoryOptions] = useState<SearchHistory[]>([])
+  const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
 
   const { handleOpen } = useOpenModalSearchParams()
 
@@ -61,9 +60,11 @@ export const SearchPageContent = () => {
     const b32 = stringToBech32(str)
 
     if (b32) {
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { 
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32
-      } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32
+        }
+      })
       return true
     }
 
@@ -87,15 +88,28 @@ export const SearchPageContent = () => {
       .finally(() => setIsLoading(false))
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    localStorage.setItem('searchValue', searchValue)
-    onSearch(searchValue)
-    loadEvents(searchValue)
+  const searchHandler = (value: string) => {
+    if (value.trim().length > 0) {
+      localStorage.setItem('searchValue', value)
+      onSearch(value)
+      loadEvents(value)
+
+      dbi.addSearchTerm({
+        id: uuidv4(),
+        value: value,
+        timestamp: Date.now(),
+        pubkey: currentPubkey
+      })
+    }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setSearchValue({ searchValue: e.target.value }))
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    searchHandler(searchValue)
+  }
+
+  const handleChange = (_: React.SyntheticEvent, value: string) => {
+    dispatch(setSearchValue({ searchValue: value }))
   }
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -104,10 +118,12 @@ export const SearchPageContent = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { 
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(0)
-    } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: {
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(0)
+      }
+    })
   }
 
   const handleOpenNote = (note: AuthoredEvent) => {
@@ -116,10 +132,12 @@ export const SearchPageContent = () => {
       id: note.id
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { 
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent,
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
-    } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: {
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent,
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
+      }
+    })
   }
 
   const handleOpenLongNote = (longNote: LongNoteEvent) => {
@@ -130,20 +148,13 @@ export const SearchPageContent = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { 
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(longNote.kind)
-    } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: {
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(longNote.kind)
+      }
+    })
   }
-
-  // useEffect(() => {
-  //   return () => {
-  //     setSearchValue('')
-  //     setProfiles(null)
-  //     setNotes(null)
-  //     setLongNotes(null)
-  //   }
-  // }, [isOpen])
 
   useEffect(() => {
     if (searchValue.trim().length) {
@@ -151,6 +162,25 @@ export const SearchPageContent = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEvents])
+
+  const getSearchHistory = useCallback(async () => {
+    if (!currentPubkey) return undefined
+
+    setIsSearchHistoryLoading(true)
+    const history = await dbi.getSearchHistory(currentPubkey).finally(() => setIsSearchHistoryLoading(false))
+
+    if (history && history.length) {
+      setSearchHistoryOptions(history)
+    }
+  }, [currentPubkey])
+
+  useEffect(() => {
+    getSearchHistory()
+  }, [getSearchHistory, isShow])
+
+  const deleteSearchTermOptionHandler = (id: string) => {
+    dbi.deleteSearchTerm(id).then(getSearchHistory)
+  }
 
   const renderContent = () => {
     return (
@@ -230,18 +260,17 @@ export const SearchPageContent = () => {
     <StyledWrapVisibility isShow={isShow}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
-          <StyledInput
-            placeholder="Search"
-            endAdornment={
-              <IconButton type="submit" color="inherit" size="medium">
-                <SearchOutlinedIcon />
-              </IconButton>
-            }
-            onChange={handleChange}
-            value={searchValue}
-            inputProps={{
-              autoFocus: false
+          <StyledAutoComplete
+            onInputChange={handleChange}
+            inputValue={searchValue}
+            options={searchHistoryOptions}
+            loading={isSearchHistoryLoading}
+            noOptionsText={searchHistoryOptions.length ? null : 'Search history is clean'}
+            onChange={(_, option) => {
+              searchHandler(option.value)
+              dispatch(setSearchValue(option.value))
             }}
+            onOptionDelete={(option) => deleteSearchTermOptionHandler(option.id)}
           />
         </StyledForm>
       </Container>

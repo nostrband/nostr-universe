@@ -69,6 +69,13 @@ interface Setting {
 
 interface LastKindApps extends IOpenAppNostr {}
 
+export interface SearchHistory {
+  id: string
+  pubkey: string
+  timestamp: number
+  value: string
+}
+
 export interface DbSchema extends Dexie {
   tabs: Dexie.Table<Tab, number>
   pins: Dexie.Table<Pin, number>
@@ -80,4 +87,5 @@ export interface DbSchema extends Dexie {
   nsecbunkerKeys: Dexie.Table<NSBKey, number>
   contentFeedSettings: Dexie.Table<Setting, number>
   lastKindApps: Dexie.Table<LastKindApps, number>
+  searchHistory: Dexie.Table<SearchHistory, number>
 }
