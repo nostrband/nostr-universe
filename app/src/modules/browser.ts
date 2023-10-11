@@ -45,8 +45,8 @@ const releaseIdle = () => {
     const a = ra.info
     const b = rb.info
     if (a.canRelease === b.canRelease)
-      // desc by time
-      return b.lastActiveTime - a.lastActiveTime
+      // asc by time of last use
+      return a.lastActiveTime - b.lastActiveTime
     else return a.canRelease ? -1 : 1
   })
   console.log(
@@ -625,7 +625,7 @@ async function createRef(info) {
   const hidden = 'yes' // params.hidden ? 'yes' : 'no'
   const geticon = 'yes' //params.geticon ? 'yes' : 'no'
 
-  const options = `location=${loc},beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
+  const options = `location=${loc},shouldPauseOnSuspend=yes,beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
   console.log('browser options', options)
 
   const ref = cordova.InAppBrowser.open(info.url, '_blank', options)

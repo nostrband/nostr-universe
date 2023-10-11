@@ -8,15 +8,17 @@ import { useUpdateProfile } from '@/hooks/profile'
 import { nip19 } from '@nostrband/nostr-tools'
 import { showToast } from '@/utils/helpers/general'
 import { checkNsbSigner } from '@/modules/nostr'
+import { useCallback } from 'react'
 //import { checkNsbSigner, setNsbSigner } from '@/modules/nostr'
 
 export const useAddKey = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
   const { keys, currentPubkey: wasPubkey } = useAppSelector((state) => state.keys)
-  const wasGuest = wasPubkey === DEFAULT_PUBKEY
 
-  const setPubkey = async (pubkey: string) => {
+  const setPubkey = useCallback(async (pubkey: string) => {
+    const wasGuest = wasPubkey === DEFAULT_PUBKEY
+
     // write to db, has to await to make sure loadKeys reads it
     await writeCurrentPubkey(pubkey)
 
@@ -44,9 +46,9 @@ export const useAddKey = () => {
 
     // load info on this new key
     await updateProfile(keys, currentPubkey)
-  }
+  }, [wasPubkey, updateProfile, dispatch])
 
-  const addKey = async () => {
+  const addKey = useCallback(async () => {
     try {
       // ask user for new key
       const r = await keystore.addKey()
@@ -57,14 +59,14 @@ export const useAddKey = () => {
       // @ts-ignore
       showToast(`Error: ${e}`)
     }
-  }
+  }, [setPubkey])
 
-  const addReadOnlyKey = async (pubkey: string) => {
+  const addReadOnlyKey = useCallback(async (pubkey: string) => {
     await dbi.putReadOnlyKey(pubkey)
     await setPubkey(pubkey)
-  }
+  }, [setPubkey])
 
-  const addNSBKey = async (token: string) => {
+  const addNSBKey = useCallback(async (token: string) => {
     let pubkey = ''
     try {
       const npub = token.includes('#') ? token.split('#')[0] : token
@@ -115,7 +117,7 @@ export const useAddKey = () => {
         console.log('nsb error', e)
         showToast('NsecBunker error!')
       })
-  }
+  }, [setPubkey])
 
   return {
     addKey,

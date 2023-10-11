@@ -45,14 +45,14 @@ export const Highlights = memo(function Highlights() {
     }
   }, [dispatch, contactList])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (highlights === null) {
       return <SkeletonHighlights />
     }
     if (!highlights || !highlights.length) {
       return <EmptyListMessage onReload={handleReloadHighlights} />
     }
-    return highlights.map((highlight, i) => (
+    return highlights.map((highlight, i: number) => (
       <ItemHighlight
         key={i}
         onClick={() => handleOpenHighlight(highlight)}
@@ -62,7 +62,7 @@ export const Highlights = memo(function Highlights() {
         author={highlight.author}
       />
     ))
-  }
+  }, [highlights, handleReloadHighlights, handleOpenHighlight])
 
   return (
     <StyledWrapper>

@@ -17,10 +17,12 @@ import { selectTab } from '@/store/reducers/tab.slice'
 import { Input } from '@/shared/Input/Input'
 import { IModalTabMenuContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
+import { usePins } from '@/hooks/pins'
 
 export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) => {
   const [searchParams] = useSearchParams()
-  const { onCloseTab, onPinTab, onUnPinTab, findTabPin, openBlank } = useOpenApp()
+  const { onCloseTab, openBlank } = useOpenApp()
+  const { onPinTab, onUnPinTab, findTabPin } = usePins()
   const [, setEventAddr] = useState('')
   const id = searchParams.get('tabId') || ''
   const currentTab = useAppSelector((state) => selectTab(state, id))

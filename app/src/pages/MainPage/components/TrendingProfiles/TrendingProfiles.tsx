@@ -37,17 +37,16 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
     [handleOpen]
   )
 
-  const handleReloadTrendingProfiles = () => refetchTrendingProfiles()
-
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (isLoading) {
       return <SkeletonProfiles />
     }
     if (!data || !data.length) {
+      const handleReloadTrendingProfiles = () => refetchTrendingProfiles()
       return <EmptyListMessage onReload={handleReloadTrendingProfiles} />
     }
     return data.map((profile, i) => <Profile key={i} onClick={handleOpenProfile} profile={profile} />)
-  }
+  }, [isLoading, data, refetchTrendingProfiles, handleOpenProfile])
 
   return (
     <StyledWrapper>
