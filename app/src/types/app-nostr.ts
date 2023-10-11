@@ -1,6 +1,6 @@
 import { APP_NOSTR_SIZE } from '@/consts'
 import { OverridableStringUnion } from './utility'
-import { AppUrl } from '@/modules/nostr'
+import { AppUrl } from './app-event'
 
 export type AppNostr = {
   author?: Record<string, unknown>

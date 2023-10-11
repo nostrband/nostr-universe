@@ -32,6 +32,7 @@ export const MainPage = () => {
     if (contentFeedSettings.length === 0) {
       return (
         <>
+          <AppsNostro />
           <TrendingNotes />
           <TrendingProfiles />
           {!guest && (
@@ -44,7 +45,6 @@ export const MainPage = () => {
               <SuggestedProfiles />
             </>
           )}
-          <AppsNostro />
         </>
       )
     }

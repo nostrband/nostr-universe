@@ -10,18 +10,29 @@ import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 import OpenInBrowserOutlinedIcon from '@mui/icons-material/OpenInBrowserOutlined'
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined'
+import PlayCircleOutlineOutlinedIcon from '@mui/icons-material/PlayCircleOutlineOutlined'
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import { StyledInput, StyledItemIconAvatar, StyledItemText, StyledMenuWrapper } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
-import { stringToBech32, stringToBolt11 } from '@/modules/nostr'
+import { KIND_APP, fetchExtendedEventByBech32, stringToBech32, stringToBolt11 } from '@/modules/nostr'
 import { useOpenApp } from '@/hooks/open-entity'
-import { copyToClipBoard } from '@/utils/helpers/prepare-data'
-import { ReactNode, useCallback } from 'react'
+import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
+import { ReactNode, useCallback, useEffect, useState } from 'react'
+import { AugmentedEvent } from '@/types/augmented-event'
+import { useAppSelector } from '@/store/hooks/redux'
+import { AppEvent } from '@/types/app-event'
+import { showToast } from '@/utils/helpers/general'
+import { usePins } from '@/hooks/pins'
 
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { openBlank, sendTabPayment } = useOpenApp()
+  const { onPinApp, findAppPin, onDeletePinnedApp } = usePins()
+  const [event, setEvent] = useState<AugmentedEvent | null>(null)
+  const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const tabId = searchParams.get('tabId') || ''
   const tabUrl = searchParams.get('tabUrl') || ''
   const text = searchParams.get('text') || ''
@@ -30,26 +41,38 @@ export const ModalContextMenuContent = () => {
   const videoSrc = searchParams.get('videoSrc') || ''
   const audioSrc = searchParams.get('audioSrc') || ''
   let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
-  const addr = stringToBech32(value || tabUrl)
-  const [invoice, bolt11] = stringToBolt11(value || tabUrl)
-  console.log('invoice', invoice, 'bolt11', JSON.stringify(bolt11))
-  if (!value) value = addr || invoice // from tabUrl
+  const b32 = stringToBech32(value || tabUrl)
+  const [invoice] = stringToBolt11(value || tabUrl)
+  if (!value) value = b32 || invoice // from tabUrl
+  const isApp = event?.kind === KIND_APP
+  const pin = isApp ? findAppPin(event as AppEvent) : null
+
+  useEffect(() => {
+    setEvent(null)
+    if (b32) {
+      const load = async () => {
+        const event = await fetchExtendedEventByBech32(b32, contactList?.contactPubkeys || [])
+        setEvent(event)
+      }
+      load()
+    }
+  }, [b32])
 
   const handleOpenModalSelect = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-      search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr },
+      search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32 },
       replace: true
     })
   }
 
   const handleZap = async () => {
     const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
-    openBlank({ url: `${ZAP_URL}${addr}` }, { replace: true })
+    openBlank({ url: `${ZAP_URL}${b32}` }, { replace: true })
   }
 
   const handleReplies = async () => {
     const URL = 'https://replies.nostrapps.org/?id='
-    openBlank({ url: `${URL}${addr}` }, { replace: true })
+    openBlank({ url: `${URL}${b32}` }, { replace: true })
   }
 
   const handleShareTabUrl = async () => {
@@ -83,6 +106,39 @@ export const ModalContextMenuContent = () => {
     sendTabPayment(tabId, invoice)
   }
 
+  const handleLaunchApp = () => {
+    const url = (event as AppEvent).meta?.website
+    if (!url) {
+      showToast("App url not specified!")
+      return
+    }
+    openBlank({ url }, { replace: true })
+  }
+
+  const handlePinApp = () => {
+    const app = (event as AppEvent)
+    const url = app.meta?.website
+    if (!url) {
+      showToast("App url not specified!")
+      return
+    }
+    onPinApp({
+      url,
+      naddr: app.naddr,
+      name: app.meta?.display_name || app.meta?.display_name || getDomain(url),
+      picture: app.meta?.picture || '',
+      order: 0
+    })
+    showToast("Pinned!")
+    handleClose()
+  }
+
+  const handleUnpinApp = () => {
+    if (!pin) return
+    onDeletePinnedApp(pin)
+    handleClose()
+  }
+
   const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void) => {
     return (
       <ListItem disablePadding>
@@ -112,9 +168,12 @@ export const ModalContextMenuContent = () => {
       <StyledMenuWrapper>
         <List>
           {invoice && renderItem('Pay invoice', <AccountBalanceWalletOutlinedIcon />, handlePayInvoice)}
-          {addr && renderItem('Open with', <AppsOutlinedIcon />, handleOpenModalSelect)}
-          {addr && renderItem('Zap', <FlashOnIcon />, handleZap)}
-          {addr && renderItem('View replies', <ForumOutlinedIcon />, handleReplies)}
+          {isApp && renderItem('Launch app', <PlayCircleOutlineOutlinedIcon />, handleLaunchApp)}
+          {isApp && !pin && renderItem('Pin app', <PushPinOutlinedIcon />, handlePinApp)}
+          {isApp && !!pin && renderItem('Unpin app', <DeleteOutlineOutlinedIcon />, handleUnpinApp)}
+          {b32 && renderItem('Open with', <AppsOutlinedIcon />, handleOpenModalSelect)}
+          {b32 && renderItem('Zap', <FlashOnIcon />, handleZap)}
+          {b32 && renderItem('View replies', <ForumOutlinedIcon />, handleReplies)}
           {href && renderItem('Open in new tab', <OpenInNewOutlinedIcon />, handleOpenHref)}
           {href && renderItem('Open in browser', <OpenInBrowserOutlinedIcon />, handleOpenHrefIntent)}
           {value && renderItem('Share text', <ShareOutlinedIcon />, handleShareValue)}

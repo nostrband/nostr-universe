@@ -46,7 +46,7 @@ import { useLocation, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
-import { AppHandlerEvent, nsbSignEvent, sendPayment, stringToBech32 } from '@/modules/nostr'
+import { nsbSignEvent, sendPayment, stringToBech32 } from '@/modules/nostr'
 import {
   deletePermissionRequest,
   setPermissionRequest,

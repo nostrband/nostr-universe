@@ -141,9 +141,9 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
         apps.push({
           naddr: app.naddr,
           url: app.eventUrl,
-          name: app.profile?.display_name || app.profile?.name || hostname,
-          about: app.profile?.about || '',
-          picture: app.profile?.picture || '',
+          name: app.meta?.display_name || app.meta?.name || hostname,
+          about: app.meta?.about || '',
+          picture: app.meta?.picture || '',
           urls: app.urls,
           lastUsed,
           pinned,

@@ -4,23 +4,31 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { fetchApps } from '@/modules/nostr'
 import { memo, useCallback } from 'react'
-import { useOpenApp } from '@/hooks/open-entity'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { SkeletonApps } from '@/components/Skeleton/SkeletonApps/SkeletonApps'
 import { AppNostr } from '@/types/app-nostr'
+import { useOpenModalSearchParams } from '@/hooks/modal'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const AppsNostro = memo(function AppsNostro() {
   const { apps, isLoading } = useAppSelector((state) => state.apps)
   const dispatch = useAppDispatch()
-  const { openApp } = useOpenApp()
+  const { handleOpen } = useOpenModalSearchParams()
+
+//  const { openApp } = useOpenApp()
 
   const handleOpenApp = useCallback(
     async (app: AppNostr) => {
-      await openApp(app)
+      handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
+        search: {
+          bech32: app.naddr || ''
+        }
+      })
+  //      await openApp(app)
     },
-    [openApp]
+    [handleOpen] 
   )
 
   const handleReloadApps = useCallback(async () => {
