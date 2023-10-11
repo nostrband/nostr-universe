@@ -133,8 +133,17 @@ export const ModalSignedEventsContent = () => {
   return (
     <Container>
       <StyledFilterField>
+        <StyledAutocomplete
+          multiple
+          id="tags-standard"
+          onChange={handleKindChange}
+          options={getTransformedKindEvents}
+          renderInput={(params) => <StyledInput {...params} placeholder="Event kinds" />}
+        />
+      </StyledFilterField>
+      <StyledFilterField>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Grid container spacing={2}>
+          <Grid container spacing={0} marginTop='-8px'>
             <Grid item xs={6}>
               <DemoContainer components={['MobileDatePicker']}>
                 <DemoItem>
@@ -173,15 +182,6 @@ export const ModalSignedEventsContent = () => {
             </Grid>
           </Grid>
         </LocalizationProvider>
-      </StyledFilterField>
-      <StyledFilterField>
-        <StyledAutocomplete
-          multiple
-          id="tags-standard"
-          onChange={handleKindChange}
-          options={getTransformedKindEvents}
-          renderInput={(params) => <StyledInput {...params} placeholder="Kinds events" />}
-        />
       </StyledFilterField>
       <StyledFilterField>
         <Input
