@@ -12,7 +12,7 @@ import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/Suggeste
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
-import { StyledAutoComplete, StyledForm } from './styled'
+import { StyledForm, StyledInput } from './styled'
 import { ContactList } from '../MainPage/components/ContactList/ContactList'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
@@ -24,7 +24,10 @@ import { Profile } from '@/shared/Profile/Profile'
 import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNote'
 import { dbi } from '@/modules/db'
 import { v4 as uuidv4 } from 'uuid'
-import { SearchHistory } from '@/modules/types/db'
+import { SearchTerm } from '@/modules/types/db'
+import { IconButton } from '@mui/material'
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import { RecentQueries } from './components/RecentQueries/RecentQueries'
 
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
@@ -41,35 +44,38 @@ export const SearchPageContent = () => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const [searchHistoryOptions, setSearchHistoryOptions] = useState<SearchHistory[]>([])
+  const [searchHistoryOptions, setSearchHistoryOptions] = useState<SearchTerm[]>([])
   const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
 
   const { handleOpen } = useOpenModalSearchParams()
 
-  const onSearch = (str: string): boolean => {
-    try {
-      const url = new URL('/', str)
-      if (url) {
-        openBlank({ url: str }, {})
+  const onSearch = useCallback(
+    (str: string): boolean => {
+      try {
+        const url = new URL('/', str)
+        if (url) {
+          openBlank({ url: str }, {})
+          return true
+        }
+      } catch (err) {
+        console.log(err)
+      }
+
+      const b32 = stringToBech32(str)
+
+      if (b32) {
+        handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+          search: {
+            [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32
+          }
+        })
         return true
       }
-    } catch (err) {
-      console.log(err)
-    }
 
-    const b32 = stringToBech32(str)
-
-    if (b32) {
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32
-        }
-      })
-      return true
-    }
-
-    return false
-  }
+      return false
+    },
+    [handleOpen, openBlank]
+  )
 
   const loadEvents = useCallback(async (searchValue: string) => {
     setIsLoading(true)
@@ -88,28 +94,31 @@ export const SearchPageContent = () => {
       .finally(() => setIsLoading(false))
   }, [])
 
-  const searchHandler = (value: string) => {
-    if (value.trim().length > 0) {
-      localStorage.setItem('searchValue', value)
-      onSearch(value)
-      loadEvents(value)
+  const searchHandler = useCallback(
+    (value: string) => {
+      if (value.trim().length > 0) {
+        localStorage.setItem('searchValue', value)
+        onSearch(value)
+        loadEvents(value)
 
-      dbi.addSearchTerm({
-        id: uuidv4(),
-        value: value,
-        timestamp: Date.now(),
-        pubkey: currentPubkey
-      })
-    }
-  }
+        dbi.addSearchTerm({
+          id: uuidv4(),
+          value: value,
+          timestamp: Date.now(),
+          pubkey: currentPubkey
+        })
+      }
+    },
+    [currentPubkey, loadEvents, onSearch]
+  )
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     searchHandler(searchValue)
   }
 
-  const handleChange = (_: React.SyntheticEvent, value: string) => {
-    dispatch(setSearchValue({ searchValue: value }))
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchValue({ searchValue: e.target.value }))
   }
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -178,9 +187,20 @@ export const SearchPageContent = () => {
     getSearchHistory()
   }, [getSearchHistory, isShow])
 
-  const deleteSearchTermOptionHandler = (id: string) => {
-    dbi.deleteSearchTerm(id).then(getSearchHistory)
-  }
+  const deleteSearchTermHandler = useCallback(
+    (id: string) => {
+      dbi.deleteSearchTerm(id).then(getSearchHistory)
+    },
+    [getSearchHistory]
+  )
+
+  const clickSearchTermItemHandler = useCallback(
+    (searchTerm: SearchTerm) => {
+      dispatch(setSearchValue({ searchValue: searchTerm.value }))
+      searchHandler(searchTerm.value)
+    },
+    [searchHandler, dispatch]
+  )
 
   const renderContent = () => {
     return (
@@ -260,20 +280,28 @@ export const SearchPageContent = () => {
     <StyledWrapVisibility isShow={isShow}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
-          <StyledAutoComplete
-            onInputChange={handleChange}
-            inputValue={searchValue}
-            options={searchHistoryOptions}
-            loading={isSearchHistoryLoading}
-            noOptionsText={searchHistoryOptions.length ? null : 'Search history is clean'}
-            onChange={(_, option) => {
-              searchHandler(option.value)
-              dispatch(setSearchValue(option.value))
+          <StyledInput
+            placeholder="Search"
+            endAdornment={
+              <IconButton type="submit" color="inherit" size="medium">
+                <SearchOutlinedIcon />
+              </IconButton>
+            }
+            onChange={handleChange}
+            value={searchValue}
+            inputProps={{
+              autoFocus: false
             }}
-            onOptionDelete={(option) => deleteSearchTermOptionHandler(option.id)}
           />
         </StyledForm>
       </Container>
+
+      <RecentQueries
+        isLoading={isSearchHistoryLoading}
+        queries={searchHistoryOptions}
+        onDeleteSearchTerm={deleteSearchTermHandler}
+        onClickSearchTerm={clickSearchTermItemHandler}
+      />
 
       {!searchValue && <ContactList />}
 

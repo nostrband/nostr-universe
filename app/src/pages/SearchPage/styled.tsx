@@ -1,138 +1,74 @@
-import { SearchHistory } from '@/modules/types/db'
-import {
-  styled,
-  InputBase,
-  Autocomplete,
-  AutocompleteProps,
-  IconButton,
-  ThemeProvider,
-  createTheme,
-  ListItem,
-  ListItemText,
-  ListItemIcon
-} from '@mui/material'
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
-import { theme } from '@/modules/theme/theme'
-import HistoryIcon from '@mui/icons-material/History'
-import CloseIcon from '@mui/icons-material/Close'
+import { forwardRef } from 'react'
+import { styled, InputBase, Typography, TypographyProps, Box, IconButton } from '@mui/material'
+import { purple } from '@mui/material/colors'
 
 export const StyledForm = styled('form')(() => ({
   marginBottom: 15
 }))
 
-const commonStyles = {
+export const StyledInput = styled(InputBase)(({ theme }) => ({
+  background: theme.palette.secondary.main,
+  width: '100%',
+  minHeight: 50,
+  borderRadius: theme.shape.borderRadius,
+  color: '#fff',
+  fontSize: 14,
+  padding: '4px 16px',
+  '&:placeholder': {
+    color: '#C9C9C9'
+  },
+  gap: '0.5rem'
+}))
+
+const color = purple[100]
+
+export const StyledTitle = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography ref={ref} {...props} />
+  })
+)(() => ({
+  color: color,
+  fontWeight: 'bold'
+}))
+
+export const StyledWrapper = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3)
+}))
+
+export const StyledRecentQueryWrap = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  background: theme.palette.secondary.main,
+  borderRadius: theme.shape.borderRadius,
+  minHeight: '3rem',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: '0.5rem 1rem',
+  paddingRight: '2rem'
+}))
+
+export const StyledCloseTabBtn = styled(IconButton)(({ theme }) => ({
+  background: 'rgba(34, 34, 34, 0.58)',
   color: theme.palette.light.light,
-  fontFamily: 'inherit',
-  fontWeight: '700'
-}
+  position: 'absolute',
+  top: 0,
+  right: 0,
+  zIndex: 1
+}))
 
-const autoCompleteTheme = createTheme({
-  components: {
-    MuiAutocomplete: {
-      styleOverrides: {
-        root: {
-          background: theme.palette.secondary.dark,
-          borderRadius: theme.shape.borderRadius,
-          ...commonStyles
-        },
-        paper: {
-          background: theme.palette.secondary.dark,
-          ...commonStyles
-        },
-        loading: {
-          ...commonStyles,
-          textAlign: 'center'
-        },
-        noOptions: {
-          ...commonStyles,
-          textAlign: 'center',
-          '&.hidden': {
-            display: 'none'
-          }
-        },
-        inputRoot: {
-          background: theme.palette.secondary.main,
-          borderRadius: theme.shape.borderRadius,
-          width: '100%',
-          minHeight: 50,
-          color: '#fff',
-          fontSize: 14,
-          padding: '4px 16px',
-          '&:placeholder': {
-            color: '#C9C9C9'
-          },
-          gap: '0.5rem'
-        }
-      }
-    }
-  }
-})
-
-const StyledListItemIcon = styled(ListItemIcon)({
-  color: 'white',
-  minWidth: '2.5rem'
-})
-
-const StyledListItem = styled(ListItem)({
-  '& .text > span': commonStyles
-})
-
-export const StyledAutoComplete = styled(
-  ({
-    onOptionDelete,
-    ...props
-  }: Omit<AutocompleteProps<SearchHistory, false, true, false>, 'renderInput'> & {
-    onOptionDelete: (option: SearchHistory) => void
-  }) => (
-    <ThemeProvider theme={autoCompleteTheme}>
-      <Autocomplete<SearchHistory, false, true, false>
-        {...props}
-        disableClearable
-        clearOnBlur={false}
-        renderInput={(params) => {
-          return (
-            <InputBase
-              placeholder="Search"
-              inputProps={{
-                ...params.inputProps
-              }}
-              {...params.InputProps}
-              endAdornment={
-                <IconButton type="submit" color="inherit" size="medium">
-                  <SearchOutlinedIcon />
-                </IconButton>
-              }
-            />
-          )
-        }}
-        getOptionLabel={(option) => option.value}
-        classes={{
-          noOptions: !props.noOptionsText ? 'hidden' : ''
-        }}
-        renderOption={(props, option) => (
-          <StyledListItem
-            {...props}
-            secondaryAction={
-              <IconButton
-                edge="end"
-                sx={{ color: 'white' }}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onOptionDelete(option)
-                }}
-              >
-                <CloseIcon color="inherit" />
-              </IconButton>
-            }
-          >
-            <StyledListItemIcon>
-              <HistoryIcon color="inherit" />
-            </StyledListItemIcon>
-            <ListItemText className="text">{option.value}</ListItemText>
-          </StyledListItem>
-        )}
-      />
-    </ThemeProvider>
-  )
-)({})
+export const StyledSearchTermValue = styled((props: TypographyProps) => {
+  return <Typography {...props} variant="body1" />
+})(({ theme }) => ({
+  width: '100%',
+  fontSize: '1rem',
+  fontWeight: '600',
+  color: theme.palette.light.light,
+  lineHeight: '18px',
+  textAlign: 'left',
+  maxWidth: '100%',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical'
+}))
