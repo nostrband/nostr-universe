@@ -103,16 +103,19 @@ export const StyledInput = styled(TextField)(({ theme }) => ({
   color: '#fff',
   fontSize: 14,
   '&:placeholder': {
-    color: '#C9C9C9'
+    color: '#fff'
   },
   gap: '0.5rem',
-  '.MuiFormLabel-root, .Mui-focused': {
+  '.MuiFormLabel-root, .Mui-focused, .MuiAutocomplete-input, .MuiChip-label': {
     color: '#fff'
+  },
+  ', .MuiSvgIcon-root': {
+    fill: 'rgba(255, 255, 255, 0.5)'
   },
   '.MuiAutocomplete-endAdornment': {
     '.MuiButtonBase-root': {
       color: '#fff'
-    }
+    },
   }
 }))
 
@@ -130,7 +133,7 @@ export const StyledDatePicker = styled(MobileDatePicker)(({ theme }) => ({
   color: '#fff',
   fontSize: 14,
   '&:placeholder': {
-    color: '#C9C9C9'
+    color: '#fff'
   },
   gap: '0.5rem',
   '.MuiFormLabel-root, .Mui-focused': {
@@ -140,5 +143,8 @@ export const StyledDatePicker = styled(MobileDatePicker)(({ theme }) => ({
     '.MuiButtonBase-root': {
       color: '#fff'
     }
+  },
+  '.MuiInputBase-input': {
+    color: '#fff'
   }
 }))
