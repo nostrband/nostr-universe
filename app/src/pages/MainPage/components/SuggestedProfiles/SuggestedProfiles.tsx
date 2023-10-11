@@ -31,22 +31,26 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(profile.kind)
+        }
+      })
     },
     [handleOpen]
   )
 
-  const handleReloadSuggestedProfiles = () => refetchSuggestedProfiles()
-
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (isLoading) {
       return <SkeletonProfiles />
     }
     if (!data || !data.length) {
+      const handleReloadSuggestedProfiles = () => refetchSuggestedProfiles()
       return <EmptyListMessage onReload={handleReloadSuggestedProfiles} />
     }
     return data.map((profile, i) => <Profile key={i} onClick={handleOpenProfile} profile={profile} />)
-  }
+  }, [isLoading, data, handleOpenProfile, refetchSuggestedProfiles])
 
   return (
     <StyledWrapper>

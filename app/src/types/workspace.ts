@@ -1,10 +1,11 @@
 import { IContentFeedSetting } from './content-feed'
 import { IPerm } from './permission-req'
+import { AppNostr } from './app-nostr'
 
 export interface IPin {
   id: string
   url: string
-  appNaddr: string
+  appNaddr?: string
   title: string
   icon: string
   order: number
@@ -16,7 +17,7 @@ export type WorkSpace = {
   tabIds: string[]
   pins: IPin[]
   lastKindApps: {
-    [key: string]: string
+    [key: string]: AppNostr
   }
   currentTabId?: string
   perms: IPerm[]

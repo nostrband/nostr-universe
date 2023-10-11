@@ -56,6 +56,7 @@ import { ITab } from '@/types/tab'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
 import { IPin } from '@/types/workspace'
 import { showToast } from '@/utils/helpers/general'
+import { useSignEvent } from './sign-event'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
@@ -70,6 +71,7 @@ export const useOpenApp = () => {
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
   const currentWorkSpaceTabs = useAppSelector(selectCurrentWorkspaceTabs)
   const { page } = useAppSelector((state) => state.positionScrollPage)
+  const { signEvent } = useSignEvent()
 
   const getTabAny = (id) => tabs.find((t) => t.id === id)
   const isReadOnly = () => currentPubkey === DEFAULT_PUBKEY || readKeys.includes(currentPubkey)
@@ -345,12 +347,6 @@ export const useOpenApp = () => {
     await browser.canRelease(tabId)
   }
 
-  const signEvent = async (event, pubkey?: string) => {
-    if (!pubkey) pubkey = currentPubkey
-    if (nsbKeys.includes(pubkey)) return await nsbSignEvent(pubkey, event)
-    else return await keystore.signEvent(event)
-  }
-
   const API = {
     // NIP-01
     getPublicKey: async function (tabId) {
@@ -548,67 +544,6 @@ export const useOpenApp = () => {
 
   browser.setAPI(API)
 
-  const onPinApp = async (app: AppNostr) => {
-    const pin: IPin = {
-      id: uuidv4(),
-      url: app.url,
-      appNaddr: app.naddr,
-      title: app?.title || app?.name, // FIXME why there title instead name?
-      icon: app.picture,
-      order: currentWorkSpace.pins.length,
-      pubkey: currentWorkSpace.pubkey
-    }
-
-    dispatch(addPinWorkspace({ pin, workspacePubkey: currentWorkSpace.pubkey }))
-
-    dbi.addPin(pin)
-  }
-
-  const onPinTab = async (currentTab: ITab) => {
-    const pin: IPin = {
-      id: uuidv4(),
-      url: currentTab.url,
-      //      appNaddr: currentTab.appNaddr,
-      title: currentTab.title,
-      icon: currentTab.icon,
-      order: currentWorkSpace.pins.length,
-      pubkey: currentTab.pubkey
-    }
-
-    dispatch(addPinWorkspace({ pin, workspacePubkey: currentTab.pubkey }))
-
-    dbi.addPin(pin)
-  }
-
-  const findTabPin = (tab: ITab): IPin | undefined => {
-    const ws = workspaces.find((ws) => ws.pubkey === tab.pubkey)
-    return ws?.pins.find(
-      (p) => p.url === tab.url // p.appNaddr === tab.appNaddr ||
-    )
-  }
-
-  const findAppPin = (app: AppNostr | AppHandlerEvent): IPin | undefined => {
-    return currentWorkSpace?.pins.find(
-      (p) => p.appNaddr === app.appNaddr || app.url?.startsWith(p.url) || app.eventUrl?.startsWith(p.url)
-    )
-  }
-
-  const onUnPinTab = async (currentTab: ITab) => {
-    const pin = findTabPin(currentTab)
-    dispatch(removePinWorkspace({ id: pin.id, workspacePubkey: currentTab.pubkey }))
-    dbi.deletePin(pin.id)
-  }
-
-  const onDeletePinnedApp = async (currentPin: IPin) => {
-    dispatch(removePinWorkspace({ id: currentPin.id, workspacePubkey: currentPin.pubkey }))
-    dbi.deletePin(currentPin.id)
-  }
-
-  const onUpdatePinnedApp = async (currentPin: IPin) => {
-    dispatch(updatePinWorkspace({ pin: currentPin, workspacePubkey: currentPin.pubkey }))
-    dbi.updatePin(currentPin)
-  }
-
   const openTabWindow = async (id) => {
     const tab = tabs.find((tab) => id === tab.id)
     if (!tab) {
@@ -694,13 +629,14 @@ export const useOpenApp = () => {
       return
     }
 
-    if (entity.url.startsWith('intent:')) {
-      // external browser
+    // external browser or app
+    if (entity.url.startsWith('intent:')
+      || entity.url.startsWith('nostr:')) {
       window.cordova.InAppBrowser.open(entity.url, '_self')
       return
     }
 
-    // // find an existing app for this url
+    // find an existing app for this url
     const origin = getOrigin(entity.url)
     const app = entity.appNaddr
       ? apps.find((app) => app.naddr === entity.appNaddr)
@@ -726,7 +662,9 @@ export const useOpenApp = () => {
 
   const openApp = async (app: IOpenAppNostr, options?: { replace?: boolean } = { replace: false }) => {
     if (app.kind !== undefined) {
-      dispatch(setLastKindApp({ kind: app.kind, naddr: app.naddr, workspacePubkey: currentPubkey }))
+      dispatch(setLastKindApp({ workspacePubkey: currentPubkey, app }))
+      const id = currentPubkey + app.kind
+      dbi.putLastKindApp({ id, pubkey: currentPubkey, ...app })
     }
 
     await openBlank(
@@ -753,15 +691,7 @@ export const useOpenApp = () => {
     replyCurrentPermRequest,
     deletePermission,
     onCloseTabs,
-    onPinApp,
-    onPinTab,
-    onUnPinTab,
-    findTabPin,
-    findAppPin,
     sendTabPayment,
-    onDeletePinnedApp,
-    onUpdatePinnedApp,
     backToLastPage,
-    signEvent
   }
 }

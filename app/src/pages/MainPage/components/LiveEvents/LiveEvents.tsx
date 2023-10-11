@@ -27,7 +27,12 @@ export const LiveEvents = memo(function LiveEvents() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(event.kind)
+        }
+      })
     },
     [handleOpen]
   )
@@ -42,7 +47,7 @@ export const LiveEvents = memo(function LiveEvents() {
     }
   }, [dispatch, contactList])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (liveEvents === null) {
       return <SkeletonLiveEvents />
     }
@@ -61,7 +66,7 @@ export const LiveEvents = memo(function LiveEvents() {
         status={event.status}
       />
     ))
-  }
+  }, [liveEvents, handleReloadLiveEvents, handleOpenLiveEvent])
 
   return (
     <StyledWrapper>

@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { WorkSpace } from '@/types/workspace'
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { dbi } from '@/modules/db'
@@ -12,6 +14,20 @@ const initialState: IWorkSpaceState = {
   workspaces: []
 }
 
+function updateWorkspace(state: IWorkSpaceState, pubkey: string, props: object | Function) {
+  state.workspaces = state.workspaces.map((workspace: WorkSpace) => {
+    if (workspace.pubkey === pubkey) {
+      if (props instanceof Function) props = props(workspace)
+      return {
+        ...workspace,
+        ...props
+      }
+    }
+
+    return workspace
+  })
+}
+
 export const workspacesSlice = createSlice({
   name: 'workspaces',
   initialState,
@@ -23,16 +39,7 @@ export const workspacesSlice = createSlice({
     updateWorkspacePubkey: (state, action) => {
       const workspacePubkey = action.payload.workspacePubkey
       const pubkey = action.payload.pubkey
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === workspacePubkey) {
-          return {
-            ...workspace,
-            pubkey
-          }
-        }
-
-        return workspace
-      })
+      updateWorkspace(state, workspacePubkey, { pubkey })
     },
 
     deletePermWorkspace: (state, action) => {
@@ -40,16 +47,7 @@ export const workspacesSlice = createSlice({
       const id = action.payload.id
       console.log('deletePermWorkspace', pubkey, id)
 
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            perms: workspace.perms.filter((p) => p.app !== id)
-          }
-        }
-
-        return workspace
-      })
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({ perms: ws.perms.filter((p) => p.app !== id) }))
     },
 
     setPermsWorkspace: (state, action) => {
@@ -57,152 +55,97 @@ export const workspacesSlice = createSlice({
       const perm = action.payload.perm
       console.log('setPermsWorkspace', pubkey, JSON.stringify(perm))
 
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            perms: [...workspace.perms, perm]
-          }
-        }
-
-        return workspace
-      })
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({ perms: [...ws.perms, perm] }))
     },
 
     removeTabWorkspace: (state, action) => {
       const id = action.payload.id
       const pubkey = action.payload.workspacePubkey
 
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            tabIds: workspace.tabIds.filter((tid) => tid !== id)
-          }
-        }
-
-        return workspace
-      })
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({ tabIds: ws.tabIds.filter((tid) => tid !== id) }))
     },
 
     removePinWorkspace: (state, action) => {
       const id = action.payload.id
       const pubkey = action.payload.workspacePubkey
 
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            pins: workspace.pins.filter((pin) => pin.id !== id)
-          }
-        }
-
-        return workspace
-      })
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({ pins: ws.pins.filter((pin) => pin.id !== id) }))
     },
 
     updatePinWorkspace: (state, action) => {
       const edittedPin = action.payload.pin
       const pubkey = action.payload.workspacePubkey
 
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            pins: workspace.pins.map((pin) => (pin.id === edittedPin.id ? { ...pin, title: edittedPin.title } : pin))
-          }
-        }
-
-        return workspace
-      })
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({
+        pins: ws.pins.map((pin) => (pin.id === edittedPin.id ? { ...pin, title: edittedPin.title } : pin))
+      }))
     },
 
     addTabWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
       const id = action.payload.id
 
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          return {
-            ...workspace,
-            tabIds: [...workspace.tabIds, id]
-          }
-        }
-
-        return workspace
-      })
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({ tabIds: [...ws.tabIds, id] }))
     },
 
     addPinWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
       const pin = action.payload.pin
 
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          const pins = [...workspace.pins, pin]
-          return {
-            ...workspace,
-            pins: pins
-          }
-        }
-
-        return workspace
-      })
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({ pins: [...ws.pins, pin] }))
     },
 
     swapPins: (state, action) => {
       const { toID, fromID } = action.payload
       const pubkey = action.payload.workspacePubkey
 
-      state.workspaces = state.workspaces.map((workspace) => {
-        if (workspace.pubkey === pubkey) {
-          const fromPin = workspace.pins.find((p) => p.id == fromID)
-          const toPin = workspace.pins.find((p) => p.id == toID)
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => {
+        const fromPin = ws.pins.find((p) => p.id == fromID)
+        const toPin = ws.pins.find((p) => p.id == toID)
 
-          const fromOrder = fromPin ? fromPin.order : 0
-          const toOrder = toPin ? toPin.order : 0
-          console.log('swap order', fromOrder, toOrder)
+        const fromOrder = fromPin ? fromPin.order : 0
+        const toOrder = toPin ? toPin.order : 0
+        console.log('swap order', fromOrder, toOrder)
 
-          dbi.updatePinOrder(fromID, toOrder)
-          dbi.updatePinOrder(toID, fromOrder)
+        dbi.updatePinOrder(fromID, toOrder)
+        dbi.updatePinOrder(toID, fromOrder)
 
-          const swappedPins = workspace.pins.map((pin) => {
-            if (pin.id === fromID) {
-              return { ...pin, order: toOrder }
-            }
-            if (pin.id === toID) {
-              return { ...pin, order: fromOrder }
-            }
-            return pin
-          })
-          swappedPins.sort((a, b) => a.order - b.order)
-
-          return {
-            ...workspace,
-            pins: swappedPins
+        const swappedPins = ws.pins.map((pin) => {
+          if (pin.id === fromID) {
+            return { ...pin, order: toOrder }
           }
-        }
+          if (pin.id === toID) {
+            return { ...pin, order: fromOrder }
+          }
+          return pin
+        })
+        swappedPins.sort((a, b) => a.order - b.order)
 
-        return workspace
+        return {
+          pins: swappedPins
+        }
       })
     },
     setLastKindApp: (state, action) => {
-      const { kind, naddr, workspacePubkey } = action.payload
-
-      const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey)
-      if (ws) ws.lastKindApps[kind] = naddr
+      const { app, workspacePubkey } = action.payload
+      updateWorkspace(state, workspacePubkey, (ws: WorkSpace) => {
+        ws.lastKindApps[app.kind] = app
+        return {
+          lastKindApps: { ...ws.lastKindApps }
+        }
+      })
     },
     updateWorkspaceContentFeedSettings: (state, action) => {
       const { workspacePubkey, newSettings } = action.payload
-      const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey)
-      if (ws) ws.contentFeedSettings = newSettings
+      updateWorkspace(state, workspacePubkey, {
+        contentFeedSettings: newSettings
+      })
     },
     switchFeedVisibilityWorkspace: (state, action) => {
       const { workspacePubkey, newContentFeedSettings } = action.payload
-      const ws = state.workspaces.find((ws) => ws.pubkey === workspacePubkey)
-      if (ws) {
-        ws.contentFeedSettings = newContentFeedSettings
-      }
+      updateWorkspace(state, workspacePubkey, {
+        contentFeedSettings: newContentFeedSettings
+      })
     }
   }
 })

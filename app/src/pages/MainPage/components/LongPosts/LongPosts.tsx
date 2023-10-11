@@ -27,7 +27,12 @@ export const LongPosts = memo(function LongPosts() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(longPost.kind)
+        }
+      })
     },
     [handleOpen]
   )
@@ -42,7 +47,7 @@ export const LongPosts = memo(function LongPosts() {
     }
   }, [dispatch, contactList])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (longPosts === null) {
       return <SkeletonLongPosts />
     }
@@ -60,7 +65,7 @@ export const LongPosts = memo(function LongPosts() {
         author={longPost.author}
       />
     ))
-  }
+  }, [longPosts, handleReloadLongPosts, handleOpenLongPosts])
 
   return (
     <StyledWrapper>

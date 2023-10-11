@@ -25,7 +25,12 @@ export const Highlights = memo(function Highlights() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(highlight.kind)
+        }
+      })
     },
     [handleOpen]
   )
@@ -40,14 +45,14 @@ export const Highlights = memo(function Highlights() {
     }
   }, [dispatch, contactList])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (highlights === null) {
       return <SkeletonHighlights />
     }
     if (!highlights || !highlights.length) {
       return <EmptyListMessage onReload={handleReloadHighlights} />
     }
-    return highlights.map((highlight, i) => (
+    return highlights.map((highlight, i: number) => (
       <ItemHighlight
         key={i}
         onClick={() => handleOpenHighlight(highlight)}
@@ -57,7 +62,7 @@ export const Highlights = memo(function Highlights() {
         author={highlight.author}
       />
     ))
-  }
+  }, [highlights, handleReloadHighlights, handleOpenHighlight])
 
   return (
     <StyledWrapper>

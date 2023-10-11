@@ -14,6 +14,7 @@ import { SortableContext, arrayMove } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { dbi } from '@/modules/db'
 import { StyledHint } from './styled'
+import { IContentFeedSetting } from '@/types/content-feed'
 
 type ModalContentFeedSettingsContentProps = {
   handleClose: () => void
@@ -24,7 +25,7 @@ export const ModalContentFeedSettingsContent: FC<ModalContentFeedSettingsContent
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
 
-  const contentFeedsIds = contentFeeds.map((feed) => feed.id)
+  const contentFeedsIds = contentFeeds.map((feed: IContentFeedSetting) => feed.id)
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {

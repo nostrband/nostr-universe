@@ -13,10 +13,11 @@ import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/Horizont
 import { SkeletonBigZaps } from '@/components/Skeleton/SkeletonBigZaps/SkeletonBigZaps'
 import { ItemBigZap } from '@/components/ItemsContent/ItemBigZap/ItemBigZap'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { RootState } from '@/store/store'
 
 export const BigZaps = memo(function BigZaps() {
   const { handleOpen } = useOpenModalSearchParams()
-  const { bigZaps, contactList } = useAppSelector((state) => state.contentWorkSpace)
+  const { bigZaps, contactList } = useAppSelector((state: RootState) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
   const handleOpenBigZap = useCallback(
@@ -38,19 +39,30 @@ export const BigZaps = memo(function BigZaps() {
             identifier: bigZap.targetEvent.identifier,
             relays: [nostrbandRelay]
           })
-        } else if (bigZap.targetMeta) {
+        } else {
           addr = nip19.neventEncode({
-            id: bigZap.targetMeta.id,
+            id: bigZap.targetEvent.id,
             relays: [nostrbandRelay]
           })
-        } else {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          window.plugins.toast.showShortBottom(`Target events not found`)
         }
+      } else if (bigZap.targetMeta) {
+        addr = nip19.neventEncode({
+          id: bigZap.targetMeta.id,
+          relays: [nostrbandRelay]
+        })
+      } else {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        window.plugins.toast.showShortBottom(`Target events not found`)
       }
+      console.log('bigZap addr', addr, bigZap)
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(bigZap.targetEvent?.kind || 0)
+        }
+      })
     },
     [handleOpen]
   )
@@ -65,7 +77,7 @@ export const BigZaps = memo(function BigZaps() {
     }
   }, [contactList, dispatch])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (bigZaps === null) {
       return <SkeletonBigZaps />
     }
@@ -82,7 +94,7 @@ export const BigZaps = memo(function BigZaps() {
         targetMeta={bigZap.targetMeta}
       />
     ))
-  }
+  }, [bigZaps, handleReloadBigZaps, handleOpenBigZap])
 
   return (
     <StyledWrapper>

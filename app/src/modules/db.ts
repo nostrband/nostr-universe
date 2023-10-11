@@ -17,6 +17,7 @@ db.version(13).stores({
   nsecbunkerKeys: '&pubkey,localPubkey,token',
   perms: '[pubkey+app+name],[pubkey+app],value',
   contentFeedSettings: 'id, pubkey, settings_json',
+  lastKindApps: 'id,pubkey,kind,naddr,app_json',
   signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson'
 })
 
@@ -277,6 +278,30 @@ export const dbi = {
       })
     } catch (error) {
       console.log(`Update content feed settings error: ${error}`)
+    }
+  },
+  putLastKindApp: async (app) => {
+    try {
+      await db.lastKindApps.put(app)
+    } catch (error) {
+      console.log(`Put lastKindApp error: ${error}`)
+    }
+  },
+  getLastKingApps: async (pubkey) => {
+    try {
+      const lastKindApps = await db.lastKindApps.where({ pubkey }).toArray()
+      return lastKindApps.reduce((acc, current) => {
+        return {
+          ...acc,
+          [current.kind]: {
+            ...current,
+            lastUsed: true,
+            order: 10000
+          }
+        }
+      }, {})
+    } catch (error) {
+      console.log(`Get lastKindApps error: ${error}`)
     }
   }
 }

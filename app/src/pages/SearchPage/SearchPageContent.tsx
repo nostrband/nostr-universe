@@ -1,14 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useOpenApp } from '@/hooks/open-entity'
-import {
-  getTagValue,
-  nostrbandRelay,
-  searchLongNotes,
-  searchNotes,
-  searchProfiles,
-  stringToBech32
-} from '@/modules/nostr'
+import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
 import { MetaEvent } from '@/types/meta-event'
@@ -62,7 +55,11 @@ export const SearchPageContent = () => {
     const b32 = stringToBech32(str)
 
     if (b32) {
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32 } })
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32
+        }
+      })
       return true
     }
 
@@ -103,7 +100,12 @@ export const SearchPageContent = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: {
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(0)
+      }
+    })
   }
 
   const handleOpenNote = (note: AuthoredEvent) => {
@@ -112,18 +114,28 @@ export const SearchPageContent = () => {
       id: note.id
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: {
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent,
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
+      }
+    })
   }
 
   const handleOpenLongNote = (longNote: LongNoteEvent) => {
     const naddr = nip19.naddrEncode({
       pubkey: longNote.pubkey,
       kind: longNote.kind,
-      identifier: getTagValue(longNote, 'd'),
+      identifier: longNote.identifier,
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr } })
+    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+      search: {
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
+        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(longNote.kind)
+      }
+    })
   }
 
   // useEffect(() => {
