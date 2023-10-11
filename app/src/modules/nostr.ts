@@ -77,7 +77,7 @@ interface EventAddr {
   hex: boolean
 }
 
-interface AppUrl {
+export interface AppUrl {
   url: string
   type: string
 }
@@ -307,7 +307,8 @@ export async function fetchApps() {
     // app's handled kinds and per-kind handler urls for the 'web' platform,
     // we don't add a kind that doesn't have a proper handler
     const kinds: number[] = []
-    const handlers: { [key: string]: { url: string; type: string } } = {}
+//    const handlers: { [key: string]: { url: string; type: string } } = {}
+    const urls: AppUrl[] = []
     e.tags.forEach((t) => {
       let k = 0
       if (t.length < 2 || t[0] != 'k') return
@@ -322,10 +323,14 @@ export async function fetchApps() {
       if (!url_type) return
 
       kinds.push(k)
-      handlers[k] = {
+      urls.push({
         url: url_type[0],
         type: url_type[1]
-      }
+      })
+      // handlers[k] = {
+      //   url: url_type[0],
+      //   type: url_type[1]
+      // }
     })
 
     if (!isWeb(e)) return
@@ -344,7 +349,7 @@ export async function fetchApps() {
       picture: profile?.picture || '',
       about: profile?.about || '',
       kinds,
-      handlers,
+      urls,
       order: e.order
     }
 
@@ -634,7 +639,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   return info
 }
 
-function getUrl(app: AppHandlerEvent, ad: EventAddr): string {
+export function getHandlerEventUrl(app: AppHandlerEvent | AppNostr, ad: EventAddr): string {
   if (ad.kind === undefined) return ''
 
   const findUrlType = (type: string): AppUrl | undefined => {
@@ -726,7 +731,13 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null):
   // to redirect to this event
   for (const [_, app] of info.apps) {
     for (const h of app.handlers) {
-      h.eventUrl = getUrl(h, addr)
+
+      // handlers[k] = {
+      //   url: url_type[0],
+      //   type: url_type[1]
+      // }
+
+      h.eventUrl = getHandlerEventUrl(h, addr)
     }
   }
 

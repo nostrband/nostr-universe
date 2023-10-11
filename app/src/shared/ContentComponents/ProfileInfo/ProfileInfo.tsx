@@ -2,8 +2,9 @@ import { MetaEvent } from '@/types/meta-event'
 import { StyledName, StyledProfileAvatar, StyledProfileInfo } from './styled'
 import { getProfileName } from '@/utils/helpers/prepare-data'
 import { useProfileImageSource } from '@/hooks/profile-image'
+import { memo } from 'react'
 
-export const ProfileInfo = ({ pubkey, profile }: { pubkey: string; profile?: MetaEvent }) => {
+export const ProfileInfo = memo(function ProfileInfo({ pubkey, profile }: { pubkey: string; profile?: MetaEvent }) {
   const name = getProfileName(pubkey, profile)
 
   const { url, viewRef } = useProfileImageSource({
@@ -17,4 +18,4 @@ export const ProfileInfo = ({ pubkey, profile }: { pubkey: string; profile?: Met
       <StyledName>{name}</StyledName>
     </StyledProfileInfo>
   )
-}
+})

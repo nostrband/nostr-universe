@@ -12,15 +12,15 @@ import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapp
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermissions'
-import { useOpenApp } from '@/hooks/open-entity'
 import { checkNsbSigner, reconnect } from '@/modules/nostr'
 import { showToast } from '@/utils/helpers/general'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useState } from 'react'
+import { useSignEvent } from '@/hooks/sign-event'
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
-  const { signEvent } = useOpenApp()
+  const { signEvent } = useSignEvent()
   const { currentPubkey, nsbKeys } = useAppSelector((state) => state.keys)
   const [checkNSB, setCheckNSB] = useState(false)
 

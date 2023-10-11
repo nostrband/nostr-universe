@@ -13,6 +13,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { CONTENT_FEEDS } from '@/types/content-feed'
+import { useCallback } from 'react'
 
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
@@ -27,7 +28,7 @@ export const MainPage = () => {
 
   const contentFeedSettings = currentWorkspace?.contentFeedSettings || []
 
-  const renderFeeds = () => {
+  const renderFeeds = useCallback(() => {
     if (contentFeedSettings.length === 0) {
       return (
         <>
@@ -66,7 +67,7 @@ export const MainPage = () => {
       if (feed.hidden) return null
       return feeds[feed.id]
     })
-  }
+  }, [contentFeedSettings, guest])
 
   return (
     <StyledWrapVisibility isShow={isShow}>
