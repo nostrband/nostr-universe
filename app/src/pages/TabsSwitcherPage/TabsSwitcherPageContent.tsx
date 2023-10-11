@@ -18,18 +18,27 @@ export const TabsSwitcherPageContent = () => {
   const { onSwitchTab, onCloseTab, onCloseTabs } = useOpenApp()
   const tgs = useAppSelector(selectTabGroups)
 
-  const handleOpen = useCallback(async (tab: ITab) => {
-    await onSwitchTab(tab)
-  }, [onSwitchTab])
+  const handleOpen = useCallback(
+    async (tab: ITab) => {
+      await onSwitchTab(tab)
+    },
+    [onSwitchTab]
+  )
 
-  const handleCloseTab = useCallback((e: MouseEvent<HTMLButtonElement>, id: string) => {
-    e.stopPropagation()
-    onCloseTab(id)
-  }, [onCloseTab])
+  const handleCloseTab = useCallback(
+    (e: MouseEvent<HTMLButtonElement>, id: string) => {
+      e.stopPropagation()
+      onCloseTab(id)
+    },
+    [onCloseTab]
+  )
 
-  const handleCloseTabGroup = useCallback((tg: ITabGroup) => {
-    onCloseTabs(tg.tabs)
-  }, [onCloseTabs])
+  const handleCloseTabGroup = useCallback(
+    (tg: ITabGroup) => {
+      onCloseTabs(tg.tabs)
+    },
+    [onCloseTabs]
+  )
 
   return (
     <StyledWrapVisibility isShow={isShow}>

@@ -25,8 +25,7 @@ export const ModalContentFeedSettingsContent: FC<ModalContentFeedSettingsContent
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
 
-  const contentFeedsIds = contentFeeds.map(
-    (feed: IContentFeedSetting) => feed.id)
+  const contentFeedsIds = contentFeeds.map((feed: IContentFeedSetting) => feed.id)
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {

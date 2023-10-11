@@ -16,20 +16,22 @@ export const TrendingNotes = memo(function TrendingNotes() {
   const { data, isFetching: isLoading, refetch: refetchTrendingNotes } = userService.useFetchTrendingNotesQuery('')
   const { handleOpen } = useOpenModalSearchParams()
 
-  const handleOpenNote = useCallback((note: AuthoredEvent) => {
-    const ntrendingnote = nip19.neventEncode({
-      relays: [nostrbandRelay],
-      id: note.id
-    })
+  const handleOpenNote = useCallback(
+    (note: AuthoredEvent) => {
+      const ntrendingnote = nip19.neventEncode({
+        relays: [nostrbandRelay],
+        id: note.id
+      })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-      search: {
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: ntrendingnote,
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
-      }
-    })
-  }, [handleOpen])
-
+      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
+        search: {
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: ntrendingnote,
+          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
+        }
+      })
+    },
+    [handleOpen]
+  )
 
   const renderContent = useCallback(() => {
     if (isLoading) {

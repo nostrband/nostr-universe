@@ -77,16 +77,14 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
             ...app,
             url: getHandlerEventUrl(app, addr),
             order: 10000,
-            lastUsed: true,
+            lastUsed: true
           }
           lastAppNaddr = app.naddr || ''
         }
       }
 
-      if (lastKindApp && lastKindApp.naddr !== NATIVE_NADDR)
-        setApps([lastKindApp, nativeApp])
-      else
-        setApps([nativeApp])
+      if (lastKindApp && lastKindApp.naddr !== NATIVE_NADDR) setApps([lastKindApp, nativeApp])
+      else setApps([nativeApp])
 
       const [info, addr] = await fetchAppsForEvent(getParamAddr)
 

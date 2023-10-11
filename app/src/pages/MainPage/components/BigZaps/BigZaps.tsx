@@ -55,7 +55,7 @@ export const BigZaps = memo(function BigZaps() {
         // @ts-ignore
         window.plugins.toast.showShortBottom(`Target events not found`)
       }
-      console.log("bigZap addr", addr, bigZap)
+      console.log('bigZap addr', addr, bigZap)
 
       handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
         search: {

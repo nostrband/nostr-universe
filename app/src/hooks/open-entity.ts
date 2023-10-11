@@ -630,8 +630,7 @@ export const useOpenApp = () => {
     }
 
     // external browser or app
-    if (entity.url.startsWith('intent:')
-      || entity.url.startsWith('nostr:')) {
+    if (entity.url.startsWith('intent:') || entity.url.startsWith('nostr:')) {
       window.cordova.InAppBrowser.open(entity.url, '_self')
       return
     }
@@ -692,6 +691,6 @@ export const useOpenApp = () => {
     deletePermission,
     onCloseTabs,
     sendTabPayment,
-    backToLastPage,
+    backToLastPage
   }
 }
