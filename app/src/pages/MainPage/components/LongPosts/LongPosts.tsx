@@ -47,7 +47,7 @@ export const LongPosts = memo(function LongPosts() {
     }
   }, [dispatch, contactList])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (longPosts === null) {
       return <SkeletonLongPosts />
     }
@@ -65,7 +65,7 @@ export const LongPosts = memo(function LongPosts() {
         author={longPost.author}
       />
     ))
-  }
+  }, [longPosts, handleReloadLongPosts, handleOpenLongPosts])
 
   return (
     <StyledWrapper>

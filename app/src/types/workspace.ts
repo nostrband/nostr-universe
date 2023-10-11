@@ -5,7 +5,7 @@ import { AppNostr } from './app-nostr'
 export interface IPin {
   id: string
   url: string
-  appNaddr: string
+  appNaddr?: string
   title: string
   icon: string
   order: number

@@ -5,7 +5,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { Container } from '@/layout/Container/Conatiner'
 import { IconButton } from '@mui/material'
-import { fetchAppsForEvent } from '@/modules/nostr'
+import { fetchAppsForEvent, getHandlerEventUrl, parseAddr } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { StyledForm, StyledNoAppsMessage } from './styled'
@@ -17,9 +17,11 @@ import { selectCurrentWorkspace } from '@/store/store'
 import { Input } from '@/shared/Input/Input'
 import { IModalSelectAppContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
+import { usePins } from '@/hooks/pins'
 
 export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent) => {
-  const { openApp, findAppPin } = useOpenApp()
+  const { openApp } = useOpenApp()
+  const { findAppPin } = usePins()
   const [searchValue, setSearchValue] = useState('')
   const [kind, setKind] = useState('')
   const [apps, setApps] = useState<IOpenAppNostr[]>([])
@@ -67,20 +69,22 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
 
       if (paramSearchKind && currentWorkSpace) {
         const app = currentWorkSpace?.lastKindApps[paramSearchKind]
-        if (app) {
+        const addr = parseAddr(getParamAddr)
+        if (app && app.urls && addr) {
+          if (!addr.kind) addr.kind = Number(paramSearchKind)
+
           lastKindApp = {
             ...app,
+            url: getHandlerEventUrl(app, addr),
             order: 10000,
-            lastUsed: true,
+            lastUsed: true
           }
-          lastAppNaddr = app.naddr
+          lastAppNaddr = app.naddr || ''
         }
       }
 
-      if (lastKindApp)
-        setApps([lastKindApp, nativeApp])
-      else
-        setApps([nativeApp])
+      if (lastKindApp && lastKindApp.naddr !== NATIVE_NADDR) setApps([lastKindApp, nativeApp])
+      else setApps([nativeApp])
 
       const [info, addr] = await fetchAppsForEvent(getParamAddr)
 
@@ -93,11 +97,11 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       handleSetKind(`${addr.kind}`)
 
       if (currentWorkSpace && addr.kind in currentWorkSpace.lastKindApps) {
-        lastAppNaddr = currentWorkSpace?.lastKindApps[addr.kind].naddr
+        lastAppNaddr = currentWorkSpace?.lastKindApps[addr.kind].naddr || ''
       }
 
       const apps: IOpenAppNostr[] = []
-      if (lastKindApp) {
+      if (lastKindApp && lastKindApp.naddr !== NATIVE_NADDR) {
         apps.push(lastKindApp)
       }
 
@@ -138,6 +142,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
           name: app.profile?.display_name || app.profile?.name || hostname,
           about: app.profile?.about || '',
           picture: app.profile?.picture || '',
+          urls: app.urls,
           lastUsed,
           pinned,
           order

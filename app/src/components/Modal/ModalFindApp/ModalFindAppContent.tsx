@@ -6,7 +6,8 @@ import { IconButton } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { AppNostroListItem } from '@/shared/AppNostroListItem/AppNostroListItem'
 import { useAppSelector } from '@/store/hooks/redux'
-import { useOpenApp } from '@/hooks/open-entity'
+import { usePins } from '@/hooks/pins'
+import { AppNostr } from '@/types/app-nostr'
 
 type ModalFindAppContentProps = {
   handleClose: () => void
@@ -15,7 +16,7 @@ type ModalFindAppContentProps = {
 export const ModalFindAppContent: FC<ModalFindAppContentProps> = ({ handleClose }) => {
   const [searchValue, setSearchValue] = useState('')
 
-  const { onPinApp } = useOpenApp()
+  const { onPinApp } = usePins()
 
   const { apps = [] } = useAppSelector((state) => state.apps)
 
@@ -46,7 +47,7 @@ export const ModalFindAppContent: FC<ModalFindAppContentProps> = ({ handleClose 
         />
       </StyledForm>
       <div>
-        {filteredApps.map((app, index) => {
+        {filteredApps.map((app: AppNostr, index: number) => {
           return <AppNostroListItem app={app} key={index} onClick={() => onPinApp(app).then(handleClose)} />
         })}
       </div>

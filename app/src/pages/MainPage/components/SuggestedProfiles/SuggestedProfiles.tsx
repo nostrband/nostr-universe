@@ -41,17 +41,16 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
     [handleOpen]
   )
 
-  const handleReloadSuggestedProfiles = () => refetchSuggestedProfiles()
-
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (isLoading) {
       return <SkeletonProfiles />
     }
     if (!data || !data.length) {
+      const handleReloadSuggestedProfiles = () => refetchSuggestedProfiles()
       return <EmptyListMessage onReload={handleReloadSuggestedProfiles} />
     }
     return data.map((profile, i) => <Profile key={i} onClick={handleOpenProfile} profile={profile} />)
-  }
+  }, [isLoading, data, handleOpenProfile, refetchSuggestedProfiles])
 
   return (
     <StyledWrapper>

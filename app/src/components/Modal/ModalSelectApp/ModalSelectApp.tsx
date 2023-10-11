@@ -14,13 +14,11 @@ export const ModalSelectApp = () => {
     setKind(k)
   }
 
-  let label = "Select app";
+  let label = 'Select app'
   if (kind) {
     const name = kindEvents[kind]
-    if (name)
-      label = `Select app for ${name} (${kind})`
-    else
-      label = `Select app for kind ${kind}`
+    if (name) label = `Select app for ${name} (${kind})`
+    else label = `Select app for kind ${kind}`
   }
 
   return (

@@ -47,7 +47,7 @@ export const Communities = memo(function Communities() {
     }
   }, [dispatch, contactList])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (communities === null) {
       return <SkeletonCommunities />
     }
@@ -65,7 +65,7 @@ export const Communities = memo(function Communities() {
         picture={community.image}
       />
     ))
-  }
+  }, [communities, handleReloadCommunities, handleOpenCommuniti])
 
   return (
     <StyledWrapper>

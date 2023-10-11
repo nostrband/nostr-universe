@@ -47,7 +47,7 @@ export const LiveEvents = memo(function LiveEvents() {
     }
   }, [dispatch, contactList])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (liveEvents === null) {
       return <SkeletonLiveEvents />
     }
@@ -66,7 +66,7 @@ export const LiveEvents = memo(function LiveEvents() {
         status={event.status}
       />
     ))
-  }
+  }, [liveEvents, handleReloadLiveEvents, handleOpenLiveEvent])
 
   return (
     <StyledWrapper>

@@ -12,7 +12,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { Input } from '@/shared/Input/Input'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
-import { useOpenApp } from '@/hooks/open-entity'
+import { usePins } from '@/hooks/pins'
 
 type ModalPinSettingsContentProps = {
   handleClose: () => void
@@ -21,7 +21,7 @@ type ModalPinSettingsContentProps = {
 
 export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ handleClose, handleSetAppTitle }) => {
   const [searchParams] = useSearchParams()
-  const { onDeletePinnedApp, onUpdatePinnedApp } = useOpenApp()
+  const { onDeletePinnedApp, onUpdatePinnedApp } = usePins()
 
   const id = searchParams.get('pinId') || ''
   const currentPin = useAppSelector((state) => selectPin(state, id))

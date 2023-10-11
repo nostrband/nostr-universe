@@ -7,7 +7,7 @@ type SearchParamsType = {
   [key: string]: string
 }
 
-type IExtraOptions = {
+export type IExtraOptions = {
   search?: SearchParamsType
   replace?: boolean
   append?: boolean
