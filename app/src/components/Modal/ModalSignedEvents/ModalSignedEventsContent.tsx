@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Dialog, TextField } from '@mui/material'
+import { Dialog, Grid, TextField } from '@mui/material'
 import { DemoContainer, DemoItem } from '@mui/x-date-pickers/internals/demo'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -134,37 +134,44 @@ export const ModalSignedEventsContent = () => {
     <Container>
       <StyledFilterField>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DemoContainer components={['MobileDatePicker']}>
-            <DemoItem label="Date start">
-              <StyledDatePicker
-                format={formatDate}
-                closeOnSelect
-                onChange={handleChangeDateStart}
-                defaultValue={new Date()}
-                value={startDate}
-                componentsProps={{
-                  actionBar: {
-                    actions: ['clear', 'accept', 'cancel']
-                  }
-                }}
-              />
-            </DemoItem>
-
-            <DemoItem label="Date end">
-              <StyledDatePicker
-                format={formatDate}
-                minDate={startDate && addDays(startDate, 1)}
-                closeOnSelect
-                value={endDate}
-                onChange={handleChangeDateEnd}
-                componentsProps={{
-                  actionBar: {
-                    actions: ['clear', 'accept', 'cancel']
-                  }
-                }}
-              />
-            </DemoItem>
-          </DemoContainer>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <DemoContainer components={['MobileDatePicker']}>
+                <DemoItem>
+                  <StyledDatePicker
+                    format={formatDate}
+                    closeOnSelect
+                    onChange={handleChangeDateStart}
+                    defaultValue={new Date()}
+                    value={startDate}
+                    componentsProps={{
+                      actionBar: {
+                        actions: ['clear', 'accept', 'cancel']
+                      }
+                    }}
+                  />
+                </DemoItem>
+              </DemoContainer>
+            </Grid>
+            <Grid item xs={6}>
+              <DemoContainer components={['MobileDatePicker']}>
+                <DemoItem>
+                  <StyledDatePicker
+                    format={formatDate}
+                    minDate={startDate && addDays(startDate, 1)}
+                    closeOnSelect
+                    value={endDate}
+                    onChange={handleChangeDateEnd}
+                    componentsProps={{
+                      actionBar: {
+                        actions: ['clear', 'accept', 'cancel']
+                      }
+                    }}
+                  />
+                </DemoItem>
+              </DemoContainer>
+            </Grid>
+          </Grid>
         </LocalizationProvider>
       </StyledFilterField>
       <StyledFilterField>

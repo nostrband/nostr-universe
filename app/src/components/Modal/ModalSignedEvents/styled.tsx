@@ -35,7 +35,7 @@ export const StyledListItemActions = styled(ListItem)(() => ({
 
 export const StyledFilterField = styled(Box)(() => ({
   marginBottom: 10,
-  '&:first-child': {
+  '&:first-type': {
     marginTop: 20
   }
 }))
