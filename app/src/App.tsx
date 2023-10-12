@@ -60,13 +60,13 @@ export const App = () => {
         return 'Apps'
 
       case 'content':
-        return 'Content'
+        return 'New'
 
       case 'tabs-switcher':
         return 'Tabs'
 
       case 'bookmarks':
-        return 'Favorite'
+        return 'Best'
 
       case 'search':
         return 'Search'
