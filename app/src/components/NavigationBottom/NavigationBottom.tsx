@@ -2,10 +2,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
-import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined'
+import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
 import { useAppDispatch } from '@/store/hooks/redux'
 import { setPage } from '@/store/reducers/positionScrollPage.slice'
 
@@ -36,9 +36,9 @@ export const NavigationBottom = () => {
       }}
     >
       <BottomNavigationAction label="Apps" icon={<AppsOutlinedIcon />} value="apps" />
-      <BottomNavigationAction label="Content" icon={<DashboardOutlinedIcon />} value="content" />
+      <BottomNavigationAction label="New" icon={<AutoAwesomeOutlinedIcon />} value="content" />
       <BottomNavigationAction label="Search" icon={<SearchOutlinedIcon />} value="search" />
-      <BottomNavigationAction label="Favorite" icon={<BookmarkOutlinedIcon />} value="bookmarks" />
+      <BottomNavigationAction label="Best" icon={<BookmarkOutlinedIcon />} value="bookmarks" />
       <BottomNavigationAction label="Tabs" icon={<WidgetsOutlinedIcon />} value="tabs-switcher" />
     </BottomNavigation>
   )

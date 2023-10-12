@@ -1,5 +1,4 @@
 import { Container } from '@/layout/Container/Conatiner'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
@@ -11,7 +10,7 @@ import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/Horizont
 import { Profile } from '@/shared/Profile/Profile'
 
 export const ContactList = memo(function ContactList() {
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
 
   const handleOpenProfile = useCallback(
@@ -21,21 +20,16 @@ export const ContactList = memo(function ContactList() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(0)
-        }
-      })
+      handleOpenContextMenu({ bech32: nprofile })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Contacts
+          Following
         </StyledTitle>
       </Container>
 

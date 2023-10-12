@@ -1,6 +1,5 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { userService } from '@/store/services/user.service'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
@@ -14,24 +13,17 @@ import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNot
 
 export const TrendingNotes = memo(function TrendingNotes() {
   const { data, isFetching: isLoading, refetch: refetchTrendingNotes } = userService.useFetchTrendingNotesQuery('')
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
 
-  const handleOpenNote = useCallback(
-    (note: AuthoredEvent) => {
-      const ntrendingnote = nip19.neventEncode({
-        relays: [nostrbandRelay],
-        id: note.id
-      })
+  const handleOpenNote = useCallback((note: AuthoredEvent) => {
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: ntrendingnote,
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
-        }
-      })
-    },
-    [handleOpen]
-  )
+    const ntrendingnote = nip19.neventEncode({
+      relays: [nostrbandRelay],
+      id: note.id
+    })
+
+    handleOpenContextMenu({ bech32: ntrendingnote })
+  }, [handleOpenContextMenu])
 
   const renderContent = useCallback(() => {
     if (isLoading) {
