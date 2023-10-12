@@ -74,18 +74,21 @@ export const SearchPageContent = () => {
     setIsLoading(true)
     searchProfiles(searchValue)
       .then((data) => {
+        console.log("profiles", data)
         setProfiles(data)
       })
       .then(() => searchNotes(searchValue))
       .then((data) => {
+        console.log("notes", data)
         setNotes(data)
       })
       .then(() => searchLongNotes(searchValue))
       .then((data) => {
+        console.log("long notes", data)
         setLongNotes(data)
       })
       .finally(() => setIsLoading(false))
-  }, [])
+  }
 
   const updateSearchHistory = useCallback((history: SearchTerm[]) => {
     history.sort((a, b) => a.value.localeCompare(b.value))

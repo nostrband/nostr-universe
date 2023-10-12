@@ -52,7 +52,7 @@ export const ModalContextMenuContent = () => {
   const [invoice] = stringToBolt11(value || tabUrl)
   if (!value) value = b32 || invoice // from tabUrl
   const isApp = kind === KIND_APP
-  const pin = isApp ? findAppPin(event as AppEvent) : null
+  const pin = event && isApp ? findAppPin(event as AppEvent) : null
   const addr = parseAddr(b32)
   if (addr && kind !== undefined) addr.kind = kind
 
