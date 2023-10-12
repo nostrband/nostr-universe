@@ -304,7 +304,7 @@ export async function fetchApps() {
     // app's handled kinds and per-kind handler urls for the 'web' platform,
     // we don't add a kind that doesn't have a proper handler
     const kinds: number[] = []
-//    const handlers: { [key: string]: { url: string; type: string } } = {}
+    //    const handlers: { [key: string]: { url: string; type: string } } = {}
     const urls: AppUrl[] = []
     e.tags.forEach((t) => {
       let k = 0
@@ -719,7 +719,6 @@ export async function fetchAppsForEvent(event: Event): Promise<AppInfos> {
   // to redirect to this event
   for (const [_, app] of info.apps) {
     for (const h of app.handlers) {
-
       // handlers[k] = {
       //   url: url_type[0],
       //   type: url_type[1]

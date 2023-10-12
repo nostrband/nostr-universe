@@ -12,11 +12,10 @@ const initialState: IWorkSpaceState = {
   workspaces: []
 }
 
-function updateWorkspace(state: any, pubkey: string, props: object | Function) {
+function updateWorkspace(state: IWorkSpaceState, pubkey: string, props: object | ((workspace: WorkSpace) => object)) {
   state.workspaces = state.workspaces.map((workspace: WorkSpace) => {
     if (workspace.pubkey === pubkey) {
-      if (props instanceof Function)
-        props = props(workspace)
+      if (props instanceof Function) props = props(workspace)
       return {
         ...workspace,
         ...props
@@ -75,8 +74,8 @@ export const workspacesSlice = createSlice({
       const edittedPin = action.payload.pin
       const pubkey = action.payload.workspacePubkey
 
-      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({ 
-        pins: ws.pins.map((pin) => (pin.id === edittedPin.id ? { ...pin, title: edittedPin.title } : pin)) 
+      updateWorkspace(state, pubkey, (ws: WorkSpace) => ({
+        pins: ws.pins.map((pin) => (pin.id === edittedPin.id ? { ...pin, title: edittedPin.title } : pin))
       }))
     },
 

@@ -99,9 +99,7 @@ const defaultApps = [
     about:
       'Hey there👋 I am zapddit, a reddit-style #nostr client with a fresh outlook on #nostr - Follow topics, not just people.',
     kinds: [1],
-    urls: [
-      { url: 'https://zapddit.com/<bech32>', type: 'npub' }
-    ]
+    urls: [{ url: 'https://zapddit.com/<bech32>', type: 'npub' }]
   },
   {
     naddr: 'naddr1qqxnzd3cxc6n2d33xymrvwpeqgsp9z7qt2n06ssaqrpuxwyn98eeelr4pvp4mdkd45htp7vrhl6k98crqsqqql8kc4575h',
@@ -111,9 +109,7 @@ const defaultApps = [
     about:
       'The antidote to Nostr profile anxiety. Nosta onboards your onto the Nostr ecosystem in a few simple steps, helps you manage your profile info as you go, gives you a nice profile page with all your recent activity, and helps you find fun and interesting things to do on Nostr. Your profile is central to everything you do on Nostr, Nosta helps you set it up in the way you want it.',
     kinds: [0],
-    urls: [
-      { url: 'https://nosta.me/<bech32>', type: 'npub' },
-    ]
+    urls: [{ url: 'https://nosta.me/<bech32>', type: 'npub' }]
   },
   {
     naddr: 'naddr1qqxnzd3cx5urydfcxqunzd3nqgsru22d9lfnnwck54qr4phrvey50h2q33xc0gqxv5j03ftn4efu4rsrqsqqql8kr7wmdc',
@@ -123,9 +119,7 @@ const defaultApps = [
     about:
       'Pinstr is a decentralized and open-source social network for curating and sharing your interests with the world. With Pinstr, you can easily organize and discover new ideas, inspiration, and recommendations.',
     kinds: [0],
-    urls: [
-      { url: 'https://pinstr.app/p/<bech32>', type: 'npub' }
-    ]
+    urls: [{ url: 'https://pinstr.app/p/<bech32>', type: 'npub' }]
   },
   {
     naddr: 'naddr1qqxnzd3cxuenywfk8ycnqvenqgs86nsy2qatyes4m40jnmqgk5558jl979a6escp9vnzyr92yv4tznqrqsqqql8kdg24gq',
@@ -249,6 +243,8 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
 
   dispatch(addWorkspaces({ workspaces: [workspace] }))
   dispatch(addTabs({ tabs }))
+
+  await dbi.autoDeleteExcessSearchHistory(pubkey)
 }
 
 export const reloadWallets = async () => {

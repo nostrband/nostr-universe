@@ -1,6 +1,18 @@
 import { forwardRef } from 'react'
+import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
 import { styled } from '@mui/material/styles'
-import { Box, Typography, TypographyProps, ListItem, ListItemText, ListItemButton, Avatar } from '@mui/material'
+import {
+  Box,
+  TextField,
+  Typography,
+  TypographyProps,
+  ListItem,
+  ListItemText,
+  ListItemButton,
+  Avatar,
+  Autocomplete
+} from '@mui/material'
+
 export const StyledViewTitle = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
     return <Typography variant="h6" component="div" ref={ref} {...props} />
@@ -9,31 +21,41 @@ export const StyledViewTitle = styled(
   fontWeight: 'bold',
   color: theme.palette.light.light
 }))
+
 export const StyledListItem = styled(ListItem)(() => ({
   borderBottom: '1px solid #fff',
   flexDirection: 'column',
   padding: 0
 }))
+
 export const StyledListItemActions = styled(ListItem)(() => ({
   gap: 10,
   padding: '10px 0'
 }))
-export const StyledFilterInput = styled(Box)(() => ({
-  marginBottom: 10
+
+export const StyledFilterField = styled(Box)(() => ({
+  marginBottom: 10,
+  '&:first-type': {
+    marginTop: 20
+  }
 }))
+
 export const StyledWrapDialogContent = styled(Box)(() => ({
   padding: '15px'
 }))
+
 export const StyledItemButton = styled(ListItemButton)(({ theme }) => ({
   borderTop: '1px solid',
   padding: '10px 0',
   borderColor: theme.palette.secondary.light,
   width: '100%'
 }))
+
 export const StyledItemIconAvatar = styled(Avatar)(({ theme }) => ({
   background: theme.palette.decorate.main,
   color: theme.palette.light.light
 }))
+
 export const StyledItemText = styled(ListItemText)(({ theme }) => ({
   display: 'flex',
   width: '100%',
@@ -51,6 +73,7 @@ export const StyledItemText = styled(ListItemText)(({ theme }) => ({
     border: 'none'
   }
 }))
+
 export const StyledWrapper = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   borderRadius: theme.shape.borderRadius,
@@ -61,11 +84,67 @@ export const StyledWrapper = styled(Box)(({ theme }) => ({
     marginBottom: 10
   }
 }))
+
 export const StyledInputWrap = styled(Box)(() => ({
   paddingTop: 5,
   paddingBottom: 10
 }))
+
 export const StyledHead = styled(Box)(() => ({
   display: 'flex',
   justifyContent: 'space-between'
+}))
+
+export const StyledInput = styled(TextField)(({ theme }) => ({
+  background: theme.palette.secondary.main,
+  width: '100%',
+  minHeight: 50,
+  borderRadius: theme.shape.borderRadius,
+  color: '#fff',
+  fontSize: 14,
+  '&:placeholder': {
+    color: '#fff'
+  },
+  gap: '0.5rem',
+  '.MuiFormLabel-root, .Mui-focused, .MuiAutocomplete-input, .MuiChip-label': {
+    color: '#fff'
+  },
+  ', .MuiSvgIcon-root': {
+    fill: 'rgba(255, 255, 255, 0.5)'
+  },
+  '.MuiAutocomplete-endAdornment': {
+    '.MuiButtonBase-root': {
+      color: '#fff'
+    },
+  }
+}))
+
+export const StyledAutocomplete = styled(Autocomplete)(() => ({
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    border: 'none'
+  }
+}))
+
+export const StyledDatePicker = styled(MobileDatePicker)(({ theme }) => ({
+  background: theme.palette.secondary.main,
+  width: '100%',
+  minHeight: 50,
+  borderRadius: theme.shape.borderRadius,
+  color: '#fff',
+  fontSize: 14,
+  '&:placeholder': {
+    color: '#fff'
+  },
+  gap: '0.5rem',
+  '.MuiFormLabel-root, .Mui-focused': {
+    color: '#fff'
+  },
+  '.MuiAutocomplete-endAdornment': {
+    '.MuiButtonBase-root': {
+      color: '#fff'
+    }
+  },
+  '.MuiInputBase-input': {
+    color: '#fff'
+  }
 }))

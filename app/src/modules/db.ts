@@ -18,7 +18,8 @@ db.version(15).stores({
   perms: '[pubkey+app+name],[pubkey+app],value',
   contentFeedSettings: 'id, pubkey, settings_json',
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
-  signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson'
+  signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson',
+  searchHistory: 'id,pubkey,timestamp,value'
 })
 
 export const dbi = {
@@ -302,6 +303,60 @@ export const dbi = {
       }, {})
     } catch (error) {
       console.log(`Get lastKindApps error: ${error}`)
+    }
+  },
+  addSearchTerm: async (searchTerm) => {
+    try {
+      const existingSearchTerm = await db.searchHistory.where('value').equals(searchTerm.value).first()
+
+      if (existingSearchTerm) {
+        existingSearchTerm.timestamp = Date.now()
+        return await db.searchHistory.put(existingSearchTerm)
+      }
+      return await db.searchHistory.add(searchTerm)
+    } catch (error) {
+      console.log(`Add searchTerm to search history in DB error: ${error}`)
+    }
+  },
+  deleteSearchTerm: async (id) => {
+    try {
+      if (!id) {
+        throw new Error('ID is required!')
+      }
+      await db.searchHistory.delete(id)
+    } catch (error) {
+      console.log(`Delete searchTerm from search history in DB error: ${error}`)
+    }
+  },
+  getSearchHistory: async (pubkey, limit) => {
+    try {
+      const currentPubkeySearchHistory = await db.searchHistory.where('pubkey').equals(pubkey).toArray()
+      return currentPubkeySearchHistory.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit)
+    } catch (error) {
+      console.log(`Get search history in DB error: ${error}`)
+    }
+  },
+  autoDeleteExcessSearchHistory: async (pubkey) => {
+    try {
+      const maxQueries = 30
+      const queryCount = await db.searchHistory.where({ pubkey }).count()
+
+      if (queryCount > maxQueries) {
+        const queriesToDeleteCount = queryCount - maxQueries
+        const queries = await db.searchHistory.where({ pubkey }).sortBy('timestamp')
+        const queriesToDelete = queries.slice(0, queriesToDeleteCount)
+        const queryIdsToDelete = queriesToDelete.map((query) => query.id)
+        await db.searchHistory.bulkDelete(queryIdsToDelete)
+      }
+
+      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+      const outdatedQueries = await db.searchHistory.where({ pubkey, timestamp: { '<': oneWeekAgo } }).toArray()
+
+      if (outdatedQueries.length > 0) {
+        await db.searchHistory.bulkDelete(outdatedQueries.map((query) => query.id))
+      }
+    } catch (error) {
+      console.log(`Bulk delete excess search history in DB error: ${error}`)
     }
   }
 }
