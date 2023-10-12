@@ -70,9 +70,21 @@ export const useOpenModalSearchParams = () => {
     [getEnumParam, searchParams]
   )
 
+  const handleOpenContextMenu = useCallback((
+    { bech32 = '', replace = false }: { bech32?: string, replace?: boolean }
+  ) => {
+    handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
+      search: {
+        bech32: bech32
+      },
+      replace
+    })
+  }, [handleOpen])
+
   return {
     handleClose,
     handleOpen,
-    getModalOpened
+    getModalOpened,
+    handleOpenContextMenu
   }
 }

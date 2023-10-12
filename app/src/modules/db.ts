@@ -6,7 +6,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(13).stores({
+db.version(14).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',

@@ -26,6 +26,7 @@ import { ContactListEvent, createContactListEvent } from '@/types/contact-list-e
 import { AppNostr } from '@/types/app-nostr'
 import { showToast } from '@/utils/helpers/general'
 import { AppEvent, AppUrl, createAppEvent } from '@/types/app-event'
+import { NATIVE_NADDR } from '@/consts'
 
 const KIND_META: number = 0
 const KIND_NOTE: number = 1
@@ -639,6 +640,8 @@ export function getHandlerEventUrl(app: AppEvent | AppNostr, ad: EventAddr): str
   if (ad.kind === undefined) return ''
 
   const findUrlType = (type: string): AppUrl | undefined => {
+    if (app.naddr === NATIVE_NADDR)
+      return { type, url: 'nostr:<bech32>' }
     return app.urls.find((u) => u.type === type)
   }
 
@@ -688,25 +691,14 @@ export function getHandlerEventUrl(app: AppEvent | AppNostr, ad: EventAddr): str
   return url
 }
 
-export async function fetchAppsForEvent(id: string, event: Event | null = null): Promise<[AppInfos, EventAddr]> {
-  const addr = parseAddr(id)
-  if (!addr) throw new Error('Bad address')
-
-  // if event content is known take kind from there
-  if (event && addr.kind === undefined) addr.kind = event.kind
-
-  // if kind unknown need to fetch event from network
-  if (addr.kind === undefined) {
-    if (!event) event = await fetchEventByAddr(ndk, addr)
-
-    if (!event) throw new Error('Failed to fetch target event')
-
-    addr.kind = event.kind
-    addr.event_id = event.id
-    addr.pubkey = event.pubkey
-    if (event.kind >= 30000 && event.kind < 40000) {
-      addr.d_tag = getTagValue(event, 'd')
-    }
+export async function fetchAppsForEvent(event: Event): Promise<AppInfos> {
+  const addr: EventAddr = {}
+  
+  addr.kind = event.kind
+  addr.event_id = event.id
+  addr.pubkey = event.pubkey
+  if (event.kind >= 30000 && event.kind < 40000) {
+    addr.d_tag = getTagValue(event, 'd')
   }
   console.log('resolved addr', addr, event)
 
@@ -737,7 +729,7 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null):
     }
   }
 
-  return [info, addr]
+  return info
 }
 
 // export const getEventKind = () => {
@@ -765,7 +757,7 @@ export async function fetchEventByBech32(b32: string): Promise<AugmentedEvent | 
 }
 
 export async function fetchExtendedEventByBech32(
-  b32: string, contactList: string[]): Promise<AugmentedEvent | null> {
+  b32: string, contactList?: string[]): Promise<AugmentedEvent | null> {
   const addr = parseAddr(b32)
   console.log('b32', b32, 'addr', JSON.stringify(addr))
   if (!addr) throw new Error('Bad address')
@@ -782,7 +774,7 @@ export async function fetchExtendedEventByBech32(
       a = await augmentCommunities([e])
       break
     case KIND_LIVE_EVENT:
-      a = await augmentLiveEvents([e], contactList, 1, /*ended*/true)
+      a = await augmentLiveEvents([e], contactList || [], 1, /*ended*/true)
       break
     case KIND_APP:
       a = await augmentApps([e])

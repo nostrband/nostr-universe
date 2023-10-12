@@ -26,7 +26,6 @@ export const AppsNostro = memo(function AppsNostro() {
           bech32: app.naddr || ''
         }
       })
-  //      await openApp(app)
     },
     [handleOpen] 
   )
