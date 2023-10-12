@@ -11,7 +11,6 @@ import {
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
 import { MetaEvent } from '@/types/meta-event'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/SuggestedProfiles/styled'
@@ -45,32 +44,27 @@ export const SearchPageContent = () => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
 
-  const onSearch = (str: string): boolean => {
+  const onSearch = useCallback((str: string): boolean => {
     try {
       const url = new URL('/', str)
       if (url) {
-        openBlank({ url: str }, {})
+        handleOpenContextMenu({ url: str })
         return true
       }
-    } catch (err) {
-      console.log(err)
-    }
+    } catch {}
 
     const b32 = stringToBech32(str)
-
     if (b32) {
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { 
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32
-      } })
+      handleOpenContextMenu({ bech32: b32 })
       return true
     }
 
     return false
-  }
+  }, [handleOpenContextMenu, openBlank])
 
-  const loadEvents = useCallback(async (searchValue: string) => {
+  const loadEvents = async (searchValue: string) => {
     setIsLoading(true)
     searchProfiles(searchValue)
       .then((data) => {
@@ -85,7 +79,7 @@ export const SearchPageContent = () => {
         setLongNotes(data)
       })
       .finally(() => setIsLoading(false))
-  }, [])
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -104,10 +98,7 @@ export const SearchPageContent = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { 
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(0)
-    } })
+    handleOpenContextMenu({ bech32: nprofile })
   }
 
   const handleOpenNote = (note: AuthoredEvent) => {
@@ -116,10 +107,7 @@ export const SearchPageContent = () => {
       id: note.id
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { 
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent,
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
-    } })
+    handleOpenContextMenu({ bech32: nevent })
   }
 
   const handleOpenLongNote = (longNote: LongNoteEvent) => {
@@ -130,10 +118,7 @@ export const SearchPageContent = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { 
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
-      [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(longNote.kind)
-    } })
+    handleOpenContextMenu({ bech32: naddr })
   }
 
   // useEffect(() => {

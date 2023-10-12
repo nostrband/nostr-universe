@@ -1,5 +1,4 @@
 import { Container } from '@/layout/Container/Conatiner'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedLongNotes, getTagValue, nostrbandRelay } from '@/modules/nostr'
@@ -14,7 +13,7 @@ import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNote'
 
 export const LongPosts = memo(function LongPosts() {
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
   const { longPosts, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
@@ -27,14 +26,9 @@ export const LongPosts = memo(function LongPosts() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(longPost.kind)
-        }
-      })
+      handleOpenContextMenu({ bech32: naddr })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   const handleReloadLongPosts = useCallback(async () => {

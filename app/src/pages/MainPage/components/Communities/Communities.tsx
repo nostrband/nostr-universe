@@ -1,5 +1,4 @@
 import { Container } from '@/layout/Container/Conatiner'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedCommunities, getTagValue, nostrbandRelay } from '@/modules/nostr'
@@ -15,7 +14,7 @@ import { ItemCommunity } from '@/components/ItemsContent/ItemCommunity/ItemCommu
 
 export const Communities = memo(function Communities() {
   const { communities, contactList } = useAppSelector((state) => state.contentWorkSpace)
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
   const dispatch = useAppDispatch()
 
   const handleOpenCommuniti = useCallback(
@@ -27,14 +26,9 @@ export const Communities = memo(function Communities() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
-        }
-      })
+      handleOpenContextMenu({ bech32: naddr })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   const handleReloadCommunities = useCallback(async () => {

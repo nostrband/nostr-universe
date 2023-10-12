@@ -10,24 +10,17 @@ import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { SkeletonApps } from '@/components/Skeleton/SkeletonApps/SkeletonApps'
 import { AppNostr } from '@/types/app-nostr'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const AppsNostro = memo(function AppsNostro() {
   const { apps, isLoading } = useAppSelector((state) => state.apps)
   const dispatch = useAppDispatch()
-  const { handleOpen } = useOpenModalSearchParams()
-
-//  const { openApp } = useOpenApp()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenApp = useCallback(
     async (app: AppNostr) => {
-      handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
-        search: {
-          bech32: app.naddr || ''
-        }
-      })
+      handleOpenContextMenu({ bech32: app.naddr })
     },
-    [handleOpen] 
+    [handleOpenContextMenu] 
   )
 
   const handleReloadApps = useCallback(async () => {
