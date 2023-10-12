@@ -71,6 +71,14 @@ export const getOrigin = (url: string) => {
   }
 }
 
+export const getDomain = (url: string) => {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
+
 export const copyToClipBoard = (copyValue: string) => {
   // @ts-ignore
   if (window.cordova) {

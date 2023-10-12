@@ -25,6 +25,8 @@ import { WalletInfo } from '@/types/wallet-info'
 import { ContactListEvent, createContactListEvent } from '@/types/contact-list-event'
 import { AppNostr } from '@/types/app-nostr'
 import { showToast } from '@/utils/helpers/general'
+import { AppEvent, AppUrl, createAppEvent } from '@/types/app-event'
+import { NATIVE_NADDR } from '@/consts'
 
 const KIND_META: number = 0
 const KIND_NOTE: number = 1
@@ -34,7 +36,7 @@ const KIND_ZAP: number = 9735
 const KIND_HIGHLIGHT: number = 9802
 const KIND_BOOKMARKS: number = 30001
 const KIND_LONG_NOTE: number = 30023
-const KIND_APP: number = 31990
+export const KIND_APP: number = 31990
 const KIND_LIVE_EVENT: number = 30311
 const KIND_COMMUNITY: number = 34550
 const KIND_NWC_PAYMENT_REQUEST: number = 23194
@@ -77,40 +79,35 @@ interface EventAddr {
   hex: boolean
 }
 
-export interface AppUrl {
-  url: string
-  type: string
-}
+// export interface AppHandlerEvent extends AugmentedEvent {
+//   naddr: string
+//   author?: MetaEvent
+//   inheritedMeta: boolean
+//   meta?: Meta
+//   kinds: number[]
+//   urls: AppUrl[]
+//   platforms: string[]
+//   appId: string
+//   eventUrl?: string
+// }
 
-export interface AppHandlerEvent extends AugmentedEvent {
-  naddr: string
-  meta: MetaEvent | null
-  inheritedProfile: boolean
-  profile: Meta | null
-  kinds: number[]
-  urls: AppUrl[]
-  platforms: string[]
-  app_id: string
-  eventUrl: string
-}
-
-function createAppHandlerEvent(e: AugmentedEvent): AppHandlerEvent {
-  const c = e as AppHandlerEvent
-  c.naddr = ''
-  c.meta = null
-  c.inheritedProfile = false
-  c.profile = null
-  c.kinds = []
-  c.urls = []
-  c.platforms = []
-  c.app_id = ''
-  c.eventUrl = ''
-  return c
-}
+// function createAppHandlerEvent(e: AugmentedEvent): AppHandlerEvent {
+//   const c = e as AppHandlerEvent
+//   c.naddr = ''
+//   c.author = null
+//   c.inheritedMeta = false
+//   c.meta = null
+//   c.kinds = []
+//   c.urls = []
+//   c.platforms = []
+//   c.appId = ''
+//   c.eventUrl = ''
+//   return c
+// }
 
 interface App {
   app_id: string
-  handlers: AppHandlerEvent[]
+  handlers: AppEvent[]
   kinds: number[]
   platforms: string[]
 }
@@ -118,7 +115,7 @@ interface App {
 export interface AppInfos {
   meta: MetaEvent | null
   apps: Map<string, App>
-  handlers: AppHandlerEvent[]
+  handlers: AppEvent[]
   kinds: number[]
   platforms: string[]
 }
@@ -185,11 +182,11 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
   })
 }
 
-export function getTags(e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent, name: string): string[] {
+export function getTags(e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent, name: string): string[][] {
   return e.tags.filter((t: string[]) => t.length > 0 && t[0] === name)
 }
 
-export function getTag(e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent, name: string): string | null {
+export function getTag(e: AugmentedEvent | NDKEvent | Event | AuthoredEvent | MetaEvent, name: string): string[] | null {
   const tags = getTags(e, name)
   if (tags.length === 0) return null
   return tags[0]
@@ -504,7 +501,7 @@ function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPu
   for (const ev of events) {
     if (ev.kind !== KIND_APP) continue
 
-    const e = createAppHandlerEvent(ev)
+    const e = createAppEvent(createAuthoredEvent(ev))
 
     // set naddr
     e.naddr = nip19.naddrEncode({
@@ -514,10 +511,10 @@ function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPu
     })
 
     // init handler profile, inherit from pubkey meta if needed
-    e.inheritedProfile = !e.content
-    e.meta = metas.get(e.pubkey) || null
-    if (e.inheritedProfile) e.profile = e.meta?.profile || null
-    else e.profile = parseProfileJson(e)
+    e.inheritedMeta = !e.content
+    e.author = metas.get(e.pubkey) || null
+    if (e.inheritedMeta) e.meta = e.author?.profile || null
+    else e.meta = parseProfileJson(e)
 
     // parse handler kinds
     const kinds = new Set<number>()
@@ -557,13 +554,13 @@ function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPu
     e.platforms = [...ps.values()]
 
     // dedup by app name
-    e.app_id = getTagValue(e, 'd')
-    if (e.content !== '') e.app_id = e.profile?.name || e.profile?.display_name || ''
+    e.appId = getTagValue(e, 'd')
+    if (e.content !== '') e.appId = e.meta?.name || e.meta?.display_name || ''
 
     // init
-    if (!info.apps.get(e.app_id)) {
-      info.apps.set(e.app_id, {
-        app_id: e.app_id,
+    if (!info.apps.get(e.appId)) {
+      info.apps.set(e.appId, {
+        app_id: e.appId,
         handlers: [],
         kinds: [],
         platforms: []
@@ -571,7 +568,7 @@ function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPu
     }
 
     // add app handler
-    const app = info.apps.get(e.app_id)
+    const app = info.apps.get(e.appId)
     if (!app) continue // impossible
     app.handlers.push(e)
     app.kinds.push(...e.kinds)
@@ -639,10 +636,12 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   return info
 }
 
-export function getHandlerEventUrl(app: AppHandlerEvent | AppNostr, ad: EventAddr): string {
+export function getHandlerEventUrl(app: AppEvent | AppNostr, ad: EventAddr): string {
   if (ad.kind === undefined) return ''
 
   const findUrlType = (type: string): AppUrl | undefined => {
+    if (app.naddr === NATIVE_NADDR)
+      return { type, url: 'nostr:<bech32>' }
     return app.urls.find((u) => u.type === type)
   }
 
@@ -692,25 +691,14 @@ export function getHandlerEventUrl(app: AppHandlerEvent | AppNostr, ad: EventAdd
   return url
 }
 
-export async function fetchAppsForEvent(id: string, event: Event | null = null): Promise<[AppInfos, EventAddr]> {
-  const addr = parseAddr(id)
-  if (!addr) throw new Error('Bad address')
-
-  // if event content is known take kind from there
-  if (event && addr.kind === undefined) addr.kind = event.kind
-
-  // if kind unknown need to fetch event from network
-  if (addr.kind === undefined) {
-    if (!event) event = await fetchEventByAddr(ndk, addr)
-
-    if (!event) throw new Error('Failed to fetch target event')
-
-    addr.kind = event.kind
-    addr.event_id = event.id
-    addr.pubkey = event.pubkey
-    if (event.kind >= 30000 && event.kind < 40000) {
-      addr.d_tag = getTagValue(event, 'd')
-    }
+export async function fetchAppsForEvent(event: Event): Promise<AppInfos> {
+  const addr: EventAddr = {}
+  
+  addr.kind = event.kind
+  addr.event_id = event.id
+  addr.pubkey = event.pubkey
+  if (event.kind >= 30000 && event.kind < 40000) {
+    addr.d_tag = getTagValue(event, 'd')
   }
   console.log('resolved addr', addr, event)
 
@@ -740,7 +728,7 @@ export async function fetchAppsForEvent(id: string, event: Event | null = null):
     }
   }
 
-  return [info, addr]
+  return info
 }
 
 // export const getEventKind = () => {
@@ -765,6 +753,45 @@ export async function fetchEventByBech32(b32: string): Promise<AugmentedEvent | 
   if (!addr) throw new Error('Bad address')
 
   return await fetchEventByAddr(ndk, addr)
+}
+
+export async function fetchExtendedEventByBech32(
+  b32: string, contactList?: string[]): Promise<AugmentedEvent | null> {
+  const addr = parseAddr(b32)
+  console.log('b32', b32, 'addr', JSON.stringify(addr))
+  if (!addr) throw new Error('Bad address')
+
+  const e = await fetchEventByAddr(ndk, addr)
+
+  // load meta etc using these special augmenters
+  let a = null
+  switch (e.kind) {
+    case KIND_ZAP: 
+      a = await augmentZaps([e])
+      break
+    case KIND_COMMUNITY:
+      a = await augmentCommunities([e])
+      break
+    case KIND_LIVE_EVENT:
+      a = await augmentLiveEvents([e], contactList || [], 1, /*ended*/true)
+      break
+    case KIND_APP:
+      a = await augmentApps([e])
+      break
+    default:
+      a = await augmentEventAuthors([e])
+
+      switch (e.kind) {
+        case KIND_LONG_NOTE:
+          a = await augmentLongNotes(a)
+          break
+        case KIND_HIGHLIGHT:
+          break
+      }
+      break
+  }
+
+  return a && a.length > 0 ? a[0] : null 
 }
 
 export async function searchProfiles(q: string): Promise<MetaEvent[]> {
@@ -1301,6 +1328,85 @@ async function augmentLiveEvents(
   }
 
   return liveEvents
+}
+
+async function augmentApps(
+  augmentedEvent: AugmentedEvent[],
+): Promise<AppEvent[]> {
+
+  let appEvents = augmentedEvent.map((e) => createAppEvent(createAuthoredEvent(e)))
+
+  appEvents.forEach((e) => {
+
+    e.naddr = nip19.naddrEncode({
+      pubkey: e.pubkey,
+      kind: e.kind,
+      identifier: e.identifier
+    })
+
+    const kinds = new Set<number>()
+    for (const t of getTags(e, 'k')) {
+      if (t.length < 2) continue
+      const k = Number(t[1])
+      if (k < 0 || k > 10000000 || isNaN(k)) continue
+      kinds.add(k)
+    }
+    e.kinds = [...kinds]
+
+    const ps = new Set<string>()
+    e.urls = []
+    for (const p of PLATFORMS) {
+      // urls for platform p
+      const urls = getTags(e, p)
+      for (const url of urls) {
+        if (url.length < 2) continue
+
+        const type = url.length > 2 ? url[2] : ''
+
+        // default or one of known types?
+        if (type != '' && !ADDR_TYPES.find((t) => t === type)) continue
+
+        ps.add(p)
+        e.urls.push({
+          url: url[1],
+          type
+        } as AppUrl)
+      }
+    }
+    e.platforms = [...ps.values()]
+
+    e.appAuthorPubkey = getTagValue(e, 'author')
+
+    if (e.content)
+      e.meta = parseContentJson(e.content)
+
+    e.appId = e.identifier
+    if (e.meta) e.appId = e.meta?.name || e.meta?.display_name || ''    
+  })
+
+  // fetch metas
+  if (appEvents.length > 0) {
+    // profile infos
+    const pubkeys = new Set<string>
+    appEvents.forEach(e => {
+      pubkeys.add(e.pubkey)
+      if (e.appAuthorPubkey)
+        pubkeys.add(e.appAuthorPubkey)
+    })
+    const metas = await fetchMetas([...pubkeys])
+
+    // assign to live events
+    appEvents.forEach((e) => {
+      e.appAuthorMeta = metas.find((m) => m.pubkey === e.appAuthorPubkey) 
+      e.author = metas.find((m) => m.pubkey === e.pubkey)
+      if (!e.meta) {
+        e.meta = e.author?.profile
+        e.inheritedMeta = !!e.meta
+      }
+    })
+  }
+
+  return appEvents
 }
 
 export async function fetchFollowedLiveEvents(contactPubkeys: string[], limit: number = 30): Promise<LiveEvent[]> {

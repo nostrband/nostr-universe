@@ -5,7 +5,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { Container } from '@/layout/Container/Conatiner'
 import { IconButton } from '@mui/material'
-import { fetchAppsForEvent, getHandlerEventUrl, parseAddr } from '@/modules/nostr'
+import { fetchAppsForEvent, fetchExtendedEventByBech32, getHandlerEventUrl, parseAddr } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { StyledForm, StyledNoAppsMessage } from './styled'
@@ -18,6 +18,7 @@ import { Input } from '@/shared/Input/Input'
 import { IModalSelectAppContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
+import { showToast } from '@/utils/helpers/general'
 
 export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent) => {
   const { openApp } = useOpenApp()
@@ -28,12 +29,11 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
   const [isAppsFailed, setIsAppsFailed] = useState(false)
   const [isAppsLoading, setIsAppsLoading] = useState(false)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
+  const { contactList } = useAppSelector((state) => state.contentWorkSpace)
 
   const [searchParams] = useSearchParams()
-  const paramSearchUrl = EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]
-  const paramSearchKind = searchParams.get(MODAL_PARAMS_KEYS.KIND) || ''
-
-  const getParamAddr = searchParams.get(paramSearchUrl) || ''
+  const getParamKind = searchParams.get(MODAL_PARAMS_KEYS.KIND) || ''
+  const getParamB32 = searchParams.get(EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]) || ''
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value)
@@ -48,14 +48,21 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       setIsAppsFailed(false)
       setIsAppsLoading(true)
 
-      if (paramSearchKind) {
-        setKind(paramSearchKind)
-        handleSetKind(paramSearchKind)
+      const addr = parseAddr(getParamB32)
+      if (!addr) {
+        setIsAppsLoading(false)
+        showToast('Bad event address!')
+        return
       }
 
+      // last used app
+      let lastKindApp: IOpenAppNostr | null = null
+      let lastAppNaddr = ''
+
+      // synthetic native app option always present
       const nativeApp: IOpenAppNostr = {
         naddr: NATIVE_NADDR,
-        url: 'nostr:' + getParamAddr,
+        url: 'nostr:' + getParamB32,
         name: 'Native app',
         about: 'Any native Nostr app installed on your device',
         picture: '',
@@ -64,44 +71,61 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
         order: 0
       }
 
-      let lastAppNaddr = ''
-      let lastKindApp: IOpenAppNostr | null = null
+      // helper
+      const setKindGetApp = (kind: string) => {
+        setKind(kind)
+        handleSetKind(kind)
+        if (!addr.kind && kind)
+          addr.kind = Number(kind)
 
-      if (paramSearchKind && currentWorkSpace) {
-        const app = currentWorkSpace?.lastKindApps[paramSearchKind]
-        const addr = parseAddr(getParamAddr)
-        if (app && app.urls && addr) {
-          if (!addr.kind) addr.kind = Number(paramSearchKind)
-
-          lastKindApp = {
-            ...app,
-            url: getHandlerEventUrl(app, addr),
-            order: 10000,
-            lastUsed: true
+        // we might have last app for this kind in db,
+        // but we need kind to use it
+        if (kind && currentWorkSpace && kind in currentWorkSpace.lastKindApps) {
+          const app = currentWorkSpace.lastKindApps[kind]
+          if (app.urls && app.urls.length > 0) {
+            lastKindApp = {
+              ...app,
+              url: getHandlerEventUrl(app, addr),
+              order: 10000,
+              kind,
+              lastUsed: true,
+            }
+            lastAppNaddr = lastKindApp.naddr || ''
           }
-          lastAppNaddr = app.naddr || ''
+        }
+
+        if (kind) {
+          // initial set of apps available immediately upon modal open
+          if (lastKindApp && lastAppNaddr !== NATIVE_NADDR)
+            setApps([lastKindApp, nativeApp])
+          else
+            setApps([nativeApp])
         }
       }
 
-      if (lastKindApp && lastKindApp.naddr !== NATIVE_NADDR) setApps([lastKindApp, nativeApp])
-      else setApps([nativeApp])
+      // kind might be provided explicitly, 
+      // or might be encoded in the addr
+      const paramKind = getParamKind || String(addr.kind || '')
 
-      const [info, addr] = await fetchAppsForEvent(getParamAddr)
+      // if kind known in advance,
+      // we might have last app for this kind in db,
+      // but we need kind to use it
+      setKindGetApp(paramKind)
 
-      if (addr.kind === undefined) {
+      // the event is most probably in cache so it's usually instant
+      const event = await fetchExtendedEventByBech32(getParamB32, contactList?.contactPubkeys)
+      if (!event) {
         setIsAppsLoading(false)
+        showToast('Event for found!')
         return
       }
 
-      setKind(`${addr.kind}`)
-      handleSetKind(`${addr.kind}`)
+      setKindGetApp(event.kind + '')
 
-      if (currentWorkSpace && addr.kind in currentWorkSpace.lastKindApps) {
-        lastAppNaddr = currentWorkSpace?.lastKindApps[addr.kind].naddr || ''
-      }
-
+      // this takes a while to download the apps from relays
+      const info = await fetchAppsForEvent(event)
       const apps: IOpenAppNostr[] = []
-      if (lastKindApp && lastKindApp.naddr !== NATIVE_NADDR) {
+      if (lastKindApp && lastAppNaddr !== NATIVE_NADDR) {
         apps.push(lastKindApp)
       }
 
@@ -139,9 +163,9 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
         apps.push({
           naddr: app.naddr,
           url: app.eventUrl,
-          name: app.profile?.display_name || app.profile?.name || hostname,
-          about: app.profile?.about || '',
-          picture: app.profile?.picture || '',
+          name: app.meta?.display_name || app.meta?.name || hostname,
+          about: app.meta?.about || '',
+          picture: app.meta?.picture || '',
           urls: app.urls,
           lastUsed,
           pinned,
@@ -162,7 +186,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       setIsAppsLoading(false)
       setIsAppsFailed(true)
     }
-  }, [currentWorkSpace?.lastKindApps, currentWorkSpace?.pins, getParamAddr, paramSearchKind])
+  }, [currentWorkSpace?.lastKindApps, currentWorkSpace?.pins, getParamB32, getParamKind])
 
   const resetStates = useCallback(() => {
     setApps([])
@@ -177,10 +201,10 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
 
   useEffect(() => {
     resetStates()
-    if (getParamAddr) {
+    if (getParamB32) {
       load()
     }
-  }, [getParamAddr, load])
+  }, [getParamB32, load])
 
   const renderContent = () => {
     return (
@@ -189,12 +213,12 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
           <StyledForm>
             <Input
               endAdornment={
-                <IconButton color="inherit" size="medium" onClick={() => copyToClipBoard(getParamAddr)}>
+                <IconButton color="inherit" size="medium" onClick={() => copyToClipBoard(getParamB32)}>
                   <ContentCopyIcon />
                 </IconButton>
               }
               readOnly
-              value={getParamAddr}
+              value={getParamB32}
             />
             <Input
               placeholder="Search app"

@@ -233,11 +233,6 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
 
   const workspace: WorkSpace = {
     pubkey,
-    // trendingProfiles: [],
-    // trendingNotes: [],
-    // longNotes: [],
-    // liveEvents: [],
-    // suggestedProfiles: [],
     tabIds: tabsSort.map((t) => t.id),
     pins: pinsSort,
     lastKindApps: lastKindAppsCollection,
