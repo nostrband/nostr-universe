@@ -6,7 +6,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(13).stores({
+db.version(15).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -328,10 +328,10 @@ export const dbi = {
       console.log(`Delete searchTerm from search history in DB error: ${error}`)
     }
   },
-  getSearchHistory: async (pubkey) => {
+  getSearchHistory: async (pubkey, limit) => {
     try {
       const currentPubkeySearchHistory = await db.searchHistory.where('pubkey').equals(pubkey).toArray()
-      return currentPubkeySearchHistory.sort((a, b) => b.timestamp - a.timestamp)
+      return currentPubkeySearchHistory.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit)
     } catch (error) {
       console.log(`Get search history in DB error: ${error}`)
     }

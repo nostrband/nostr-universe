@@ -27,7 +27,10 @@ import { v4 as uuidv4 } from 'uuid'
 import { SearchTerm } from '@/modules/types/db'
 import { IconButton } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import CloseIcon from '@mui/icons-material/Close'
 import { RecentQueries } from './components/RecentQueries/RecentQueries'
+
+const MAX_HISTORY = 10
 
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
@@ -43,6 +46,7 @@ export const SearchPageContent = () => {
   const [longNotes, setLongNotes] = useState<LongNoteEvent[] | null>(null)
 
   const [isLoading, setIsLoading] = useState(false)
+  const [lastValue, setLastValue] = useState('')
 
   const [searchHistoryOptions, setSearchHistoryOptions] = useState<SearchTerm[]>([])
   const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
@@ -57,9 +61,7 @@ export const SearchPageContent = () => {
           openBlank({ url: str }, {})
           return true
         }
-      } catch (err) {
-        console.log(err)
-      }
+      } catch {}
 
       const b32 = stringToBech32(str)
 
@@ -94,19 +96,45 @@ export const SearchPageContent = () => {
       .finally(() => setIsLoading(false))
   }, [])
 
+  const updateSearchHistory = useCallback((history: SearchTerm[]) => {
+    history.sort((a, b) => a.value.localeCompare(b.value))
+    // @ts-ignore
+    const filtered: SearchTerm[] = history.map((e, i, a) => {
+      if (!i || a[i-1].value !== e.value)
+        return e
+    })
+    .filter(e => e !== undefined)
+    .slice(0, MAX_HISTORY)
+
+    filtered.sort((a, b) => b.timestamp - a.timestamp)
+
+    setSearchHistoryOptions(filtered)
+  }, [setSearchHistoryOptions])
+
   const searchHandler = useCallback(
     (value: string) => {
       if (value.trim().length > 0) {
-        localStorage.setItem('searchValue', value)
-        onSearch(value)
+        // if custom handler executed then we don't proceed 
+        if (onSearch(value)) return
+
+        if (value !== lastValue) {
+          setNotes(null)
+          setLongNotes(null)
+          setProfiles(null)
+        }
+        setLastValue(value)
         loadEvents(value)
 
-        dbi.addSearchTerm({
+        const term = {
           id: uuidv4(),
           value: value,
           timestamp: Date.now(),
           pubkey: currentPubkey
-        })
+        }
+
+        updateSearchHistory([term, ...searchHistoryOptions])
+
+        dbi.addSearchTerm(term)
       }
     },
     [currentPubkey, loadEvents, onSearch]
@@ -119,6 +147,10 @@ export const SearchPageContent = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchValue({ searchValue: e.target.value }))
+  }
+
+  const handleClear = () => {
+    dispatch(setSearchValue({ searchValue: '' }))
   }
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -176,10 +208,10 @@ export const SearchPageContent = () => {
     if (!currentPubkey) return undefined
 
     setIsSearchHistoryLoading(true)
-    const history = await dbi.getSearchHistory(currentPubkey).finally(() => setIsSearchHistoryLoading(false))
+    const history = await dbi.getSearchHistory(currentPubkey, MAX_HISTORY * 10).finally(() => setIsSearchHistoryLoading(false))
 
-    if (history && history.length) {
-      setSearchHistoryOptions(history)
+    if (history) {
+      updateSearchHistory(history)
     }
   }, [currentPubkey])
 
@@ -283,9 +315,18 @@ export const SearchPageContent = () => {
           <StyledInput
             placeholder="Search"
             endAdornment={
-              <IconButton type="submit" color="inherit" size="medium">
-                <SearchOutlinedIcon />
-              </IconButton>
+              <>
+                {searchValue && (
+                  <IconButton type="button" color="inherit" size="medium"
+                    onClick={handleClear}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                )}
+                <IconButton type="submit" color="inherit" size="medium">
+                  <SearchOutlinedIcon />
+                </IconButton>
+              </>
             }
             onChange={handleChange}
             value={searchValue}
@@ -296,16 +337,21 @@ export const SearchPageContent = () => {
         </StyledForm>
       </Container>
 
-      <RecentQueries
-        isLoading={isSearchHistoryLoading}
-        queries={searchHistoryOptions}
-        onDeleteSearchTerm={deleteSearchTermHandler}
-        onClickSearchTerm={clickSearchTermItemHandler}
-      />
+      {!searchValue && (
+        <>
+          {searchHistoryOptions.length > 0 && (
+            <RecentQueries
+              isLoading={isSearchHistoryLoading}
+              queries={searchHistoryOptions}
+              onDeleteSearchTerm={deleteSearchTermHandler}
+              onClickSearchTerm={clickSearchTermItemHandler}
+            />
+          )}
+          <ContactList />
+        </>
+      )}
 
-      {!searchValue && <ContactList />}
-
-      {renderContent()}
+      {searchValue === lastValue && renderContent()}
     </StyledWrapVisibility>
   )
 }

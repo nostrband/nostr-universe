@@ -70,5 +70,6 @@ export const StyledSearchTermValue = styled((props: TypographyProps) => {
   textOverflow: 'ellipsis',
   display: '-webkit-box',
   WebkitLineClamp: 2,
-  WebkitBoxOrient: 'vertical'
+  WebkitBoxOrient: 'vertical',
+  whiteSpace: 'nowrap'
 }))
