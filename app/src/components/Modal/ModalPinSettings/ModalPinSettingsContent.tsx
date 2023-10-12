@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, ReactNode, useCallback, useEffect, useState } from 'react'
+import { ChangeEvent, FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { Container } from '@/layout/Container/Conatiner'
 import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
@@ -30,6 +30,8 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
 
   const [enteredAppTitle, setEnteredAppTitle] = useState(title)
   const [editMode, setEditMode] = useState(false)
+
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     setEnteredAppTitle(title)
@@ -113,8 +115,17 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
           value={enteredAppTitle}
           onChange={editAppTitleHandler}
           onBlur={appTitleBlurHandler}
+          inputRef={inputRef}
           endAdornment={
-            <IconButton color="inherit" size="medium" type="button" onClick={() => setEditMode(true)}>
+            <IconButton
+              color="inherit"
+              size="medium"
+              type="button"
+              onClick={() => {
+                setEditMode(true)
+                inputRef.current?.focus()
+              }}
+            >
               <EditOutlinedIcon />
             </IconButton>
           }

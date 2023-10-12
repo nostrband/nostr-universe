@@ -13,7 +13,6 @@ import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/Tre
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { StyledForm, StyledInput } from './styled'
-import { ContactList } from '../MainPage/components/ContactList/ContactList'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
@@ -61,7 +60,9 @@ export const SearchPageContent = () => {
           openBlank({ url: str }, {})
           return true
         }
-      } catch {}
+      } catch (error) {
+        console.log(error)
+      }
 
       const b32 = stringToBech32(str)
 
@@ -96,25 +97,29 @@ export const SearchPageContent = () => {
       .finally(() => setIsLoading(false))
   }, [])
 
-  const updateSearchHistory = useCallback((history: SearchTerm[]) => {
-    history.sort((a, b) => a.value.localeCompare(b.value))
-    // @ts-ignore
-    const filtered: SearchTerm[] = history.map((e, i, a) => {
-      if (!i || a[i-1].value !== e.value)
-        return e
-    })
-    .filter(e => e !== undefined)
-    .slice(0, MAX_HISTORY)
+  const updateSearchHistory = useCallback(
+    (history: SearchTerm[]) => {
+      history.sort((a, b) => a.value.localeCompare(b.value))
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const filtered: SearchTerm[] = history
+        .map((e, i, a) => {
+          if (!i || a[i - 1].value !== e.value) return e
+        })
+        .filter((e) => e !== undefined)
+        .slice(0, MAX_HISTORY)
 
-    filtered.sort((a, b) => b.timestamp - a.timestamp)
+      filtered.sort((a, b) => b.timestamp - a.timestamp)
 
-    setSearchHistoryOptions(filtered)
-  }, [setSearchHistoryOptions])
+      setSearchHistoryOptions(filtered)
+    },
+    [setSearchHistoryOptions]
+  )
 
   const searchHandler = useCallback(
     (value: string) => {
       if (value.trim().length > 0) {
-        // if custom handler executed then we don't proceed 
+        // if custom handler executed then we don't proceed
         if (onSearch(value)) return
 
         if (value !== lastValue) {
@@ -137,7 +142,7 @@ export const SearchPageContent = () => {
         dbi.addSearchTerm(term)
       }
     },
-    [currentPubkey, loadEvents, onSearch]
+    [currentPubkey, lastValue, loadEvents, onSearch, searchHistoryOptions, updateSearchHistory]
   )
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -208,12 +213,14 @@ export const SearchPageContent = () => {
     if (!currentPubkey) return undefined
 
     setIsSearchHistoryLoading(true)
-    const history = await dbi.getSearchHistory(currentPubkey, MAX_HISTORY * 10).finally(() => setIsSearchHistoryLoading(false))
+    const history = await dbi
+      .getSearchHistory(currentPubkey, MAX_HISTORY * 10)
+      .finally(() => setIsSearchHistoryLoading(false))
 
     if (history) {
       updateSearchHistory(history)
     }
-  }, [currentPubkey])
+  }, [currentPubkey, updateSearchHistory])
 
   useEffect(() => {
     getSearchHistory()
@@ -317,9 +324,7 @@ export const SearchPageContent = () => {
             endAdornment={
               <>
                 {searchValue && (
-                  <IconButton type="button" color="inherit" size="medium"
-                    onClick={handleClear}
-                  >
+                  <IconButton type="button" color="inherit" size="medium" onClick={handleClear}>
                     <CloseIcon />
                   </IconButton>
                 )}
@@ -347,7 +352,6 @@ export const SearchPageContent = () => {
               onClickSearchTerm={clickSearchTermItemHandler}
             />
           )}
-          <ContactList />
         </>
       )}
 

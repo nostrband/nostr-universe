@@ -5,6 +5,7 @@ import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined'
 import { useAppDispatch } from '@/store/hooks/redux'
 import { setPage } from '@/store/reducers/positionScrollPage.slice'
 
@@ -37,6 +38,7 @@ export const NavigationBottom = () => {
       <BottomNavigationAction label="Apps" icon={<AppsOutlinedIcon />} value="apps" />
       <BottomNavigationAction label="Content" icon={<DashboardOutlinedIcon />} value="content" />
       <BottomNavigationAction label="Search" icon={<SearchOutlinedIcon />} value="search" />
+      <BottomNavigationAction label="Favorite" icon={<BookmarkOutlinedIcon />} value="bookmarks" />
       <BottomNavigationAction label="Tabs" icon={<WidgetsOutlinedIcon />} value="tabs-switcher" />
     </BottomNavigation>
   )
