@@ -115,7 +115,7 @@ export const StyledInput = styled(TextField)(({ theme }) => ({
   '.MuiAutocomplete-endAdornment': {
     '.MuiButtonBase-root': {
       color: '#fff'
-    },
+    }
   }
 }))
 

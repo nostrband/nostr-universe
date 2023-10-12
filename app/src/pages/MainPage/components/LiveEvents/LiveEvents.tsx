@@ -7,11 +7,15 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedLiveEvents, getTagValue, nostrbandRelay } from '@/modules/nostr'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { setLiveEvents } from '@/store/reducers/contentWorkspace'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { SkeletonLiveEvents } from '@/components/Skeleton/SkeletonLiveEvents/SkeletonLiveEvents'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { ItemLiveEvent } from '@/components/ItemsContent/ItemLiveEvent/ItemLiveEvent'
+import {
+  HorizontalSwipeVirtualContent,
+  HorizontalSwipeVirtualItem
+} from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 
 export const LiveEvents = memo(function LiveEvents() {
   const { liveEvents, contactList } = useAppSelector((state) => state.contentWorkSpace)
@@ -51,21 +55,32 @@ export const LiveEvents = memo(function LiveEvents() {
     if (liveEvents === null) {
       return <SkeletonLiveEvents />
     }
+
     if (!liveEvents || !liveEvents.length) {
       return <EmptyListMessage onReload={handleReloadLiveEvents} />
     }
-    return liveEvents.map((event, i) => (
-      <ItemLiveEvent
-        key={i}
-        onClick={() => handleOpenLiveEvent(event)}
-        time={event.starts || event.created_at}
-        hostPubkey={event.host}
-        host={event.hostMeta}
-        subtitle={event.title}
-        content={event.summary || event.content.substring(0, 300)}
-        status={event.status}
-      />
-    ))
+
+    const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      const event = liveEvents[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={liveEvents.length}>
+          <ItemLiveEvent
+            onClick={() => handleOpenLiveEvent(event)}
+            time={event.starts || event.created_at}
+            hostPubkey={event.host}
+            host={event.hostMeta}
+            subtitle={event.title}
+            content={event.summary || event.content.substring(0, 300)}
+            status={event.status}
+          />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
+
+    return (
+      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={liveEvents.length} RowComponent={Row} />
+    )
   }, [liveEvents, handleReloadLiveEvents, handleOpenLiveEvent])
 
   return (

@@ -143,7 +143,7 @@ export const ModalSignedEventsContent = () => {
       </StyledFilterField>
       <StyledFilterField>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Grid container spacing={0} marginTop='-8px'>
+          <Grid container spacing={0} marginTop="-8px">
             <Grid item xs={6}>
               <DemoContainer components={['MobileDatePicker']}>
                 <DemoItem>
