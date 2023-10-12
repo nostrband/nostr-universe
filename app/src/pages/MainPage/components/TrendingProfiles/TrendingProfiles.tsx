@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
 import { userService } from '@/store/services/user.service'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay } from '@/modules/nostr'
@@ -22,7 +21,7 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
     isFetching: isLoading,
     refetch: refetchTrendingProfiles
   } = userService.useFetchTrendingProfilesQuery('')
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenProfile = useCallback(
     (profile: MetaEvent) => {
@@ -31,14 +30,9 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(profile.kind)
-        }
-      })
+      handleOpenContextMenu({ bech32: nprofile })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   const renderContent = useCallback(() => {

@@ -5,7 +5,6 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { LiveEvent } from '@/types/live-events'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedLiveEvents, getTagValue, nostrbandRelay } from '@/modules/nostr'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { setLiveEvents } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
@@ -19,7 +18,7 @@ import {
 
 export const LiveEvents = memo(function LiveEvents() {
   const { liveEvents, contactList } = useAppSelector((state) => state.contentWorkSpace)
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
   const dispatch = useAppDispatch()
 
   const handleOpenLiveEvent = useCallback(
@@ -31,14 +30,9 @@ export const LiveEvents = memo(function LiveEvents() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(event.kind)
-        }
-      })
+      handleOpenContextMenu({ bech32: naddr })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   const handleReloadLiveEvents = useCallback(async () => {

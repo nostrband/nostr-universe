@@ -4,7 +4,6 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { fetchApps } from '@/modules/nostr'
 import { memo, useCallback, FC, CSSProperties } from 'react'
-import { useOpenApp } from '@/hooks/open-entity'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
@@ -14,17 +13,18 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 export const AppsNostro = memo(function AppsNostro() {
   const { apps, isLoading } = useAppSelector((state) => state.apps)
   const dispatch = useAppDispatch()
-  const { openApp } = useOpenApp()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenApp = useCallback(
     async (app: AppNostr) => {
-      await openApp(app)
+      handleOpenContextMenu({ bech32: app.naddr })
     },
-    [openApp]
+    [handleOpenContextMenu]
   )
 
   const handleReloadApps = useCallback(async () => {

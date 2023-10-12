@@ -1,5 +1,4 @@
 import { Container } from '@/layout/Container/Conatiner'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedZaps, nostrbandRelay } from '@/modules/nostr'
@@ -20,7 +19,7 @@ import {
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 
 export const BigZaps = memo(function BigZaps() {
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
   const { bigZaps, contactList } = useAppSelector((state: RootState) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
@@ -61,14 +60,9 @@ export const BigZaps = memo(function BigZaps() {
       }
       console.log('bigZap addr', addr, bigZap)
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr,
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(bigZap.targetEvent?.kind || 0)
-        }
-      })
+      handleOpenContextMenu({ bech32: addr })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   const handleReloadBigZaps = useCallback(async () => {

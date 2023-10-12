@@ -5,7 +5,6 @@ import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToB
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
 import { MetaEvent } from '@/types/meta-event'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/SuggestedProfiles/styled'
@@ -13,9 +12,6 @@ import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/Tre
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 import { StyledForm, StyledInput } from './styled'
-import { IconButton } from '@mui/material'
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
-import { ContactList } from '../MainPage/components/ContactList/ContactList'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
@@ -24,6 +20,15 @@ import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/Horizont
 import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
 import { Profile } from '@/shared/Profile/Profile'
 import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNote'
+import { dbi } from '@/modules/db'
+import { v4 as uuidv4 } from 'uuid'
+import { SearchTerm } from '@/modules/types/db'
+import { IconButton } from '@mui/material'
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import CloseIcon from '@mui/icons-material/Close'
+import { RecentQueries } from './components/RecentQueries/RecentQueries'
+
+const MAX_HISTORY = 10
 
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
@@ -31,67 +36,123 @@ export const SearchPageContent = () => {
 
   const { openBlank } = useOpenApp()
   const { searchValue } = useAppSelector((state) => state.searchModal)
+  const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
-  // const [searchValue, setSearchValue] = useState('')
+
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [notes, setNotes] = useState<AuthoredEvent[] | null>(null)
   const [longNotes, setLongNotes] = useState<LongNoteEvent[] | null>(null)
 
   const [isLoading, setIsLoading] = useState(false)
+  const [lastValue, setLastValue] = useState('')
 
-  const { handleOpen } = useOpenModalSearchParams()
+  const [searchHistoryOptions, setSearchHistoryOptions] = useState<SearchTerm[]>([])
+  const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
 
-  const onSearch = (str: string): boolean => {
-    try {
-      const url = new URL('/', str)
-      if (url) {
-        openBlank({ url: str }, {})
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
+
+  const onSearch = useCallback(
+    (str: string): boolean => {
+      try {
+        const url = new URL('/', str)
+        if (url) {
+          handleOpenContextMenu({ url: str })
+          return true
+        }
+      } catch (err) {
+        console.log(err)
+      }
+
+      const b32 = stringToBech32(str)
+      if (b32) {
+        handleOpenContextMenu({ bech32: b32 })
         return true
       }
-    } catch (err) {
-      console.log(err)
-    }
 
-    const b32 = stringToBech32(str)
+      return false
+    },
+    [handleOpenContextMenu, openBlank]
+  )
 
-    if (b32) {
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32
-        }
-      })
-      return true
-    }
-
-    return false
-  }
-
-  const loadEvents = useCallback(async (searchValue: string) => {
+  const loadEvents = async (searchValue: string) => {
     setIsLoading(true)
     searchProfiles(searchValue)
       .then((data) => {
+        console.log('profiles', data)
         setProfiles(data)
       })
       .then(() => searchNotes(searchValue))
       .then((data) => {
+        console.log('notes', data)
         setNotes(data)
       })
       .then(() => searchLongNotes(searchValue))
       .then((data) => {
+        console.log('long notes', data)
         setLongNotes(data)
       })
       .finally(() => setIsLoading(false))
-  }, [])
+  }
+
+  const updateSearchHistory = useCallback(
+    (history: SearchTerm[]) => {
+      history.sort((a, b) => a.value.localeCompare(b.value))
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const filtered: SearchTerm[] = history
+        .map((e, i, a) => {
+          if (!i || a[i - 1].value !== e.value) return e
+        })
+        .filter((e) => e !== undefined)
+        .slice(0, MAX_HISTORY)
+
+      filtered.sort((a, b) => b.timestamp - a.timestamp)
+
+      setSearchHistoryOptions(filtered)
+    },
+    [setSearchHistoryOptions]
+  )
+
+  const searchHandler = useCallback(
+    (value: string) => {
+      if (value.trim().length > 0) {
+        // if custom handler executed then we don't proceed
+        if (onSearch(value)) return
+
+        if (value !== lastValue) {
+          setNotes(null)
+          setLongNotes(null)
+          setProfiles(null)
+        }
+        setLastValue(value)
+        loadEvents(value)
+
+        const term = {
+          id: uuidv4(),
+          value: value,
+          timestamp: Date.now(),
+          pubkey: currentPubkey
+        }
+
+        updateSearchHistory([term, ...searchHistoryOptions])
+
+        dbi.addSearchTerm(term)
+      }
+    },
+    [currentPubkey, lastValue, loadEvents, onSearch, searchHistoryOptions, updateSearchHistory]
+  )
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    localStorage.setItem('searchValue', searchValue)
-    onSearch(searchValue)
-    loadEvents(searchValue)
+    searchHandler(searchValue)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchValue({ searchValue: e.target.value }))
+  }
+
+  const handleClear = () => {
+    dispatch(setSearchValue({ searchValue: '' }))
   }
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -100,12 +161,7 @@ export const SearchPageContent = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-      search: {
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nprofile,
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(0)
-      }
-    })
+    handleOpenContextMenu({ bech32: nprofile })
   }
 
   const handleOpenNote = (note: AuthoredEvent) => {
@@ -114,12 +170,7 @@ export const SearchPageContent = () => {
       id: note.id
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-      search: {
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent,
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(note.kind)
-      }
-    })
+    handleOpenContextMenu({ bech32: nevent })
   }
 
   const handleOpenLongNote = (longNote: LongNoteEvent) => {
@@ -130,22 +181,8 @@ export const SearchPageContent = () => {
       relays: [nostrbandRelay]
     })
 
-    handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-      search: {
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: naddr,
-        [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(longNote.kind)
-      }
-    })
+    handleOpenContextMenu({ bech32: naddr })
   }
-
-  // useEffect(() => {
-  //   return () => {
-  //     setSearchValue('')
-  //     setProfiles(null)
-  //     setNotes(null)
-  //     setLongNotes(null)
-  //   }
-  // }, [isOpen])
 
   useEffect(() => {
     if (searchValue.trim().length) {
@@ -153,6 +190,38 @@ export const SearchPageContent = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEvents])
+
+  const getSearchHistory = useCallback(async () => {
+    if (!currentPubkey) return undefined
+
+    setIsSearchHistoryLoading(true)
+    const history = await dbi
+      .getSearchHistory(currentPubkey, MAX_HISTORY * 10)
+      .finally(() => setIsSearchHistoryLoading(false))
+
+    if (history) {
+      updateSearchHistory(history)
+    }
+  }, [currentPubkey, updateSearchHistory])
+
+  useEffect(() => {
+    getSearchHistory()
+  }, [getSearchHistory, isShow])
+
+  const deleteSearchTermHandler = useCallback(
+    (id: string) => {
+      dbi.deleteSearchTerm(id).then(getSearchHistory)
+    },
+    [getSearchHistory]
+  )
+
+  const clickSearchTermItemHandler = useCallback(
+    (searchTerm: SearchTerm) => {
+      dispatch(setSearchValue({ searchValue: searchTerm.value }))
+      searchHandler(searchTerm.value)
+    },
+    [searchHandler, dispatch]
+  )
 
   const renderContent = () => {
     return (
@@ -235,9 +304,16 @@ export const SearchPageContent = () => {
           <StyledInput
             placeholder="Search"
             endAdornment={
-              <IconButton type="submit" color="inherit" size="medium">
-                <SearchOutlinedIcon />
-              </IconButton>
+              <>
+                {searchValue && (
+                  <IconButton type="button" color="inherit" size="medium" onClick={handleClear}>
+                    <CloseIcon />
+                  </IconButton>
+                )}
+                <IconButton type="submit" color="inherit" size="medium">
+                  <SearchOutlinedIcon />
+                </IconButton>
+              </>
             }
             onChange={handleChange}
             value={searchValue}
@@ -248,9 +324,20 @@ export const SearchPageContent = () => {
         </StyledForm>
       </Container>
 
-      {!searchValue && <ContactList />}
+      {!searchValue && (
+        <>
+          {searchHistoryOptions.length > 0 && (
+            <RecentQueries
+              isLoading={isSearchHistoryLoading}
+              queries={searchHistoryOptions}
+              onDeleteSearchTerm={deleteSearchTermHandler}
+              onClickSearchTerm={clickSearchTermItemHandler}
+            />
+          )}
+        </>
+      )}
 
-      {renderContent()}
+      {searchValue === lastValue && renderContent()}
     </StyledWrapVisibility>
   )
 }

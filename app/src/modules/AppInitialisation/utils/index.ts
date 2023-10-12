@@ -233,11 +233,6 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
 
   const workspace: WorkSpace = {
     pubkey,
-    // trendingProfiles: [],
-    // trendingNotes: [],
-    // longNotes: [],
-    // liveEvents: [],
-    // suggestedProfiles: [],
     tabIds: tabsSort.map((t) => t.id),
     pins: pinsSort,
     lastKindApps: lastKindAppsCollection,
@@ -248,6 +243,8 @@ export const loadWorkspace = async (pubkey: string, dispatch): Promise<void> => 
 
   dispatch(addWorkspaces({ workspaces: [workspace] }))
   dispatch(addTabs({ tabs }))
+
+  await dbi.autoDeleteExcessSearchHistory(pubkey)
 }
 
 export const reloadWallets = async () => {

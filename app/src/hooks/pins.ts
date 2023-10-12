@@ -3,11 +3,11 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { removePinWorkspace, addPinWorkspace, updatePinWorkspace } from '@/store/reducers/workspaces.slice'
 import { AppNostr } from '@/types/app-nostr'
 import { v4 as uuidv4 } from 'uuid'
-import { AppHandlerEvent } from '@/modules/nostr'
 import { ITab } from '@/types/tab'
 import { selectCurrentWorkspace } from '@/store/store'
 import { IPin, WorkSpace } from '@/types/workspace'
 import { useCallback } from 'react'
+import { AppEvent } from '@/types/app-event'
 
 export const usePins = () => {
   const dispatch = useAppDispatch()
@@ -65,20 +65,10 @@ export const usePins = () => {
   )
 
   const findAppPin = useCallback(
-    (app: AppHandlerEvent): IPin | undefined => {
-      return currentWorkspace?.pins.find((p) => p.appNaddr === app.naddr || app.eventUrl?.startsWith(p.url))
+    (app: AppEvent): IPin | undefined => {
+      return currentWorkspace?.pins.find((p) => p.appNaddr === app.naddr || p.url === app.meta?.website)
     },
     [currentWorkspace]
-  )
-
-  const onUnPinTab = useCallback(
-    async (currentTab: ITab) => {
-      const pin = findTabPin(currentTab)
-      if (!pin) return
-      dispatch(removePinWorkspace({ id: pin.id, workspacePubkey: currentTab.pubkey }))
-      dbi.deletePin(pin.id)
-    },
-    [findTabPin, dispatch]
   )
 
   const onDeletePinnedApp = useCallback(
@@ -87,6 +77,14 @@ export const usePins = () => {
       dbi.deletePin(currentPin.id)
     },
     [dispatch]
+  )
+
+  const onUnPinTab = useCallback(
+    async (currentTab: ITab) => {
+      const pin = findTabPin(currentTab)
+      if (pin) onDeletePinnedApp(pin)
+    },
+    [findTabPin, onDeletePinnedApp]
   )
 
   const onUpdatePinnedApp = useCallback(

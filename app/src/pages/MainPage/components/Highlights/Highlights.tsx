@@ -1,5 +1,4 @@
 import { Container } from '@/layout/Container/Conatiner'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedHighlights, nostrbandRelay } from '@/modules/nostr'
@@ -18,7 +17,7 @@ import {
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 
 export const Highlights = memo(function Highlights() {
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
   const { highlights, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
@@ -29,14 +28,9 @@ export const Highlights = memo(function Highlights() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-        search: {
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent,
-          [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(highlight.kind)
-        }
-      })
+      handleOpenContextMenu({ bech32: nevent })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   const handleReloadHighlights = useCallback(async () => {
