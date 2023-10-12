@@ -25,6 +25,7 @@ import { ModalAddNSBKey } from './components/Modal/ModalAddNSBKey/ModalAddNSBKey
 import { ModalPinSettings } from './components/Modal/ModalPinSettings/ModalPinSettings'
 import { ModalContentFeedSettings } from './components/Modal/ModalContentFeedSettings/ModalContentFeedSettings'
 import { ModalSignedEvents } from './components/Modal/ModalSignedEvents/ModalSignedEvents'
+import { BookmarksPage } from './pages/BookmarksPage/BookmarksPage'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -64,6 +65,9 @@ export const App = () => {
       case 'tabs-switcher':
         return 'Tabs'
 
+      case 'bookmarks':
+        return 'Favorite'
+
       case 'search':
         return 'Search'
 
@@ -91,6 +95,7 @@ export const App = () => {
 
         <MainPage />
         <TabsSwitcherPage />
+        <BookmarksPage />
         <SearchPage />
 
         <NavigationBottom />

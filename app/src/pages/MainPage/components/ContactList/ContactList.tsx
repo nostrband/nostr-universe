@@ -29,7 +29,7 @@ export const ContactList = memo(function ContactList() {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Contacts
+          Following
         </StyledTitle>
       </Container>
 
