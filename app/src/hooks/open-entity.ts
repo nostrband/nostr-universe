@@ -270,7 +270,9 @@ export const useOpenApp = () => {
     const exec = async () => {
       try {
         console.log('sending payment', paymentRequest)
+        ///
         const res = await sendPayment(wallet, paymentRequest)
+        ///
         console.log('payment result', res)
         showToast(`Sent ${amount / 1000} sats`)
         return res // forward to the tab
@@ -535,7 +537,7 @@ export const useOpenApp = () => {
       // new tab coming, hide current one
       if (tab) await hide(tab.id) 
       // just open another tab
-      openBlank({ url }, { replace: true })
+      openBlank({ url }, { replace: false })
     },
     onBeforeLoad: async (tabId: string, url: string) => {
       const tab = getTabAny(tabId)

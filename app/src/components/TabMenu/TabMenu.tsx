@@ -41,7 +41,8 @@ export const TabMenu = () => {
   const handleMagicMenu = () => {
     handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
       search: {
-        tabUrl: currentTab?.url as string
+        tabId: currentTab?.id || '',
+        tabUrl: currentTab?.url || ''
       }
     })
   }
