@@ -6,11 +6,15 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { HighlightEvent } from '@/types/highlight-event'
 import { setHighlights } from '@/store/reducers/contentWorkspace'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { ItemHighlight } from '@/components/ItemsContent/ItemHighlight/ItemHighlight'
 import { SkeletonHighlights } from '@/components/Skeleton/SkeletonHighlights/SkeletonHighlights'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import {
+  HorizontalSwipeVirtualContent,
+  HorizontalSwipeVirtualItem
+} from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 
 export const Highlights = memo(function Highlights() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
@@ -41,21 +45,36 @@ export const Highlights = memo(function Highlights() {
 
   const renderContent = useCallback(() => {
     if (highlights === null) {
-      return <SkeletonHighlights />
+      return (
+        <HorizontalSwipeContent childrenWidth={225}>
+          <SkeletonHighlights />
+        </HorizontalSwipeContent>
+      )
     }
+
     if (!highlights || !highlights.length) {
       return <EmptyListMessage onReload={handleReloadHighlights} />
     }
-    return highlights.map((highlight, i: number) => (
-      <ItemHighlight
-        key={i}
-        onClick={() => handleOpenHighlight(highlight)}
-        time={highlight.created_at}
-        content={highlight.content}
-        pubkey={highlight.pubkey}
-        author={highlight.author}
-      />
-    ))
+
+    const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      const highlight = highlights[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={highlights.length}>
+          <ItemHighlight
+            onClick={() => handleOpenHighlight(highlight)}
+            time={highlight.created_at}
+            content={highlight.content}
+            pubkey={highlight.pubkey}
+            author={highlight.author}
+          />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
+
+    return (
+      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={highlights.length} RowComponent={Row} />
+    )
   }, [highlights, handleReloadHighlights, handleOpenHighlight])
 
   return (
@@ -65,8 +84,7 @@ export const Highlights = memo(function Highlights() {
           Highlights
         </StyledTitle>
       </Container>
-
-      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
+      {renderContent()}
     </StyledWrapper>
   )
 })

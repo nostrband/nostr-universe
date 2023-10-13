@@ -1,6 +1,6 @@
-import { AuthoredEvent } from "./authored-event";
-import { Meta } from "./meta";
-import { MetaEvent } from "./meta-event";
+import { AuthoredEvent } from './authored-event'
+import { Meta } from './meta'
+import { MetaEvent } from './meta-event'
 
 export interface AppUrl {
   url: string

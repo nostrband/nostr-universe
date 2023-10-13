@@ -51,39 +51,44 @@ export const SearchPageContent = () => {
 
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
-  const onSearch = useCallback((str: string): boolean => {
-    try {
-      const url = new URL('/', str)
-      if (url) {
-        handleOpenContextMenu({ url: str })
+  const onSearch = useCallback(
+    (str: string): boolean => {
+      try {
+        const url = new URL('/', str)
+        if (url) {
+          handleOpenContextMenu({ url: str })
+          return true
+        }
+      } catch (err) {
+        console.log(err)
+      }
+
+      const b32 = stringToBech32(str)
+      if (b32) {
+        handleOpenContextMenu({ bech32: b32 })
         return true
       }
-    } catch {}
 
-    const b32 = stringToBech32(str)
-    if (b32) {
-      handleOpenContextMenu({ bech32: b32 })
-      return true
-    }
-
-    return false
-  }, [handleOpenContextMenu, openBlank])
+      return false
+    },
+    [handleOpenContextMenu, openBlank]
+  )
 
   const loadEvents = async (searchValue: string) => {
     setIsLoading(true)
     searchProfiles(searchValue)
       .then((data) => {
-        console.log("profiles", data)
+        console.log('profiles', data)
         setProfiles(data)
       })
       .then(() => searchNotes(searchValue))
       .then((data) => {
-        console.log("notes", data)
+        console.log('notes', data)
         setNotes(data)
       })
       .then(() => searchLongNotes(searchValue))
       .then((data) => {
-        console.log("long notes", data)
+        console.log('long notes', data)
         setLongNotes(data)
       })
       .finally(() => setIsLoading(false))

@@ -64,22 +64,28 @@ export const usePins = () => {
     [workspaces]
   )
 
-  const findAppPin = useCallback((app: AppEvent): IPin | undefined => {
-    return currentWorkspace?.pins.find(
-      (p) => p.appNaddr === app.naddr
-        || p.url === app.meta?.website
-    )
-  }, [currentWorkspace])
+  const findAppPin = useCallback(
+    (app: AppEvent): IPin | undefined => {
+      return currentWorkspace?.pins.find((p) => p.appNaddr === app.naddr || p.url === app.meta?.website)
+    },
+    [currentWorkspace]
+  )
 
-  const onDeletePinnedApp = useCallback(async (currentPin: IPin) => {
-    dispatch(removePinWorkspace({ id: currentPin.id, workspacePubkey: currentPin.pubkey }))
-    dbi.deletePin(currentPin.id)
-  }, [dispatch])
+  const onDeletePinnedApp = useCallback(
+    async (currentPin: IPin) => {
+      dispatch(removePinWorkspace({ id: currentPin.id, workspacePubkey: currentPin.pubkey }))
+      dbi.deletePin(currentPin.id)
+    },
+    [dispatch]
+  )
 
-  const onUnPinTab = useCallback(async (currentTab: ITab) => {
-    const pin = findTabPin(currentTab)
-    if (pin) onDeletePinnedApp(pin)
-  }, [findTabPin, onDeletePinnedApp])
+  const onUnPinTab = useCallback(
+    async (currentTab: ITab) => {
+      const pin = findTabPin(currentTab)
+      if (pin) onDeletePinnedApp(pin)
+    },
+    [findTabPin, onDeletePinnedApp]
+  )
 
   const onUpdatePinnedApp = useCallback(
     async (currentPin: IPin) => {

@@ -75,8 +75,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       const setKindGetApp = (kind: string) => {
         setKind(kind)
         handleSetKind(kind)
-        if (!addr.kind && kind)
-          addr.kind = Number(kind)
+        if (!addr.kind && kind) addr.kind = Number(kind)
 
         // we might have last app for this kind in db,
         // but we need kind to use it
@@ -88,7 +87,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
               url: getHandlerEventUrl(app, addr),
               order: 10000,
               kind,
-              lastUsed: true,
+              lastUsed: true
             }
             lastAppNaddr = lastKindApp.naddr || ''
           }
@@ -96,14 +95,12 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
 
         if (kind) {
           // initial set of apps available immediately upon modal open
-          if (lastKindApp && lastAppNaddr !== NATIVE_NADDR)
-            setApps([lastKindApp, nativeApp])
-          else
-            setApps([nativeApp])
+          if (lastKindApp && lastAppNaddr !== NATIVE_NADDR) setApps([lastKindApp, nativeApp])
+          else setApps([nativeApp])
         }
       }
 
-      // kind might be provided explicitly, 
+      // kind might be provided explicitly,
       // or might be encoded in the addr
       const paramKind = getParamKind || String(addr.kind || '')
 

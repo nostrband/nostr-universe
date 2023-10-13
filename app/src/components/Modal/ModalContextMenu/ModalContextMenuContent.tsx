@@ -14,10 +14,24 @@ import PlayCircleOutlineOutlinedIcon from '@mui/icons-material/PlayCircleOutline
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
-import { StyledListItemAppIcon, StyledInput, StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledItemIconButton } from './styled'
+import {
+  StyledListItemAppIcon,
+  StyledInput,
+  StyledItemIconAvatar,
+  StyledItemText,
+  StyledMenuWrapper,
+  StyledItemIconButton
+} from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
-import { KIND_APP, fetchExtendedEventByBech32, getHandlerEventUrl, parseAddr, stringToBech32, stringToBolt11 } from '@/modules/nostr'
+import {
+  KIND_APP,
+  fetchExtendedEventByBech32,
+  getHandlerEventUrl,
+  parseAddr,
+  stringToBech32,
+  stringToBolt11
+} from '@/modules/nostr'
 import { useOpenApp } from '@/hooks/open-entity'
 import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
 import { ReactNode, useCallback, useEffect, useState } from 'react'
@@ -67,16 +81,13 @@ export const ModalContextMenuContent = () => {
           url
         })
       }
-      console.log("last app", app)
+      console.log('last app', app)
     }
   }, [kind])
 
   useEffect(() => {
-
-    if (addr?.kind !== undefined)
-      setKind(addr?.kind)
-    else
-      setKind(undefined)
+    if (addr?.kind !== undefined) setKind(addr?.kind)
+    else setKind(undefined)
 
     setEvent(null)
     if (b32) {
@@ -91,7 +102,7 @@ export const ModalContextMenuContent = () => {
 
   const handleOpenModalSelect = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
-      search: { 
+      search: {
         [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: b32,
         [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.KIND]]: String(kind || '')
       },
@@ -101,7 +112,7 @@ export const ModalContextMenuContent = () => {
 
   const handleOpenApp = () => {
     if (!lastApp) return
-    openApp({ ...lastApp, kind: ''+kind }, { replace: true })
+    openApp({ ...lastApp, kind: '' + kind }, { replace: true })
   }
 
   const handleZap = async () => {
@@ -148,17 +159,17 @@ export const ModalContextMenuContent = () => {
   const handleLaunchApp = () => {
     const url = (event as AppEvent).meta?.website
     if (!url) {
-      showToast("App url not specified!")
+      showToast('App url not specified!')
       return
     }
     openBlank({ url }, { replace: true })
   }
 
   const handlePinApp = () => {
-    const app = (event as AppEvent)
+    const app = event as AppEvent
     const url = app.meta?.website
     if (!url) {
-      showToast("App url not specified!")
+      showToast('App url not specified!')
       return
     }
     onPinApp({
@@ -168,7 +179,7 @@ export const ModalContextMenuContent = () => {
       picture: app.meta?.picture || '',
       order: 0
     })
-    showToast("Pinned!")
+    showToast('Pinned!')
     handleClose()
   }
 
@@ -178,11 +189,7 @@ export const ModalContextMenuContent = () => {
     handleClose()
   }
 
-  const renderItem = useCallback((
-    label: string,
-    icon: ReactNode,
-    handler: () => void,
-  ) => {
+  const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void) => {
     return (
       <ListItem disablePadding>
         <ListItemButton alignItems="center" onClick={handler}>
@@ -197,18 +204,17 @@ export const ModalContextMenuContent = () => {
 
   const renderOpenWith = useCallback(() => {
     return (
-      <ListItem disablePadding
-        secondaryAction={lastApp && (
-          <StyledItemIconButton edge="end" aria-label="more"
-            onClick={handleOpenModalSelect}
-          >
-            <MoreHorizOutlinedIcon />
-          </StyledItemIconButton>
-        )}
+      <ListItem
+        disablePadding
+        secondaryAction={
+          lastApp && (
+            <StyledItemIconButton edge="end" aria-label="more" onClick={handleOpenModalSelect}>
+              <MoreHorizOutlinedIcon />
+            </StyledItemIconButton>
+          )
+        }
       >
-        <ListItemButton alignItems="center" 
-          onClick={lastApp ? handleOpenApp : handleOpenModalSelect}
-        >
+        <ListItemButton alignItems="center" onClick={lastApp ? handleOpenApp : handleOpenModalSelect}>
           {!lastApp && (
             <ListItemAvatar>
               <StyledItemIconAvatar>
@@ -218,12 +224,7 @@ export const ModalContextMenuContent = () => {
           )}
           {lastApp && (
             <StyledListItemAppIcon>
-              <AppIcon
-                isPreviewTab
-                isRounded={true}
-                picture={lastApp.picture}
-                alt={lastApp.name}
-              />
+              <AppIcon isPreviewTab isRounded={true} picture={lastApp.picture} alt={lastApp.name} />
             </StyledListItemAppIcon>
           )}
           <StyledItemText primary={lastApp ? 'Open with ' + lastApp.name : 'Open with'} />

@@ -21,7 +21,6 @@ export const ModalAddNSBKeyContent = ({ handleCloseModal }: { handleCloseModal: 
 
   return (
     <>
-      {' '}
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput

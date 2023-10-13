@@ -1,5 +1,5 @@
-import { AuthoredEvent } from "./authored-event";
-import { EventAddr } from "./event-addr";
+import { AuthoredEvent } from './authored-event'
+import { EventAddr } from './event-addr'
 
 export interface ReactionTargetEvent extends AuthoredEvent {
   targetAddr?: EventAddr
