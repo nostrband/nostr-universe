@@ -9,6 +9,7 @@ interface IAppIconProps {
   isOutline?: boolean
   isRounded?: boolean
   isLight?: boolean
+  isSmall?: boolean
   onClick?: () => void
 }
 
@@ -18,6 +19,7 @@ export interface IAvatarProps extends AvatarProps {
   size?: AppNostrSize
   isPreviewTab?: boolean
   isLight?: boolean
+  isSmall?: boolean
 }
 
 export interface IAppIconBase {

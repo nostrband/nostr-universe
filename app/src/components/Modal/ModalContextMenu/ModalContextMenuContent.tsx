@@ -64,10 +64,10 @@ export const ModalContextMenuContent = () => {
   let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
   const b32 = stringToBech32(value || tabUrl)
   const [invoice] = stringToBolt11(value || tabUrl)
-  if (!value) value = b32 || invoice // from tabUrl
+  if (!value) value = b32 || invoice || tabUrl // from tabUrl
   const isApp = kind === KIND_APP
   const pin = event && isApp ? findAppPin(event as AppEvent) : null
-  const addr = parseAddr(b32)
+  const addr = b32 ? parseAddr(b32) : undefined
   if (addr && kind !== undefined) addr.kind = kind
 
   useEffect(() => {

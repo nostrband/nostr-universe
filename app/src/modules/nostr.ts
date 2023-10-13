@@ -151,7 +151,7 @@ export function parseProfileJson(e: Event): Meta {
   return profile
 }
 
-function getEventAddr(e: NDKEvent | AugmentedEvent): string {
+export function getEventAddr(e: NDKEvent | AugmentedEvent): string {
   let addr = e.id
   if (
     e.kind === KIND_META ||
@@ -491,6 +491,14 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
   const ndkEvents = await collectEvents(reqs)
   events.push(...[...ndkEvents].map((e) => rawEvent(e)))
   events.forEach((e) => putEventToCache(e))
+  return events
+}
+
+async function fetchFullyAugmentedEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<AuthoredEvent[]> {
+  const augmentedEvents = await fetchEventsByAddrs(ndk, addrs)
+
+  // for each event, check what needs to be loaded/augmented and execute
+
   return events
 }
 

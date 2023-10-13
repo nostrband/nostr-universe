@@ -16,17 +16,6 @@ export const getNoteId = (key) => {
   return nip19.noteEncode(key)
 }
 
-// export const getProfileImage = (profile) => {
-//   if (profile && profile?.picture) {
-//     return profile.picture
-//   }
-//   return ''
-// }
-
-export const isGuest = (pubkey) => {
-  return pubkey.length != 64
-}
-
 export const getRenderedUsername = (profile, pubkey) => {
   return (
     profile?.profile?.display_name ||

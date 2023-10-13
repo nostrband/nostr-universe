@@ -24,7 +24,15 @@ export const StyledInfoItem = styled(
 export const StyledItemText = styled(ListItemText)(({ theme }) => ({
   color: theme.palette.light.light,
   fontWeight: 'bold',
-  flex: 'none'
+  flex: 'none',
+  width: '100%',
+  '.MuiTypography-root': {
+    display: 'block',
+    overflowX: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    width: '70%'
+  }
 }))
 
 export const StyledItemIconAvatar = styled(Avatar)(({ theme }) => ({

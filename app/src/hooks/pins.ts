@@ -8,15 +8,31 @@ import { selectCurrentWorkspace } from '@/store/store'
 import { IPin, WorkSpace } from '@/types/workspace'
 import { useCallback } from 'react'
 import { AppEvent } from '@/types/app-event'
+import { showToast } from '@/utils/helpers/general'
 
 export const usePins = () => {
   const dispatch = useAppDispatch()
   const { workspaces } = useAppSelector((state) => state.workspaces)
   const currentWorkspace = useAppSelector(selectCurrentWorkspace)
 
+  const findAppPinExt = useCallback(
+    (url: string, naddr: string): IPin | undefined => {
+      return currentWorkspace?.pins.find((p) => 
+        p.appNaddr === naddr 
+        || p.url === url
+      )
+    },
+    [currentWorkspace]
+  )
+
   const onPinApp = useCallback(
     async (app: AppNostr) => {
       if (!currentWorkspace) return
+
+      if (findAppPinExt(app.url, app.naddr || '')) {
+        showToast('App already pinned!')
+        return
+      }
 
       const pin: IPin = {
         id: uuidv4(),
@@ -32,7 +48,7 @@ export const usePins = () => {
 
       dbi.addPin(pin)
     },
-    [dispatch, currentWorkspace]
+    [dispatch, currentWorkspace, findAppPinExt]
   )
 
   const onPinTab = useCallback(
@@ -66,9 +82,9 @@ export const usePins = () => {
 
   const findAppPin = useCallback(
     (app: AppEvent): IPin | undefined => {
-      return currentWorkspace?.pins.find((p) => p.appNaddr === app.naddr || p.url === app.meta?.website)
+      return findAppPinExt(app.meta?.website || '', app.naddr || '')
     },
-    [currentWorkspace]
+    [findAppPinExt]
   )
 
   const onDeletePinnedApp = useCallback(
