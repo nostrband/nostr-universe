@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useOpenApp } from '@/hooks/open-entity'
 import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
@@ -50,6 +50,7 @@ export const SearchPageContent = () => {
   const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
 
   const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const inputRef = useRef<HTMLElement>()
 
   const onSearch = useCallback(
     (str: string): boolean => {
@@ -59,9 +60,7 @@ export const SearchPageContent = () => {
           handleOpenContextMenu({ url: str })
           return true
         }
-      } catch (err) {
-        console.log(err)
-      }
+      } catch {}
 
       const b32 = stringToBech32(str)
       if (b32) {
@@ -74,8 +73,9 @@ export const SearchPageContent = () => {
     [handleOpenContextMenu, openBlank]
   )
 
-  const loadEvents = async (searchValue: string) => {
+  const loadEvents = useCallback(async (searchValue: string) => {
     setIsLoading(true)
+    console.log("searching", searchValue)
     searchProfiles(searchValue)
       .then((data) => {
         console.log('profiles', data)
@@ -92,7 +92,7 @@ export const SearchPageContent = () => {
         setLongNotes(data)
       })
       .finally(() => setIsLoading(false))
-  }
+  }, [setIsLoading, setProfiles, setNotes, setLongNotes])
 
   const updateSearchHistory = useCallback(
     (history: SearchTerm[]) => {
@@ -144,6 +144,7 @@ export const SearchPageContent = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    inputRef.current?.blur()
     searchHandler(searchValue)
   }
 
@@ -186,7 +187,9 @@ export const SearchPageContent = () => {
 
   useEffect(() => {
     if (searchValue.trim().length) {
-      loadEvents(searchValue)
+      // WHY? It's re-searching on any state change,
+      // which makes no sense, and doesn't help anywhere else
+//      loadEvents(searchValue)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEvents])
@@ -202,7 +205,7 @@ export const SearchPageContent = () => {
     if (history) {
       updateSearchHistory(history)
     }
-  }, [currentPubkey, updateSearchHistory])
+  }, [currentPubkey, updateSearchHistory, setIsSearchHistoryLoading])
 
   useEffect(() => {
     getSearchHistory()
@@ -220,7 +223,7 @@ export const SearchPageContent = () => {
       dispatch(setSearchValue({ searchValue: searchTerm.value }))
       searchHandler(searchTerm.value)
     },
-    [searchHandler, dispatch]
+    [searchHandler, dispatch, setSearchValue]
   )
 
   const renderContent = () => {
@@ -318,7 +321,8 @@ export const SearchPageContent = () => {
             onChange={handleChange}
             value={searchValue}
             inputProps={{
-              autoFocus: false
+              autoFocus: false,
+              ref: inputRef
             }}
           />
         </StyledForm>

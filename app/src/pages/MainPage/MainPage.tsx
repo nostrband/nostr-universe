@@ -14,19 +14,16 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { CONTENT_FEEDS } from '@/types/content-feed'
 import { useCallback, Fragment } from 'react'
+import { selectCurrentWorkspaceFeedSettings, selectKeys } from '@/store/store'
 
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'content'
 
-  const { keys, currentPubkey } = useAppSelector((state) => state.keys)
+  const { keys } = useAppSelector(selectKeys)
   const guest = !keys.length || isGuest(keys[0])
 
-  const currentWorkspace = useAppSelector((state) =>
-    state.workspaces.workspaces.find((ws) => ws.pubkey === currentPubkey)
-  )
-
-  const contentFeedSettings = currentWorkspace?.contentFeedSettings || []
+  const contentFeedSettings = useAppSelector(selectCurrentWorkspaceFeedSettings)
 
   const renderFeeds = useCallback(() => {
     if (contentFeedSettings.length === 0) {

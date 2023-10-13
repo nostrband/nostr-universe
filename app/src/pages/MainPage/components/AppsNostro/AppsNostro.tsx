@@ -65,7 +65,7 @@ export const AppsNostro = memo(function AppsNostro() {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Apps
+          New Apps
         </StyledTitle>
       </Container>
       {renderContent()}

@@ -1,6 +1,6 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit'
 import userReducer from './reducers/user.slice'
-import { keysSlice } from './reducers/keys.slice'
+import { IKeysState, keysSlice } from './reducers/keys.slice'
 import { userService } from './services/user.service'
 import { appsSlice } from './reducers/apps.slice'
 import { workspacesSlice } from './reducers/workspaces.slice'
@@ -13,6 +13,7 @@ import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { ITab } from '@/types/tab'
 import { positionScrollPageSlice } from './reducers/positionScrollPage.slice'
 import { searchModalSlice } from './reducers/searchModal.slice'
+import { IContentFeedSetting } from '@/types/content-feed'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -43,9 +44,18 @@ export type RootState = ReturnType<typeof rootReducer>
 export type AppStore = ReturnType<typeof createStore>
 export type AppDispatch = AppStore['dispatch']
 
+export const selectKeys = (state: RootState): IKeysState => {
+  return state.keys
+}
+
 export const selectCurrentWorkspace = (state: RootState): WorkSpace | undefined => {
   const currentPubKey = state.keys.currentPubkey
   return state.workspaces.workspaces.find((ws) => ws.pubkey === currentPubKey)
+}
+
+export const selectCurrentWorkspaceFeedSettings = (state: RootState): IContentFeedSetting[] => {
+  const cws = selectCurrentWorkspace(state)
+  return cws?.contentFeedSettings || []
 }
 
 // FIXME should be memoized
