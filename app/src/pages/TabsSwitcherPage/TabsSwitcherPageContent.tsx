@@ -48,7 +48,7 @@ export const TabsSwitcherPageContent = () => {
         tgs.map((tg) => {
           const info = tg.tabs[0]
           return (
-            <Box key={tg.id}>
+            <Box key={tg.id} marginTop="10px">
               <Container>
                 <StyledHeadTabGroup>
                   <AppIcon isPreviewTab isRounded={true} picture={info.icon} alt={info.title} />
@@ -77,7 +77,7 @@ export const TabsSwitcherPageContent = () => {
                     >
                       <CloseIcon />
                     </StyledCloseTabBtn>
-                    <AppIcon size="big" picture={tab.screenshot || tab.icon} alt={tab.title} />
+                    <AppIcon size="big" isSmall={!tab.screenshot} picture={tab.screenshot || tab.icon} alt={tab.title} />
                   </StyledTabWrap>
                 ))}
               </HorizontalSwipeContent>
