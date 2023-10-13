@@ -5,9 +5,12 @@ import { nostrbandRelay } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { MetaEvent } from '@/types/meta-event'
-import { memo, useCallback } from 'react'
-import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { memo, useCallback, FC, CSSProperties } from 'react'
 import { Profile } from '@/shared/Profile/Profile'
+import {
+  HorizontalSwipeVirtualContent,
+  HorizontalSwipeVirtualItem
+} from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 
 export const ContactList = memo(function ContactList() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
@@ -25,6 +28,20 @@ export const ContactList = memo(function ContactList() {
     [handleOpenContextMenu]
   )
 
+  const RowContact: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+    if (contactList === null) {
+      return null
+    }
+
+    const profile = contactList.contactEvents[index]
+
+    return (
+      <HorizontalSwipeVirtualItem style={style} index={index} itemCount={contactList.contactEvents.length}>
+        <Profile isContact onClick={handleOpenProfile} profile={profile} />
+      </HorizontalSwipeVirtualItem>
+    )
+  }
+
   return (
     <StyledWrapper>
       <Container>
@@ -33,11 +50,14 @@ export const ContactList = memo(function ContactList() {
         </StyledTitle>
       </Container>
 
-      <HorizontalSwipeContent childrenWidth={115}>
-        {contactList?.contactEvents.map((profile, i) => (
-          <Profile key={i} isContact onClick={handleOpenProfile} profile={profile} />
-        ))}
-      </HorizontalSwipeContent>
+      {contactList && (
+        <HorizontalSwipeVirtualContent
+          itemHight={114}
+          itemSize={115}
+          itemCount={contactList?.contactEvents.length}
+          RowComponent={RowContact}
+        />
+      )}
     </StyledWrapper>
   )
 })

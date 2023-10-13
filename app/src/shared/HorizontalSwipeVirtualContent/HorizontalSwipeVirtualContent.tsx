@@ -47,5 +47,5 @@ export const HorizontalSwipeVirtualItem: FC<IHorizontalSwipeVirtualItem> = memo(
 }) {
   const width = index + 1 === itemCount ? Number(style.width) + 12 : style.width
 
-  return <StyledItemVitual style={{ ...style, width, left: Number(style.left + 16) }}>{children}</StyledItemVitual>
+  return <StyledItemVitual style={{ ...style, width, left: Number(style.left + 12) }}>{children}</StyledItemVitual>
 })

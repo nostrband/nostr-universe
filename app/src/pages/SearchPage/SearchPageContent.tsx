@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState, FC, CSSProperties } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useOpenApp } from '@/hooks/open-entity'
 import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
@@ -16,7 +16,6 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
 import { StyledWrapVisibility } from '../styled'
-import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
 import { Profile } from '@/shared/Profile/Profile'
 import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNote'
@@ -27,6 +26,10 @@ import { IconButton } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import CloseIcon from '@mui/icons-material/Close'
 import { RecentQueries } from './components/RecentQueries/RecentQueries'
+import {
+  HorizontalSwipeVirtualContent,
+  HorizontalSwipeVirtualItem
+} from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 
 const MAX_HISTORY = 10
 
@@ -60,7 +63,9 @@ export const SearchPageContent = () => {
           handleOpenContextMenu({ url: str })
           return true
         }
-      } catch {}
+      } catch (err) {
+        console.log(err)
+      }
 
       const b32 = stringToBech32(str)
       if (b32) {
@@ -73,26 +78,29 @@ export const SearchPageContent = () => {
     [handleOpenContextMenu, openBlank]
   )
 
-  const loadEvents = useCallback(async (searchValue: string) => {
-    setIsLoading(true)
-    console.log("searching", searchValue)
-    searchProfiles(searchValue)
-      .then((data) => {
-        console.log('profiles', data)
-        setProfiles(data)
-      })
-      .then(() => searchNotes(searchValue))
-      .then((data) => {
-        console.log('notes', data)
-        setNotes(data)
-      })
-      .then(() => searchLongNotes(searchValue))
-      .then((data) => {
-        console.log('long notes', data)
-        setLongNotes(data)
-      })
-      .finally(() => setIsLoading(false))
-  }, [setIsLoading, setProfiles, setNotes, setLongNotes])
+  const loadEvents = useCallback(
+    async (searchValue: string) => {
+      setIsLoading(true)
+      console.log('searching', searchValue)
+      searchProfiles(searchValue)
+        .then((data) => {
+          console.log('profiles', data)
+          setProfiles(data)
+        })
+        .then(() => searchNotes(searchValue))
+        .then((data) => {
+          console.log('notes', data)
+          setNotes(data)
+        })
+        .then(() => searchLongNotes(searchValue))
+        .then((data) => {
+          console.log('long notes', data)
+          setLongNotes(data)
+        })
+        .finally(() => setIsLoading(false))
+    },
+    [setIsLoading, setProfiles, setNotes, setLongNotes]
+  )
 
   const updateSearchHistory = useCallback(
     (history: SearchTerm[]) => {
@@ -189,7 +197,7 @@ export const SearchPageContent = () => {
     if (searchValue.trim().length) {
       // WHY? It's re-searching on any state change,
       // which makes no sense, and doesn't help anywhere else
-//      loadEvents(searchValue)
+      //      loadEvents(searchValue)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEvents])
@@ -227,6 +235,61 @@ export const SearchPageContent = () => {
   )
 
   const renderContent = () => {
+    const RowProfile: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      if (profiles === null) {
+        return null
+      }
+
+      const profile = profiles[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={profiles.length}>
+          <Profile onClick={handleOpenProfile} profile={profile} />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
+
+    const RowTrendingNote: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      if (notes === null) {
+        return null
+      }
+
+      const note = notes[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={notes.length}>
+          <ItemTrendingNote
+            onClick={() => handleOpenNote(note)}
+            time={note.created_at}
+            content={note.content}
+            pubkey={note.pubkey}
+            author={note.author}
+          />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
+
+    const RowLongNote: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      if (longNotes === null) {
+        return null
+      }
+
+      const longNote = longNotes[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={longNotes.length}>
+          <ItemLongNote
+            onClick={() => handleOpenLongNote(longNote)}
+            time={longNote.created_at}
+            content={longNote.content}
+            subtitle={longNote.title}
+            pubkey={longNote.pubkey}
+            author={longNote.author}
+          />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
+
     return (
       <>
         {profiles && (
@@ -237,11 +300,12 @@ export const SearchPageContent = () => {
               </StyledTitle>
             </Container>
 
-            <HorizontalSwipeContent childrenWidth={140}>
-              {profiles.map((profile, i) => (
-                <Profile key={i} onClick={handleOpenProfile} profile={profile} />
-              ))}
-            </HorizontalSwipeContent>
+            <HorizontalSwipeVirtualContent
+              itemHight={164}
+              itemSize={140}
+              itemCount={profiles.length}
+              RowComponent={RowProfile}
+            />
           </StyledWrapper>
         )}
 
@@ -253,18 +317,12 @@ export const SearchPageContent = () => {
               </StyledTitleNotes>
             </Container>
 
-            <HorizontalSwipeContent childrenWidth={225}>
-              {notes.map((note, i) => (
-                <ItemTrendingNote
-                  onClick={() => handleOpenNote(note)}
-                  key={i}
-                  time={note.created_at}
-                  content={note.content}
-                  pubkey={note.pubkey}
-                  author={note.author}
-                />
-              ))}
-            </HorizontalSwipeContent>
+            <HorizontalSwipeVirtualContent
+              itemHight={141}
+              itemSize={225}
+              itemCount={notes.length}
+              RowComponent={RowTrendingNote}
+            />
           </StyledWrapper>
         )}
 
@@ -276,19 +334,12 @@ export const SearchPageContent = () => {
               </StyledTitleLongPost>
             </Container>
 
-            <HorizontalSwipeContent childrenWidth={225}>
-              {longNotes.map((longNote, i) => (
-                <ItemLongNote
-                  key={i}
-                  onClick={() => handleOpenLongNote(longNote)}
-                  time={longNote.created_at}
-                  content={longNote.content}
-                  subtitle={longNote.title}
-                  pubkey={longNote.pubkey}
-                  author={longNote.author}
-                />
-              ))}
-            </HorizontalSwipeContent>
+            <HorizontalSwipeVirtualContent
+              itemHight={113}
+              itemSize={225}
+              itemCount={longNotes.length}
+              RowComponent={RowLongNote}
+            />
           </StyledWrapper>
         )}
         {isLoading && (
