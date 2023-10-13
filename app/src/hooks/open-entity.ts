@@ -32,12 +32,7 @@ import { AppNostr, IOpenAppNostr } from '@/types/app-nostr'
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { v4 as uuidv4 } from 'uuid'
 import { useUpdateProfile } from './profile'
-import {
-  loadWorkspace,
-  getTabGroupId,
-  writeCurrentPubkey,
-  loadKeys
-} from '@/modules/AppInitialisation/utils'
+import { loadWorkspace, getTabGroupId, writeCurrentPubkey, loadKeys } from '@/modules/AppInitialisation/utils'
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
