@@ -14,6 +14,7 @@ import { ITab } from '@/types/tab'
 import { positionScrollPageSlice } from './reducers/positionScrollPage.slice'
 import { searchModalSlice } from './reducers/searchModal.slice'
 import { IContentFeedSetting } from '@/types/content-feed'
+import memoizeOne from 'memoize-one';
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -58,11 +59,14 @@ export const selectCurrentWorkspaceFeedSettings = (state: RootState): IContentFe
   return cws?.contentFeedSettings || []
 }
 
-// FIXME should be memoized
+const selectCurrentWorkspaceTabsMemo = memoizeOne((tabs: ITab[], ws?: WorkSpace) => {
+  if (!ws) return []
+  return tabs.filter((t) => ws.tabIds.includes(t.id))
+})
+
 export const selectCurrentWorkspaceTabs = (state: RootState): ITab[] => {
   const currentWorkSpace = selectCurrentWorkspace(state)
-  if (!currentWorkSpace) return []
-  return state.tab.tabs.filter((t) => currentWorkSpace.tabIds.includes(t.id))
+  return selectCurrentWorkspaceTabsMemo(state.tab.tabs, currentWorkSpace)
 }
 
 export interface ITabGroup {
@@ -70,9 +74,7 @@ export interface ITabGroup {
   tabs: ITab[]
 }
 
-// FIXME should be memoized
-export const selectTabGroups = (state: RootState): ITabGroup[] => {
-  const tabs = selectCurrentWorkspaceTabs(state)
+const selectTabGroupsMemo = memoizeOne((tabs: ITab[]) => {
   tabs.sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0))
   const groups: ITabGroup[] = []
   tabs.forEach((t) => {
@@ -86,4 +88,8 @@ export const selectTabGroups = (state: RootState): ITabGroup[] => {
     group.tabs.push(t)
   })
   return groups
+})
+
+export const selectTabGroups = (state: RootState): ITabGroup[] => {
+  return selectTabGroupsMemo(selectCurrentWorkspaceTabs(state))
 }
