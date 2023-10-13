@@ -60,7 +60,9 @@ export const SearchPageContent = () => {
           handleOpenContextMenu({ url: str })
           return true
         }
-      } catch {}
+      } catch {
+        /* empty */
+      }
 
       const b32 = stringToBech32(str)
       if (b32) {
@@ -73,26 +75,29 @@ export const SearchPageContent = () => {
     [handleOpenContextMenu, openBlank]
   )
 
-  const loadEvents = useCallback(async (searchValue: string) => {
-    setIsLoading(true)
-    console.log("searching", searchValue)
-    searchProfiles(searchValue)
-      .then((data) => {
-        console.log('profiles', data)
-        setProfiles(data)
-      })
-      .then(() => searchNotes(searchValue))
-      .then((data) => {
-        console.log('notes', data)
-        setNotes(data)
-      })
-      .then(() => searchLongNotes(searchValue))
-      .then((data) => {
-        console.log('long notes', data)
-        setLongNotes(data)
-      })
-      .finally(() => setIsLoading(false))
-  }, [setIsLoading, setProfiles, setNotes, setLongNotes])
+  const loadEvents = useCallback(
+    async (searchValue: string) => {
+      setIsLoading(true)
+      console.log('searching', searchValue)
+      searchProfiles(searchValue)
+        .then((data) => {
+          console.log('profiles', data)
+          setProfiles(data)
+        })
+        .then(() => searchNotes(searchValue))
+        .then((data) => {
+          console.log('notes', data)
+          setNotes(data)
+        })
+        .then(() => searchLongNotes(searchValue))
+        .then((data) => {
+          console.log('long notes', data)
+          setLongNotes(data)
+        })
+        .finally(() => setIsLoading(false))
+    },
+    [setIsLoading, setProfiles, setNotes, setLongNotes]
+  )
 
   const updateSearchHistory = useCallback(
     (history: SearchTerm[]) => {
@@ -189,7 +194,7 @@ export const SearchPageContent = () => {
     if (searchValue.trim().length) {
       // WHY? It's re-searching on any state change,
       // which makes no sense, and doesn't help anywhere else
-//      loadEvents(searchValue)
+      //      loadEvents(searchValue)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEvents])
