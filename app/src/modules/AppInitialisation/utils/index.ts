@@ -11,6 +11,7 @@ import { addTabs } from '@/store/reducers/tab.slice'
 import { addWorkspaces } from '@/store/reducers/workspaces.slice'
 import { DEFAULT_CONTENT_FEED_SETTINGS } from '@/types/content-feed'
 import { WorkSpace } from '@/types/workspace'
+import { getOrigin } from '@/utils/helpers/prepare-data'
 import { v4 as uuidv4 } from 'uuid'
 
 // ?? зачем дефолтные аппы ??
@@ -181,14 +182,6 @@ const ensureBootstrapped = async (workspaceKey) => {
   if (!(await dbi.getFlag(workspaceKey, 'bootstrapped'))) {
     await bootstrap(workspaceKey)
     dbi.setFlag(workspaceKey, 'bootstrapped', true)
-  }
-}
-
-export const getOrigin = (url) => {
-  try {
-    return new URL(url).origin
-  } catch {
-    return url
   }
 }
 

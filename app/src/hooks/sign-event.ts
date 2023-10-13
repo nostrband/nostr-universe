@@ -1,8 +1,7 @@
-/* eslint-disable */
-// @ts-nocheck
 import { keystore } from '@/modules/keystore'
 import { nsbSignEvent } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
+// @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
 import { useCallback } from 'react'
 

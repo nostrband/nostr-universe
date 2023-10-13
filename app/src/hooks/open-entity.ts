@@ -34,7 +34,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { useUpdateProfile } from './profile'
 import {
   loadWorkspace,
-  getOrigin,
   getTabGroupId,
   writeCurrentPubkey,
   loadKeys
@@ -42,7 +41,6 @@ import {
 import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
-import { useLocation, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 import { DEFAULT_PUBKEY } from '@/consts'
 import { walletstore } from '@/modules/walletstore'
@@ -57,10 +55,10 @@ import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/stor
 import { IPin } from '@/types/workspace'
 import { showToast } from '@/utils/helpers/general'
 import { useSignEvent } from './sign-event'
+import { getOrigin } from '@/utils/helpers/prepare-data'
 
 export const useOpenApp = () => {
   const dispatch = useAppDispatch()
-  const location = useLocation()
   const updateProfile = useUpdateProfile()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { workspaces } = useAppSelector((state) => state.workspaces)
@@ -205,10 +203,6 @@ export const useOpenApp = () => {
 
   const onHideTabInBrowser = async (id: string) => {
     await hide(id)
-  }
-
-  const onHideTab = () => {
-    handleClose(location.pathname)
   }
 
   const onCloseTab = async (id: string) => {
@@ -472,7 +466,9 @@ export const useOpenApp = () => {
       }
     },
     onHide: (tabId) => {
-      backToLastPage()
+      //backToLastPage()
+      handleClose()
+
       // it's very common to open a tab, read it and hit 'back',
       // most of the time it means user won't need the tab any more,
       // but we won't delete the tab, we just release the webview,
@@ -681,7 +677,6 @@ export const useOpenApp = () => {
     openApp,
     onStopLoadTab,
     onReloadTab,
-    onHideTab,
     onSwitchTab,
     onHideTabInBrowser,
     onCloseTab,
