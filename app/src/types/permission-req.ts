@@ -1,7 +1,7 @@
 export interface IPermReq {
   id: string
   tabId: string
-  cb: () => void
+  cb: (allow: boolean) => void
   perm?: string
   event?: string
   plainText?: string
@@ -9,6 +9,7 @@ export interface IPermReq {
   cipherText?: string
   paymentRequest?: string
   amount?: number
+  processing?: boolean
   wallet?: {
     [key: string]: string
   }

@@ -28,7 +28,7 @@
   },
   "include": [
     "src"
-  ],
+, "browser-api.ts"  ],
   "references": [
     {
       "path": "./tsconfig.node.json"
