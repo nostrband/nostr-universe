@@ -70,7 +70,7 @@ const BestNotes = () => {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHight={121} itemSize={225} itemCount={bestNotes.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent itemHight={125} itemSize={225} itemCount={bestNotes.length} RowComponent={Row} />
     )
   }, [bestNotes, isBestNotesLoading, reloadBestNotes])
 

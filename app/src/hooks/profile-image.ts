@@ -67,16 +67,16 @@ export const useProfileImageSource = ({
     viewRef: ref
   }
 
+  if (isFailed || failedCache.get(id)) {
+    return { ...returnedObject, url: originalImage }
+  }
+
   if (!wasInView || !pubkey || !originalImage || isGuest(pubkey)) {
     return { ...returnedObject, url: defaultUserImage }
   }
 
   if (isLoading) {
     return { ...returnedObject, url: defaultUserImage }
-  }
-
-  if (isFailed || failedCache.get(id)) {
-    return { ...returnedObject, url: originalImage }
   }
 
   return {

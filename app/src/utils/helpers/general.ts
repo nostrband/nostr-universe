@@ -2,6 +2,7 @@
 // @ts-nocheck
 import { MetaEvent } from '@/types/meta-event'
 import { nip19 } from '@nostrband/nostr-tools'
+import { isGuest } from './prepare-data'
 
 export const getShortenText = (str) => {
   const string = String(str)
