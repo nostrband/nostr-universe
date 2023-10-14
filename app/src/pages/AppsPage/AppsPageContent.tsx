@@ -4,7 +4,7 @@ import { Container } from '@/layout/Container/Conatiner'
 import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { StyledSwipeableDrawerContent, StyledAddButtonWrapper, StyledIconButton } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
-import { AppNostr as AppNostroType } from '@/types/app-nostr'
+import { AppNostr, AppNostr as AppNostroType } from '@/types/app-nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
@@ -76,9 +76,9 @@ export const AppsPageContent = () => {
       <DndContext sensors={sensors} autoScroll={false} onDragEnd={handleDragEnd}>
         <SortableContext items={pinIds} strategy={rectSwappingStrategy}>
           <Container>
-            <Grid columns={10} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+            <Grid columns={8} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
               {pins.map((pin, i) => {
-                const app = {
+                const app: AppNostr = {
                   picture: pin.icon,
                   name: pin.title,
                   naddr: pin.appNaddr,

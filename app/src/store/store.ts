@@ -1,6 +1,6 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit'
 import userReducer from './reducers/user.slice'
-import { keysSlice } from './reducers/keys.slice'
+import { IKeysState, keysSlice } from './reducers/keys.slice'
 import { userService } from './services/user.service'
 import { appsSlice } from './reducers/apps.slice'
 import { workspacesSlice } from './reducers/workspaces.slice'
@@ -13,6 +13,9 @@ import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { ITab } from '@/types/tab'
 import { positionScrollPageSlice } from './reducers/positionScrollPage.slice'
 import { searchModalSlice } from './reducers/searchModal.slice'
+import { IContentFeedSetting } from '@/types/content-feed'
+import { bookmarksSlice } from './reducers/bookmarks.slice'
+import memoizeOne from 'memoize-one'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -25,7 +28,8 @@ export const rootReducer = combineReducers({
   permissionRequests: permissionRequestsSlice.reducer,
   positionScrollPage: positionScrollPageSlice.reducer,
   searchModal: searchModalSlice.reducer,
-  [userService.reducerPath]: userService.reducer
+  [userService.reducerPath]: userService.reducer,
+  [bookmarksSlice.name]: bookmarksSlice.reducer
 })
 
 export const createStore = () => {
@@ -43,16 +47,28 @@ export type RootState = ReturnType<typeof rootReducer>
 export type AppStore = ReturnType<typeof createStore>
 export type AppDispatch = AppStore['dispatch']
 
+export const selectKeys = (state: RootState): IKeysState => {
+  return state.keys
+}
+
 export const selectCurrentWorkspace = (state: RootState): WorkSpace | undefined => {
   const currentPubKey = state.keys.currentPubkey
   return state.workspaces.workspaces.find((ws) => ws.pubkey === currentPubKey)
 }
 
-// FIXME should be memoized
+export const selectCurrentWorkspaceFeedSettings = (state: RootState): IContentFeedSetting[] => {
+  const cws = selectCurrentWorkspace(state)
+  return cws?.contentFeedSettings || []
+}
+
+const selectCurrentWorkspaceTabsMemo = memoizeOne((tabs: ITab[], ws?: WorkSpace) => {
+  if (!ws) return []
+  return tabs.filter((t) => ws.tabIds.includes(t.id))
+})
+
 export const selectCurrentWorkspaceTabs = (state: RootState): ITab[] => {
   const currentWorkSpace = selectCurrentWorkspace(state)
-  if (!currentWorkSpace) return []
-  return state.tab.tabs.filter((t) => currentWorkSpace.tabIds.includes(t.id))
+  return selectCurrentWorkspaceTabsMemo(state.tab.tabs, currentWorkSpace)
 }
 
 export interface ITabGroup {
@@ -60,9 +76,7 @@ export interface ITabGroup {
   tabs: ITab[]
 }
 
-// FIXME should be memoized
-export const selectTabGroups = (state: RootState): ITabGroup[] => {
-  const tabs = selectCurrentWorkspaceTabs(state)
+const selectTabGroupsMemo = memoizeOne((tabs: ITab[]) => {
   tabs.sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0))
   const groups: ITabGroup[] = []
   tabs.forEach((t) => {
@@ -76,4 +90,8 @@ export const selectTabGroups = (state: RootState): ITabGroup[] => {
     group.tabs.push(t)
   })
   return groups
+})
+
+export const selectTabGroups = (state: RootState): ITabGroup[] => {
+  return selectTabGroupsMemo(selectCurrentWorkspaceTabs(state))
 }

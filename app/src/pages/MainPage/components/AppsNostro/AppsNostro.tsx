@@ -3,24 +3,28 @@ import { StyledTitle, StyledWrapper } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { fetchApps } from '@/modules/nostr'
-import { memo, useCallback } from 'react'
-import { useOpenApp } from '@/hooks/open-entity'
+import { memo, useCallback, FC, CSSProperties } from 'react'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { SkeletonApps } from '@/components/Skeleton/SkeletonApps/SkeletonApps'
 import { AppNostr } from '@/types/app-nostr'
+import {
+  HorizontalSwipeVirtualContent,
+  HorizontalSwipeVirtualItem
+} from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 export const AppsNostro = memo(function AppsNostro() {
   const { apps, isLoading } = useAppSelector((state) => state.apps)
   const dispatch = useAppDispatch()
-  const { openApp } = useOpenApp()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenApp = useCallback(
     async (app: AppNostr) => {
-      await openApp(app)
+      handleOpenContextMenu({ bech32: app.naddr })
     },
-    [openApp]
+    [handleOpenContextMenu]
   )
 
   const handleReloadApps = useCallback(async () => {
@@ -33,23 +37,38 @@ export const AppsNostro = memo(function AppsNostro() {
 
   const renderContent = useCallback(() => {
     if (isLoading && !apps.length) {
-      return <SkeletonApps />
+      return (
+        <HorizontalSwipeContent>
+          <SkeletonApps />
+        </HorizontalSwipeContent>
+      )
     }
+
     if (!apps.length && !isLoading) {
       return <EmptyListMessage onReload={handleReloadApps} />
     }
-    return apps.map((app, i) => <AppNostro key={i} app={app} onOpen={handleOpenApp} />)
+
+    const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      const app = apps[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={apps.length}>
+          <AppNostro app={app} onOpen={handleOpenApp} />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
+
+    return <HorizontalSwipeVirtualContent itemHight={105} itemSize={80} itemCount={apps.length} RowComponent={Row} />
   }, [handleOpenApp, apps, isLoading, handleReloadApps])
 
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Apps
+          New Apps
         </StyledTitle>
       </Container>
-
-      <HorizontalSwipeContent>{renderContent()}</HorizontalSwipeContent>
+      {renderContent()}
     </StyledWrapper>
   )
 })

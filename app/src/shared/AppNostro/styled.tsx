@@ -22,7 +22,6 @@ export const StyledAppName = styled(
   marginTop: APP_NAME_GUTTER_VALUE[size],
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  display: '-webkit-box',
-  WebkitLineClamp: 1,
-  WebkitBoxOrient: 'vertical'
+  maxWidth: '80px',
+  whiteSpace: 'nowrap'
 }))

@@ -1,5 +1,4 @@
 import { Container } from '@/layout/Container/Conatiner'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedZaps, nostrbandRelay } from '@/modules/nostr'
@@ -8,15 +7,20 @@ import { StyledTitle, StyledWrapper } from './styled'
 import { ZapEvent } from '@/types/zap-event'
 import { setBigZaps } from '@/store/reducers/contentWorkspace'
 import { MIN_ZAP_AMOUNT } from '@/consts'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { SkeletonBigZaps } from '@/components/Skeleton/SkeletonBigZaps/SkeletonBigZaps'
 import { ItemBigZap } from '@/components/ItemsContent/ItemBigZap/ItemBigZap'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { RootState } from '@/store/store'
+import {
+  HorizontalSwipeVirtualContent,
+  HorizontalSwipeVirtualItem
+} from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 
 export const BigZaps = memo(function BigZaps() {
-  const { handleOpen } = useOpenModalSearchParams()
-  const { bigZaps, contactList } = useAppSelector((state) => state.contentWorkSpace)
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { bigZaps, contactList } = useAppSelector((state: RootState) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
   const handleOpenBigZap = useCallback(
@@ -38,21 +42,27 @@ export const BigZaps = memo(function BigZaps() {
             identifier: bigZap.targetEvent.identifier,
             relays: [nostrbandRelay]
           })
-        } else if (bigZap.targetMeta) {
+        } else {
           addr = nip19.neventEncode({
-            id: bigZap.targetMeta.id,
+            id: bigZap.targetEvent.id,
             relays: [nostrbandRelay]
           })
-        } else {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          window.plugins.toast.showShortBottom(`Target events not found`)
         }
+      } else if (bigZap.targetMeta) {
+        addr = nip19.neventEncode({
+          id: bigZap.targetMeta.id,
+          relays: [nostrbandRelay]
+        })
+      } else {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        window.plugins.toast.showShortBottom(`Target events not found`)
       }
+      console.log('bigZap addr', addr, bigZap)
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: addr } })
+      handleOpenContextMenu({ bech32: addr })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   const handleReloadBigZaps = useCallback(async () => {
@@ -65,24 +75,37 @@ export const BigZaps = memo(function BigZaps() {
     }
   }, [contactList, dispatch])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (bigZaps === null) {
-      return <SkeletonBigZaps />
+      return (
+        <HorizontalSwipeContent childrenWidth={225}>
+          <SkeletonBigZaps />
+        </HorizontalSwipeContent>
+      )
     }
+
     if (!bigZaps || !bigZaps.length) {
       return <EmptyListMessage onReload={handleReloadBigZaps} />
     }
-    return bigZaps.map((bigZap, i) => (
-      <ItemBigZap
-        key={i}
-        onClick={() => handleOpenBigZap(bigZap)}
-        time={bigZap.created_at}
-        subtitle={`+${Math.round(bigZap.amountMsat / 1000)} sats`}
-        targetPubkey={bigZap.targetPubkey}
-        targetMeta={bigZap.targetMeta}
-      />
-    ))
-  }
+
+    const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      const bigZap = bigZaps[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={bigZaps.length}>
+          <ItemBigZap
+            onClick={() => handleOpenBigZap(bigZap)}
+            time={bigZap.created_at}
+            subtitle={`+${Math.round(bigZap.amountMsat / 1000)} sats`}
+            targetPubkey={bigZap.targetPubkey}
+            targetMeta={bigZap.targetMeta}
+          />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
+
+    return <HorizontalSwipeVirtualContent itemHight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
+  }, [bigZaps, handleReloadBigZaps, handleOpenBigZap])
 
   return (
     <StyledWrapper>
@@ -91,8 +114,7 @@ export const BigZaps = memo(function BigZaps() {
           Big Zaps
         </StyledTitle>
       </Container>
-
-      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
+      {renderContent()}
     </StyledWrapper>
   )
 })

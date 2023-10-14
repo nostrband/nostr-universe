@@ -13,6 +13,7 @@ const initialState: IPositionScrollPageState = {
     '/': 0,
     '/content': 0,
     '/tabs-switcher': 0,
+    '/bookmarks': 0,
     '/search': 0
   }
 }

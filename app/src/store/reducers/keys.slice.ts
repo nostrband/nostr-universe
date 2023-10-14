@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-interface IKeysState {
+export interface IKeysState {
   keys: string[]
   currentPubkey: string
   readKeys: string[]

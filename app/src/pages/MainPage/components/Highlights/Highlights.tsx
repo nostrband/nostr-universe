@@ -1,5 +1,4 @@
 import { Container } from '@/layout/Container/Conatiner'
-import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
 import { fetchFollowedHighlights, nostrbandRelay } from '@/modules/nostr'
@@ -7,14 +6,18 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { HighlightEvent } from '@/types/highlight-event'
 import { setHighlights } from '@/store/reducers/contentWorkspace'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { ItemHighlight } from '@/components/ItemsContent/ItemHighlight/ItemHighlight'
 import { SkeletonHighlights } from '@/components/Skeleton/SkeletonHighlights/SkeletonHighlights'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import {
+  HorizontalSwipeVirtualContent,
+  HorizontalSwipeVirtualItem
+} from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 
 export const Highlights = memo(function Highlights() {
-  const { handleOpen } = useOpenModalSearchParams()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
   const { highlights, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
@@ -25,9 +28,9 @@ export const Highlights = memo(function Highlights() {
         relays: [nostrbandRelay]
       })
 
-      handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, { search: { [EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]]: nevent } })
+      handleOpenContextMenu({ bech32: nevent })
     },
-    [handleOpen]
+    [handleOpenContextMenu]
   )
 
   const handleReloadHighlights = useCallback(async () => {
@@ -40,24 +43,39 @@ export const Highlights = memo(function Highlights() {
     }
   }, [dispatch, contactList])
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (highlights === null) {
-      return <SkeletonHighlights />
+      return (
+        <HorizontalSwipeContent childrenWidth={225}>
+          <SkeletonHighlights />
+        </HorizontalSwipeContent>
+      )
     }
+
     if (!highlights || !highlights.length) {
       return <EmptyListMessage onReload={handleReloadHighlights} />
     }
-    return highlights.map((highlight, i) => (
-      <ItemHighlight
-        key={i}
-        onClick={() => handleOpenHighlight(highlight)}
-        time={highlight.created_at}
-        content={highlight.content}
-        pubkey={highlight.pubkey}
-        author={highlight.author}
-      />
-    ))
-  }
+
+    const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      const highlight = highlights[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={highlights.length}>
+          <ItemHighlight
+            onClick={() => handleOpenHighlight(highlight)}
+            time={highlight.created_at}
+            content={highlight.content}
+            pubkey={highlight.pubkey}
+            author={highlight.author}
+          />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
+
+    return (
+      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={highlights.length} RowComponent={Row} />
+    )
+  }, [highlights, handleReloadHighlights, handleOpenHighlight])
 
   return (
     <StyledWrapper>
@@ -66,8 +84,7 @@ export const Highlights = memo(function Highlights() {
           Highlights
         </StyledTitle>
       </Container>
-
-      <HorizontalSwipeContent childrenWidth={225}>{renderContent()}</HorizontalSwipeContent>
+      {renderContent()}
     </StyledWrapper>
   )
 })

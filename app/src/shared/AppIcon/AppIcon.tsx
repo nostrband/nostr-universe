@@ -11,6 +11,7 @@ export const AppIcon = memo(function AppIcon({
   isLight,
   isRounded,
   isOutline,
+  isSmall,
   alt,
   onClick
 }: IAppIcon) {
@@ -42,6 +43,7 @@ export const AppIcon = memo(function AppIcon({
           isPreviewTab={isPreviewTab}
           size={size}
           alt={alt}
+          isSmall={isSmall}
           src={isFailed ? '/' : picture}
         />
       ) : (
@@ -50,6 +52,7 @@ export const AppIcon = memo(function AppIcon({
           isPreviewTab={isPreviewTab}
           size={size}
           alt={alt}
+          isSmall={isSmall}
           src={isFailed ? '/' : picture}
         >
           <ImageOutlinedIcon fontSize="inherit" />

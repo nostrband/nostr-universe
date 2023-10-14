@@ -22,6 +22,7 @@ import { dbi } from '@/modules/db'
 import { MIN_ZAP_AMOUNT } from '@/consts'
 import { MetaEvent } from '@/types/meta-event'
 import { ContactListEvent } from '@/types/contact-list-event'
+import { fetchBestLongNotesThunk, fetchBestNotesThunk } from '@/store/reducers/bookmarks.slice'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
@@ -61,6 +62,9 @@ export const useUpdateProfile = () => {
       dispatch(setLongPosts({ longPosts: null }))
       dispatch(setCommunities({ communities: null }))
       dispatch(setLiveEvents({ liveEvents: null }))
+
+      dispatch(fetchBestNotesThunk(currentPubKey))
+      dispatch(fetchBestLongNotesThunk(currentPubKey))
 
       subscribeProfiles(keys, async (profile: MetaEvent) => {
         if (profile) {

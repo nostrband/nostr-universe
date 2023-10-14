@@ -62,20 +62,22 @@ export const StyledAppIcon = styled(
 )
 
 export const StyledAppImg = styled(function BoxDisplayName(props: IAvatarProps) {
-  const exclude = new Set(['isPreviewTab', 'isLight'])
+  const exclude = new Set(['isPreviewTab', 'isLight', 'isSmall'])
   const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
 
   return <Avatar variant="square" {...omitProps} />
-})(({ theme, isPreviewTab = false, isLight = false, size = APP_NOSTR_SIZE.MEDIUM }) => ({
+})(({ theme, isSmall = false, isPreviewTab = false, isLight = false, size = APP_NOSTR_SIZE.MEDIUM }) => ({
   position: 'absolute',
   left: 0,
   top: 0,
   height: '100%',
   width: '100%',
-  objectFit: 'cover',
   background: isLight ? '#fff' : 'none',
   color: theme.palette.light.light,
   borderRadius: isLight ? '50%' : '0',
   fontWeight: 'bold',
-  fontSize: isPreviewTab ? APP_NAME_FONT_SIZE_VALUE[APP_NOSTR_SIZE.EXTRA_SMALL] : APP_NAME_FONT_SIZE_VALUE[size]
+  fontSize: isPreviewTab ? APP_NAME_FONT_SIZE_VALUE[APP_NOSTR_SIZE.EXTRA_SMALL] : APP_NAME_FONT_SIZE_VALUE[size],
+  '.MuiAvatar-img': {
+    objectFit: isSmall ? 'scale-down' : 'cover',
+  }
 }))

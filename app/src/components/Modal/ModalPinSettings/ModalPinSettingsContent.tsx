@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, ReactNode, useCallback, useEffect, useState } from 'react'
+import { ChangeEvent, FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { Container } from '@/layout/Container/Conatiner'
 import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
@@ -12,7 +12,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { Input } from '@/shared/Input/Input'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
-import { useOpenApp } from '@/hooks/open-entity'
+import { usePins } from '@/hooks/pins'
 
 type ModalPinSettingsContentProps = {
   handleClose: () => void
@@ -21,7 +21,7 @@ type ModalPinSettingsContentProps = {
 
 export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ handleClose, handleSetAppTitle }) => {
   const [searchParams] = useSearchParams()
-  const { onDeletePinnedApp, onUpdatePinnedApp } = useOpenApp()
+  const { onDeletePinnedApp, onUpdatePinnedApp } = usePins()
 
   const id = searchParams.get('pinId') || ''
   const currentPin = useAppSelector((state) => selectPin(state, id))
@@ -30,6 +30,8 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
 
   const [enteredAppTitle, setEnteredAppTitle] = useState(title)
   const [editMode, setEditMode] = useState(false)
+
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     setEnteredAppTitle(title)
@@ -113,8 +115,17 @@ export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ hand
           value={enteredAppTitle}
           onChange={editAppTitleHandler}
           onBlur={appTitleBlurHandler}
+          inputRef={inputRef}
           endAdornment={
-            <IconButton color="inherit" size="medium" type="button" onClick={() => setEditMode(true)}>
+            <IconButton
+              color="inherit"
+              size="medium"
+              type="button"
+              onClick={() => {
+                setEditMode(true)
+                inputRef.current?.focus()
+              }}
+            >
               <EditOutlinedIcon />
             </IconButton>
           }

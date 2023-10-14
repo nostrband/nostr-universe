@@ -2,6 +2,7 @@
 // @ts-nocheck
 import { MetaEvent } from '@/types/meta-event'
 import { nip19 } from '@nostrband/nostr-tools'
+import { isGuest } from './prepare-data'
 
 export const getShortenText = (str) => {
   const string = String(str)
@@ -14,17 +15,6 @@ export const getNpub = (key) => {
 
 export const getNoteId = (key) => {
   return nip19.noteEncode(key)
-}
-
-// export const getProfileImage = (profile) => {
-//   if (profile && profile?.picture) {
-//     return profile.picture
-//   }
-//   return ''
-// }
-
-export const isGuest = (pubkey) => {
-  return pubkey.length != 64
 }
 
 export const getRenderedUsername = (profile, pubkey) => {

@@ -8,45 +8,50 @@ import { useUpdateProfile } from '@/hooks/profile'
 import { nip19 } from '@nostrband/nostr-tools'
 import { showToast } from '@/utils/helpers/general'
 import { checkNsbSigner } from '@/modules/nostr'
+import { useCallback } from 'react'
 //import { checkNsbSigner, setNsbSigner } from '@/modules/nostr'
 
 export const useAddKey = () => {
   const dispatch = useAppDispatch()
   const updateProfile = useUpdateProfile()
   const { keys, currentPubkey: wasPubkey } = useAppSelector((state) => state.keys)
-  const wasGuest = wasPubkey === DEFAULT_PUBKEY
 
-  const setPubkey = async (pubkey: string) => {
-    // write to db, has to await to make sure loadKeys reads it
-    await writeCurrentPubkey(pubkey)
+  const setPubkey = useCallback(
+    async (pubkey: string) => {
+      const wasGuest = wasPubkey === DEFAULT_PUBKEY
 
-    // reload keys
-    const [keys, currentPubkey] = await loadKeys(dispatch)
+      // write to db, has to await to make sure loadKeys reads it
+      await writeCurrentPubkey(pubkey)
 
-    if (wasGuest) {
-      // reassign guest pins and tabs to this new workspace
-      await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubkey })
-      await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubkey })
+      // reload keys
+      const [keys, currentPubkey] = await loadKeys(dispatch)
 
-      // avoid double-init
-      await dbi.setFlag(currentPubkey, 'bootstrapped', true)
+      if (wasGuest) {
+        // reassign guest pins and tabs to this new workspace
+        await db.tabs.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubkey })
+        await db.pins.where({ pubkey: DEFAULT_PUBKEY }).modify({ pubkey: currentPubkey })
 
-      dispatch(
-        updateWorkspacePubkey({
-          workspacePubkey: wasPubkey,
-          pubkey: currentPubkey
-        })
-      )
-    } else {
-      // read workspace from db
-      await loadWorkspace(currentPubkey, dispatch)
-    }
+        // avoid double-init
+        await dbi.setFlag(currentPubkey, 'bootstrapped', true)
 
-    // load info on this new key
-    await updateProfile(keys, currentPubkey)
-  }
+        dispatch(
+          updateWorkspacePubkey({
+            workspacePubkey: wasPubkey,
+            pubkey: currentPubkey
+          })
+        )
+      } else {
+        // read workspace from db
+        await loadWorkspace(currentPubkey, dispatch)
+      }
 
-  const addKey = async () => {
+      // load info on this new key
+      await updateProfile(keys, currentPubkey)
+    },
+    [wasPubkey, updateProfile, dispatch]
+  )
+
+  const addKey = useCallback(async () => {
     try {
       // ask user for new key
       const r = await keystore.addKey()
@@ -57,65 +62,71 @@ export const useAddKey = () => {
       // @ts-ignore
       showToast(`Error: ${e}`)
     }
-  }
+  }, [setPubkey])
 
-  const addReadOnlyKey = async (pubkey: string) => {
-    await dbi.putReadOnlyKey(pubkey)
-    await setPubkey(pubkey)
-  }
+  const addReadOnlyKey = useCallback(
+    async (pubkey: string) => {
+      await dbi.putReadOnlyKey(pubkey)
+      await setPubkey(pubkey)
+    },
+    [setPubkey]
+  )
 
-  const addNSBKey = async (token: string) => {
-    let pubkey = ''
-    try {
-      const npub = token.includes('#') ? token.split('#')[0] : token
-      const { type, data } = nip19.decode(npub)
-      if (type !== 'npub') throw new Error('Bad npub or token')
+  const addNSBKey = useCallback(
+    async (token: string) => {
+      let pubkey = ''
+      try {
+        const npub = token.includes('#') ? token.split('#')[0] : token
+        const { type, data } = nip19.decode(npub)
+        if (type !== 'npub') throw new Error('Bad npub or token')
 
-      pubkey = data
-    } catch (e) {
-      showToast(`Error: ${e}`)
-      return
-    }
-    console.log('nsb pubkey', pubkey)
+        pubkey = data
+      } catch (e) {
+        showToast(`Error: ${e}`)
+        return
+      }
+      console.log('nsb pubkey', pubkey)
 
-    if (keys.includes(pubkey)) {
-      showToast(`Key already exists!`)
-      return
-    }
+      if (keys.includes(pubkey)) {
+        showToast(`Key already exists!`)
+        return
+      }
 
-    let localPubkey = ''
-    try {
-      const r = await keystore.generateKey()
-      console.log('generateKey', JSON.stringify(r))
-      localPubkey = r.pubKey
-    } catch (e) {
-      console.log('generatekey error ', e)
-      showToast(`Error: ${e}`)
-      return
-    }
-    console.log('localPubkey', localPubkey)
+      let localPubkey = ''
+      try {
+        const r = await keystore.generateKey()
+        console.log('generateKey', JSON.stringify(r))
+        localPubkey = r.pubKey
+      } catch (e) {
+        console.log('generatekey error ', e)
+        showToast(`Error: ${e}`)
+        return
+      }
+      console.log('localPubkey', localPubkey)
 
-    // write to db
-    await dbi.addNsecBunkerKey({
-      pubkey,
-      localPubkey,
-      token
-    })
-
-    await setPubkey(pubkey)
-
-    showToast('Authorize in NsecBunker')
-
-    // launch a connection check
-    checkNsbSigner()
-      .then(() => {
-        showToast('NsecBunker connected!')
+      // write to db
+      await dbi.addNsecBunkerKey({
+        pubkey,
+        localPubkey,
+        token
       })
-      .catch((e) => {
-        console.log('nsb error', e)
-        showToast('NsecBunker error!')
-      })
-  }
+
+      await setPubkey(pubkey)
+
+      showToast('Authorize in NsecBunker')
+
+      // launch a connection check
+      checkNsbSigner()
+        .then(() => {
+          showToast('NsecBunker connected!')
+        })
+        .catch((e) => {
+          console.log('nsb error', e)
+          showToast('NsecBunker error!')
+        })
+    },
+    [setPubkey]
+  )
 
   return {
     addKey,

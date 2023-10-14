@@ -13,24 +13,23 @@ import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { CONTENT_FEEDS } from '@/types/content-feed'
+import { useCallback, Fragment } from 'react'
+import { selectCurrentWorkspaceFeedSettings, selectKeys } from '@/store/store'
 
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'content'
 
-  const { keys, currentPubkey } = useAppSelector((state) => state.keys)
+  const { keys } = useAppSelector(selectKeys)
   const guest = !keys.length || isGuest(keys[0])
 
-  const currentWorkspace = useAppSelector((state) =>
-    state.workspaces.workspaces.find((ws) => ws.pubkey === currentPubkey)
-  )
+  const contentFeedSettings = useAppSelector(selectCurrentWorkspaceFeedSettings)
 
-  const contentFeedSettings = currentWorkspace?.contentFeedSettings || []
-
-  const renderFeeds = () => {
+  const renderFeeds = useCallback(() => {
     if (contentFeedSettings.length === 0) {
       return (
         <>
+          <AppsNostro />
           <TrendingNotes />
           <TrendingProfiles />
           {!guest && (
@@ -43,7 +42,6 @@ export const MainPage = () => {
               <SuggestedProfiles />
             </>
           )}
-          <AppsNostro />
         </>
       )
     }
@@ -62,11 +60,11 @@ export const MainPage = () => {
       feeds[CONTENT_FEEDS.SUGGESTED_PROFILES] = <SuggestedProfiles />
     }
 
-    return contentFeedSettings.map((feed) => {
+    return contentFeedSettings.map((feed, i) => {
       if (feed.hidden) return null
-      return feeds[feed.id]
+      return <Fragment key={i}>{feeds[feed.id]}</Fragment>
     })
-  }
+  }, [contentFeedSettings, guest])
 
   return (
     <StyledWrapVisibility isShow={isShow}>

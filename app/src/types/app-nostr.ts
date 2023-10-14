@@ -1,9 +1,10 @@
 import { APP_NOSTR_SIZE } from '@/consts'
 import { OverridableStringUnion } from './utility'
+import { AppUrl } from './app-event'
 
 export type AppNostr = {
   author?: Record<string, unknown>
-  naddr: string
+  naddr?: string
   url: string
   picture: string
   about?: string
@@ -11,12 +12,7 @@ export type AppNostr = {
   pinned?: boolean
   kinds?: number[]
   order: number
-  handlers?: {
-    [key: string]: {
-      url: string
-      type: string
-    }
-  }
+  urls?: AppUrl[]
 }
 
 export interface IOpenAppNostr extends AppNostr {

@@ -1,3 +1,4 @@
+import { IOpenAppNostr } from '@/types/app-nostr'
 import { IContentFeedSetting } from '@/types/content-feed'
 import Dexie from 'dexie'
 
@@ -66,6 +67,15 @@ interface Setting {
   settings_json: IContentFeedSetting[]
 }
 
+interface LastKindApps extends IOpenAppNostr {}
+
+export interface SearchTerm {
+  id: string
+  pubkey: string
+  timestamp: number
+  value: string
+}
+
 export interface DbSchema extends Dexie {
   tabs: Dexie.Table<Tab, number>
   pins: Dexie.Table<Pin, number>
@@ -75,5 +85,7 @@ export interface DbSchema extends Dexie {
   flags: Dexie.Table<Flag, number>
   readOnlyKeys: Dexie.Table<ReadOnlyKey, number>
   nsecbunkerKeys: Dexie.Table<NSBKey, number>
-  settings: Dexie.Table<Setting, number>
+  contentFeedSettings: Dexie.Table<Setting, number>
+  lastKindApps: Dexie.Table<LastKindApps, number>
+  searchHistory: Dexie.Table<SearchTerm, number>
 }

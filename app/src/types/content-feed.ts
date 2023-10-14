@@ -17,6 +17,10 @@ export enum CONTENT_FEEDS {
 
 export const DEFAULT_CONTENT_FEED_SETTINGS = [
   {
+    id: CONTENT_FEEDS.APPS,
+    hidden: false
+  },
+  {
     id: CONTENT_FEEDS.TRENDING_NOTES,
     hidden: false
   },
@@ -46,10 +50,6 @@ export const DEFAULT_CONTENT_FEED_SETTINGS = [
   },
   {
     id: CONTENT_FEEDS.SUGGESTED_PROFILES,
-    hidden: false
-  },
-  {
-    id: CONTENT_FEEDS.APPS,
     hidden: false
   }
 ]

@@ -1,4 +1,4 @@
-import { MouseEvent } from 'react'
+import { MouseEvent, useCallback } from 'react'
 import { Box, IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { Container } from '@/layout/Container/Conatiner'
@@ -18,18 +18,28 @@ export const TabsSwitcherPageContent = () => {
   const { onSwitchTab, onCloseTab, onCloseTabs } = useOpenApp()
   const tgs = useAppSelector(selectTabGroups)
 
-  const handleOpen = async (tab: ITab) => {
-    await onSwitchTab(tab)
-  }
+  const handleOpen = useCallback(
+    async (tab: ITab) => {
+      await onSwitchTab(tab)
+    },
+    [onSwitchTab]
+  )
 
-  const handleCloseTab = (e: MouseEvent<HTMLButtonElement>, id: string) => {
-    e.stopPropagation()
-    onCloseTab(id)
-  }
+  const handleCloseTab = useCallback(
+    (e: MouseEvent<HTMLButtonElement>, id: string) => {
+      e.stopPropagation()
+      onCloseTab(id)
+    },
+    [onCloseTab]
+  )
 
-  const handleCloseTabGroup = (tg: ITabGroup) => {
-    onCloseTabs(tg.tabs)
-  }
+  const handleCloseTabGroup = useCallback(
+    (tg: ITabGroup) => {
+      onCloseTabs(tg.tabs)
+    },
+    [onCloseTabs]
+  )
+
   return (
     <StyledWrapVisibility isShow={isShow}>
       {!tgs.length ? (
@@ -38,7 +48,7 @@ export const TabsSwitcherPageContent = () => {
         tgs.map((tg) => {
           const info = tg.tabs[0]
           return (
-            <Box key={tg.id}>
+            <Box key={tg.id} marginTop="10px">
               <Container>
                 <StyledHeadTabGroup>
                   <AppIcon isPreviewTab isRounded={true} picture={info.icon} alt={info.title} />
@@ -67,7 +77,7 @@ export const TabsSwitcherPageContent = () => {
                     >
                       <CloseIcon />
                     </StyledCloseTabBtn>
-                    <AppIcon size="big" picture={tab.screenshot || tab.icon} alt={tab.title} />
+                    <AppIcon size="big" isSmall={!tab.screenshot} picture={tab.screenshot || tab.icon} alt={tab.title} />
                   </StyledTabWrap>
                 ))}
               </HorizontalSwipeContent>

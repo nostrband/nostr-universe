@@ -9,7 +9,8 @@ export const StyledMessage = styled(
   color: theme.palette.text.primary,
   display: 'flex',
   alignItems: 'center',
-  fontSize: '14px'
+  fontSize: '14px',
+  paddingLeft: '1rem'
 }))
 
 export const StyledReloadButton = styled(
