@@ -13,15 +13,31 @@ import { BestNoteItem } from './BestNoteItem/BestNoteItem'
 import { AuthoredEvent } from '@/types/authored-event'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNotes/SkeletonTrendingNotes'
+import { nip19 } from '@nostrband/nostr-tools'
+import { nostrbandRelay } from '@/modules/nostr'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 const BestNotes = () => {
   const { bestNotes, isBestNotesLoading } = useAppSelector((state) => state.bookmarks)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const reloadBestNotes = useCallback(() => {
     dispatch(fetchBestNotesThunk(currentPubkey))
   }, [currentPubkey, dispatch])
+
+  const handleOpenNote = useCallback(
+    (note: AuthoredEvent) => {
+      const noteId = nip19.neventEncode({
+        relays: [nostrbandRelay],
+        id: note.id
+      })
+
+      handleOpenContextMenu({ bech32: noteId })
+    },
+    [handleOpenContextMenu]
+  )
 
   const renderContent = useCallback(() => {
     if (isBestNotesLoading) {
@@ -41,9 +57,11 @@ const BestNotes = () => {
       return (
         <HorizontalSwipeVirtualItem style={style} index={index} itemCount={bestNotes.length}>
           <BestNoteItem
+            onClick={() => handleOpenNote(noteTargetEvent)}
             pubkey={noteTargetEvent.pubkey}
             author={noteTargetEvent.author}
             content={noteTargetEvent.content}
+            time={noteTargetEvent.created_at}
             reactionKind={note.kind}
             reactionTime={note.created_at}
           />
@@ -60,7 +78,7 @@ const BestNotes = () => {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Best Notes
+          Favorite Notes
         </StyledTitle>
       </Container>
       {renderContent()}

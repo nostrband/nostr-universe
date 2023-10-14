@@ -459,7 +459,6 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
 
     const cachedEvent = addrCache.get(id)
     if (cachedEvent) {
-      console.log('event in addr cache', id)
       events.push({ ...cachedEvent })
       continue
     }

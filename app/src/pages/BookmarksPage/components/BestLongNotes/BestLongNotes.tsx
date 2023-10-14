@@ -12,15 +12,33 @@ import {
 import { BestLongNoteItem } from './BestLongNoteItem/BestLongNoteItem'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { fetchBestLongNotesThunk } from '@/store/reducers/bookmarks.slice'
+import { nip19 } from '@nostrband/nostr-tools'
+import { nostrbandRelay } from '@/modules/nostr'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 export const BestLongNotes = () => {
   const { bestLongNotes, isBestLongNotesLoading } = useAppSelector((state) => state.bookmarks)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const reloadBestNotes = useCallback(() => {
     dispatch(fetchBestLongNotesThunk(currentPubkey))
   }, [currentPubkey, dispatch])
+
+  const handleOpenLongPosts = useCallback(
+    (longPost: LongNoteEvent) => {
+      const naddr = nip19.naddrEncode({
+        pubkey: longPost.pubkey,
+        kind: longPost.kind,
+        identifier: longPost.identifier,
+        relays: [nostrbandRelay]
+      })
+
+      handleOpenContextMenu({ bech32: naddr })
+    },
+    [handleOpenContextMenu]
+  )
 
   const renderContent = useCallback(() => {
     if (isBestLongNotesLoading) {
@@ -40,9 +58,11 @@ export const BestLongNotes = () => {
       return (
         <HorizontalSwipeVirtualItem style={style} index={index} itemCount={bestLongNotes.length}>
           <BestLongNoteItem
+            onClick={() => handleOpenLongPosts(longNoteTargetEvent)}
             pubkey={longNoteTargetEvent.pubkey}
             author={longNoteTargetEvent.author}
             content={longNoteTargetEvent.content}
+            time={longNoteTargetEvent.created_at}
             reactionKind={longNote.kind}
             reactionTime={longNote.created_at}
           />
@@ -64,7 +84,7 @@ export const BestLongNotes = () => {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Best Long Notes
+          Favorite Long Posts
         </StyledTitle>
       </Container>
       {renderContent()}
