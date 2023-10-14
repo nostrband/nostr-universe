@@ -459,7 +459,6 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
 
     const cachedEvent = addrCache.get(id)
     if (cachedEvent) {
-      console.log('event in addr cache', id)
       events.push({ ...cachedEvent })
       continue
     }
@@ -860,7 +859,7 @@ export async function fetchExtendedEventByBech32(b32: string, contactList?: stri
   return a && a.length > 0 ? a[0] : null
 }
 
-async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]): ReactionTargetEvent[] {
+async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]): Promise<ReactionTargetEvent[]> {
   // FIXME add zap requests from our local db of signed events!
   const ndkEvents = await fetchEventsRead(ndk, {
     authors: [pubkey],
@@ -941,11 +940,11 @@ async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]):
   return events.filter((e) => !!e.targetEvent)
 }
 
-export async function fetchReactionTargetNotes(pubkey: string): ReactionTargetEvent[] {
+export async function fetchReactionTargetNotes(pubkey: string): Promise<ReactionTargetEvent[]> {
   return await fetchReactionTargetEventsByKind(pubkey, [KIND_NOTE])
 }
 
-export async function fetchReactionTargetLongNotes(pubkey: string): ReactionTargetEvent[] {
+export async function fetchReactionTargetLongNotes(pubkey: string): Promise<ReactionTargetEvent[]> {
   const authoredEvents = await fetchReactionTargetEventsByKind(pubkey, [KIND_LONG_NOTE])
   return await augmentLongNotes(authoredEvents)
 }

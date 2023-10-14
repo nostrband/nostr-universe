@@ -14,7 +14,8 @@ import { ITab } from '@/types/tab'
 import { positionScrollPageSlice } from './reducers/positionScrollPage.slice'
 import { searchModalSlice } from './reducers/searchModal.slice'
 import { IContentFeedSetting } from '@/types/content-feed'
-import memoizeOne from 'memoize-one';
+import { bookmarksSlice } from './reducers/bookmarks.slice'
+import memoizeOne from 'memoize-one'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -27,7 +28,8 @@ export const rootReducer = combineReducers({
   permissionRequests: permissionRequestsSlice.reducer,
   positionScrollPage: positionScrollPageSlice.reducer,
   searchModal: searchModalSlice.reducer,
-  [userService.reducerPath]: userService.reducer
+  [userService.reducerPath]: userService.reducer,
+  [bookmarksSlice.name]: bookmarksSlice.reducer
 })
 
 export const createStore = () => {

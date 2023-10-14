@@ -63,8 +63,8 @@ export const SearchPageContent = () => {
           handleOpenContextMenu({ url: str })
           return true
         }
-      } catch (err) {
-        console.log(err)
+      } catch {
+        /* empty */
       }
 
       const b32 = stringToBech32(str)

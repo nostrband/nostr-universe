@@ -62,7 +62,7 @@ export const StyledAppIcon = styled(
 )
 
 export const StyledAppImg = styled(function BoxDisplayName(props: IAvatarProps) {
-  const exclude = new Set(['isPreviewTab', 'isLight'])
+  const exclude = new Set(['isPreviewTab', 'isLight', 'isSmall'])
   const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
 
   return <Avatar variant="square" {...omitProps} />
