@@ -1,8 +1,8 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
-import { useAppSelector } from '@/store/hooks/redux'
+import { nostrbandRelay, subscribeContactList } from '@/modules/nostr'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { MetaEvent } from '@/types/meta-event'
 import { memo, useCallback, FC, CSSProperties } from 'react'
@@ -11,10 +11,18 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
+import { SkeletonContactList } from '@/components/Skeleton/SkeletonContactList/SkeletonContactList'
+import { selectKeys } from '@/store/store'
+import { setContactList } from '@/store/reducers/contentWorkspace'
+import { ContactListEvent } from '@/types/contact-list-event'
 
 export const ContactList = memo(function ContactList() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
+  const { currentPubkey } = useAppSelector(selectKeys)
+  const dispatch = useAppDispatch()
 
   const handleOpenProfile = useCallback(
     (profile: MetaEvent) => {
@@ -28,17 +36,45 @@ export const ContactList = memo(function ContactList() {
     [handleOpenContextMenu]
   )
 
-  const RowContact: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+  const handleReloadContactList = () => {
+    dispatch(setContactList({ contactList: null }))
+
+    subscribeContactList(currentPubkey, async (contactList: ContactListEvent) => {
+      if (contactList) {
+        dispatch(setContactList({ contactList }))
+      }
+    })
+  }
+
+  const renderContent = () => {
     if (contactList === null) {
-      return null
+      return (
+        <HorizontalSwipeContent childrenWidth={115}>
+          <SkeletonContactList />
+        </HorizontalSwipeContent>
+      )
+    }
+    if (!contactList || !contactList?.contactEvents.length) {
+      return <EmptyListMessage onReload={handleReloadContactList} />
     }
 
-    const profile = contactList.contactEvents[index]
+    const RowContact: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
+      const profile = contactList.contactEvents[index]
+
+      return (
+        <HorizontalSwipeVirtualItem style={style} index={index} itemCount={contactList.contactEvents.length}>
+          <Profile isContact onClick={handleOpenProfile} profile={profile} />
+        </HorizontalSwipeVirtualItem>
+      )
+    }
 
     return (
-      <HorizontalSwipeVirtualItem style={style} index={index} itemCount={contactList.contactEvents.length}>
-        <Profile isContact onClick={handleOpenProfile} profile={profile} />
-      </HorizontalSwipeVirtualItem>
+      <HorizontalSwipeVirtualContent
+        itemHight={114}
+        itemSize={115}
+        itemCount={contactList?.contactEvents.length}
+        RowComponent={RowContact}
+      />
     )
   }
 
@@ -50,14 +86,7 @@ export const ContactList = memo(function ContactList() {
         </StyledTitle>
       </Container>
 
-      {contactList && (
-        <HorizontalSwipeVirtualContent
-          itemHight={114}
-          itemSize={115}
-          itemCount={contactList?.contactEvents.length}
-          RowComponent={RowContact}
-        />
-      )}
+      {renderContent()}
     </StyledWrapper>
   )
 })
