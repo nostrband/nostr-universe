@@ -6,7 +6,7 @@ import { DbSchema } from './types/db'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(15).stores({
+db.version(16).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -19,7 +19,8 @@ db.version(15).stores({
   contentFeedSettings: 'id, pubkey, settings_json',
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
   signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson',
-  searchHistory: 'id,pubkey,timestamp,value'
+  searchHistory: 'id,pubkey,timestamp,value',
+  localRelayEvents: 'id,pubkey,kind,created_at'
 })
 
 export const dbi = {
@@ -358,5 +359,22 @@ export const dbi = {
     } catch (error) {
       console.log(`Bulk delete excess search history in DB error: ${error}`)
     }
-  }
+  },
+  listLocalRelayEvents: async () => {
+    try {
+      return await db.localRelayEvents.toCollection().toArray()
+    } catch (error) {
+      console.log(`List localRelayEvents error: ${JSON.stringify(error)}`)
+      return []
+    }
+  },
+  putLocalRelayEvent: async (e) => {
+    try {
+      await db.localRelayEvents.put(e)
+    } catch (error) {
+      console.log(`Put localRelayEvents error: ${error}`)
+    }
+  },
+
+
 }
