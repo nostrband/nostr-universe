@@ -26,6 +26,7 @@ import { ModalPinSettings } from './components/Modal/ModalPinSettings/ModalPinSe
 import { ModalContentFeedSettings } from './components/Modal/ModalContentFeedSettings/ModalContentFeedSettings'
 import { ModalSignedEvents } from './components/Modal/ModalSignedEvents/ModalSignedEvents'
 import { BookmarksPage } from './pages/BookmarksPage/BookmarksPage'
+import { ModalPaymentHistory } from './components/Modal/ModalPaymentHistory/ModalPaymentHistory'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -118,6 +119,7 @@ export const App = () => {
       <ModalPinSettings />
       <ModalContentFeedSettings />
       <ModalSignedEvents />
+      <ModalPaymentHistory />
     </>
   )
 }

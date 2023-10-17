@@ -1,7 +1,7 @@
 import { keystore } from '@/modules/keystore'
 import { nsbSignEvent } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// eslint-disable-next-line
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
 import { useCallback } from 'react'

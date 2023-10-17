@@ -1,0 +1,82 @@
+import { useState } from 'react'
+import { Alert, Chip, IconButton, Menu, MenuItem } from '@mui/material'
+import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
+import { StyledViewTitle, StyledWrapper, StyledHead, StyledItemBlock } from './styled'
+import { copyToClipBoard } from '@/utils/helpers/prepare-data'
+import { formatDateHours } from '@/consts/index'
+import { format } from 'date-fns'
+
+interface IPaymentItem {
+  walletId?: string
+  url: string
+  time: number
+  walletName: string
+  amount: number
+  preimage: string
+}
+
+export const PaymentItem = ({ url, time, walletName, walletId, amount, preimage }: IPaymentItem) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const open = Boolean(anchorEl)
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handleCopyPreimage = () => {
+    copyToClipBoard(preimage)
+    handleClose()
+  }
+
+  const getName = walletName || walletId
+  const getUrl = new URL(url).hostname
+  const getTime = format(new Date(time), formatDateHours)
+
+  return (
+    <StyledWrapper>
+      <StyledHead>
+        <StyledViewTitle>-{amount} sats</StyledViewTitle>
+        <IconButton
+          color="inherit"
+          size="medium"
+          id="demo-positioned-button"
+          aria-controls={open ? 'demo-positioned-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={handleClick}
+        >
+          <MoreHorizOutlinedIcon />
+        </IconButton>
+      </StyledHead>
+      <StyledItemBlock>
+        <Chip color="secondary" label={`Wallet: ${getName}`} />
+      </StyledItemBlock>
+      {!preimage && (
+        <StyledItemBlock>
+          <Alert severity="error">Payment not confirmed</Alert>
+        </StyledItemBlock>
+      )}
+      By {getUrl} at {getTime}
+      <Menu
+        id="demo-positioned-menu"
+        aria-labelledby="demo-positioned-button"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'left'
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left'
+        }}
+      >
+        <MenuItem onClick={handleCopyPreimage}>Copy preimage</MenuItem>
+      </Menu>
+    </StyledWrapper>
+  )
+}

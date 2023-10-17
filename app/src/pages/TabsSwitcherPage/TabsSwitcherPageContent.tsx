@@ -77,7 +77,12 @@ export const TabsSwitcherPageContent = () => {
                     >
                       <CloseIcon />
                     </StyledCloseTabBtn>
-                    <AppIcon size="big" isSmall={!tab.screenshot} picture={tab.screenshot || tab.icon} alt={tab.title} />
+                    <AppIcon
+                      size="big"
+                      isSmall={!tab.screenshot}
+                      picture={tab.screenshot || tab.icon}
+                      alt={tab.title}
+                    />
                   </StyledTabWrap>
                 ))}
               </HorizontalSwipeContent>

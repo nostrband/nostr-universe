@@ -22,7 +22,8 @@ export enum MODAL_PARAMS_KEYS {
   PIN_SETTINGS_MODAL = 'pin-settings-modal',
   CONTENT_FEEDS_SETTINGS_MODAL = 'content-feeds-settings-modal',
   KIND = 'kind',
-  SIGNED_EVENTS_MODAL = 'signed-events-modal'
+  SIGNED_EVENTS_MODAL = 'signed-events-modal',
+  PAYMENT_HISTORY_MODAL = 'payment-history-modal'
 }
 
 export const EXTRA_OPTIONS = {
