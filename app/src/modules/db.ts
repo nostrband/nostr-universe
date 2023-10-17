@@ -19,7 +19,8 @@ db.version(15).stores({
   contentFeedSettings: 'id, pubkey, settings_json',
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
   signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson',
-  searchHistory: 'id,pubkey,timestamp,value'
+  searchHistory: 'id,pubkey,timestamp,value',
+  feedbacksInfo: 'id,pubkey,timestamp'
 })
 
 export const dbi = {
@@ -357,6 +358,40 @@ export const dbi = {
       }
     } catch (error) {
       console.log(`Bulk delete excess search history in DB error: ${error}`)
+    }
+  },
+  addFeedbackInfo: async (feedbackInfo) => {
+    try {
+      const existingFeedback = await db.feedbacksInfo.where('pubkey').equals(feedbackInfo.pubkey).first()
+
+      if (existingFeedback) {
+        existingFeedback.timestamp = feedbackInfo.timestamp
+
+        return await db.feedbacksInfo.put(existingFeedback)
+      }
+      return await db.feedbacksInfo.add(feedbackInfo)
+    } catch (error) {
+      console.log(`Add NPS score info in DB error: ${error}`)
+    }
+  },
+  getFeedbackInfo: async (pubkey) => {
+    try {
+      return await db.feedbacksInfo.where({ pubkey }).first()
+    } catch (error) {
+      console.log(`Get NPS score info in DB error: ${error}`)
+    }
+  },
+  delayFeedbackForWeek: async (delayedFeedbackInfo) => {
+    try {
+      const isFeedbackInfoExists = await dbi.getFeedbackInfo(delayedFeedbackInfo.pubkey)
+      if (!isFeedbackInfoExists) {
+        return await dbi.addFeedbackInfo(delayedFeedbackInfo)
+      }
+      return await db.feedbacksInfo
+        .where({ pubkey: delayedFeedbackInfo.pubkey })
+        .modify({ timestamp: delayedFeedbackInfo.timestamp })
+    } catch (error) {
+      console.log(`Delay NPS score in DB error: ${error}`)
     }
   }
 }

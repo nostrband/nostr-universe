@@ -23,6 +23,7 @@ import { MIN_ZAP_AMOUNT } from '@/consts'
 import { MetaEvent } from '@/types/meta-event'
 import { ContactListEvent } from '@/types/contact-list-event'
 import { fetchBestLongNotesThunk, fetchBestNotesThunk } from '@/store/reducers/bookmarks.slice'
+import { getFeedbackInfoThunk } from '@/store/reducers/feedbackInfo.slice'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
@@ -50,6 +51,8 @@ export const useUpdateProfile = () => {
   return useCallback(
     async (keys: string[], currentPubKey: string) => {
       const currentProfile = getProfile(currentPubKey)
+
+      dispatch(getFeedbackInfoThunk(currentPubKey))
 
       if (currentProfile) {
         dispatch(setCurrentProfile({ profile: currentProfile }))
