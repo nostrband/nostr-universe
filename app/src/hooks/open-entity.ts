@@ -20,7 +20,6 @@ import { IOpenAppNostr } from '@/types/app-nostr'
 // @ts-ignore
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { v4 as uuidv4 } from 'uuid'
-import { keystore } from '@/modules/keystore'
 import { useOpenModalSearchParams } from './modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { DEFAULT_PUBKEY } from '@/consts'
@@ -29,7 +28,7 @@ import { sendPayment, stringToBech32 } from '@/modules/nostr'
 import { ITab } from '@/types/tab'
 import { selectCurrentWorkspaceTabs } from '@/store/store'
 import { showToast } from '@/utils/helpers/general'
-import { useSignEvent } from './sign-event'
+import { useSigner } from './signer'
 import { getOrigin, isGuest } from '@/utils/helpers/prepare-data'
 import { usePerms } from './perms'
 // eslint-disable-next-line
@@ -45,7 +44,7 @@ export const useOpenApp = () => {
   const { tabs } = useAppSelector((state) => state.tab)
   const currentWorkSpaceTabs = useAppSelector(selectCurrentWorkspaceTabs)
   const { page } = useAppSelector((state) => state.positionScrollPage)
-  const { signEvent } = useSignEvent()
+  const { signEvent, encrypt, decrypt } = useSigner()
   const { showPendingPermRequest, requestPermExec, replyCurrentPermRequest, hasPerm, deletePermission } = usePerms()
 
   const getTabAny = useCallback(
@@ -483,7 +482,7 @@ export const useOpenApp = () => {
       if (isReadOnly()) throw new Error('No pubkey')
       const error = 'Encrypt disallowed'
       if (hasPerm(tab, 'encrypt', '0')) throw new Error(error)
-      const exec = async () => await keystore.encrypt(pubkey, plainText)
+      const exec = async () => await encrypt(pubkey, plainText)
       if (hasPerm(tab, 'encrypt', '1')) return await exec()
       return requestPermExec(tab, { perm: 'encrypt', pubkey, plainText }, exec, error)
     },
@@ -493,7 +492,7 @@ export const useOpenApp = () => {
       if (isReadOnly()) throw new Error('No pubkey')
       const error = 'Decrypt disallowed'
       if (hasPerm(tab, 'decrypt', '0')) throw new Error(error)
-      const exec = async () => await keystore.decrypt(pubkey, cipherText)
+      const exec = async () => await decrypt(pubkey, cipherText)
       if (hasPerm(tab, 'decrypt', '1')) return await exec()
       return requestPermExec(tab, { perm: 'decrypt', pubkey, cipherText }, exec, error)
     },

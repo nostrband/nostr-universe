@@ -1,14 +1,24 @@
-/* eslint-disable */
-// @ts-nocheck
-import NDK, { NDKRelaySet, NDKRelay, NDKEvent, NDKFilter } from '@nostrband/ndk'
+import NDK, {
+  NDKRelaySet,
+  NDKRelay,
+  NDKEvent,
+  NDKFilter,
+  NDKNip07Signer,
+  NDKNip46Signer,
+  NDKSubscription,
+  NostrEvent,
+  NostrTop,
+  NDKUser
+// @ts-ignore
+} from '@nostrband/ndk'
 import { Event, getEventHash, nip19 } from '@nostrband/nostr-tools'
+// @ts-ignore
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { walletstore } from './walletstore'
 import { AuthoredEvent, createAuthoredEvent } from '@/types/authored-event'
 import { AugmentedEvent, createEvent } from '@/types/augmented-event'
 import { MetaEvent, createMetaEvent } from '@/types/meta-event'
 import { Meta, createMeta } from '@/types/meta'
-import { NDKFilter, NDKNip07Signer, NDKNip46Signer, NDKSubscription, NostrEvent, NostrTop } from '@nostrband/ndk'
 import { ZapEvent, createZapEvent } from '@/types/zap-event'
 import {
   CommunityApprovalInfo,
@@ -27,18 +37,19 @@ import { AppNostr } from '@/types/app-nostr'
 import { showToast } from '@/utils/helpers/general'
 import { AppEvent, AppUrl, createAppEvent } from '@/types/app-event'
 import { NATIVE_NADDR } from '@/consts'
-import { EventAddr } from './event-addr'
 import { ReactionTargetEvent, createReactionTargetEvent } from '@/types/reaction-target-event'
+import { EventAddr } from '@/types/event-addr'
 
 const KIND_META: number = 0
 const KIND_NOTE: number = 1
 const KIND_CONTACT_LIST: number = 3
+export const KIND_DM: number = 4
 const KIND_REPOST: number = 6
 const KIND_REACTION: number = 7
 const KIND_COMMUNITY_APPROVAL: number = 4550
 const KIND_ZAP: number = 9735
 const KIND_HIGHLIGHT: number = 9802
-const KIND_BOOKMARKS: number = 30001
+//const KIND_BOOKMARKS: number = 30001
 const KIND_LONG_NOTE: number = 30023
 export const KIND_APP: number = 31990
 const KIND_LIVE_EVENT: number = 30311
@@ -143,7 +154,7 @@ function parseContentJson(c: string): object {
   }
 }
 
-export function parseProfileJson(e: Event): Meta {
+export function parseProfileJson(e: NostrEvent): Meta {
   // all meta fields are optional so 'as' works fine
   const profile = createMeta(parseContentJson(e.content))
   profile.pubkey = e.pubkey
@@ -207,7 +218,7 @@ export function getEventTagA(e: AugmentedEvent | NDKEvent | Event | AuthoredEven
   return addr
 }
 
-function isWeb(e: Event): boolean {
+function isWeb(e: NostrEvent): boolean {
   for (const t of e.tags) {
     if (t[0] === 'web') return true
 
@@ -217,7 +228,7 @@ function isWeb(e: Event): boolean {
   return true
 }
 
-function findHandlerUrl(e: Event, k: number) {
+function findHandlerUrl(e: NostrEvent, k: number) {
   for (const t of e.tags) {
     if (t[0] !== 'web' || t.length < 3) continue
 
@@ -245,22 +256,8 @@ function sortDesc(arr: AugmentedEvent[] | AuthoredEvent[] | MetaEvent[]) {
 
 export async function fetchApps() {
   // try to fetch best apps list from our relay
-  const top = null
-  // const top = await ndk.fetchTop(
-  //   {
-  //     kinds: [KIND_APP],
-  //     limit: MAX_TOP_APPS
-  //   },
-  //   // note: send to this separate endpoint bcs this req might be slow
-  //   NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk)
-  // )
-  // console.log('top apps', top?.ids.length)
-
   let events: AugmentedEvent[] = []
-  if (top?.ids.length) {
-    // fetch the app events themselves from the list
-    events = await fetchEventsByIds({ ids: top.ids, kinds: [KIND_APP] })
-  } else {
+  {
     console.log('top apps empty, fetching new ones')
     // load non-best apps from other relays just to avoid
     // completely breaking the UX due to our relay being down
@@ -278,14 +275,14 @@ export async function fetchApps() {
   const profiles = await fetchMetas(events.map((e) => e.pubkey))
 
   // assign order to the apps, sort by top or by published date
-  if (top)
-    events.forEach((e) => {
-      e.order = top.ids.findIndex((i: string) => e.id === i)
-    })
-  else
-    events.forEach((e) => {
-      e.order = Number(getTagValue(e, 'published_at'))
-    })
+  // if (top)
+  //   events.forEach((e) => {
+  //     e.order = top.ids.findIndex((i: string) => e.id === i)
+  //   })
+  // else
+  events.forEach((e) => {
+    e.order = Number(getTagValue(e, 'published_at'))
+  })
 
   // sort events by order desc
   sortDesc(events)
@@ -493,12 +490,12 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
   return events
 }
 
-async function fetchFullyAugmentedEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<AuthoredEvent[]> {
+export async function fetchFullyAugmentedEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<AuthoredEvent[]> {
   const augmentedEvents = await fetchEventsByAddrs(ndk, addrs)
 
   // for each event, check what needs to be loaded/augmented and execute
 
-  return events
+  return augmentedEvents
 }
 
 async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEvent | null> {
@@ -578,9 +575,8 @@ function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPu
     })
 
     // init handler profile, inherit from pubkey meta if needed
-    e.inheritedMeta = !e.content
-    e.author = metas.get(e.pubkey) || null
-    if (e.inheritedMeta) e.meta = e.author?.profile || null
+    e.author = metas.get(e.pubkey)
+    if (!e.content) e.meta = e.author?.profile
     else e.meta = parseProfileJson(e)
 
     // parse handler kinds
@@ -674,7 +670,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e))
 
   if (top)
-    top.ids.forEach((id, i) => {
+    top.ids.forEach((id: string, i: number) => {
       const e = augmentedEvents.find((e) => e.id == id)
       if (e) e.order = top.ids.length - i
     })
@@ -708,7 +704,7 @@ export function getHandlerEventUrl(app: AppEvent | AppNostr, ad: EventAddr): str
 
   const findUrlType = (type: string): AppUrl | undefined => {
     if (app.naddr === NATIVE_NADDR) return { type, url: 'nostr:<bech32>' }
-    return app.urls.find((u) => u.type === type)
+    return app.urls?.find((u) => u.type === type)
   }
 
   const allUrl = findUrlType('')
@@ -757,7 +753,7 @@ export function getHandlerEventUrl(app: AppEvent | AppNostr, ad: EventAddr): str
   return url
 }
 
-export async function fetchAppsForEvent(event: Event): Promise<AppInfos> {
+export async function fetchAppsForEvent(event: NostrEvent): Promise<AppInfos> {
   const addr: EventAddr = {}
 
   addr.kind = event.kind
@@ -767,6 +763,8 @@ export async function fetchAppsForEvent(event: Event): Promise<AppInfos> {
     addr.d_tag = getTagValue(event, 'd')
   }
   console.log('resolved addr', addr, event)
+
+  if (addr.kind === undefined) throw new Error("Undefined kind")
 
   // now fetch the apps for event kind
   let info = kindAppsCache.get(addr.kind)
@@ -827,12 +825,13 @@ export async function fetchExtendedEventByBech32(b32: string, contactList?: stri
   if (!addr) throw new Error('Bad address')
 
   const e = await fetchEventByAddr(ndk, addr)
+  if (!e) return null
 
   // load meta etc using these special augmenters
   let a = null
   switch (e.kind) {
     case KIND_ZAP:
-      a = await augmentZaps([e])
+      a = await augmentZaps([e], 0)
       break
     case KIND_COMMUNITY:
       a = await augmentCommunities([e])
@@ -872,7 +871,7 @@ async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]):
   )
   //console.log("reactions", events)
 
-  const idToAddr = (id) => {
+  const idToAddr = (id: string) => {
     if (id.includes(':')) {
       const v = id.split(':')
       if (v.length === 3) {
@@ -888,10 +887,10 @@ async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]):
     } else if (id) {
       return { event_id: id } as EventAddr
     }
-    return null
+    return undefined
   }
 
-  const getTargetAddr = (e, tag) => {
+  const getTargetAddr = (e: NostrEvent, tag: string) => {
     let id = ''
     if (e.kind !== KIND_NOTE) {
       id = getTagValue(e, tag)
@@ -909,7 +908,7 @@ async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]):
     if (!e.targetAddr) e.targetAddr = getTargetAddr(e, 'e')
   })
 
-  const addrs = events.map((e) => e.targetAddr).filter((a) => !!a)
+  const addrs = events.map((e) => e.targetAddr).filter((a) => !!a) as EventAddr[]
   //console.log("reaction target addrs", addrs)
 
   if (!addrs.length) return []
@@ -922,13 +921,15 @@ async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]):
   if (!targets.length) return []
 
   const metas = await fetchMetas([...targets.map((e) => e.pubkey), ...events.map((e) => e.pubkey)])
-  targets.forEach((t) => {
-    t.author = metas.find((e) => e.pubkey === t.pubkey)
+  const authoredTargets = targets.map((t) => {
+    const at = createAuthoredEvent(t)
+    at.author = metas.find((e) => e.pubkey === t.pubkey)
+    return at
   })
 
   events.forEach((e) => {
     e.author = metas.find((m) => m.pubkey === e.pubkey)
-    e.targetEvent = targets.find((t) => {
+    e.targetEvent = authoredTargets.find((t) => {
       return (
         t.id === e.targetAddr?.event_id ||
         (t.pubkey === e.targetAddr?.pubkey && t.kind === e.targetAddr?.kind && t.identifier === e.targetAddr?.d_tag)
@@ -982,7 +983,7 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
 
   // order by top.ids
   events.forEach((e) => {
-    e.order = top.ids.findIndex((i) => e.id === i)
+    e.order = top.ids.findIndex((i: string) => e.id === i)
   })
 
   sortAsc(events)
@@ -1553,7 +1554,6 @@ async function augmentApps(augmentedEvent: AugmentedEvent[]): Promise<AppEvent[]
       e.author = metas.find((m) => m.pubkey === e.pubkey)
       if (!e.meta) {
         e.meta = e.author?.profile
-        e.inheritedMeta = !!e.meta
       }
     })
   }
@@ -1576,7 +1576,6 @@ class Subscription<OutputEventType> {
   label: string = ''
   onEvent: (e: AugmentedEvent) => Promise<OutputEventType>
   filter: NDKFilter
-  cb: (e: OutputEventType) => Promise<void>
 
   constructor(label: string, onEvent: (e: AugmentedEvent) => Promise<OutputEventType>) {
     this.label = label
@@ -1601,7 +1600,6 @@ class Subscription<OutputEventType> {
     }
 
     this.filter = filter
-    this.cb = cb
 
     const events = new Map<string, NDKEvent>()
     let eose = false
@@ -1647,7 +1645,7 @@ class Subscription<OutputEventType> {
     // notify that initial fetch is over
     sub.on(
       'eose',
-      pq.appender(async (sub, reason) => {
+      pq.appender(async (_, reason) => {
         console.log('eose was', eose, this.label, 'events', events.size, 'reason', reason, 'at', Date.now())
         if (eose) return // WTF second one?
 
@@ -1789,7 +1787,6 @@ export function stringToBolt11(s: string): [string, any] {
 
   const array = [...s.matchAll(INVOICE_REGEX)].map((a) => a[0])
 
-  let invoice = null
   for (let b32 of array) {
     console.log('maybe invoice', b32, s)
     if (!b32.toLowerCase().startsWith('lnbc')) continue
@@ -1803,8 +1800,8 @@ export function stringToBolt11(s: string): [string, any] {
   return ['', null]
 }
 
-export function createAddrOpener(cb: (addr: string) => void): (event: Event) => void {
-  return (event: Event) => {
+export function createAddrOpener(cb: (addr: string) => void): (event: NostrEvent) => void {
+  return (event: NostrEvent) => {
     let addr = event.id
 
     if (event.kind === KIND_META) {
@@ -1966,13 +1963,16 @@ export async function checkNsbSigner() {
   }
 }
 
-export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<NostrEvent> {
+async function ensureNsbSigner(pubkey: string) {
   if (!nsbSigner) throw new Error(`NSB signer not found for ${pubkey}`)
-  if (!nsbSigner.connected) {
-    console.log('nsb connecting for pubkey', pubkey)
-    await nsbSigner.blockUntilReady()
-    nsbSigner.connected = true
-  }
+  if (nsbSigner.connected) return
+  console.log('nsb connecting for pubkey', pubkey)
+  await nsbSigner.blockUntilReady()
+  nsbSigner.connected = true
+}
+
+export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<NostrEvent> {
+  await ensureNsbSigner(pubkey)
 
   const signed = {
     ...event,
@@ -1984,6 +1984,35 @@ export async function nsbSignEvent(pubkey: string, event: NostrEvent): Promise<N
   console.log('nsb signed event ', signed.id, signed.sig)
 
   return signed
+}
+
+export async function nsbEncrypt(pubkey: string, content: string, targetPubkey: string): Promise<string> {
+  await ensureNsbSigner(pubkey)
+
+  console.log('nsb encrypt ', content, 'for', targetPubkey)
+  const enc = await nsbSigner.encrypt(
+    new NDKUser({ npub: nip19.npubEncode(targetPubkey) }), 
+    content)
+  console.log('nsb encrypted ', enc)
+
+  return enc
+}
+
+export async function nsbDecrypt(pubkey: string, content: string, sourcePubkey: string): Promise<string> {
+  await ensureNsbSigner(pubkey)
+
+  console.log('nsb decrypt ', content, 'from', sourcePubkey)
+  const dec = await nsbSigner.decrypt(
+    new NDKUser({ npub: nip19.npubEncode(sourcePubkey) }), 
+    content)
+  console.log('nsb decrypted ', dec)
+
+  return dec
+}
+
+export async function publishEvent(event: NostrEvent) {
+  await ndk.publish(new NDKEvent(ndk, event), 
+    NDKRelaySet.fromRelayUrls(writeRelays, ndk))
 }
 
 async function checkReconnect(ndk: NDK, force: boolean = false) {
@@ -2008,7 +2037,7 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
           )
 
           let alive = false
-          sub.on('event', (e) => {
+          sub.on('event', (e: NostrEvent) => {
             console.log('checkReconnect', url, 'got event', e.id)
             alive = true
           })
@@ -2020,7 +2049,7 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
         })
 
     if (!alive) {
-      await new Promise((ok) => {
+      await new Promise<void>((ok) => {
         console.log('reconnecting', url)
         reconnected = true
         r.disconnect()

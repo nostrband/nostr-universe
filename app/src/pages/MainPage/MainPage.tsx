@@ -15,12 +15,15 @@ import { isGuest } from '@/utils/helpers/prepare-data'
 import { CONTENT_FEEDS } from '@/types/content-feed'
 import { useCallback, Fragment } from 'react'
 import { selectCurrentWorkspaceFeedSettings, selectKeys } from '@/store/store'
+import { NPSWidget } from '@/components/NPSWidget/NPSWidget'
 
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'content'
 
   const { keys } = useAppSelector(selectKeys)
+  const { isShowWidget } = useAppSelector((state) => state.feedbackInfo)
+
   const guest = !keys.length || isGuest(keys[0])
 
   const contentFeedSettings = useAppSelector(selectCurrentWorkspaceFeedSettings)
@@ -69,6 +72,7 @@ export const MainPage = () => {
   return (
     <StyledWrapVisibility isShow={isShow}>
       {guest && <WelcomeWidget />}
+      {isShowWidget && <NPSWidget />}
       {renderFeeds()}
     </StyledWrapVisibility>
   )

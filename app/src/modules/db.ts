@@ -3,6 +3,7 @@
 
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
+import { feedbackPeriodMs } from '@/consts'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
@@ -383,5 +384,11 @@ export const dbi = {
     } catch (error) {
       console.log(`Bulk delete excess search history in DB error: ${error}`)
     }
+  },
+  getNextFeedbackTime: async () => {
+    return Number((await dbi.getFlag('', 'nextFeedbackTime')) || '0')
+  },
+  advanceFeedbackTime: async () => {
+    await dbi.setFlag('', 'nextFeedbackTime', Date.now() + feedbackPeriodMs)
   }
 }
