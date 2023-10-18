@@ -6,12 +6,13 @@ import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { useEffect, useState } from 'react'
 
 export const ModalAboutContent = () => {
-
   const [logs, setLogs] = useState<string>('')
 
   useEffect(() => {
+    // eslint-disable-next-line
     // @ts-ignore
     if (window.NativeLogs) {
+      // eslint-disable-next-line
       // @ts-ignore
       window.NativeLogs.getLog(100, false, (logs) => {
         setLogs(logs)
@@ -30,9 +31,7 @@ export const ModalAboutContent = () => {
         <StyledViewTitle variant="h5">The Nostr Browser</StyledViewTitle>
         <StyledViewTitle variant="body1">0.4.0</StyledViewTitle>
         <Typography variant="body1">Spring is an open-source project by Nostr.Band.</Typography>
-        {logs && (
-          <StyledLogs readOnly={true}>{logs}</StyledLogs>
-        )}
+        {logs && <StyledLogs readOnly={true}>{logs}</StyledLogs>}
       </StyledWrap>
     </Container>
   )

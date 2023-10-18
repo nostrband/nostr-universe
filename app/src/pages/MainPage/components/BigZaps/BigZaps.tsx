@@ -54,7 +54,7 @@ export const BigZaps = memo(function BigZaps() {
           relays: [nostrbandRelay]
         })
       } else {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // eslint-disable-next-line
         // @ts-ignore
         window.plugins.toast.showShortBottom(`Target events not found`)
       }
