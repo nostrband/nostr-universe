@@ -19,7 +19,7 @@ export const useSigner = () => {
   )
 
   const encrypt = useCallback(
-    async (content: string, targetPubkey: string, pubkey?: string) => {
+    async (content: string, targetPubkey: string, pubkey?: string): Promise<string> => {
       if (!pubkey) pubkey = currentPubkey
       if (nsbKeys.includes(pubkey)) return await nsbEncrypt(pubkey, content, targetPubkey)
       else return await keystore.encrypt(targetPubkey, content)
@@ -28,7 +28,7 @@ export const useSigner = () => {
   )
 
   const decrypt = useCallback(
-    async (content: string, sourcePubkey: string, pubkey?: string) => {
+    async (content: string, sourcePubkey: string, pubkey?: string): Promise<string> => {
       if (!pubkey) pubkey = currentPubkey
       if (nsbKeys.includes(pubkey)) return await nsbDecrypt(pubkey, content, sourcePubkey)
       else return await keystore.decrypt(sourcePubkey, content)

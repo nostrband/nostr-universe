@@ -28,6 +28,7 @@ import { getFeedbackInfoThunk } from '@/store/reducers/feedbackInfo.slice'
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
   const { profiles } = useAppSelector((state) => state.profile)
+  //const { decrypt } = useSigner()
 
   const setContacts = useCallback(
     async (contactList: ContactListEvent) => {
@@ -86,6 +87,11 @@ export const useUpdateProfile = () => {
 
         if (contactList) {
           setContacts(contactList)
+
+          // const profileLists = await fetchProfileLists(currentPubKey, decrypt)
+          // console.log("profileLists", profileLists)
+          // const bookmarkLists = await fetchBookmarkLists(currentPubKey, decrypt)
+          // console.log("bookmarkLists", bookmarkLists)
 
           const highlights = await fetchFollowedHighlights(contactList.contactPubkeys).catch(() => {
             dispatch(setHighlights({ highlights: null }))

@@ -9,7 +9,7 @@ import NDK, {
   NostrEvent,
   NostrTop,
   NDKUser
-// @ts-ignore
+  // @ts-ignore
 } from '@nostrband/ndk'
 import { Event, getEventHash, nip19 } from '@nostrband/nostr-tools'
 // @ts-ignore
@@ -39,6 +39,8 @@ import { AppEvent, AppUrl, createAppEvent } from '@/types/app-event'
 import { NATIVE_NADDR } from '@/consts'
 import { ReactionTargetEvent, createReactionTargetEvent } from '@/types/reaction-target-event'
 import { EventAddr } from '@/types/event-addr'
+import { ProfileListEvent, createProfileListEvent } from '@/types/profile-list-event'
+import { Bookmark, BookmarkListEvent, createBookmarkListEvent } from '@/types/bookmark-list-event'
 
 const KIND_META: number = 0
 const KIND_NOTE: number = 1
@@ -49,7 +51,8 @@ const KIND_REACTION: number = 7
 const KIND_COMMUNITY_APPROVAL: number = 4550
 const KIND_ZAP: number = 9735
 const KIND_HIGHLIGHT: number = 9802
-//const KIND_BOOKMARKS: number = 30001
+const KIND_PROFILE_LIST: number = 30000
+const KIND_BOOKMARKS: number = 30001
 const KIND_LONG_NOTE: number = 30023
 export const KIND_APP: number = 31990
 const KIND_LIVE_EVENT: number = 30311
@@ -858,6 +861,158 @@ export async function fetchExtendedEventByBech32(b32: string, contactList?: stri
   return a && a.length > 0 ? a[0] : null
 }
 
+export async function fetchProfileLists(
+  pubkey: string,
+  decrypt: (content: string, targetPubkey: string, pubkey?: string) => Promise<string>,
+  loadListedEvents: boolean = false): Promise<ProfileListEvent[]> {
+
+  const authoredLists = await fetchPubkeyAuthoredEvents({
+    kind: KIND_PROFILE_LIST,
+    pubkeys: [pubkey],
+    limit: 200
+  })
+
+  const tagsToPubkeys = (tags?: string[][]): string[] => {
+    return tags
+      ?.map(t => t.length >= 2 ? t[1] : '')
+      .filter(p => !!p) || []
+  }
+
+  const events: ProfileListEvent[] = []
+  for (const e of authoredLists) {
+
+    const list = createProfileListEvent(e)
+    list.name = getTagValue(list, 'name') || list.identifier
+    list.description = getTagValue(list, 'description')
+
+    const ps = getTags(list, 'p')
+
+    list.publicProfilePubkeys = tagsToPubkeys(ps)
+
+    if (list.content) {
+      try {
+        const content = await decrypt(list.content, list.pubkey)
+        const tags = JSON.parse(content) as string[][]
+        list.privateProfilePubkeys = tagsToPubkeys(
+          tags.filter((t: string[]) => t.length >= 2 && t[0] === 'p'))
+      } catch (e) {
+        console.log("bad list payload ", list.id, list.content, e)
+      }
+    }
+
+    // skip irrelevant stuff
+    if (list.publicProfilePubkeys.length || list.privateProfilePubkeys.length)
+      events.push(list)
+  }
+
+  if (loadListedEvents) {
+    const pubkeys = [...new Set(events.map(e => [...e.publicProfilePubkeys, ...e.privateProfilePubkeys]).flat())]
+    const metas = await fetchMetas(pubkeys)
+    events.forEach(e => {
+      e.profileEvents = metas.filter(m =>
+        e.publicProfilePubkeys.includes(m.pubkey) || e.privateProfilePubkeys.includes(m.pubkey)
+      )
+    })
+  }
+
+  return events
+}
+
+export async function fetchBookmarkLists(
+  pubkey: string,
+  decrypt: (content: string, targetPubkey: string, pubkey?: string) => Promise<string>,
+  loadListedEvents: boolean = false): Promise<BookmarkListEvent[]> {
+
+  const authoredLists = await fetchPubkeyAuthoredEvents({
+    kind: KIND_BOOKMARKS,
+    pubkeys: [pubkey],
+    limit: 100
+  })
+
+  const tagsToBookmarks = (tags?: string[][]): Bookmark[] => {
+    return tags
+      ?.map(t => {
+        if (t.length < 2) return null
+        const b: Bookmark = {}
+        if (t[0] === 'e')
+          b.eventId = t[1]
+        else if (t[0] === 'a')
+          b.eventAddr = t[1]
+        else if (t[0] === 'r')
+          b.url = t[1]
+        else
+          return null
+
+        return b
+      })
+      .filter(b => !!b) as Bookmark[] || []
+  }
+
+  const events: BookmarkListEvent[] = []
+  for (const e of authoredLists) {
+
+    const list = createBookmarkListEvent(e)
+    list.name = getTagValue(list, 'name') || list.identifier
+    list.description = getTagValue(list, 'description')
+
+    list.publicBookmarks = tagsToBookmarks(list.tags)
+
+    if (list.content) {
+      try {
+        const content = await decrypt(list.content, list.pubkey)
+        const tags = JSON.parse(content) as string[][]
+        list.privateBookmarks = tagsToBookmarks(tags)
+      } catch (e) {
+        console.log("bad list payload ", list.id, list.content, e)
+      }
+    }
+
+    // skip irrelevant stuff
+    if (list.publicBookmarks.length || list.privateBookmarks.length)
+      events.push(list)
+  }
+
+  if (loadListedEvents) {
+    const eventIds = events.map(e => 
+      e.publicBookmarks.map(b => b.eventId).filter(id => !!id)).flat() as string[]
+    const eventAddrs = events.map(e => 
+      e.publicBookmarks.map(b => b.eventAddr).filter(id => !!id)).flat() as string[]
+
+    const addrs = [...new Set([...eventIds, eventAddrs].flat())]
+      .map(idAddr => idToAddr(idAddr))
+      .filter(addr => !!addr) as EventAddr[]
+    const targetEvents = await fetchEventsByAddrs(ndk, addrs)
+    events.forEach(e => {
+      e.events = targetEvents.filter(t => {
+        const id = getEventAddr(t)
+        return e.publicBookmarks.find(b => b.eventId === id || b.eventAddr === id)
+          || e.privateBookmarks.find(b => b.eventId === id || b.eventAddr === id)
+      })
+    })
+  }
+
+  return events
+}
+
+function idToAddr(id: string, kinds?: number[]): EventAddr | undefined {
+  if (id.includes(':')) {
+    const v = id.split(':')
+    if (v.length === 3) {
+      const kind = Number(v[0])
+      // pre-filter by target kind
+      if (!kinds || kinds.includes(kind))
+        return {
+          kind,
+          pubkey: v[1],
+          d_tag: v[2]
+        } as EventAddr
+    }
+  } else if (id) {
+    return { event_id: id } as EventAddr
+  }
+  return undefined
+}
+
 async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]): Promise<ReactionTargetEvent[]> {
   // FIXME add zap requests from our local db of signed events!
   const ndkEvents = await fetchEventsRead(ndk, {
@@ -871,25 +1026,6 @@ async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]):
   )
   //console.log("reactions", events)
 
-  const idToAddr = (id: string) => {
-    if (id.includes(':')) {
-      const v = id.split(':')
-      if (v.length === 3) {
-        const kind = Number(v[0])
-        // pre-filter by target kind
-        if (kinds.includes(kind))
-          return {
-            kind,
-            pubkey: v[1],
-            d_tag: v[2]
-          } as EventAddr
-      }
-    } else if (id) {
-      return { event_id: id } as EventAddr
-    }
-    return undefined
-  }
-
   const getTargetAddr = (e: NostrEvent, tag: string) => {
     let id = ''
     if (e.kind !== KIND_NOTE) {
@@ -900,7 +1036,7 @@ async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]):
       const reply = es.find((t) => t.length >= 3 && t[3] === 'reply')?.[1]
       id = reply || root || getTagValue(e, tag)
     }
-    return idToAddr(id)
+    return idToAddr(id, kinds)
   }
 
   events.forEach((e) => {
@@ -1291,7 +1427,7 @@ interface PromiseQueueCb {
 class PromiseQueue {
   queue: PromiseQueueCb[] = []
 
-  constructor() {}
+  constructor() { }
 
   appender(cb: (...cbArgs: any[]) => void): (...apArgs: any[]) => void {
     return (...args) => {
@@ -1855,7 +1991,7 @@ export async function addWalletInfo(info: WalletInfo): Promise<void> {
 }
 
 export async function sendPayment(info: WalletInfo, payreq: string)
-: Promise<{ preimage: string }> {
+  : Promise<{ preimage: string }> {
   localStorage.debug = 'ndk:-'
 
   const relay = await addRelay(info.relay)
@@ -1992,7 +2128,7 @@ export async function nsbEncrypt(pubkey: string, content: string, targetPubkey: 
 
   console.log('nsb encrypt ', content, 'for', targetPubkey)
   const enc = await nsbSigner.encrypt(
-    new NDKUser({ npub: nip19.npubEncode(targetPubkey) }), 
+    new NDKUser({ npub: nip19.npubEncode(targetPubkey) }),
     content)
   console.log('nsb encrypted ', enc)
 
@@ -2004,7 +2140,7 @@ export async function nsbDecrypt(pubkey: string, content: string, sourcePubkey: 
 
   console.log('nsb decrypt ', content, 'from', sourcePubkey)
   const dec = await nsbSigner.decrypt(
-    new NDKUser({ npub: nip19.npubEncode(sourcePubkey) }), 
+    new NDKUser({ npub: nip19.npubEncode(sourcePubkey) }),
     content)
   console.log('nsb decrypted ', dec)
 
@@ -2012,7 +2148,7 @@ export async function nsbDecrypt(pubkey: string, content: string, sourcePubkey: 
 }
 
 export async function publishEvent(event: NostrEvent) {
-  await ndk.publish(new NDKEvent(ndk, event), 
+  await ndk.publish(new NDKEvent(ndk, event),
     NDKRelaySet.fromRelayUrls(writeRelays, ndk))
 }
 
@@ -2025,29 +2161,29 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
     const alive = force
       ? false
       : await new Promise((ok) => {
-          const sub = ndk.subscribe(
-            {
-              kinds: [0, 1, 3],
-              limit: 1
-            },
-            {
-              closeOnEose: true
-            },
-            new NDKRelaySet(new Set([r]), ndk),
+        const sub = ndk.subscribe(
+          {
+            kinds: [0, 1, 3],
+            limit: 1
+          },
+          {
+            closeOnEose: true
+          },
+          new NDKRelaySet(new Set([r]), ndk),
             /* autoStart */ false
-          )
+        )
 
-          let alive = false
-          sub.on('event', (e: NostrEvent) => {
-            console.log('checkReconnect', url, 'got event', e.id)
-            alive = true
-          })
-          sub.on('eose', () => {
-            console.log('checkReconnect', url, 'alive', alive)
-            ok(alive)
-          })
-          sub.start()
+        let alive = false
+        sub.on('event', (e: NostrEvent) => {
+          console.log('checkReconnect', url, 'got event', e.id)
+          alive = true
         })
+        sub.on('eose', () => {
+          console.log('checkReconnect', url, 'alive', alive)
+          ok(alive)
+        })
+        sub.start()
+      })
 
     if (!alive) {
       await new Promise<void>((ok) => {
