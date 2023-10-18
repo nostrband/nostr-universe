@@ -16,6 +16,7 @@ import {
 } from '@/store/reducers/tab.slice'
 import { removeTabWorkspace, setLastKindApp, addTabWorkspace } from '@/store/reducers/workspaces.slice'
 import { IOpenAppNostr } from '@/types/app-nostr'
+// eslint-disable-next-line
 // @ts-ignore
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { v4 as uuidv4 } from 'uuid'
@@ -30,6 +31,7 @@ import { showToast } from '@/utils/helpers/general'
 import { useSigner } from './signer'
 import { getOrigin, isGuest } from '@/utils/helpers/prepare-data'
 import { usePerms } from './perms'
+// eslint-disable-next-line
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
 import { useCallback } from 'react'
@@ -146,6 +148,7 @@ export const useOpenApp = () => {
   )
 
   const show = useCallback(
+    // eslint-disable-next-line
     (tab: ITab, options: any) => {
       console.log('show', tab.id, JSON.stringify(options))
 
@@ -158,11 +161,12 @@ export const useOpenApp = () => {
   )
 
   const open = useCallback(
+    // eslint-disable-next-line
     async (params: any, options: any) => {
       console.log('open', JSON.stringify(params))
 
-      let { title = '', icon = '' } = params
-      const { url } = params
+      // eslint-disable-next-line
+      let { url, title = '', icon = '' } = params
 
       try {
         const U = new URL(url)
@@ -200,6 +204,7 @@ export const useOpenApp = () => {
   )
 
   const openBlank = useCallback(
+    // eslint-disable-next-line
     async (entity: any, options: any) => {
       const tab = currentWorkSpaceTabs.find((tab) => tab.url === entity.url)
 
@@ -210,6 +215,7 @@ export const useOpenApp = () => {
 
       // external browser or app
       if (entity.url.startsWith('intent:') || entity.url.startsWith('nostr:')) {
+        // eslint-disable-next-line
         // @ts-ignore
         window.cordova.InAppBrowser.open(entity.url, '_self')
         return
@@ -293,9 +299,11 @@ export const useOpenApp = () => {
       if (!tab) throw new Error('Inactive tab')
 
       const bolt11 = bolt11Decode(paymentRequest)
+      // eslint-disable-next-line
       const amount = Number(bolt11.sections?.find((s: any) => s.name === 'amount').value)
 
       const error = 'Payment request disallowed'
+      // eslint-disable-next-line
       let wallet: any = null
       try {
         wallet = await walletstore.getInfo()
@@ -305,13 +313,29 @@ export const useOpenApp = () => {
         throw new Error(error)
       }
 
+      const payment = {
+        id: uuidv4(),
+        preimage: '',
+        amount,
+        walletName: wallet.name,
+        walletId: wallet.id,
+        pubkey: currentPubkey,
+        url: tab.url,
+        timestamp: Date.now(),
+        invoice: paymentRequest
+      }
+
       const perm = 'pay_invoice:' + wallet.id
       const exec = async () => {
         try {
           console.log('sending payment', paymentRequest)
-          ///
+          await dbi.addPayment(payment)
+
           const res = await sendPayment(wallet, paymentRequest)
-          ///
+
+          // eslint-disable-next-line
+          // @ts-ignore
+          await dbi.updatePayment(payment.id, res.preimage)
           console.log('payment result', res)
           showToast(`Sent ${amount / 1000} sats`)
           return res // forward to the tab
@@ -358,6 +382,7 @@ export const useOpenApp = () => {
           sendTabPayment(tab.id, url.split(':')[1])
         } catch (e) {
           // just open some outside app for now
+          // eslint-disable-next-line
           // @ts-ignore
           window.cordova.InAppBrowser.open(url, '_self')
         }
@@ -374,6 +399,7 @@ export const useOpenApp = () => {
           handleOpenContextMenu({ bech32: b32 })
         } else {
           // try some external app that might know this type of nostr: link
+          // eslint-disable-next-line
           // @ts-ignore
           window.cordova.InAppBrowser.open(url, '_self')
         }
@@ -485,17 +511,21 @@ export const useOpenApp = () => {
     sendPayment: sendTabPayment,
 
     clipboardWriteText: async function (_: string, text: string) {
+      // eslint-disable-next-line
       // @ts-ignore
       const r = await window.cordova.plugins.clipboard.copy(text)
       showToast('Copied')
       return r
     },
+    // eslint-disable-next-line
     clipboardReadText: async function (_: string) {
       return new Promise((ok) => {
+        // eslint-disable-next-line
         // @ts-ignore
         window.cordova.plugins.clipboard.paste(ok)
       })
     },
+    // eslint-disable-next-line
     showContextMenu: async function (tabId: string, data: any) {
       console.log('event menu', JSON.stringify(data))
       const tab = getTabAny(tabId)
@@ -506,6 +536,7 @@ export const useOpenApp = () => {
         search: data
       })
     },
+    // eslint-disable-next-line
     share: async function (_: string, data: any) {
       return await window.navigator.share(data)
     },
@@ -555,11 +586,13 @@ export const useOpenApp = () => {
       dispatch(setTabUrl({ id: tabId, url }))
       dbi.updateTab({ ...tab, url })
     },
+    // eslint-disable-next-line
     onLoadStart: async (tabId: string, event: any) => {
       console.log('loading', JSON.stringify(event))
       API.setUrl(tabId, event.url)
       dispatch(setTabIsLoading({ id: tabId, isLoading: true }))
     },
+    // eslint-disable-next-line
     onLoadStop: async (tabId: string, event: any) => {
       console.log('loaded', event.url)
       API.setUrl(tabId, event.url)

@@ -21,6 +21,7 @@ db.version(16).stores({
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
   signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson',
   searchHistory: 'id,pubkey,timestamp,value',
+  payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage'
 })
 
 export const dbi = {
@@ -37,6 +38,30 @@ export const dbi = {
     } catch (error) {
       console.log(`List signedEvents error: ${error}`)
       return []
+    }
+  },
+  addPayment: async (payment) => {
+    try {
+      await db.payments.add(payment)
+    } catch (error) {
+      console.log(`Add payment to DB error: ${error}`)
+    }
+  },
+  getPayments: async (pubkey: string) => {
+    try {
+      return (await db.payments.where('pubkey').equals(pubkey).toArray()).sort((a, b) => b.timestamp - a.timestamp)
+    } catch (error) {
+      console.log(`List payments error: ${error}`)
+      return []
+    }
+  },
+  updatePayment: async (id, preimage) => {
+    try {
+      await db.payments.where('id').equals(id).modify({
+        preimage
+      })
+    } catch (error) {
+      console.log(`Update payment in DB error: ${JSON.stringify(error)}`)
     }
   },
   addTab: async (tab) => {

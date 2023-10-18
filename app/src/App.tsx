@@ -27,6 +27,7 @@ import { ModalContentFeedSettings } from './components/Modal/ModalContentFeedSet
 import { ModalSignedEvents } from './components/Modal/ModalSignedEvents/ModalSignedEvents'
 import { BookmarksPage } from './pages/BookmarksPage/BookmarksPage'
 import { ModalNPSScore } from './components/Modal/ModalNPSScore/ModalNPSScore'
+import { ModalPaymentHistory } from './components/Modal/ModalPaymentHistory/ModalPaymentHistory'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -120,6 +121,7 @@ export const App = () => {
       <ModalContentFeedSettings />
       <ModalSignedEvents />
       <ModalNPSScore />
+      <ModalPaymentHistory />
     </>
   )
 }

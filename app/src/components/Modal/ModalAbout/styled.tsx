@@ -28,5 +28,5 @@ export const StyledLogs = styled('textarea')(() => ({
   padding: '10px',
   border: '1px solid #666',
   borderRadius: '10px',
-  backgroundColor: '#ddd',
+  backgroundColor: '#ddd'
 }))
