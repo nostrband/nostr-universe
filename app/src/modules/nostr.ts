@@ -1854,7 +1854,8 @@ export async function addWalletInfo(info: WalletInfo): Promise<void> {
   relay.on('publish:failed', (event: NDKEvent, err: string) => console.log('publish failed to', info.relay, event, err))
 }
 
-export async function sendPayment(info: WalletInfo, payreq: string): { preimage: string } {
+export async function sendPayment(info: WalletInfo, payreq: string)
+: Promise<{ preimage: string }> {
   localStorage.debug = 'ndk:-'
 
   const relay = await addRelay(info.relay)
