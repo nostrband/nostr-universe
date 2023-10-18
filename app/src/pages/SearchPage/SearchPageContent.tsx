@@ -105,7 +105,7 @@ export const SearchPageContent = () => {
   const updateSearchHistory = useCallback(
     (history: SearchTerm[]) => {
       history.sort((a, b) => a.value.localeCompare(b.value))
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // eslint-disable-next-line
       // @ts-ignore
       const filtered: SearchTerm[] = history
         .map((e, i, a) => {

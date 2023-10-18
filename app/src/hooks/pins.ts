@@ -17,10 +17,7 @@ export const usePins = () => {
 
   const findAppPinExt = useCallback(
     (url: string, naddr: string): IPin | undefined => {
-      return currentWorkspace?.pins.find((p) => 
-        p.appNaddr === naddr 
-        || p.url === url
-      )
+      return currentWorkspace?.pins.find((p) => p.appNaddr === naddr || p.url === url)
     },
     [currentWorkspace]
   )

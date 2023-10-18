@@ -80,8 +80,10 @@ export const getDomain = (url: string) => {
 }
 
 export const copyToClipBoard = (copyValue: string) => {
+  // eslint-disable-next-line
   // @ts-ignore
   if (window.cordova) {
+    // eslint-disable-next-line
     // @ts-ignore
     window.cordova.plugins.clipboard.copy(copyValue)
     showToast('Copied')
