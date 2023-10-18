@@ -56,7 +56,7 @@ export const dbi = {
   },
   updatePayment: async (id, preimage) => {
     try {
-      await db.tabs.where('id').equals(id).modify({
+      await db.payments.where('id').equals(id).modify({
         preimage
       })
     } catch (error) {

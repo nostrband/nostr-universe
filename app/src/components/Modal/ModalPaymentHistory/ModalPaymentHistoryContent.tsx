@@ -12,7 +12,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { formatDate } from '@/consts'
 import { addDays, isAfter, isEqual, isWithinInterval, startOfDay } from 'date-fns'
 
-// const paymentsMoc = [
+// const paymentsMoc: TypePayment[] = [
 //   {
 //     id: '1',
 //     walletId: '11',
@@ -51,7 +51,7 @@ type TypePayment = {
 
 export const ModalPaymentHistoryContent = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
-  const [payments, setPayments] = useState([])
+  const [payments, setPayments] = useState<TypePayment[]>([])
   const [startDate, setStartDate] = useState<Date | null>(startOfDay(new Date()))
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [filterContentValue, setFilterContentValue] = useState('')
@@ -114,7 +114,7 @@ export const ModalPaymentHistoryContent = () => {
       getFieldСoincidence(payment.walletName) ||
       getFieldСoincidence(payment.preimage)
 
-    const filteredByAmount = payment.amount >= Number(filterAmount)
+    const filteredByAmount = payment.amount >= Number(filterAmount) * 1000
 
     let filteredByDate = true
 

@@ -13,7 +13,7 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { KindOptionType, formatDate, getTransformedKindEvents } from '@/consts'
 import { addDays, isAfter, isEqual, isWithinInterval, startOfDay } from 'date-fns'
 
-// const eventsMoc = [
+// const eventsMoc: TypeSignEvent[] = [
 //   {
 //     id: '1',
 //     url: 'http://www.google.com/3434343/',
@@ -48,7 +48,7 @@ export const ModalSignedEventsContent = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { handleOpen } = useOpenModalSearchParams()
   const [content, setContent] = useState('')
-  const [events, setEvents] = useState([])
+  const [events, setEvents] = useState<TypeSignEvent[]>([])
   const [kinds, setKinds] = useState<KindOptionType[]>([])
   const [startDate, setStartDate] = useState<Date | null>(startOfDay(new Date()))
   const [endDate, setEndDate] = useState<Date | null>(null)

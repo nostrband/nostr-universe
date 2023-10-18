@@ -13,6 +13,10 @@ export const StyledItemBlock = styled(Box)(() => ({
   marginBottom: 10
 }))
 
+export const StyledItemFooter = styled(Box)(() => ({
+  fontSize: '0.7em'
+}))
+
 export const StyledWrapper = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
   borderRadius: theme.shape.borderRadius,

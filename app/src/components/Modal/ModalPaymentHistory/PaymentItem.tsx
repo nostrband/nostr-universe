@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Alert, Chip, IconButton, Menu, MenuItem } from '@mui/material'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
-import { StyledViewTitle, StyledWrapper, StyledHead, StyledItemBlock } from './styled'
+import { StyledViewTitle, StyledWrapper, StyledHead, StyledItemBlock, StyledItemFooter } from './styled'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { formatDateHours } from '@/consts/index'
 import { format } from 'date-fns'
@@ -38,7 +38,7 @@ export const PaymentItem = ({ url, time, walletName, walletId, amount, preimage 
   return (
     <StyledWrapper>
       <StyledHead>
-        <StyledViewTitle>-{amount} sats</StyledViewTitle>
+        <StyledViewTitle>-{amount / 1000} sats</StyledViewTitle>
         <IconButton
           color="inherit"
           size="medium"
@@ -59,7 +59,9 @@ export const PaymentItem = ({ url, time, walletName, walletId, amount, preimage 
           <Alert severity="error">Payment not confirmed</Alert>
         </StyledItemBlock>
       )}
-      By {getUrl} at {getTime}
+      <StyledItemFooter>
+        On {getUrl} at {getTime}
+      </StyledItemFooter>
       <Menu
         id="demo-positioned-menu"
         aria-labelledby="demo-positioned-button"
