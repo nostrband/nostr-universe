@@ -4,5 +4,5 @@ export interface EventAddr {
   event_id?: string
   d_tag?: string
   relays?: string[]
-  hex: boolean
+  hex?: boolean
 }

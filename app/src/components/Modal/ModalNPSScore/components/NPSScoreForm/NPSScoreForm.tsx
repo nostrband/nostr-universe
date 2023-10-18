@@ -3,22 +3,21 @@ import { Rating } from '../Rating/Rating'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { ActionsContainer, FieldWrapper, StyledLabel, StyledTextarea, SwitchControl } from './styled'
 import { FC, FormEvent, useState } from 'react'
-import { isGuest } from '@/utils/helpers/prepare-data'
+import { getProfileName } from '@/utils/helpers/prepare-data'
 import { useAppSelector } from '@/store/hooks/redux'
-import { selectKeys } from '@/store/store'
+import { selectIsGuest, selectKeys } from '@/store/store'
 import { ANSWER_FIELDS, NPSScoreFormProps } from './types'
-import { ANONYM, getUsername } from './const'
 
 export const NPSScoreForm: FC<NPSScoreFormProps> = ({ onSubmit }) => {
   const { handleClose } = useOpenModalSearchParams()
-  const { keys } = useAppSelector(selectKeys)
+  const { currentPubkey } = useAppSelector(selectKeys)
+  const guest = useAppSelector(selectIsGuest)
 
   const { currentProfile } = useAppSelector((state) => state.profile)
 
-  const [senderType, setSenderType] = useState<typeof ANONYM | string>(ANONYM)
+  const [sendAsUser, setSendAsUser] = useState<boolean>(false)
 
-  const username = getUsername(currentProfile)
-  const guest = !keys.length || isGuest(keys[0]) || !username
+  const username = getProfileName(currentPubkey, currentProfile || undefined)
 
   const [selectedRating, setSelectedRating] = useState<number | undefined>()
 
@@ -36,6 +35,7 @@ export const NPSScoreForm: FC<NPSScoreFormProps> = ({ onSubmit }) => {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     onSubmit({
+      sendAsUser,
       rating: selectedRating,
       primaryReason: answers[ANSWER_FIELDS.PRIMARY_REASON],
       experienceImprovement: answers[ANSWER_FIELDS.EXPERIENCE_IMPROVEMENT]
@@ -49,10 +49,10 @@ export const NPSScoreForm: FC<NPSScoreFormProps> = ({ onSubmit }) => {
   }
 
   const handleSenderTypeChange = (_: unknown, checked: boolean) => {
-    if (checked && username) {
-      return setSenderType(username)
+    if (checked && !guest) {
+      return setSendAsUser(true)
     }
-    return setSenderType(ANONYM)
+    return setSendAsUser(false)
   }
 
   const isFormValid = Boolean(selectedRating || selectedRating === 0)
@@ -60,7 +60,7 @@ export const NPSScoreForm: FC<NPSScoreFormProps> = ({ onSubmit }) => {
   return (
     <form onSubmit={handleSubmit}>
       <FieldWrapper>
-        <StyledLabel required>
+        <StyledLabel>
           On a scale 0-10, how likely are you recommend Spring to a friend or colleague?
         </StyledLabel>
         <Rating selectedRating={selectedRating} onRateChange={ratingChangeHandler} />
@@ -68,21 +68,34 @@ export const NPSScoreForm: FC<NPSScoreFormProps> = ({ onSubmit }) => {
 
       <FieldWrapper>
         <StyledLabel htmlFor="reason">What is the primary reason for the score you gave us?</StyledLabel>
-        <StyledTextarea id="reason" onChange={answersChangeHandler(ANSWER_FIELDS.PRIMARY_REASON)} />
+        <StyledTextarea id="reason" onChange={answersChangeHandler(ANSWER_FIELDS.PRIMARY_REASON)}
+          placeholder='optional'
+        />
       </FieldWrapper>
 
       <FieldWrapper>
         <StyledLabel htmlFor="improvement">
           Is there anything specific that Spring can do to improve your experience?
         </StyledLabel>
-        <StyledTextarea id="improvement" onChange={answersChangeHandler(ANSWER_FIELDS.EXPERIENCE_IMPROVEMENT)} />
+        <StyledTextarea id="improvement" onChange={answersChangeHandler(ANSWER_FIELDS.EXPERIENCE_IMPROVEMENT)}
+          placeholder='optional'
+        />
       </FieldWrapper>
 
-      <Stack direction="row" component="label" alignItems="center">
-        <StyledLabel spacing={false}>Send anonymously</StyledLabel>
-        <SwitchControl checked={senderType !== ANONYM} onChange={handleSenderTypeChange} />
-        {username && !guest && <StyledLabel spacing={false}>Send as «{username}»</StyledLabel>}
-      </Stack>
+      {!guest && (
+        <FieldWrapper>
+          <Stack direction="row" component="label" alignItems="center">
+            <SwitchControl checked={sendAsUser} onChange={handleSenderTypeChange} />
+            {!sendAsUser && (<StyledLabel spacing={false}>Send anonymously</StyledLabel>)}
+            {sendAsUser && <StyledLabel spacing={false}>Send as «{username}»</StyledLabel>}
+          </Stack>
+        </FieldWrapper>
+      )}
+
+      <FieldWrapper>
+        Your feedback will be send as an encrypted direct message on Nostr,
+        it is private and you can be as honest as you need to be.
+      </FieldWrapper>
 
       <ActionsContainer>
         <Button className="btn" variant="contained" type="submit" color="actionPrimary" disabled={!isFormValid}>

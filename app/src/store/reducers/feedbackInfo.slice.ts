@@ -22,28 +22,21 @@ export const feedbackInfoSlice = createSlice({
   }
 })
 
-const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000
-
 export const getFeedbackInfoThunk = createAsyncThunk(
   'feedbackInfo/getFeedbackInfo',
-  async (currentPubkey: string, { dispatch }) => {
+  async (_, { dispatch }) => {
     try {
       dispatch(setHideNPSWidget())
-      const feedbackExists = await dbi.getFeedbackInfo(currentPubkey || 'GUEST')
+      //await dbi.setFlag('', 'nextFeedbackTime', Date.now())
+      const feedbackTime = await dbi.getNextFeedbackTime()
 
-      if (!feedbackExists) {
-        return dispatch(setShowNPSWidget())
+      if (!feedbackTime) {
+        // don't show feedback request to new users
+        await dbi.advanceFeedbackTime();
+        return 
       }
 
-      const currentTime = Date.now()
-
-      const timeDifference = currentTime - feedbackExists.timestamp
-
-      const isLastScoreExpired = timeDifference >= sevenDaysInMillis
-
-      if (isLastScoreExpired) {
-        console.log(isLastScoreExpired, 'HISH isLastScoreExpired')
-
+      if (feedbackTime < Date.now()) {
         return dispatch(setShowNPSWidget())
       }
     } catch (error) {

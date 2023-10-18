@@ -3,10 +3,11 @@
 
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
+import { feedbackPeriodMs } from '@/consts'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(15).stores({
+db.version(16).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -20,7 +21,6 @@ db.version(15).stores({
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
   signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson',
   searchHistory: 'id,pubkey,timestamp,value',
-  feedbacksInfo: 'id,pubkey,timestamp'
 })
 
 export const dbi = {
@@ -360,38 +360,10 @@ export const dbi = {
       console.log(`Bulk delete excess search history in DB error: ${error}`)
     }
   },
-  addFeedbackInfo: async (feedbackInfo) => {
-    try {
-      const existingFeedback = await db.feedbacksInfo.where('pubkey').equals(feedbackInfo.pubkey).first()
-
-      if (existingFeedback) {
-        existingFeedback.timestamp = feedbackInfo.timestamp
-
-        return await db.feedbacksInfo.put(existingFeedback)
-      }
-      return await db.feedbacksInfo.add(feedbackInfo)
-    } catch (error) {
-      console.log(`Add NPS score info in DB error: ${error}`)
-    }
+  getNextFeedbackTime: async () => {
+    return Number((await dbi.getFlag('', 'nextFeedbackTime')) || '0')
   },
-  getFeedbackInfo: async (pubkey) => {
-    try {
-      return await db.feedbacksInfo.where({ pubkey }).first()
-    } catch (error) {
-      console.log(`Get NPS score info in DB error: ${error}`)
-    }
-  },
-  delayFeedbackForWeek: async (delayedFeedbackInfo) => {
-    try {
-      const isFeedbackInfoExists = await dbi.getFeedbackInfo(delayedFeedbackInfo.pubkey)
-      if (!isFeedbackInfoExists) {
-        return await dbi.addFeedbackInfo(delayedFeedbackInfo)
-      }
-      return await db.feedbacksInfo
-        .where({ pubkey: delayedFeedbackInfo.pubkey })
-        .modify({ timestamp: delayedFeedbackInfo.timestamp })
-    } catch (error) {
-      console.log(`Delay NPS score in DB error: ${error}`)
-    }
+  advanceFeedbackTime: async () => {
+    await dbi.setFlag('', 'nextFeedbackTime', Date.now() + feedbackPeriodMs)
   }
 }

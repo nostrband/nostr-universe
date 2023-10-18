@@ -52,7 +52,7 @@ export const useUpdateProfile = () => {
     async (keys: string[], currentPubKey: string) => {
       const currentProfile = getProfile(currentPubKey)
 
-      dispatch(getFeedbackInfoThunk(currentPubKey))
+      dispatch(getFeedbackInfoThunk())
 
       if (currentProfile) {
         dispatch(setCurrentProfile({ profile: currentProfile }))

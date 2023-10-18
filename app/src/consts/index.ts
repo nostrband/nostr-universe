@@ -79,3 +79,7 @@ export const getTransformedKindEvents: KindOptionType[] = Object.entries(kindEve
 
 export const formatDateHours = 'dd.MM.yyyy HH:mm:ss'
 export const formatDate = 'dd.MM.yyyy'
+
+export const feedbackPeriodMs = 7 * 24 * 60 * 60 * 1000 // 1 week
+
+export const NOSTR_BAND_PUBKEY = '818a39b5f164235f86254b12ca586efccc1f95e98b45cb1c91c71dc5d9486dda'

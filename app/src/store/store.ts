@@ -17,6 +17,7 @@ import { IContentFeedSetting } from '@/types/content-feed'
 import { bookmarksSlice } from './reducers/bookmarks.slice'
 import memoizeOne from 'memoize-one'
 import { feedbackInfoSlice } from './reducers/feedbackInfo.slice'
+import { isGuest } from '@/utils/helpers/prepare-data'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -51,6 +52,10 @@ export type AppDispatch = AppStore['dispatch']
 
 export const selectKeys = (state: RootState): IKeysState => {
   return state.keys
+}
+
+export const selectIsGuest = (state: RootState): boolean => {
+  return isGuest(state.keys.currentPubkey)
 }
 
 export const selectCurrentWorkspace = (state: RootState): WorkSpace | undefined => {

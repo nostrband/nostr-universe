@@ -16,11 +16,11 @@ import { checkNsbSigner, reconnect } from '@/modules/nostr'
 import { showToast } from '@/utils/helpers/general'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useState } from 'react'
-import { useSignEvent } from '@/hooks/sign-event'
+import { useSigner } from '@/hooks/signer'
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
-  const { signEvent } = useSignEvent()
+  const { signEvent } = useSigner()
   const { currentPubkey, nsbKeys } = useAppSelector((state) => state.keys)
   const [checkNSB, setCheckNSB] = useState(false)
 

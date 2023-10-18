@@ -12,7 +12,7 @@ export const ModalNPSScore = () => {
   }
 
   return (
-    <Modal title="NPS Score" open={isOpen} handleClose={modalCloseHandler}>
+    <Modal title="Feedback form" open={isOpen} handleClose={modalCloseHandler}>
       {isOpen && <ModalNPSScoreContent handleClose={modalCloseHandler} />}
     </Modal>
   )

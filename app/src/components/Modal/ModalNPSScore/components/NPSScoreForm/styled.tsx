@@ -12,9 +12,11 @@ import { red } from '@mui/material/colors'
 
 const asteriskColor = red[500]
 
-export const StyledLabel = styled((props: FormLabelProps & { spacing?: boolean }) => (
-  <FormLabel {...props} classes={{ asterisk: 'asterisk' }} />
-))(({ theme, spacing = true }) => ({
+export const StyledLabel = styled((props: FormLabelProps & { spacing?: boolean }) => {
+  const exclude = new Set(['spacing'])
+  const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
+  return (<FormLabel {...omitProps} classes={{ asterisk: 'asterisk' }} />)
+})(({ theme, spacing = true }) => ({
   color: theme.palette.light.light,
   marginBottom: spacing ? theme.spacing(1) : '0',
   display: spacing ? 'block' : 'inline-block',
@@ -48,7 +50,8 @@ export const ActionsContainer = styled(Box)(({ theme }) => ({
   gap: '0.5rem',
   alignItems: 'center',
   justifyContent: 'space-between',
-  marginTop: '2rem',
+  marginTop: '0.5rem',
+  marginBottom: '0.5rem',
   '& .btn': {
     flex: 1,
     '&.Mui-disabled': {
