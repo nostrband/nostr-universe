@@ -49,6 +49,7 @@ export const KIND_DM: number = 4
 const KIND_REPOST: number = 6
 const KIND_REACTION: number = 7
 const KIND_COMMUNITY_APPROVAL: number = 4550
+export const KIND_ZAP_REQUEST: number = 9734
 const KIND_ZAP: number = 9735
 const KIND_HIGHLIGHT: number = 9802
 const KIND_PROFILE_LIST: number = 30000
@@ -1127,7 +1128,7 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
   return events
 }
 
-async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
+export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   // dedup
   pubkeys = [...new Set(pubkeys)]
 

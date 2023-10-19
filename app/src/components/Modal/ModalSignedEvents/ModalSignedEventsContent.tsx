@@ -65,7 +65,7 @@ export const ModalSignedEventsContent = () => {
 
   const getEvents = async () => {
     try {
-      const res = await dbi.getSignedEvents(currentPubkey)
+      const res = await dbi.listSignedEvents(currentPubkey)
       setEvents(res)
     } catch (error) {
       console.log(error)
