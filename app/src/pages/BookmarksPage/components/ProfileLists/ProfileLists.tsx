@@ -67,7 +67,7 @@ export const ProfileLists = () => {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={125}
+        itemHight={100}
         itemSize={225}
         itemCount={profileLists.length}
         RowComponent={Row}
@@ -79,7 +79,7 @@ export const ProfileLists = () => {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Profiles
+          Profile Lists
         </StyledTitle>
       </Container>
       {renderContent()}

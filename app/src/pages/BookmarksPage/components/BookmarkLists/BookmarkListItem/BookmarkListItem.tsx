@@ -25,10 +25,10 @@ export const BookmarkListItem: FC<BookmarkListItemProps> = ({
         </StyledProfileInfo>
         <Time date={time} />
       </Head>
-      <StyledContent contentLine={2}>{description || 'No description'}</StyledContent>
       <StyledBookmarksCount>
         {bookmarksCount} {bookmarkText}
       </StyledBookmarksCount>
+      {description && (<StyledContent contentLine={1}>{description}</StyledContent>)}
     </StyledWrapper>
   )
 }

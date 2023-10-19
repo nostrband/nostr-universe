@@ -66,7 +66,7 @@ export const BookmarkLists = () => {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={125}
+        itemHight={100}
         itemSize={225}
         itemCount={bookmarkLists.length}
         RowComponent={Row}
@@ -78,7 +78,7 @@ export const BookmarkLists = () => {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Bookmarks
+          Bookmark Lists
         </StyledTitle>
       </Container>
       {renderContent()}

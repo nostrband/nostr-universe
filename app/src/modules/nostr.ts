@@ -881,7 +881,7 @@ export async function fetchProfileLists(
   const events: ProfileListEvent[] = []
   for (const e of authoredLists) {
     const list = createProfileListEvent(e)
-    list.name = getTagValue(list, 'name') || list.identifier
+    list.name = getTagValue(list, 'name') || getTagValue(list, 'title') || list.identifier
     list.description = getTagValue(list, 'description')
 
     const ps = getTags(list, 'p')
@@ -946,7 +946,7 @@ export async function fetchBookmarkLists(
   const events: BookmarkListEvent[] = []
   for (const e of authoredLists) {
     const list = createBookmarkListEvent(e)
-    list.name = getTagValue(list, 'name') || list.identifier
+    list.name = getTagValue(list, 'name') || getTagValue(list, 'title') || list.identifier
     list.description = getTagValue(list, 'description')
 
     list.publicBookmarks = tagsToBookmarks(list.tags)

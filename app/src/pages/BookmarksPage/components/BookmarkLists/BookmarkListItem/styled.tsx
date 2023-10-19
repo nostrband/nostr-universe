@@ -14,7 +14,8 @@ export const StyledContent = styled(Content)({
 export const StyledBookmarksCount = styled((props: TypographyProps) => <Typography {...props} variant="caption" />)(
   ({ theme }) => ({
     color: theme.palette.light.light,
+    fontSize: '1.2em',
     fontWeight: 'bold',
-    textAlign: 'right'
+    textAlign: 'left'
   })
 )

@@ -25,10 +25,10 @@ export const ProfileListItem: FC<ProfileListItemProps> = ({
         </StyledProfileInfo>
         <Time date={time} />
       </Head>
-      <StyledContent contentLine={2}>{description || 'No description'}</StyledContent>
       <StyledProfilesCount>
         {profilesCount} {profileText}
       </StyledProfilesCount>
+      {description && (<StyledContent contentLine={1}>{description}</StyledContent>)}
     </StyledWrapper>
   )
 }
