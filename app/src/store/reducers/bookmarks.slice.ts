@@ -1,32 +1,40 @@
-import { fetchReactionTargetLongNotes, fetchReactionTargetNotes } from '@/modules/nostr'
+import {
+  fetchBookmarkLists,
+  fetchProfileLists,
+  fetchReactionTargetLongNotes,
+  fetchReactionTargetNotes
+} from '@/modules/nostr'
+import { BookmarkListEvent } from '@/types/bookmark-list-event'
+import { ProfileListEvent } from '@/types/profile-list-event'
 import { ReactionTargetEvent } from '@/types/reaction-target-event'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 
-interface IContentWorkSpace {
+interface IBookmarksContent {
   bestNotes: ReactionTargetEvent[]
   isBestNotesLoading: boolean
   bestLongNotes: ReactionTargetEvent[]
   isBestLongNotesLoading: boolean
+  profileLists: ProfileListEvent[]
+  isProfileListsLoading: boolean
+  bookmarkLists: BookmarkListEvent[]
+  isBookmarkListsLoading: boolean
 }
 
-const initialState: IContentWorkSpace = {
+const initialState: IBookmarksContent = {
   bestNotes: [],
   isBestNotesLoading: false,
   bestLongNotes: [],
-  isBestLongNotesLoading: false
+  isBestLongNotesLoading: false,
+  profileLists: [],
+  isProfileListsLoading: false,
+  bookmarkLists: [],
+  isBookmarkListsLoading: false
 }
 
 export const bookmarksSlice = createSlice({
   name: 'bookmarks',
   initialState,
-  reducers: {
-    setBestNotes: (state, action) => {
-      state.bestNotes = action.payload
-    },
-    setBestLongNotes: (state, action) => {
-      state.bestLongNotes = action.payload
-    }
-  },
+  reducers: {},
   extraReducers(builder) {
     builder
       .addCase(fetchBestNotesThunk.pending, (state) => {
@@ -51,6 +59,28 @@ export const bookmarksSlice = createSlice({
       .addCase(fetchBestLongNotesThunk.rejected, (state) => {
         state.isBestLongNotesLoading = false
         state.bestLongNotes = []
+      })
+      .addCase(fetchProfileListsThunk.pending, (state) => {
+        state.isProfileListsLoading = true
+      })
+      .addCase(fetchProfileListsThunk.fulfilled, (state, action) => {
+        state.isProfileListsLoading = false
+        state.profileLists = action.payload
+      })
+      .addCase(fetchProfileListsThunk.rejected, (state) => {
+        state.isProfileListsLoading = false
+        state.profileLists = []
+      })
+      .addCase(fetchBookmarkListsThunk.pending, (state) => {
+        state.isBookmarkListsLoading = true
+      })
+      .addCase(fetchBookmarkListsThunk.fulfilled, (state, action) => {
+        state.isBookmarkListsLoading = false
+        state.bookmarkLists = action.payload
+      })
+      .addCase(fetchBookmarkListsThunk.rejected, (state) => {
+        state.isBookmarkListsLoading = false
+        state.bookmarkLists = []
       })
   }
 })
@@ -81,4 +111,33 @@ export const fetchBestLongNotesThunk = createAsyncThunk<ReactionTargetEvent[], s
   }
 )
 
-export const { setBestNotes, setBestLongNotes } = bookmarksSlice.actions
+type FetchWithDecryptEventThunkArgs = {
+  pubkey: string
+  decrypt: (content: string, targetPubkey: string, pubkey?: string) => Promise<string>
+}
+
+export const fetchProfileListsThunk = createAsyncThunk<ProfileListEvent[], FetchWithDecryptEventThunkArgs>(
+  'bookmarks/fetchProfileListThunk',
+  async ({ pubkey, decrypt }) => {
+    try {
+      const profileLists = await fetchProfileLists(pubkey, decrypt)
+      return profileLists
+    } catch (error) {
+      console.log(error)
+      return []
+    }
+  }
+)
+
+export const fetchBookmarkListsThunk = createAsyncThunk<BookmarkListEvent[], FetchWithDecryptEventThunkArgs>(
+  'bookmarks/fetchBookmarkListsThunk',
+  async ({ pubkey, decrypt }) => {
+    try {
+      const bookmarkLists = await fetchBookmarkLists(pubkey, decrypt)
+      return bookmarkLists
+    } catch (error) {
+      console.log(error)
+      return []
+    }
+  }
+)

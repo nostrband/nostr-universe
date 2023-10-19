@@ -22,13 +22,19 @@ import { dbi } from '@/modules/db'
 import { MIN_ZAP_AMOUNT } from '@/consts'
 import { MetaEvent } from '@/types/meta-event'
 import { ContactListEvent } from '@/types/contact-list-event'
-import { fetchBestLongNotesThunk, fetchBestNotesThunk } from '@/store/reducers/bookmarks.slice'
+import {
+  fetchBestLongNotesThunk,
+  fetchBestNotesThunk,
+  fetchBookmarkListsThunk,
+  fetchProfileListsThunk
+} from '@/store/reducers/bookmarks.slice'
 import { getFeedbackInfoThunk } from '@/store/reducers/feedbackInfo.slice'
+import { useSigner } from './signer'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
   const { profiles } = useAppSelector((state) => state.profile)
-  //const { decrypt } = useSigner()
+  const { decrypt } = useSigner()
 
   const setContacts = useCallback(
     async (contactList: ContactListEvent) => {
@@ -69,6 +75,8 @@ export const useUpdateProfile = () => {
 
       dispatch(fetchBestNotesThunk(currentPubKey))
       dispatch(fetchBestLongNotesThunk(currentPubKey))
+      dispatch(fetchProfileListsThunk({ pubkey: currentPubKey, decrypt }))
+      dispatch(fetchBookmarkListsThunk({ pubkey: currentPubKey, decrypt }))
 
       subscribeProfiles(keys, async (profile: MetaEvent) => {
         if (profile) {
@@ -87,11 +95,6 @@ export const useUpdateProfile = () => {
 
         if (contactList) {
           setContacts(contactList)
-
-          // const profileLists = await fetchProfileLists(currentPubKey, decrypt)
-          // console.log("profileLists", profileLists)
-          // const bookmarkLists = await fetchBookmarkLists(currentPubKey, decrypt)
-          // console.log("bookmarkLists", bookmarkLists)
 
           const highlights = await fetchFollowedHighlights(contactList.contactPubkeys).catch(() => {
             dispatch(setHighlights({ highlights: null }))
