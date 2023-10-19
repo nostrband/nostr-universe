@@ -71,6 +71,9 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
         order: 0
       }
 
+      // native is always available immediately
+      setApps([nativeApp])
+
       // helper
       const setKindGetApp = (kind: string) => {
         setKind(kind)

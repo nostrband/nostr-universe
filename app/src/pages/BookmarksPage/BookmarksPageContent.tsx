@@ -3,6 +3,8 @@ import { StyledWrapVisibility } from '../styled'
 import { ContactList } from '../MainPage/components/ContactList/ContactList'
 import BestNotes from './components/BestNotes/BestNotes'
 import { BestLongNotes } from './components/BestLongNotes/BestLongNotes'
+import { BookmarkLists } from './components/BookmarkLists/BookmarkLists'
+import { ProfileLists } from './components/ProfileLists/ProfileLists'
 
 export const BookmarksPageContent = () => {
   const [searchParams] = useSearchParams()
@@ -13,6 +15,8 @@ export const BookmarksPageContent = () => {
       <ContactList />
       <BestNotes />
       <BestLongNotes />
+      <BookmarkLists />
+      <ProfileLists />
     </StyledWrapVisibility>
   )
 }
