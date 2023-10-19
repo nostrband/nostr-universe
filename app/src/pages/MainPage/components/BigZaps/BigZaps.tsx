@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { fetchFollowedZaps, getEventNip19, nostrbandRelay } from '@/modules/nostr'
+import { fetchFollowedZaps, getEventNip19 } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { ZapEvent } from '@/types/zap-event'
