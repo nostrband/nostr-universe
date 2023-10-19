@@ -167,7 +167,31 @@ export function parseProfileJson(e: NostrEvent): Meta {
   return profile
 }
 
-export function getEventAddr(e: NDKEvent | AugmentedEvent): string {
+export function getEventNip19(e: NDKEvent | AugmentedEvent): string {
+  if (e.kind === 0) {
+    return nip19.nprofileEncode({
+      pubkey: e.pubkey,
+      relays: [nostrbandRelay]
+    })
+  } else if (
+    (e.kind >= 10000 && e.kind < 20000) ||
+    (e.kind >= 30000 && e.kind < 40000)
+  ) {
+    return nip19.naddrEncode({
+      pubkey: e.pubkey,
+      kind: e.kind,
+      identifier: e.identifier,
+      relays: [nostrbandRelay]
+    })
+  } else {
+    return nip19.neventEncode({
+      id: e.id,
+      relays: [nostrbandRelay]
+    })
+  }
+}
+
+function getEventAddr(e: NDKEvent | AugmentedEvent): string {
   let addr = e.id
   if (
     e.kind === KIND_META ||
@@ -448,14 +472,9 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
       id = addr.event_id
     } else if (addr.pubkey && addr.d_tag !== undefined && addr.kind !== undefined) {
       // naddr
-      d_tags.push(addr.d_tag)
-      pubkeys.push(addr.pubkey)
-      kinds.push(addr.kind)
       id = addr.kind + ':' + addr.pubkey + ':' + addr.d_tag
     } else if (addr.pubkey && addr.kind !== undefined) {
       // npub, nprofile
-      pubkeys.push(addr.pubkey)
-      kinds.push(addr.kind)
       id = addr.kind + ':' + addr.pubkey + ':'
     }
 
@@ -495,12 +514,54 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
   return events
 }
 
-export async function fetchFullyAugmentedEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<AuthoredEvent[]> {
+export async function fetchFullyAugmentedEventsByAddrs(
+  addrs: EventAddr[], contactList?: string[]): Promise<AuthoredEvent[]> {
   const augmentedEvents = await fetchEventsByAddrs(ndk, addrs)
 
-  // for each event, check what needs to be loaded/augmented and execute
+  const kindEvents = new Map<number, AugmentedEvent[]>()
+  for (const e of augmentedEvents) {
+    if (!kindEvents.has(e.kind))
+      kindEvents.set(e.kind, [])
+    const events = kindEvents.get(e.kind)
+    events?.push(e)
+  }
 
-  return augmentedEvents
+  const authoredEvens = []
+  for (const [kind, events] of kindEvents.entries()) {
+    // for each event, check what needs to be loaded/augmented and execute
+    // load meta etc using these special augmenters
+    let a = null
+    switch (kind) {
+      case KIND_ZAP:
+        a = await augmentZaps(events, 0)
+        break
+      case KIND_COMMUNITY:
+        a = await augmentCommunities(events)
+        break
+      case KIND_LIVE_EVENT:
+        a = await augmentLiveEvents(events, contactList || [], 1, /*ended*/ true)
+        break
+      case KIND_APP:
+        a = await augmentApps(events)
+        break
+      default:
+        a = await augmentEventAuthors(events)
+
+        switch (kind) {
+          case KIND_LONG_NOTE:
+            a = await augmentLongNotes(a)
+            break
+          case KIND_HIGHLIGHT:
+            break
+        }
+        break
+    }
+    authoredEvens.push(...a)
+  }
+
+  sortDesc(authoredEvens)
+
+  return authoredEvens
 }
 
 async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEvent | null> {
