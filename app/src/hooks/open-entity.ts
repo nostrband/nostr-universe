@@ -301,8 +301,9 @@ export const useOpenApp = () => {
       const bolt11 = bolt11Decode(paymentRequest)
       // eslint-disable-next-line
       const amount = Number(bolt11.sections?.find((s: any) => s.name === 'amount').value)
+      // eslint-disable-next-line
       const descriptionHash = bolt11.sections?.find((s: any) => s.name === 'description_hash').value
-      console.log("descriptionHash", descriptionHash)
+      console.log('descriptionHash', descriptionHash)
 
       const error = 'Payment request disallowed'
       // eslint-disable-next-line

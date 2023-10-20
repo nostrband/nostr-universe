@@ -18,7 +18,16 @@ interface IPaymentItem {
   receiver?: MetaEvent
 }
 
-export const PaymentItem = ({ url, time, walletName, walletId, amount, preimage, receiverPubkey, receiver }: IPaymentItem) => {
+export const PaymentItem = ({
+  url,
+  time,
+  walletName,
+  walletId,
+  amount,
+  preimage,
+  receiverPubkey,
+  receiver
+}: IPaymentItem) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {

@@ -1,23 +1,10 @@
 import { forwardRef } from 'react'
-import { styled, InputBase, Typography, TypographyProps, Box, IconButton } from '@mui/material'
+import { styled, Typography, TypographyProps, Box, IconButton, TextField } from '@mui/material'
 import { purple } from '@mui/material/colors'
+import { lighten, darken } from '@mui/system'
 
 export const StyledForm = styled('form')(() => ({
   marginBottom: 15
-}))
-
-export const StyledInput = styled(InputBase)(({ theme }) => ({
-  background: theme.palette.secondary.main,
-  width: '100%',
-  minHeight: 50,
-  borderRadius: theme.shape.borderRadius,
-  color: '#fff',
-  fontSize: 14,
-  padding: '4px 16px',
-  '&:placeholder': {
-    color: '#C9C9C9'
-  },
-  gap: '0.5rem'
 }))
 
 const color = purple[100]
@@ -73,3 +60,58 @@ export const StyledSearchTermValue = styled((props: TypographyProps) => {
   WebkitBoxOrient: 'vertical',
   whiteSpace: 'nowrap'
 }))
+
+export const StyledAutocompleteInput = styled(TextField)(({ theme }) => ({
+  background: theme.palette.secondary.main,
+  width: '100%',
+  minHeight: 50,
+  borderRadius: theme.shape.borderRadius,
+  color: '#fff',
+  fontSize: 14,
+  '&:placeholder': {
+    color: '#C9C9C9'
+  },
+  gap: '0.5rem',
+  '.MuiFormLabel-root, .Mui-focused, .MuiAutocomplete-input, .MuiChip-label': {
+    color: '#fff'
+  },
+  '.MuiSvgIcon-root': {
+    fill: 'rgba(255, 255, 255, 0.5)'
+  },
+  '.MuiOutlinedInput-notchedOutline': {
+    border: 'none'
+  }
+}))
+
+export const StyledAutocomplete = styled(Box)(() => ({
+  display: 'flex',
+  gap: 10,
+  width: '100%'
+}))
+
+export const StyledAutocompleteButton = styled(Box)(({ theme }) => ({
+  background: theme.palette.secondary.main,
+  minWidth: 56,
+  minHeight: 50,
+  display: 'flex',
+  borderRadius: theme.shape.borderRadius,
+  color: '#fff',
+  '& > *': {
+    margin: 'auto'
+  }
+}))
+
+export const GroupHeader = styled('div')(({ theme }) => ({
+  position: 'sticky',
+  top: '-8px',
+  padding: '4px 10px',
+  color: theme.palette.primary.main,
+  backgroundColor:
+    theme.palette.mode === 'light'
+      ? lighten(theme.palette.primary.light, 0.85)
+      : darken(theme.palette.primary.main, 0.8)
+}))
+
+export const GroupItems = styled('ul')({
+  padding: 0
+})

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState, FC, CSSProperties } from 'react'
+import React, { useCallback, useEffect, useState, FC, CSSProperties } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useOpenApp } from '@/hooks/open-entity'
 import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
@@ -11,7 +11,14 @@ import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/Suggeste
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
-import { StyledForm, StyledInput } from './styled'
+import {
+  GroupHeader,
+  GroupItems,
+  StyledAutocomplete,
+  StyledAutocompleteButton,
+  StyledAutocompleteInput,
+  StyledForm
+} from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
@@ -22,9 +29,10 @@ import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNot
 import { dbi } from '@/modules/db'
 import { v4 as uuidv4 } from 'uuid'
 import { SearchTerm } from '@/modules/types/db'
-import { IconButton } from '@mui/material'
+import { IconButton, Box, Autocomplete, FilterOptionsState } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
-import CloseIcon from '@mui/icons-material/Close'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import { RecentQueries } from './components/RecentQueries/RecentQueries'
 import {
   HorizontalSwipeVirtualContent,
@@ -33,6 +41,15 @@ import {
 
 const MAX_HISTORY = 10
 
+interface IOptionApp {
+  id: string
+  icon: string
+  label: string
+  url: string
+  groupName: string
+  groupValue: string
+}
+
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'search'
@@ -40,6 +57,8 @@ export const SearchPageContent = () => {
   const { openBlank } = useOpenApp()
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
+  const { apps = [] } = useAppSelector((state) => state.apps)
+  const { tabs = [] } = useAppSelector((state) => state.tab)
   const dispatch = useAppDispatch()
 
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
@@ -53,7 +72,78 @@ export const SearchPageContent = () => {
   const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
 
   const { handleOpenContextMenu } = useOpenModalSearchParams()
-  const inputRef = useRef<HTMLElement>()
+
+  const [selectApp, setSelectApp] = useState<IOptionApp | string | null>(null)
+  const [openGroup, setOpenGroup] = useState<{ [key: string]: boolean }>({
+    tabs: false,
+    apps: false
+  })
+
+  const optionsApps: IOptionApp[] = apps.map((app, i) => ({
+    id: `app-${i}`,
+    icon: app.picture,
+    label: app.name,
+    url: app.url,
+    groupName: 'Apps',
+    groupValue: 'apps'
+  }))
+  const optionsTabs: IOptionApp[] = tabs.map((tab, i) => ({
+    id: `tab-${i}`,
+    icon: tab.icon,
+    label: tab.title,
+    url: tab.url,
+    groupName: 'Tabs',
+    groupValue: 'tabs'
+  }))
+
+  const getOptions = [...optionsTabs, ...optionsApps]
+
+  const filterOptions = (options: IOptionApp[], state: FilterOptionsState<IOptionApp>) => {
+    const inputValue = state.inputValue.toLowerCase()
+
+    const filteredOptions = options.filter((option) => {
+      const label = option.label.toLowerCase()
+      const url = option.url.toLowerCase()
+      return label.includes(inputValue) || url.includes(inputValue)
+    })
+
+    const sortGroup: Record<string, IOptionApp[]> = {}
+
+    filteredOptions.forEach((obj) => {
+      if (!sortGroup[obj.groupValue]) {
+        sortGroup[obj.groupValue] = []
+      }
+      sortGroup[obj.groupValue].push(obj)
+    })
+
+    if (selectApp && typeof selectApp === 'object') {
+      for (const group in sortGroup) {
+        if (!openGroup[group]) {
+          const currentIndex = sortGroup[group].findIndex((el) => el.id === selectApp.id)
+
+          if (currentIndex >= 0 && currentIndex > 2) {
+            const newData = [...sortGroup[group]]
+            const element = newData[currentIndex]
+            newData.splice(currentIndex, 1)
+
+            newData.unshift(element)
+
+            sortGroup[group] = newData
+          }
+        }
+      }
+    }
+
+    for (const group in sortGroup) {
+      if (!openGroup[group]) {
+        sortGroup[group] = sortGroup[group].slice(0, 3)
+      }
+    }
+
+    const concatSortGroupArrays: IOptionApp[] = ([] as IOptionApp[]).concat(...Object.values(sortGroup))
+
+    return concatSortGroupArrays
+  }
 
   const onSearch = useCallback(
     (str: string): boolean => {
@@ -152,16 +242,7 @@ export const SearchPageContent = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    inputRef.current?.blur()
-    searchHandler(searchValue)
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setSearchValue({ searchValue: e.target.value }))
-  }
-
-  const handleClear = () => {
-    dispatch(setSearchValue({ searchValue: '' }))
+    searchHandler(typeof selectApp === 'string' || selectApp === null ? searchValue : selectApp.url)
   }
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -351,31 +432,67 @@ export const SearchPageContent = () => {
     )
   }
 
+  const handleOpenGrop = (group: string) => {
+    const keyGroup = group.toLowerCase()
+
+    setOpenGroup((prev) => ({ ...prev, [keyGroup]: !prev[keyGroup] }))
+  }
+
+  const handleSelect = (_: React.SyntheticEvent<Element, Event>, selectedValue: IOptionApp | null | string) => {
+    setSelectApp(selectedValue)
+  }
+
+  const onInputChange = (_: React.SyntheticEvent<Element, Event>, textValue: string) => {
+    dispatch(setSearchValue({ searchValue: textValue }))
+  }
+
   return (
     <StyledWrapVisibility isShow={isShow}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
-          <StyledInput
-            placeholder="Search"
-            endAdornment={
-              <>
-                {searchValue && (
-                  <IconButton type="button" color="inherit" size="medium" onClick={handleClear}>
-                    <CloseIcon />
-                  </IconButton>
-                )}
-                <IconButton type="submit" color="inherit" size="medium">
-                  <SearchOutlinedIcon />
-                </IconButton>
-              </>
-            }
-            onChange={handleChange}
-            value={searchValue}
-            inputProps={{
-              autoFocus: false,
-              ref: inputRef
-            }}
-          />
+          <StyledAutocomplete>
+            <Autocomplete
+              placeholder="Search"
+              popupIcon={false}
+              onChange={handleSelect}
+              onInputChange={onInputChange}
+              inputValue={searchValue}
+              value={selectApp ? selectApp : null}
+              isOptionEqualToValue={(option, value) => option.label === value.label && option.url === value.url}
+              id="country-select-demo"
+              fullWidth
+              options={getOptions}
+              getOptionLabel={(option) => (typeof option === 'string' ? option : `${option.label} - ${option.url}`)}
+              filterOptions={filterOptions}
+              groupBy={(option) => option.groupName}
+              renderGroup={(params) => {
+                return (
+                  <li key={params.key}>
+                    <GroupHeader sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      {params.group}
+                      <div onClick={() => handleOpenGrop(params.group)}>
+                        {openGroup[params.group.toLocaleLowerCase()] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      </div>
+                    </GroupHeader>
+                    <GroupItems>{params.children}</GroupItems>
+                  </li>
+                )
+              }}
+              renderOption={(props, option) => (
+                <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option.id}>
+                  <img loading="lazy" width="20" srcSet={option.icon} src={option.icon} alt={option.label} />
+                  {option.label} - {option.url}
+                </Box>
+              )}
+              freeSolo
+              renderInput={(params) => <StyledAutocompleteInput {...params} placeholder="Search" />}
+            />
+            <StyledAutocompleteButton>
+              <IconButton type="submit" color="inherit" size="medium">
+                <SearchOutlinedIcon />
+              </IconButton>
+            </StyledAutocompleteButton>
+          </StyledAutocomplete>
         </StyledForm>
       </Container>
 

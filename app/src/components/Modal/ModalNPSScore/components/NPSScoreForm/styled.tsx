@@ -15,7 +15,7 @@ const asteriskColor = red[500]
 export const StyledLabel = styled((props: FormLabelProps & { spacing?: boolean }) => {
   const exclude = new Set(['spacing'])
   const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
-  return (<FormLabel {...omitProps} classes={{ asterisk: 'asterisk' }} />)
+  return <FormLabel {...omitProps} classes={{ asterisk: 'asterisk' }} />
 })(({ theme, spacing = true }) => ({
   color: theme.palette.light.light,
   marginBottom: spacing ? theme.spacing(1) : '0',

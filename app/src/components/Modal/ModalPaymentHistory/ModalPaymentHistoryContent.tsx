@@ -64,17 +64,20 @@ export const ModalPaymentHistoryContent = () => {
 
   const getPayments = async () => {
     try {
-      const res = await dbi.listPayments(currentPubkey) as TypePayment[]
+      const res = (await dbi.listPayments(currentPubkey)) as TypePayment[]
       const zaps = await dbi.listSignedZapRequests(currentPubkey)
 
       // attach zaps
       res.forEach((p: TypePayment) => {
+        // eslint-disable-next-line
         const zap = zaps.find((z: any) => z.eventZapHash === p.descriptionHash)
         if (zap) {
           try {
             const event = JSON.parse(zap.eventJson)
             p.receiverPubkey = getTagValue(event, 'p') || ''
-          } catch {}
+          } catch (err) {
+            console.log(err)
+          }
         }
       })
 
