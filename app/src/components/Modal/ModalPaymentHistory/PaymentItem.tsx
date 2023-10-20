@@ -62,7 +62,7 @@ export const PaymentItem = ({ url, time, walletName, walletId, amount, preimage,
           <Alert severity="error">Payment not confirmed</Alert>
         </StyledItemBlock>
       )}
-      {receiverPubkey && (
+      {false && receiverPubkey && (
         <StyledItemBlock>
           <Alert severity="info">Zap to {getProfileName(receiverPubkey, receiver)}</Alert>
         </StyledItemBlock>

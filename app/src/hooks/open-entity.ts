@@ -469,7 +469,7 @@ export const useOpenApp = () => {
       if (isReadOnly()) throw new Error('No pubkey')
       const error = 'Encrypt disallowed'
       if (hasPerm(tab, 'encrypt', '0')) throw new Error(error)
-      const exec = async () => await encrypt(pubkey, plainText)
+      const exec = async () => await encrypt(plainText, pubkey)
       if (hasPerm(tab, 'encrypt', '1')) return await exec()
       return requestPermExec(tab, { perm: 'encrypt', pubkey, plainText }, exec, error)
     },
@@ -479,7 +479,7 @@ export const useOpenApp = () => {
       if (isReadOnly()) throw new Error('No pubkey')
       const error = 'Decrypt disallowed'
       if (hasPerm(tab, 'decrypt', '0')) throw new Error(error)
-      const exec = async () => await decrypt(pubkey, cipherText)
+      const exec = async () => await decrypt(cipherText, pubkey)
       if (hasPerm(tab, 'decrypt', '1')) return await exec()
       return requestPermExec(tab, { perm: 'decrypt', pubkey, cipherText }, exec, error)
     },
