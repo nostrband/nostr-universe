@@ -78,7 +78,7 @@ export const BestLongNotes = () => {
         RowComponent={Row}
       />
     )
-  }, [bestLongNotes, isBestLongNotesLoading, reloadBestNotes])
+  }, [bestLongNotes, handleOpenLongPosts, isBestLongNotesLoading, reloadBestNotes])
 
   return (
     <StyledWrapper>

@@ -78,6 +78,6 @@ export const StyledAppImg = styled(function BoxDisplayName(props: IAvatarProps) 
   fontWeight: 'bold',
   fontSize: isPreviewTab ? APP_NAME_FONT_SIZE_VALUE[APP_NOSTR_SIZE.EXTRA_SMALL] : APP_NAME_FONT_SIZE_VALUE[size],
   '.MuiAvatar-img': {
-    objectFit: isSmall ? 'scale-down' : 'cover',
+    objectFit: isSmall ? 'scale-down' : 'cover'
   }
 }))

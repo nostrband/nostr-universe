@@ -625,7 +625,7 @@ async function createRef(info) {
   const hidden = 'yes' // params.hidden ? 'yes' : 'no'
   const geticon = 'yes' //params.geticon ? 'yes' : 'no'
 
-  const options = `location=${loc},shouldPauseOnSuspend=yes,beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
+  const options = `location=${loc},pauseonhide=yes,shouldPauseOnSuspend=yes,beforeload=yes,beforeblank=yes,fullscreen=no,closebuttonhide=yes,multitab=yes,menubutton=${menu},zoom=no,bottomoffset=${bottom},hidden=${hidden},geticon=${geticon},transparentloading=yes`
   console.log('browser options', options)
 
   const ref = cordova.InAppBrowser.open(info.url, '_blank', options)

@@ -20,6 +20,7 @@ cordova plugin add https://github.com/nostrband/nostr-walletstore-cordova-plugin
 cordova plugin add cordova-clipboard
 cordova plugin add cordova-plugin-x-socialsharing
 cordova plugin add cordova-plugin-statusbar
+cordova plugin add cordova-plugin-native-logs
 cordova platform add android
 cordova build android
 ```

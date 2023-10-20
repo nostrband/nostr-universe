@@ -19,3 +19,14 @@ export const StyledWrap = styled(Box)(() => ({
   height: 'calc(100vh - 60px)',
   gap: 5
 }))
+
+export const StyledLogs = styled('textarea')(() => ({
+  display: 'flex',
+  height: '200px',
+  overflow: 'scroll',
+  width: '100%',
+  padding: '10px',
+  border: '1px solid #666',
+  borderRadius: '10px',
+  backgroundColor: '#ddd'
+}))

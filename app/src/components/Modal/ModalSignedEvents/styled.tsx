@@ -33,6 +33,10 @@ export const StyledListItemActions = styled(ListItem)(() => ({
   padding: '10px 0'
 }))
 
+export const StyledItemFooter = styled(Box)(() => ({
+  fontSize: '0.7em'
+}))
+
 export const StyledFilterField = styled(Box)(() => ({
   marginBottom: 10,
   '&:first-type': {

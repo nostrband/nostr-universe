@@ -58,7 +58,7 @@ export const useAddKey = () => {
       console.log('addKey', JSON.stringify(r))
       await setPubkey(r.pubKey)
     } catch (e) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // eslint-disable-next-line
       // @ts-ignore
       showToast(`Error: ${e}`)
     }
