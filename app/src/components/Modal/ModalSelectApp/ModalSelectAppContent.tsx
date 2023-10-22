@@ -71,6 +71,9 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
         order: 0
       }
 
+      // native is always available immediately
+      setApps([nativeApp])
+
       // helper
       const setKindGetApp = (kind: string) => {
         setKind(kind)
@@ -113,7 +116,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
       const event = await fetchExtendedEventByBech32(getParamB32, contactList?.contactPubkeys)
       if (!event) {
         setIsAppsLoading(false)
-        showToast('Event for found!')
+        showToast('Event not found!')
         return
       }
 

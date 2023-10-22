@@ -4,10 +4,11 @@
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
 import { feedbackPeriodMs } from '@/consts'
+import { KIND_ZAP_REQUEST } from './nostr'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(16).stores({
+db.version(18).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -19,9 +20,9 @@ db.version(16).stores({
   perms: '[pubkey+app+name],[pubkey+app],value',
   contentFeedSettings: 'id, pubkey, settings_json',
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
-  signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson',
+  signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson,eventZapHash',
   searchHistory: 'id,pubkey,timestamp,value',
-  payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage'
+  payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash'
 })
 
 export const dbi = {
@@ -32,7 +33,18 @@ export const dbi = {
       console.log(`Add signedEvent to DB error: ${error}`)
     }
   },
-  getSignedEvents: async (pubkey: string) => {
+  listSignedZapRequests: async (pubkey: string) => {
+    try {
+      return (await db.signedEvents.where({
+        pubkey,
+        kind: KIND_ZAP_REQUEST
+      }).toArray()).sort((a, b) => b.timestamp - a.timestamp)
+    } catch (error) {
+      console.log(`List signedEvents error: ${error}`)
+      return []
+    }
+  },
+  listSignedEvents: async (pubkey: string) => {
     try {
       return (await db.signedEvents.where('pubkey').equals(pubkey).toArray()).sort((a, b) => b.timestamp - a.timestamp)
     } catch (error) {
@@ -47,7 +59,7 @@ export const dbi = {
       console.log(`Add payment to DB error: ${error}`)
     }
   },
-  getPayments: async (pubkey: string) => {
+  listPayments: async (pubkey: string) => {
     try {
       return (await db.payments.where('pubkey').equals(pubkey).toArray()).sort((a, b) => b.timestamp - a.timestamp)
     } catch (error) {

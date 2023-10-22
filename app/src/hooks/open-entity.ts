@@ -301,6 +301,8 @@ export const useOpenApp = () => {
       const bolt11 = bolt11Decode(paymentRequest)
       // eslint-disable-next-line
       const amount = Number(bolt11.sections?.find((s: any) => s.name === 'amount').value)
+      const descriptionHash = bolt11.sections?.find((s: any) => s.name === 'description_hash').value
+      console.log("descriptionHash", descriptionHash)
 
       const error = 'Payment request disallowed'
       // eslint-disable-next-line
@@ -322,7 +324,8 @@ export const useOpenApp = () => {
         pubkey: currentPubkey,
         url: tab.url,
         timestamp: Date.now(),
-        invoice: paymentRequest
+        invoice: paymentRequest,
+        descriptionHash
       }
 
       const perm = 'pay_invoice:' + wallet.id
@@ -443,23 +446,7 @@ export const useOpenApp = () => {
       if (isReadOnly()) throw new Error('No pubkey')
       const kindPerm = 'sign:' + event.kind
       const allPerm = 'sign'
-      const exec = async () => {
-        const resSindEvend = await signEvent(event, tab.pubkey)
-
-        // do not wait for it
-        dbi.addSignedEvent({
-          timestamp: Date.now(),
-          kind: resSindEvend.kind,
-          eventJson: JSON.stringify(resSindEvend, null, ' '),
-          eventId: resSindEvend.id,
-          url: tab?.url,
-          pubkey: currentPubkey,
-          id: uuidv4()
-        })
-
-        return resSindEvend
-      }
-      // return await exec()
+      const exec = async () => await signEvent(event, tab.pubkey, tab.url)
 
       // // allowed this kind or all kinds (if not kind-0)?
       if (hasPerm(tab, kindPerm, '1') || (event.kind != 0 && hasPerm(tab, allPerm, '1'))) {
@@ -482,7 +469,7 @@ export const useOpenApp = () => {
       if (isReadOnly()) throw new Error('No pubkey')
       const error = 'Encrypt disallowed'
       if (hasPerm(tab, 'encrypt', '0')) throw new Error(error)
-      const exec = async () => await encrypt(pubkey, plainText)
+      const exec = async () => await encrypt(plainText, pubkey)
       if (hasPerm(tab, 'encrypt', '1')) return await exec()
       return requestPermExec(tab, { perm: 'encrypt', pubkey, plainText }, exec, error)
     },
@@ -492,7 +479,7 @@ export const useOpenApp = () => {
       if (isReadOnly()) throw new Error('No pubkey')
       const error = 'Decrypt disallowed'
       if (hasPerm(tab, 'decrypt', '0')) throw new Error(error)
-      const exec = async () => await decrypt(pubkey, cipherText)
+      const exec = async () => await decrypt(cipherText, pubkey)
       if (hasPerm(tab, 'decrypt', '1')) return await exec()
       return requestPermExec(tab, { perm: 'decrypt', pubkey, cipherText }, exec, error)
     },

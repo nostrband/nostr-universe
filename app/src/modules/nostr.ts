@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import NDK, {
   NDKRelaySet,
   NDKRelay,
@@ -49,6 +50,7 @@ export const KIND_DM: number = 4
 const KIND_REPOST: number = 6
 const KIND_REACTION: number = 7
 const KIND_COMMUNITY_APPROVAL: number = 4550
+export const KIND_ZAP_REQUEST: number = 9734
 const KIND_ZAP: number = 9735
 const KIND_HIGHLIGHT: number = 9802
 const KIND_PROFILE_LIST: number = 30000
@@ -78,7 +80,7 @@ const nsbRelays = ['wss://relay.nsecbunker.com']
 
 // global ndk instance for now
 let ndk: NDK = null
-let nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
+const nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
 nsbNDK
   .connect(5000)
   .then(() => {
@@ -165,7 +167,31 @@ export function parseProfileJson(e: NostrEvent): Meta {
   return profile
 }
 
-export function getEventAddr(e: NDKEvent | AugmentedEvent): string {
+export function getEventNip19(e: NDKEvent | AugmentedEvent): string {
+  if (e.kind === 0) {
+    return nip19.nprofileEncode({
+      pubkey: e.pubkey,
+      relays: [nostrbandRelay]
+    })
+  } else if (
+    (e.kind >= 10000 && e.kind < 20000) ||
+    (e.kind >= 30000 && e.kind < 40000)
+  ) {
+    return nip19.naddrEncode({
+      pubkey: e.pubkey,
+      kind: e.kind,
+      identifier: e.identifier,
+      relays: [nostrbandRelay]
+    })
+  } else {
+    return nip19.neventEncode({
+      id: e.id,
+      relays: [nostrbandRelay]
+    })
+  }
+}
+
+function getEventAddr(e: NDKEvent | AugmentedEvent): string {
   let addr = e.id
   if (
     e.kind === KIND_META ||
@@ -355,7 +381,7 @@ export async function fetchApps() {
 }
 
 export function parseAddr(id: string): EventAddr | null {
-  let addr: EventAddr = {
+  const addr: EventAddr = {
     hex: false
   }
 
@@ -446,14 +472,9 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
       id = addr.event_id
     } else if (addr.pubkey && addr.d_tag !== undefined && addr.kind !== undefined) {
       // naddr
-      d_tags.push(addr.d_tag)
-      pubkeys.push(addr.pubkey)
-      kinds.push(addr.kind)
       id = addr.kind + ':' + addr.pubkey + ':' + addr.d_tag
     } else if (addr.pubkey && addr.kind !== undefined) {
       // npub, nprofile
-      pubkeys.push(addr.pubkey)
-      kinds.push(addr.kind)
       id = addr.kind + ':' + addr.pubkey + ':'
     }
 
@@ -493,12 +514,54 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
   return events
 }
 
-export async function fetchFullyAugmentedEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<AuthoredEvent[]> {
+export async function fetchFullyAugmentedEventsByAddrs(
+  addrs: EventAddr[], contactList?: string[]): Promise<AuthoredEvent[]> {
   const augmentedEvents = await fetchEventsByAddrs(ndk, addrs)
 
-  // for each event, check what needs to be loaded/augmented and execute
+  const kindEvents = new Map<number, AugmentedEvent[]>()
+  for (const e of augmentedEvents) {
+    if (!kindEvents.has(e.kind))
+      kindEvents.set(e.kind, [])
+    const events = kindEvents.get(e.kind)
+    events?.push(e)
+  }
 
-  return augmentedEvents
+  const authoredEvens = []
+  for (const [kind, events] of kindEvents.entries()) {
+    // for each event, check what needs to be loaded/augmented and execute
+    // load meta etc using these special augmenters
+    let a = null
+    switch (kind) {
+      case KIND_ZAP:
+        a = await augmentZaps(events, 0)
+        break
+      case KIND_COMMUNITY:
+        a = await augmentCommunities(events)
+        break
+      case KIND_LIVE_EVENT:
+        a = await augmentLiveEvents(events, contactList || [], 1, /*ended*/ true)
+        break
+      case KIND_APP:
+        a = await augmentApps(events)
+        break
+      default:
+        a = await augmentEventAuthors(events)
+
+        switch (kind) {
+          case KIND_LONG_NOTE:
+            a = await augmentLongNotes(a)
+            break
+          case KIND_HIGHLIGHT:
+            break
+        }
+        break
+    }
+    authoredEvens.push(...a)
+  }
+
+  sortDesc(authoredEvens)
+
+  return authoredEvens
 }
 
 async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEvent | null> {
@@ -767,7 +830,7 @@ export async function fetchAppsForEvent(event: NostrEvent): Promise<AppInfos> {
   }
   console.log('resolved addr', addr, event)
 
-  if (addr.kind === undefined) throw new Error("Undefined kind")
+  if (addr.kind === undefined) throw new Error('Undefined kind')
 
   // now fetch the apps for event kind
   let info = kindAppsCache.get(addr.kind)
@@ -784,6 +847,7 @@ export async function fetchAppsForEvent(event: NostrEvent): Promise<AppInfos> {
 
   // init convenient url property for each handler
   // to redirect to this event
+  // eslint-disable-next-line
   for (const [_, app] of info.apps) {
     for (const h of app.handlers) {
       // handlers[k] = {
@@ -864,8 +928,8 @@ export async function fetchExtendedEventByBech32(b32: string, contactList?: stri
 export async function fetchProfileLists(
   pubkey: string,
   decrypt: (content: string, targetPubkey: string, pubkey?: string) => Promise<string>,
-  loadListedEvents: boolean = false): Promise<ProfileListEvent[]> {
-
+  loadListedEvents: boolean = false
+): Promise<ProfileListEvent[]> {
   const authoredLists = await fetchPubkeyAuthoredEvents({
     kind: KIND_PROFILE_LIST,
     pubkeys: [pubkey],
@@ -873,16 +937,13 @@ export async function fetchProfileLists(
   })
 
   const tagsToPubkeys = (tags?: string[][]): string[] => {
-    return tags
-      ?.map(t => t.length >= 2 ? t[1] : '')
-      .filter(p => !!p) || []
+    return tags?.map((t) => (t.length >= 2 ? t[1] : '')).filter((p) => !!p) || []
   }
 
   const events: ProfileListEvent[] = []
   for (const e of authoredLists) {
-
     const list = createProfileListEvent(e)
-    list.name = getTagValue(list, 'name') || list.identifier
+    list.name = getTagValue(list, 'name') || getTagValue(list, 'title') || list.identifier
     list.description = getTagValue(list, 'description')
 
     const ps = getTags(list, 'p')
@@ -893,24 +954,22 @@ export async function fetchProfileLists(
       try {
         const content = await decrypt(list.content, list.pubkey)
         const tags = JSON.parse(content) as string[][]
-        list.privateProfilePubkeys = tagsToPubkeys(
-          tags.filter((t: string[]) => t.length >= 2 && t[0] === 'p'))
+        list.privateProfilePubkeys = tagsToPubkeys(tags.filter((t: string[]) => t.length >= 2 && t[0] === 'p'))
       } catch (e) {
-        console.log("bad list payload ", list.id, list.content, e)
+        console.log('bad list payload ', list.id, list.content, e)
       }
     }
 
     // skip irrelevant stuff
-    if (list.publicProfilePubkeys.length || list.privateProfilePubkeys.length)
-      events.push(list)
+    if (list.publicProfilePubkeys.length || list.privateProfilePubkeys.length) events.push(list)
   }
 
   if (loadListedEvents) {
-    const pubkeys = [...new Set(events.map(e => [...e.publicProfilePubkeys, ...e.privateProfilePubkeys]).flat())]
+    const pubkeys = [...new Set(events.map((e) => [...e.publicProfilePubkeys, ...e.privateProfilePubkeys]).flat())]
     const metas = await fetchMetas(pubkeys)
-    events.forEach(e => {
-      e.profileEvents = metas.filter(m =>
-        e.publicProfilePubkeys.includes(m.pubkey) || e.privateProfilePubkeys.includes(m.pubkey)
+    events.forEach((e) => {
+      e.profileEvents = metas.filter(
+        (m) => e.publicProfilePubkeys.includes(m.pubkey) || e.privateProfilePubkeys.includes(m.pubkey)
       )
     })
   }
@@ -921,8 +980,8 @@ export async function fetchProfileLists(
 export async function fetchBookmarkLists(
   pubkey: string,
   decrypt: (content: string, targetPubkey: string, pubkey?: string) => Promise<string>,
-  loadListedEvents: boolean = false): Promise<BookmarkListEvent[]> {
-
+  loadListedEvents: boolean = false
+): Promise<BookmarkListEvent[]> {
   const authoredLists = await fetchPubkeyAuthoredEvents({
     kind: KIND_BOOKMARKS,
     pubkeys: [pubkey],
@@ -930,29 +989,26 @@ export async function fetchBookmarkLists(
   })
 
   const tagsToBookmarks = (tags?: string[][]): Bookmark[] => {
-    return tags
-      ?.map(t => {
-        if (t.length < 2) return null
-        const b: Bookmark = {}
-        if (t[0] === 'e')
-          b.eventId = t[1]
-        else if (t[0] === 'a')
-          b.eventAddr = t[1]
-        else if (t[0] === 'r')
-          b.url = t[1]
-        else
-          return null
+    return (
+      (tags
+        ?.map((t) => {
+          if (t.length < 2) return null
+          const b: Bookmark = {}
+          if (t[0] === 'e') b.eventId = t[1]
+          else if (t[0] === 'a') b.eventAddr = t[1]
+          else if (t[0] === 'r') b.url = t[1]
+          else return null
 
-        return b
-      })
-      .filter(b => !!b) as Bookmark[] || []
+          return b
+        })
+        .filter((b) => !!b) as Bookmark[]) || []
+    )
   }
 
   const events: BookmarkListEvent[] = []
   for (const e of authoredLists) {
-
     const list = createBookmarkListEvent(e)
-    list.name = getTagValue(list, 'name') || list.identifier
+    list.name = getTagValue(list, 'name') || getTagValue(list, 'title') || list.identifier
     list.description = getTagValue(list, 'description')
 
     list.publicBookmarks = tagsToBookmarks(list.tags)
@@ -963,30 +1019,31 @@ export async function fetchBookmarkLists(
         const tags = JSON.parse(content) as string[][]
         list.privateBookmarks = tagsToBookmarks(tags)
       } catch (e) {
-        console.log("bad list payload ", list.id, list.content, e)
+        console.log('bad list payload ', list.id, list.content, e)
       }
     }
 
     // skip irrelevant stuff
-    if (list.publicBookmarks.length || list.privateBookmarks.length)
-      events.push(list)
+    if (list.publicBookmarks.length || list.privateBookmarks.length) events.push(list)
   }
 
   if (loadListedEvents) {
-    const eventIds = events.map(e => 
-      e.publicBookmarks.map(b => b.eventId).filter(id => !!id)).flat() as string[]
-    const eventAddrs = events.map(e => 
-      e.publicBookmarks.map(b => b.eventAddr).filter(id => !!id)).flat() as string[]
+    const eventIds = events.map((e) => e.publicBookmarks.map((b) => b.eventId).filter((id) => !!id)).flat() as string[]
+    const eventAddrs = events
+      .map((e) => e.publicBookmarks.map((b) => b.eventAddr).filter((id) => !!id))
+      .flat() as string[]
 
     const addrs = [...new Set([...eventIds, eventAddrs].flat())]
-      .map(idAddr => idToAddr(idAddr))
-      .filter(addr => !!addr) as EventAddr[]
+      .map((idAddr) => idToAddr(idAddr))
+      .filter((addr) => !!addr) as EventAddr[]
     const targetEvents = await fetchEventsByAddrs(ndk, addrs)
-    events.forEach(e => {
-      e.events = targetEvents.filter(t => {
+    events.forEach((e) => {
+      e.events = targetEvents.filter((t) => {
         const id = getEventAddr(t)
-        return e.publicBookmarks.find(b => b.eventId === id || b.eventAddr === id)
-          || e.privateBookmarks.find(b => b.eventId === id || b.eventAddr === id)
+        return (
+          e.publicBookmarks.find((b) => b.eventId === id || b.eventAddr === id) ||
+          e.privateBookmarks.find((b) => b.eventId === id || b.eventAddr === id)
+        )
       })
     })
   }
@@ -1127,7 +1184,7 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
   return events
 }
 
-async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
+export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   // dedup
   pubkeys = [...new Set(pubkeys)]
 
@@ -1279,7 +1336,7 @@ async function augmentZaps(augmentedEvents: AugmentedEvent[], minZap: number): P
 
     // assign to zaps
     zapEvents.forEach((e) => {
-      let target = augmentedTargetsEvents.find((t) => t.id === e.targetEventId)
+      const target = augmentedTargetsEvents.find((t) => t.id === e.targetEventId)
       if (target) {
         e.targetEvent = createAuthoredEvent(target)
         // FIXME receive frozen object property error when change profile!
@@ -1427,7 +1484,7 @@ interface PromiseQueueCb {
 class PromiseQueue {
   queue: PromiseQueueCb[] = []
 
-  constructor() { }
+  constructor() {}
 
   appender(cb: (...cbArgs: any[]) => void): (...apArgs: any[]) => void {
     return (...args) => {
@@ -1626,7 +1683,7 @@ async function augmentLiveEvents(
 }
 
 async function augmentApps(augmentedEvent: AugmentedEvent[]): Promise<AppEvent[]> {
-  let appEvents = augmentedEvent.map((e) => createAppEvent(createAuthoredEvent(e)))
+  const appEvents = augmentedEvent.map((e) => createAppEvent(createAuthoredEvent(e)))
 
   appEvents.forEach((e) => {
     e.naddr = nip19.naddrEncode({
@@ -1698,7 +1755,7 @@ async function augmentApps(augmentedEvent: AugmentedEvent[]): Promise<AppEvent[]
 }
 
 export async function fetchFollowedLiveEvents(contactPubkeys: string[], limit: number = 30): Promise<LiveEvent[]> {
-  let events = await fetchPubkeyEvents({
+  const events = await fetchPubkeyEvents({
     kind: KIND_LIVE_EVENT,
     pubkeys: contactPubkeys,
     tagged: true
@@ -1889,7 +1946,7 @@ export function stringToBech32(s: string, hex: boolean = false): string {
   const array = [...s.matchAll(BECH32_REGEX)].map((a) => a[0])
 
   let bech32 = ''
-  for (let b32 of array) {
+  for (const b32 of array) {
     try {
       const { type } = nip19.decode(b32)
       //      console.log("b32", b32, "type", type, "data", data);
@@ -1923,7 +1980,7 @@ export function stringToBolt11(s: string): [string, any] {
 
   const array = [...s.matchAll(INVOICE_REGEX)].map((a) => a[0])
 
-  for (let b32 of array) {
+  for (const b32 of array) {
     console.log('maybe invoice', b32, s)
     if (!b32.toLowerCase().startsWith('lnbc')) continue
     try {
@@ -1990,8 +2047,7 @@ export async function addWalletInfo(info: WalletInfo): Promise<void> {
   relay.on('publish:failed', (event: NDKEvent, err: string) => console.log('publish failed to', info.relay, event, err))
 }
 
-export async function sendPayment(info: WalletInfo, payreq: string)
-  : Promise<{ preimage: string }> {
+export async function sendPayment(info: WalletInfo, payreq: string): Promise<{ preimage: string }> {
   localStorage.debug = 'ndk:-'
 
   const relay = await addRelay(info.relay)
@@ -2127,9 +2183,7 @@ export async function nsbEncrypt(pubkey: string, content: string, targetPubkey: 
   await ensureNsbSigner(pubkey)
 
   console.log('nsb encrypt ', content, 'for', targetPubkey)
-  const enc = await nsbSigner.encrypt(
-    new NDKUser({ npub: nip19.npubEncode(targetPubkey) }),
-    content)
+  const enc = await nsbSigner.encrypt(new NDKUser({ npub: nip19.npubEncode(targetPubkey) }), content)
   console.log('nsb encrypted ', enc)
 
   return enc
@@ -2139,17 +2193,14 @@ export async function nsbDecrypt(pubkey: string, content: string, sourcePubkey: 
   await ensureNsbSigner(pubkey)
 
   console.log('nsb decrypt ', content, 'from', sourcePubkey)
-  const dec = await nsbSigner.decrypt(
-    new NDKUser({ npub: nip19.npubEncode(sourcePubkey) }),
-    content)
+  const dec = await nsbSigner.decrypt(new NDKUser({ npub: nip19.npubEncode(sourcePubkey) }), content)
   console.log('nsb decrypted ', dec)
 
   return dec
 }
 
 export async function publishEvent(event: NostrEvent) {
-  await ndk.publish(new NDKEvent(ndk, event),
-    NDKRelaySet.fromRelayUrls(writeRelays, ndk))
+  await ndk.publish(new NDKEvent(ndk, event), NDKRelaySet.fromRelayUrls(writeRelays, ndk))
 }
 
 async function checkReconnect(ndk: NDK, force: boolean = false) {
@@ -2161,29 +2212,29 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
     const alive = force
       ? false
       : await new Promise((ok) => {
-        const sub = ndk.subscribe(
-          {
-            kinds: [0, 1, 3],
-            limit: 1
-          },
-          {
-            closeOnEose: true
-          },
-          new NDKRelaySet(new Set([r]), ndk),
+          const sub = ndk.subscribe(
+            {
+              kinds: [0, 1, 3],
+              limit: 1
+            },
+            {
+              closeOnEose: true
+            },
+            new NDKRelaySet(new Set([r]), ndk),
             /* autoStart */ false
-        )
+          )
 
-        let alive = false
-        sub.on('event', (e: NostrEvent) => {
-          console.log('checkReconnect', url, 'got event', e.id)
-          alive = true
+          let alive = false
+          sub.on('event', (e: NostrEvent) => {
+            console.log('checkReconnect', url, 'got event', e.id)
+            alive = true
+          })
+          sub.on('eose', () => {
+            console.log('checkReconnect', url, 'alive', alive)
+            ok(alive)
+          })
+          sub.start()
         })
-        sub.on('eose', () => {
-          console.log('checkReconnect', url, 'alive', alive)
-          ok(alive)
-        })
-        sub.start()
-      })
 
     if (!alive) {
       await new Promise<void>((ok) => {

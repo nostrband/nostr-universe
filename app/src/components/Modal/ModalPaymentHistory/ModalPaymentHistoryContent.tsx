@@ -11,6 +11,8 @@ import { Input } from '@/shared/Input/Input'
 import { useAppSelector } from '@/store/hooks/redux'
 import { formatDate } from '@/consts'
 import { addDays, isAfter, isEqual, isWithinInterval, startOfDay } from 'date-fns'
+import { MetaEvent } from '@/types/meta-event'
+import { getTagValue } from '@/modules/nostr'
 
 // const paymentsMoc: TypePayment[] = [
 //   {
@@ -39,6 +41,7 @@ import { addDays, isAfter, isEqual, isWithinInterval, startOfDay } from 'date-fn
 
 type TypePayment = {
   id: string
+  pubkey: string
   walletId: string
   url: string
   timestamp: number
@@ -46,7 +49,9 @@ type TypePayment = {
   amount: number
   invoice: string
   preimage: string
-  pubkey: string
+  descriptionHash: string
+  receiverPubkey: string
+  receiver?: MetaEvent
 }
 
 export const ModalPaymentHistoryContent = () => {
@@ -59,7 +64,20 @@ export const ModalPaymentHistoryContent = () => {
 
   const getPayments = async () => {
     try {
-      const res = await dbi.getPayments(currentPubkey)
+      const res = await dbi.listPayments(currentPubkey) as TypePayment[]
+      const zaps = await dbi.listSignedZapRequests(currentPubkey)
+
+      // attach zaps
+      res.forEach((p: TypePayment) => {
+        const zap = zaps.find((z: any) => z.eventZapHash === p.descriptionHash)
+        if (zap) {
+          try {
+            const event = JSON.parse(zap.eventJson)
+            p.receiverPubkey = getTagValue(event, 'p') || ''
+          } catch {}
+        }
+      })
+
       setPayments(res)
     } catch (error) {
       console.log(error)
@@ -201,6 +219,8 @@ export const ModalPaymentHistoryContent = () => {
           walletName={payment.walletName}
           amount={payment.amount}
           preimage={payment.preimage}
+          receiverPubkey={payment.receiverPubkey}
+          receiver={payment.receiver}
         />
       ))}
     </Container>

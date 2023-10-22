@@ -72,7 +72,7 @@ const BestNotes = () => {
     return (
       <HorizontalSwipeVirtualContent itemHight={125} itemSize={225} itemCount={bestNotes.length} RowComponent={Row} />
     )
-  }, [bestNotes, isBestNotesLoading, reloadBestNotes])
+  }, [bestNotes, handleOpenNote, isBestNotesLoading, reloadBestNotes])
 
   return (
     <StyledWrapper>
