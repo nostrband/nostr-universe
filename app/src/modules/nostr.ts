@@ -105,7 +105,7 @@ class LocalRelayWebSocket extends EventTarget {
   }
 
   send(data: string) {
-    console.log("local relay req", data)
+//    console.log(Date.now (), "local scheduled", data)
     if (this.closed || typeof data !== 'string') return
     this.relay.handle(data)
   }
@@ -136,9 +136,9 @@ const overrideWebSocket = () => {
 }
 overrideWebSocket()
 
-const KIND_META: number = 0
+export const KIND_META: number = 0
 const KIND_NOTE: number = 1
-const KIND_CONTACT_LIST: number = 3
+export const KIND_CONTACT_LIST: number = 3
 const KIND_REPOST: number = 6
 const KIND_REACTION: number = 7
 const KIND_COMMUNITY_APPROVAL: number = 4550
@@ -163,7 +163,7 @@ export const nostrbandRelay = 'wss://relay.nostr.band/'
 export const nostrbandRelayAll = 'wss://relay.nostr.band/all'
 
 // cacheRelay
-const readRelays = [cacheRelay, nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.bg', 'wss://nostr.mom']
+const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol']//, 'wss://relay.nostr.bg', 'wss://nostr.mom']
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 const allRelays = [nostrbandRelayAll, ...writeRelays]
 
@@ -238,23 +238,65 @@ export function getEventAddr(e: NDKEvent | AugmentedEvent): string {
     e.kind === KIND_META ||
     e.kind === KIND_CONTACT_LIST ||
     (e.kind >= 10000 && e.kind < 20000) ||
-    (e.kind >= 10000 && e.kind < 20000)
+    (e.kind >= 30000 && e.kind < 40000)
   ) {
     addr = e.kind + ':' + e.pubkey + ':' + getTagValue(e, 'd')
   }
   return addr
 }
 
-function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
+// function subscribeFetch(ndk: NDK, filter: NDKFilter, relaySet: NDKRelaySet): Promise<Set<NDKEvent>> {
+//   return new Promise((ok) => {
+//     const events = new Set<NDKEvent>()
+//     const activeRelays = new Set<string>()
+//     const eoseRelays = new Set<string>()
+//     const timeout = setTimeout(() => {
+//       for (const relay of relaySet) {
+//         if (!activeRelays.has(relay.url))
+//           eoseRelays.add(relay.url)
+//       }
+//     }, 1000)
+//     let eose = false
+
+//     const sub = ndk.subscribe(filter, {}, relaySet, /* autoStart */false)
+//     sub.on('event', (event: NDKEvent, relay: NDKRelay) => {
+//       events.add(event)
+//       activeRelays.add(relay.url)
+//     })
+//     sub.on('eose', () => {
+//       if (!eose) {
+//         clearTimeout(timeout)
+//         eose = true
+//         ok(events)
+//       }
+//     })
+//   })
+// }
+
+interface FetchOptions {
+  cacheOnly?: boolean
+  noCache?: boolean
+}
+
+function fetchEventsRead(ndk: NDK, filter: NDKFilter, options?: FetchOptions): Promise<Set<NDKEvent>> {
   return new Promise(async (ok) => {
     const start = Date.now()
-    const events = await ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
+    const relaySet = NDKRelaySet.fromRelayUrls(
+      options?.cacheOnly 
+      ? [cacheRelay]
+      : (options?.noCache
+        ? readRelays
+        : [cacheRelay, ...readRelays]
+      ), 
+      ndk)
+    const events = await ndk.fetchEvents(filter, {}, relaySet)
     for (const e of events.values()) {
       const augmentedEvent = rawEvent(e)
-      putEventToCache(augmentedEvent)
+      if (!options?.cacheOnly)
+        putEventToCache(augmentedEvent)
     }
-    console.log('fetched in', Date.now() - start, 
-    'ms events', events.size, 'from', readRelays.length, 'relays', JSON.stringify(filter))
+    console.log(Date.now(), 'fetched in', Date.now() - start, 
+    'ms events', events.size, 'from', relaySet.relays.size, 'options', options, 'relays', filter)
     ok(events)
   })
 }
@@ -572,7 +614,7 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
 
   const ndkEvents = await collectEvents(reqs)
   events.push(...[...ndkEvents].map((e) => rawEvent(e)))
-  events.forEach((e) => putEventToCache(e))
+//  events.forEach((e) => putEventToCache(e))
   return events
 }
 
@@ -624,7 +666,7 @@ async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEve
 
   const events = await collectEvents(reqs)
   const event = events.length > 0 ? rawEvent(events[0]) : null
-  if (event) putEventToCache(event)
+//  if (event) putEventToCache(event)
   return event
 }
 
@@ -1081,18 +1123,18 @@ async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   pubkeys = [...new Set(pubkeys)]
 
   const metas: MetaEvent[] = []
-  const reqPubkeys: string[] = []
+  const reqPubkeys = new Set<string>()
   pubkeys.forEach((p) => {
     const meta = metaCache.get(p)
     if (meta) metas.push({ ...meta })
-    else reqPubkeys.push(p)
+    else reqPubkeys.add(p)
   })
 
-  if (reqPubkeys.length > 0) {
+  const fetch = async (options: FetchOptions) => {
     const ndkEvents = await fetchEventsRead(ndk, {
       kinds: [KIND_META],
-      authors: reqPubkeys
-    })
+      authors: [...reqPubkeys]
+    }, options)
 
     // drop ndk stuff
     const metaEvents = [...ndkEvents.values()].map((e) => createMetaEvent(rawEvent(e)))
@@ -1102,14 +1144,35 @@ async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
       e.profile = parseProfileJson(e)
     })
 
+    for (const { pubkey } of metaEvents)
+      reqPubkeys.delete(pubkey)
+
+    return metaEvents
+  }
+
+  if (reqPubkeys.size > 0) {
+    const size = reqPubkeys.size
+    const metaEvents = await fetch({ cacheOnly: true })
+
+    // merge with cached results
+    metas.push(...metaEvents)
+
+    console.log('meta fetched from local relay ', metaEvents.length, 'req', size)
+  }
+
+  if (reqPubkeys.size > 0) {
+    const size = reqPubkeys.size
+    const metaEvents = await fetch({ noCache: true })
+
     // put to cache
     metaEvents.forEach((e) => putEventToCache(e))
 
     // merge with cached results
     metas.push(...metaEvents)
+
+    console.log('meta fetch from remote relay ', metaEvents.length, 'cache', metaCache.size, 'req', size)
   }
 
-  console.log('meta cache', metaCache.size)
   return metas
 }
 
@@ -1133,35 +1196,48 @@ interface IFetchEventByIdsParams {
 
 async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise<AugmentedEvent[]> {
   const results: AugmentedEvent[] = []
-  const reqIds: string[] = []
+  const reqIds = new Set<string>()
   ids.forEach((id) => {
     const ne = eventCache.get(id)
     if (ne) {
       // make sure kinds match
       if (kinds.includes(ne.kind)) results.push({ ...ne })
     } else {
-      reqIds.push(id)
+      reqIds.add(id)
     }
   })
 
-  if (reqIds.length > 0) {
+  const fetch = async (relays: string[]) => {
     const ndkEvents = await ndk.fetchEvents(
       {
-        ids: reqIds,
+        ids: [...reqIds],
         kinds
       },
       {}, // opts
-      NDKRelaySet.fromRelayUrls(readRelays, ndk)
+      NDKRelaySet.fromRelayUrls(relays, ndk)
     )
     //    console.log('ids', ids, 'reqIds', reqIds, 'kinds', kinds, 'events', ndkEvents)
 
-    const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e)).filter((e) => ids.includes(e.id))
+    return [...ndkEvents.values()].filter((e) => ids.includes(e.id)).map((e) => rawEvent(e))
+  }
+
+  if (reqIds.size > 0) {
+    const cached = await fetch([cacheRelay])
+    results.push(...cached)
+    for (const { id } of cached)
+      reqIds.delete(id)
+
+    console.log('events from local relay', cached.length)
+  }
+
+  if (reqIds.size > 0) {
+    const augmentedEvents = await fetch(readRelays)
 
     augmentedEvents.forEach((e) => putEventToCache(e))
 
     results.push(...augmentedEvents)
 
-    console.log('event cache', eventCache.size)
+    console.log('event cache extended', eventCache.size)
   }
 
   // desc by tm
@@ -1693,7 +1769,7 @@ class Subscription<OutputEventType> {
     const sub: NDKSubscription = await ndk.subscribe(
       filter,
       { closeOnEose: false },
-      NDKRelaySet.fromRelayUrls(readRelays, ndk),
+      NDKRelaySet.fromRelayUrls([cacheRelay, ...readRelays], ndk),
       /* autoStart */ false
     )
 
@@ -1923,7 +1999,7 @@ export function createAddrOpener(cb: (addr: string) => void): (event: NostrEvent
 
 export function connect(): Promise<void> {
   // main instance
-  ndk = new NDK({ explicitRelayUrls: allRelays })
+  ndk = new NDK({ explicitRelayUrls: [cacheRelay, ...allRelays] })
 
   const scheduleStats = () => {
     setTimeout(() => {
@@ -2039,8 +2115,9 @@ export function putEventToCache(e: AugmentedEvent | MetaEvent) {
   if (e.kind === KIND_META) metaCache.set(e.pubkey, e)
   eventCache.set(e.id, e)
   addrCache.set(getEventAddr(e), e)
-  if (addLocalRelayEvent(e))
+  if (addLocalRelayEvent(e)) {
     dbi.putLocalRelayEvent(e)
+  }
 }
 
 export function setNsbSigner(token: string) {
@@ -2141,4 +2218,4 @@ export function reconnect() {
   checkReconnect(nsbNDK, true)
 }
 
-//localStorage.debug = ''
+localStorage.debug = 'ndk:*'

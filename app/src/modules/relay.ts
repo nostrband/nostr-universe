@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { matchFilter, matchFilters } from '@nostrband/nostr-tools'
 import { dbi } from './db'
-import { getEventAddr } from './nostr'
+import { KIND_CONTACT_LIST, KIND_META, getEventAddr } from './nostr'
 
 const events = []
 const eventById = new Map<string, number>()
@@ -16,16 +16,28 @@ export function addLocalRelayEvent(e) {
 
   const index = events.length
 
-  const put = (map: Map<string, number[]>, key) => {
+  const put = (map: Map<string, number[]>, key, replace?: boolean) => {
     if (!map.has(key)) map.set(key, [])
     const a = map.get(key)
-    a?.push(index)
+    if (replace && a?.length > 0) {
+      const oldIndex = a[0]
+      const old = events[oldIndex]
+      if (old.created_at < e.created_at) {
+        a[0] = index
+      }
+    } else {
+      a?.push(index)
+    }
   }
 
   put(eventsByKind, e.kind+'')
   put(eventsByAuthor, e.pubkey)
-  put(eventsByAuthorKind, e.kind + ':' + e.pubkey)
-  put(eventsByAddr, getEventAddr(e))
+  const replaceAuthorKind = e.kind === KIND_META || e.kind === KIND_CONTACT_LIST
+  put(eventsByAuthorKind, e.kind + ':' + e.pubkey, replaceAuthorKind)
+  const replaceAddr = e.kind === KIND_META || e.kind === KIND_CONTACT_LIST
+    || (e.kind >= 10000 && e.kind < 20000)
+    || (e.kind >= 30000 && e.kind < 40000)
+  put(eventsByAddr, getEventAddr(e), replaceAddr)
   eventById.set(e.id, index)
   events.push(e)
   return true
@@ -78,8 +90,8 @@ export class LocalRelayClient {
     this.removeSub(subId)
   }
   onREQ(subId, ...filters) {
-    console.log('REQ', subId, filters)
     const start = Date.now()
+    console.log(start, 'REQ', subId, filters)
 
     this.addSub(subId, filters)
 
@@ -160,7 +172,7 @@ export class LocalRelayClient {
       let send = false
       for (const filterIndex of filterIndexes) {
         const filter = filters[filterIndex]
-        const limit = Math.min(filter.limit || 1000, 1000)
+        const limit = Math.min(filter.limit || 3000, 3000)
         const count = filterCounts[filterIndex]
         if (count < limit) {
           filterCounts[filterIndex]++
@@ -174,7 +186,7 @@ export class LocalRelayClient {
       }
     }
 
-    console.log("REQ EOSE done in ", Date.now() - start, "sent", sent, "results", results.length)
+    console.log(Date.now(), "REQ EOSE done in ", Date.now() - start, "sent", sent, "results", results.length)
 
     this.send(['EOSE', subId])
   }
