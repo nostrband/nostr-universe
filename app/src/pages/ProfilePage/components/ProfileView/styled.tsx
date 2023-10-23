@@ -1,6 +1,20 @@
 import { forwardRef } from 'react'
 import { styled } from '@mui/material/styles'
-import { Box, Avatar, Typography, TypographyProps, Button, BoxProps } from '@mui/material'
+import {
+  Box,
+  Avatar,
+  Typography,
+  TypographyProps,
+  Button,
+  BoxProps,
+  StackProps,
+  Stack,
+  IconButton,
+  IconButtonProps
+} from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+
+const AVATAR_SIZE = 80
 
 export const StyledViewBaner = styled((props: BoxProps & { url: string }) => <Box {...props} />)(({ theme, url }) => ({
   position: 'relative',
@@ -10,41 +24,60 @@ export const StyledViewBaner = styled((props: BoxProps & { url: string }) => <Bo
     : 'linear-gradient(45deg, rgba(238,59,255,1) 0%, rgba(121,9,95,1) 35%, rgba(117,0,255,1) 100%)',
   borderRadius: theme.shape.borderRadius,
   backgroundSize: 'cover',
-  marginBottom: 50
+  marginBottom: '4rem'
+}))
+
+export const CurrentProfileWrapper = styled((props: BoxProps) => <Box {...props}></Box>)(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  maxWidth: 90,
+  flex: 1,
+  width: 'fit-content',
+  position: 'absolute',
+  bottom: -60,
+  left: '0.5rem',
+  right: 0,
+  zIndex: 1
+}))
+
+export const SuggestedProfilesWrapper = styled((props: StackProps) => (
+  <Stack {...props} flexDirection={'row'} gap={'0.5rem'} alignItems={'center'} />
+))({
+  position: 'absolute',
+  bottom: `calc(${AVATAR_SIZE / -2}px - 0.5rem)`,
+  width: '100%',
+  paddingLeft: `calc(${AVATAR_SIZE}px + 1rem)`
+})
+
+export const StyledAddButton = styled((props: IconButtonProps) => (
+  <IconButton {...props}>
+    <AddIcon color="inherit" />
+  </IconButton>
+))(({ theme }) => ({
+  color: theme.palette.light.light,
+  height: 'fit-content',
+  alignSelf: 'center',
+  '&:is(&, &:hover, &:active)': {
+    background: theme.palette.decorate.main
+  },
+  marginLeft: 'auto'
 }))
 
 export const StyledViewAvatar = styled(Avatar)(({ theme }) => ({
   border: '3px solid',
-  height: 70,
-  width: 70,
+  height: AVATAR_SIZE,
+  width: AVATAR_SIZE,
   borderColor: theme.palette.light.light
 }))
 
-export const StyledViewAvatarWrapper = styled(Box)(() => ({
-  position: 'absolute',
-  bottom: -35,
-  left: 0,
-  right: 0,
-  margin: 'auto',
-  zIndex: 1,
-  height: 70,
-  width: 70
-}))
-
-export const StyledViewAvatarSwitch = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  bottom: -5,
-  right: -5,
-  zIndex: 1,
-  height: 30,
-  width: 30,
-  borderRadius: '50%',
-  background: theme.palette.decorate.main,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: theme.palette.background.default
-}))
+export const ProfilesList = styled((props: StackProps) => (
+  <Stack {...props} flexDirection={'row'} gap={'0.5rem'} alignItems={'center'} justifyContent={'flex-start'} />
+))({
+  flex: 2,
+  overflow: 'auto',
+  borderRadius: '12px'
+})
 
 export const StyledViewName = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
@@ -53,8 +86,13 @@ export const StyledViewName = styled(
 )(({ theme }) => ({
   fontWeight: 'bold',
   textAlign: 'center',
-  marginBottom: 10,
-  color: theme.palette.light.light
+  color: theme.palette.light.light,
+  width: '100%',
+  display: 'inline-block',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+  marginBottom: 10
 }))
 
 export const StyledViewKey = styled(
