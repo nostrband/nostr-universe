@@ -7,6 +7,7 @@ import { useChangeAccount } from '@/hooks/workspaces'
 import { copyToClipBoard, getNpub, getProfileImage, isGuest } from '@/utils/helpers/prepare-data'
 import {
   CurrentProfileWrapper,
+  ProfilesList,
   StyledAddButton,
   StyledForm,
   StyledViewAvatar,
@@ -21,7 +22,7 @@ import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
 import { userService } from '@/store/services/user.service'
 import { useProfileImageSource } from '@/hooks/profile-image'
 import { IAccount } from '../ModalAccounts/types'
-import { IconButton, Stack } from '@mui/material'
+import { IconButton } from '@mui/material'
 import { Input } from '@/shared/Input/Input'
 import { ItemProfile } from '../ItemProfile/ItemProfile'
 
@@ -73,34 +74,33 @@ export const ProfileView = () => {
 
   return (
     <Container>
-      <StyledViewBaner url={url}></StyledViewBaner>
-
-      <Stack flexDirection={'row'} gap={'0.5rem'} alignItems={'center'} ref={viewRef}>
+      <StyledViewBaner url={url}>
         <CurrentProfileWrapper>
           <StyledViewAvatar src={getProfileImage(currentProfile)} />
-          <StyledViewName variant="h5" component="div">
-            {name}
-          </StyledViewName>
         </CurrentProfileWrapper>
+        <SuggestedProfilesWrapper flexDirection={'row'} gap={'0.5rem'} alignItems={'center'} ref={viewRef}>
+          {!!accounts.length && (
+            <ProfilesList>
+              {accounts.map((account) => {
+                return (
+                  <ItemProfile
+                    {...account}
+                    onChangeAccount={() => handlechangeAccount(account.pubkey)}
+                    key={account.pubkey}
+                  />
+                )
+              })}
+            </ProfilesList>
+          )}
 
-        {!!accounts.length && (
-          <SuggestedProfilesWrapper>
-            {accounts.map((account) => {
-              return (
-                <ItemProfile
-                  {...account}
-                  onChangeAccount={() => handlechangeAccount(account.pubkey)}
-                  key={account.pubkey}
-                />
-              )
-            })}
-          </SuggestedProfilesWrapper>
-        )}
+          <StyledAddButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.ADD_KEY_MODAL, { replace: true })} />
+        </SuggestedProfilesWrapper>
+      </StyledViewBaner>
 
-        <StyledAddButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.ADD_KEY_MODAL, { replace: true })} />
-      </Stack>
-
-      <StyledViewKey component="div">{type}</StyledViewKey>
+      <StyledViewName variant="h5" component="div">
+        {name}
+      </StyledViewName>
+      {type && <StyledViewKey component="div">{type}</StyledViewKey>}
       {npub && (
         <StyledForm>
           <Input
