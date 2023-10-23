@@ -38,6 +38,7 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { selectCurrentWorkspaceTabs } from '@/store/store'
 
 const MAX_HISTORY = 10
 
@@ -58,7 +59,7 @@ export const SearchPageContent = () => {
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { apps = [] } = useAppSelector((state) => state.apps)
-  const { tabs = [] } = useAppSelector((state) => state.tab)
+  const tabs = useAppSelector(selectCurrentWorkspaceTabs)
   const dispatch = useAppDispatch()
 
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)

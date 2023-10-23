@@ -202,9 +202,9 @@ function getEventAddr(e: NDKEvent | AugmentedEvent): string {
 }
 
 function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
-  return new Promise((ok) => {
+  return new Promise(async (ok) => {
     const start = Date.now()
-    const events = ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
+    const events = await ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
     for (const e of events.values()) {
       const augmentedEvent = rawEvent(e)
       putEventToCache(augmentedEvent)
