@@ -43,7 +43,12 @@ export const CurrentProfileWrapper = styled((props: BoxProps) => <Box {...props}
 
 export const SuggestedProfilesWrapper = styled((props: StackProps) => (
   <Stack {...props} flexDirection={'row'} gap={'0.5rem'} alignItems={'center'} />
-))({ position: 'absolute', bottom: `calc(${AVATAR_SIZE / -2}px - 0.5rem)`, width: '100%' })
+))({
+  position: 'absolute',
+  bottom: `calc(${AVATAR_SIZE / -2}px - 0.5rem)`,
+  width: '100%',
+  paddingLeft: `calc(${AVATAR_SIZE}px + 1rem)`
+})
 
 export const StyledAddButton = styled((props: IconButtonProps) => (
   <IconButton {...props}>
@@ -67,12 +72,11 @@ export const StyledViewAvatar = styled(Avatar)(({ theme }) => ({
 }))
 
 export const ProfilesList = styled((props: StackProps) => (
-  <Stack {...props} flexDirection={'row'} gap={'0.5rem'} alignItems={'center'} />
+  <Stack {...props} flexDirection={'row'} gap={'0.5rem'} alignItems={'center'} justifyContent={'flex-start'} />
 ))({
   flex: 2,
   overflow: 'auto',
-  borderRadius: '12px',
-  paddingLeft: `calc(${AVATAR_SIZE}px + 0.5rem)`
+  borderRadius: '12px'
 })
 
 export const StyledViewName = styled(
