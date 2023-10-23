@@ -27,7 +27,7 @@ import { Input } from '@/shared/Input/Input'
 import { ItemProfile } from '../ItemProfile/ItemProfile'
 
 export const ProfileView = () => {
-  const { handleClose, handleOpen } = useOpenModalSearchParams()
+  const { handleOpen } = useOpenModalSearchParams()
   const { currentProfile, profiles } = useAppSelector((state) => state.profile)
   const { keys, currentPubkey, readKeys, nsbKeys } = useAppSelector((state) => state.keys)
   const { changeAccount } = useChangeAccount()
@@ -61,7 +61,7 @@ export const ProfileView = () => {
     fetchTrendingNotes('')
     fetchTrendingProfiles('')
     changeAccount(pubkey)
-    handleClose()
+//    handleClose()
   }
 
   const name = getRenderedUsername(currentProfile, currentPubkey)
