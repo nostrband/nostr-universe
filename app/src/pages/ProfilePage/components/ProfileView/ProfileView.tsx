@@ -78,7 +78,7 @@ export const ProfileView = () => {
         <CurrentProfileWrapper>
           <StyledViewAvatar src={getProfileImage(currentProfile)} />
         </CurrentProfileWrapper>
-        <SuggestedProfilesWrapper flexDirection={'row'} gap={'0.5rem'} alignItems={'center'} ref={viewRef}>
+        <SuggestedProfilesWrapper flexDirection={'row'} gap={'0.5rem'} alignItems={'center'}>
           {!!accounts.length && (
             <ProfilesList>
               {accounts.map((account) => {
@@ -97,7 +97,7 @@ export const ProfileView = () => {
         </SuggestedProfilesWrapper>
       </StyledViewBaner>
 
-      <StyledViewName variant="h5" component="div">
+      <StyledViewName ref={viewRef} variant="h5" component="div">
         {name}
       </StyledViewName>
       {type && <StyledViewKey component="div">{type}</StyledViewKey>}
