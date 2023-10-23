@@ -163,7 +163,7 @@ export const nostrbandRelay = 'wss://relay.nostr.band/'
 export const nostrbandRelayAll = 'wss://relay.nostr.band/all'
 
 // cacheRelay
-const readRelays = [cacheRelay, nostrbandRelay]//, 'wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.bg', 'wss://nostr.mom']
+const readRelays = [cacheRelay, nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.bg', 'wss://nostr.mom']
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 const allRelays = [nostrbandRelayAll, ...writeRelays]
 
@@ -1702,13 +1702,20 @@ class Subscription<OutputEventType> {
 
     // helper to transform and return the event
     const returnEvent = async (event: NDKEvent) => {
-      const e = await this.onEvent(rawEvent(event))
+      const ae = rawEvent(event)
+      putEventToCache(ae)
+      const e = await this.onEvent(ae)
       console.log('returning', this.label, e)
       await cb(e)
     }
 
+    sub.on('event:dup', (event: NDKEvent, relay: NDKRelay) => {
+      console.log("sub event dup", event.id, "kind", event.kind, "from relay", relay.url)
+    })
+
     // call cb on each event
-    sub.on('event', (event: NDKEvent) => {
+    sub.on('event', (event: NDKEvent, relay: NDKRelay) => {
+      console.log("sub event", event.id, "kind", event.kind, "from relay", relay.url)
       // dedup
       const dedupKey = event.deduplicationKey()
       const existingEvent = events.get(dedupKey)
