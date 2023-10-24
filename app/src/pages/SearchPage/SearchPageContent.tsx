@@ -123,14 +123,18 @@ export const SearchPageContent = () => {
 
   const getOptions = [...optionsTabs, ...optionsApps]
 
-  const filterOptions = (options: IDropdownOption[], state: FilterOptionsState<IDropdownOption>) => {
-    const inputValue = state.inputValue.toLowerCase()
-
-    const filteredOptions = options.filter((option) => {
+  const filterOptionsByValue = (options: IDropdownOption[], str: string) => {
+    const inputValue = str.toLowerCase()
+    return options.filter((option) => {
       const label = option.label.toLowerCase()
       const url = option.value.toLowerCase()
       return label.includes(inputValue) || url.includes(inputValue)
     })
+  }
+
+  const filterOptions = (options: IDropdownOption[], state: FilterOptionsState<IDropdownOption>) => {
+
+    const filteredOptions = filterOptionsByValue(options, state.inputValue)
 
     const sortGroup: Record<string, IDropdownOption[]> = {}
 
@@ -516,7 +520,8 @@ export const SearchPageContent = () => {
   }
 
   const getGroupCount = (group: string) => {
-    return getOptions.filter(o => o.group === group).length
+    return filterOptionsByValue(getOptions, searchValue)
+      .filter(o => o.group === group).length
   }
 
   return (
