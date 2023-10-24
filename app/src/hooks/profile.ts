@@ -33,6 +33,7 @@ export const useUpdateProfile = () => {
       if (contactList?.contactEvents) {
         const lastContacts = await dbi.listLastContacts(contactList.pubkey)
         console.log('lastContacts', lastContacts)
+        // FIXME sort by lastContacts.tm
       }
 
       dispatch(setContactList({ contactList }))

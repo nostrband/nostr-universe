@@ -1,9 +1,12 @@
-// @ts-nocheck
+//! @ts-nocheck
 import { matchFilter, matchFilters } from '@nostrband/nostr-tools'
 import { dbi } from './db'
 import { KIND_CONTACT_LIST, KIND_META, getEventAddr } from './nostr'
+// @ts-ignore
+import { NostrEvent } from '@nostrband/ndk'
 
-const events = []
+
+const events: NostrEvent[] = []
 const eventById = new Map<string, number>()
 const eventsByKind = new Map<string, number[]>()
 const eventsByAuthor = new Map<string, number[]>()
@@ -11,15 +14,15 @@ const eventsByAuthorKind = new Map<string, number[]>()
 const eventsByAddr = new Map<string, number[]>()
 const subs = new Map<string, any>()
 
-export function addLocalRelayEvent(e) {
+export function addLocalRelayEvent(e: NostrEvent) {
   if (eventById.has(e.id)) return false
 
   const index = events.length
 
-  const put = (map: Map<string, number[]>, key, replace?: boolean) => {
+  const put = (map: Map<string, number[]>, key: string, replace?: boolean) => {
     if (!map.has(key)) map.set(key, [])
     const a = map.get(key)
-    if (replace && a?.length > 0) {
+    if (replace && a && a.length > 0) {
       const oldIndex = a[0]
       const old = events[oldIndex]
       if (old.created_at < e.created_at) {
@@ -44,8 +47,12 @@ export function addLocalRelayEvent(e) {
 }
 
 export class LocalRelayClient {
-  constructor(onSend) {
-    this._subs = new Set()
+
+  _subs: Set<any>
+  _onSend: (msg: any) => void
+
+  constructor(onSend: (msg: any) => void) {
+    this._subs = new Set<any>()
     this._onSend = onSend
   }
   cleanup() {
@@ -53,31 +60,33 @@ export class LocalRelayClient {
       this.removeSub(subId)
     }
   }
-  addSub(subId, filters) {
+  addSub(subId: string, filters: any) {
     subs.set(subId, {instance: this, filters})
     this._subs.add(subId)
   }
-  removeSub(subId) {
+  removeSub(subId: string) {
     subs.delete(subId)
     this._subs.delete(subId)
   }
-  send(message) {
+  send(message: any) {
     this._onSend(message)
   }
-  handle(message) {
+  handle(message: string) {
     try {
       message = JSON.parse(message)
     } catch (e) {
       this.send(['NOTICE', '', 'Unable to parse message'])
     }
 
-    let verb, payload
+    let verb: string = ''
+    let payload: Array<any> = []
     try {
       [verb, ...payload] = message
     } catch (e) {
       this.send(['NOTICE', '', 'Unable to read message'])
     }
 
+    // @ts-ignore
     const handler = this[`on${verb}`]
 
     if (handler) {
@@ -86,10 +95,10 @@ export class LocalRelayClient {
       this.send(['NOTICE', '', 'Unable to handle message'])
     }
   }
-  onCLOSE(subId) {
+  onCLOSE(subId: string) {
     this.removeSub(subId)
   }
-  onREQ(subId, ...filters) {
+  onREQ(subId: string, ...filters: any[]) {
     const start = Date.now()
     console.log(start, 'REQ', subId, filters)
 
@@ -98,7 +107,7 @@ export class LocalRelayClient {
     let resultFilters = new Map<string, Set<number>>()
     let results: NostrEvent[] = []
 
-    const matchAppend = (filter, filterIndex, e) => {
+    const matchAppend = (filter: any, filterIndex: number, e: NostrEvent) => {
       if (!e) return
 
       try {
@@ -120,6 +129,7 @@ export class LocalRelayClient {
       if (filter.ids?.length) {
         for (const id of filter.ids) {
           const index = eventById.get(id)
+          if (index === undefined) continue
           const e = events[index]
           matchAppend(filter, filterIndex, e)
         }
@@ -145,6 +155,9 @@ export class LocalRelayClient {
             matchAppend(filter, filterIndex, e)
           }
         }
+      } else {
+        for (const e of events)
+          matchAppend(filter, filterIndex, e)
       }
     }
 
@@ -166,6 +179,7 @@ export class LocalRelayClient {
     let sent = 0
     for (const e of results) {
       const filterIndexes = resultFilters.get(e.id)
+      if (!filterIndexes) throw new Error("Impossible")
 //      console.log("event", e.id, "filterIndexes", filterIndexes)
 
       // check if this event fits one of it's matching filters' limits
@@ -190,7 +204,7 @@ export class LocalRelayClient {
 
     this.send(['EOSE', subId])
   }
-  onEVENT(event) {
+  onEVENT(event: NostrEvent) {
     const added = addLocalRelayEvent(event)
 
     console.log('EVENT', event, true)
@@ -210,9 +224,10 @@ export class LocalRelayClient {
 }
 
 async function init() {
+  const start = Date.now()
   const dbEvents = await dbi.listLocalRelayEvents()
   for (const e of dbEvents) 
     addLocalRelayEvent(e)
-  console.log("local events", events.length)
+  console.log("local events", events.length, "loaded in", Date.now() - start, "ms")
 }
 init()
