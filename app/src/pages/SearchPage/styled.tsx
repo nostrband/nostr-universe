@@ -13,7 +13,35 @@ import { purple } from '@mui/material/colors'
 import { darken } from '@mui/system'
 
 export const StyledForm = styled('form')(() => ({
-  marginBottom: 15
+  marginBottom: 15,
+  position: 'relative'
+}))
+
+export const StyledInputBox = styled('div')(({ theme }) => ({
+  width: '100%',
+  minHeight: 56,
+  background: theme.palette.secondary.main,
+  borderRadius: theme.shape.borderRadius,
+  fontSize: 14,
+  padding: '4px 16px',
+  display: 'flex',
+  alignItems: 'center',
+  letterSpacing: '0.5px',
+  '& .suggestion_block': {
+    whiteSpace: 'nowrap',
+    maxWidth: 'calc(100% - 1rem - 80px)',
+    overflow: 'auto'
+  },
+  '& .hidden_part': {
+    opacity: 0,
+    height: 'fit-content'
+  },
+  '& .suggestion_value': {
+    background: theme.palette.secondary.light,
+    color: '#fff',
+    height: 'fit-content',
+    display: 'inline-block'
+  }
 }))
 
 const color = purple[100]
@@ -71,9 +99,9 @@ export const StyledSearchTermValue = styled((props: TypographyProps) => {
 }))
 
 export const StyledAutocompleteInput = styled(TextField)(({ theme }) => ({
-  background: theme.palette.secondary.main,
+  background: 'none',
   width: '100%',
-  minHeight: 50,
+  minHeight: 56,
   borderRadius: theme.shape.borderRadius,
   color: '#fff',
   fontSize: 14,
@@ -90,29 +118,14 @@ export const StyledAutocompleteInput = styled(TextField)(({ theme }) => ({
   '.MuiOutlinedInput-notchedOutline': {
     border: 'none'
   },
-  '.MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
-    right: 59
+  '.MuiOutlinedInput-root': {
+    paddingRight: '9px !important'
   }
 }))
 
 export const StyledAutocomplete = styled(Box)(() => ({
   position: 'relative',
   width: '100%'
-}))
-
-export const StyledAutocompleteButton = styled(Box)(({ theme }) => ({
-  background: theme.palette.secondary.main,
-  position: 'absolute',
-  top: 0,
-  right: 0,
-  minWidth: 56,
-  minHeight: 56,
-  display: 'flex',
-  borderRadius: theme.shape.borderRadius,
-  color: '#fff',
-  '& > *': {
-    margin: 'auto'
-  }
 }))
 
 export const GroupHeader = styled('div')(({ theme }) => ({
