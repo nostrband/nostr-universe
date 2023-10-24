@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, FC, CSSProperties } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { useOpenApp } from '@/hooks/open-entity'
 import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
@@ -11,7 +10,7 @@ import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/Suggeste
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
-import { StyledForm, StyledInput } from './styled'
+import { StyledForm, StyledInput, StyledInputBox } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
@@ -37,10 +36,11 @@ export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'search'
 
-  const { openBlank } = useOpenApp()
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
+
+  const [suggestion, setSuggestion] = useState('')
 
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [notes, setNotes] = useState<AuthoredEvent[] | null>(null)
@@ -75,7 +75,7 @@ export const SearchPageContent = () => {
 
       return false
     },
-    [handleOpenContextMenu, openBlank]
+    [handleOpenContextMenu]
   )
 
   const loadEvents = useCallback(
@@ -105,14 +105,13 @@ export const SearchPageContent = () => {
   const updateSearchHistory = useCallback(
     (history: SearchTerm[]) => {
       history.sort((a, b) => a.value.localeCompare(b.value))
-      // eslint-disable-next-line
-      // @ts-ignore
-      const filtered: SearchTerm[] = history
+
+      const filtered = history
         .map((e, i, a) => {
           if (!i || a[i - 1].value !== e.value) return e
         })
         .filter((e) => e !== undefined)
-        .slice(0, MAX_HISTORY)
+        .slice(0, MAX_HISTORY) as SearchTerm[]
 
       filtered.sort((a, b) => b.timestamp - a.timestamp)
 
@@ -124,20 +123,21 @@ export const SearchPageContent = () => {
   const searchHandler = useCallback(
     (value: string) => {
       if (value.trim().length > 0) {
+        const trimmedValue = value.trim()
         // if custom handler executed then we don't proceed
-        if (onSearch(value)) return
+        if (onSearch(trimmedValue)) return
 
-        if (value !== lastValue) {
+        if (trimmedValue !== lastValue) {
           setNotes(null)
           setLongNotes(null)
           setProfiles(null)
         }
-        setLastValue(value)
-        loadEvents(value)
+        setLastValue(trimmedValue)
+        loadEvents(trimmedValue)
 
         const term = {
           id: uuidv4(),
-          value: value,
+          value: trimmedValue,
           timestamp: Date.now(),
           pubkey: currentPubkey
         }
@@ -152,16 +152,29 @@ export const SearchPageContent = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    e.stopPropagation()
     inputRef.current?.blur()
+    setSuggestion('')
     searchHandler(searchValue)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchValue({ searchValue: e.target.value }))
+
+    if (e.target.value.trim().length) {
+      const suggestion = searchHistoryOptions.find((s) =>
+        s.value.toLowerCase().startsWith(e.target.value.toLowerCase())
+      )
+      setSuggestion(suggestion?.value || '')
+    } else {
+      setSuggestion('')
+    }
   }
 
-  const handleClear = () => {
+  const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
     dispatch(setSearchValue({ searchValue: '' }))
+    setSuggestion('')
   }
 
   const handleOpenProfile = (profile: MetaEvent) => {
@@ -193,15 +206,6 @@ export const SearchPageContent = () => {
     handleOpenContextMenu({ bech32: naddr })
   }
 
-  useEffect(() => {
-    if (searchValue.trim().length) {
-      // WHY? It's re-searching on any state change,
-      // which makes no sense, and doesn't help anywhere else
-      //      loadEvents(searchValue)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadEvents])
-
   const getSearchHistory = useCallback(async () => {
     if (!currentPubkey) return undefined
 
@@ -231,7 +235,7 @@ export const SearchPageContent = () => {
       dispatch(setSearchValue({ searchValue: searchTerm.value }))
       searchHandler(searchTerm.value)
     },
-    [searchHandler, dispatch, setSearchValue]
+    [searchHandler, dispatch]
   )
 
   const renderContent = () => {
@@ -351,6 +355,12 @@ export const SearchPageContent = () => {
     )
   }
 
+  const handleAcceptSuggestion = () => {
+    const isSuggestionExists = suggestion.trim().length !== 0
+    if (!isSuggestionExists) return undefined
+    dispatch(setSearchValue({ searchValue: suggestion }))
+  }
+
   return (
     <StyledWrapVisibility isShow={isShow}>
       <Container>
@@ -364,7 +374,7 @@ export const SearchPageContent = () => {
                     <CloseIcon />
                   </IconButton>
                 )}
-                <IconButton type="submit" color="inherit" size="medium">
+                <IconButton type="submit" color="inherit" size="medium" onClick={(e) => e.stopPropagation()}>
                   <SearchOutlinedIcon />
                 </IconButton>
               </>
@@ -375,7 +385,16 @@ export const SearchPageContent = () => {
               autoFocus: false,
               ref: inputRef
             }}
+            onClick={handleAcceptSuggestion}
           />
+          <StyledInputBox>
+            <div className="suggestion_block">
+              <span className="hidden_part">{searchValue}</span>
+              <span className="suggestion_value">
+                {suggestion.substring(searchValue.length).replace(/ /g, '\u00A0')}
+              </span>
+            </div>
+          </StyledInputBox>
         </StyledForm>
       </Container>
 
