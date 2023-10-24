@@ -79,20 +79,20 @@ export const SearchPageContent = () => {
   )
 
   const loadEvents = useCallback(
-    async (searchValue: string) => {
+    async (value: string) => {
       setIsLoading(true)
-      console.log('searching', searchValue)
-      searchProfiles(searchValue)
+      console.log('searching', value)
+      searchProfiles(value)
         .then((data) => {
           console.log('profiles', data)
           setProfiles(data)
         })
-        .then(() => searchNotes(searchValue))
+        .then(() => searchNotes(value))
         .then((data) => {
           console.log('notes', data)
           setNotes(data)
         })
-        .then(() => searchLongNotes(searchValue))
+        .then(() => searchLongNotes(value))
         .then((data) => {
           console.log('long notes', data)
           setLongNotes(data)
@@ -154,14 +154,29 @@ export const SearchPageContent = () => {
     e.preventDefault()
     e.stopPropagation()
     inputRef.current?.blur()
+    const value = suggestion || searchValue
+    console.log("value", value)
+    dispatch(setSearchValue({ searchValue: value }))
     setSuggestion('')
-    searchHandler(searchValue)
+    searchHandler(value)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // we had a suggestion and user clicked backspace?
+    const reduced = searchValue.length > e.target.value.length
+    if (reduced) {
+      const wasSug = suggestion != ''
+      if (wasSug) {
+        setSuggestion('')
+        setTimeout(() => {
+          e.target.setSelectionRange(searchValue.length, searchValue.length)
+        }, 0)
+        return
+      }
+    }
     dispatch(setSearchValue({ searchValue: e.target.value }))
 
-    if (e.target.value.trim().length) {
+    if (!reduced && e.target.value.trim().length) {
       const suggestion = searchHistoryOptions.find((s) =>
         s.value.toLowerCase().startsWith(e.target.value.toLowerCase())
       )
