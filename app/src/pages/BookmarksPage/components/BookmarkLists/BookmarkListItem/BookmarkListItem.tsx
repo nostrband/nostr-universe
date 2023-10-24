@@ -28,7 +28,7 @@ export const BookmarkListItem: FC<BookmarkListItemProps> = ({
       <StyledBookmarksCount>
         {bookmarksCount} {bookmarkText}
       </StyledBookmarksCount>
-      {description && (<StyledContent contentLine={1}>{description}</StyledContent>)}
+      {description && <StyledContent contentLine={1}>{description}</StyledContent>}
     </StyledWrapper>
   )
 }

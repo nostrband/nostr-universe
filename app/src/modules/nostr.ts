@@ -72,7 +72,7 @@ const ADDR_TYPES = ['', 'npub', 'note', 'nevent', 'nprofile', 'naddr']
 export const nostrbandRelay = 'wss://relay.nostr.band/'
 export const nostrbandRelayAll = 'wss://relay.nostr.band/all'
 
-const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol']//, 'wss://relay.nostr.bg', 'wss://nostr.mom']
+const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol'] //, 'wss://relay.nostr.bg', 'wss://nostr.mom']
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 const allRelays = [nostrbandRelayAll, ...writeRelays]
 
@@ -173,10 +173,7 @@ export function getEventNip19(e: NDKEvent | AugmentedEvent): string {
       pubkey: e.pubkey,
       relays: [nostrbandRelay]
     })
-  } else if (
-    (e.kind >= 10000 && e.kind < 20000) ||
-    (e.kind >= 30000 && e.kind < 40000)
-  ) {
+  } else if ((e.kind >= 10000 && e.kind < 20000) || (e.kind >= 30000 && e.kind < 40000)) {
     return nip19.naddrEncode({
       pubkey: e.pubkey,
       kind: e.kind,
@@ -205,6 +202,7 @@ function getEventAddr(e: NDKEvent | AugmentedEvent): string {
 }
 
 function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
+  // eslint-disable-next-line
   return new Promise(async (ok) => {
     const start = Date.now()
     const events = await ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
@@ -515,13 +513,14 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
 }
 
 export async function fetchFullyAugmentedEventsByAddrs(
-  addrs: EventAddr[], contactList?: string[]): Promise<AuthoredEvent[]> {
+  addrs: EventAddr[],
+  contactList?: string[]
+): Promise<AuthoredEvent[]> {
   const augmentedEvents = await fetchEventsByAddrs(ndk, addrs)
 
   const kindEvents = new Map<number, AugmentedEvent[]>()
   for (const e of augmentedEvents) {
-    if (!kindEvents.has(e.kind))
-      kindEvents.set(e.kind, [])
+    if (!kindEvents.has(e.kind)) kindEvents.set(e.kind, [])
     const events = kindEvents.get(e.kind)
     events?.push(e)
   }
@@ -1474,7 +1473,9 @@ export async function searchCommunities(q: string, limit: number = 30): Promise<
 }
 
 interface PromiseQueueCb {
+  // eslint-disable-next-line
   cb: (...args: any[]) => void
+  // eslint-disable-next-line
   args: any[]
 }
 
@@ -1485,7 +1486,7 @@ class PromiseQueue {
   queue: PromiseQueueCb[] = []
 
   constructor() {}
-
+  // eslint-disable-next-line
   appender(cb: (...cbArgs: any[]) => void): (...apArgs: any[]) => void {
     return (...args) => {
       this.queue.push({ cb, args })
@@ -1973,6 +1974,7 @@ export function stringToBech32(s: string, hex: boolean = false): string {
   return ''
 }
 
+// eslint-disable-next-line
 export function stringToBolt11(s: string): [string, any] {
   if (!s) return ['', null]
 
@@ -2242,7 +2244,7 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
       reconnected = true
       ndk.pool.removeRelay(r.url)
       const newRelay = new NDKRelay(r.url)
-      ndk.pool.addRelay(newRelay, /*connect*/false)
+      ndk.pool.addRelay(newRelay, /*connect*/ false)
       await newRelay.connect()
     }
   }

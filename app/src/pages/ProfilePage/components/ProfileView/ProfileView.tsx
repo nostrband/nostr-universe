@@ -61,7 +61,7 @@ export const ProfileView = () => {
     fetchTrendingNotes('')
     fetchTrendingProfiles('')
     changeAccount(pubkey)
-//    handleClose()
+    //    handleClose()
   }
 
   const name = getRenderedUsername(currentProfile, currentPubkey)

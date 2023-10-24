@@ -14,9 +14,9 @@ type ModalNPSScoreContentProps = {
 export const ModalNPSScoreContent: FC<ModalNPSScoreContentProps> = ({ handleClose }) => {
   const dispatch = useAppDispatch()
   const { sendFeedback } = useFeedback()
-
+  // eslint-disable-next-line
   const submitScoreFormHandler = async (data: any) => {
-    console.log("feedback", data)
+    console.log('feedback', data)
 
     handleClose()
 
@@ -26,9 +26,8 @@ export const ModalNPSScoreContent: FC<ModalNPSScoreContentProps> = ({ handleClos
 
       await dbi.advanceFeedbackTime()
       dispatch(getFeedbackInfoThunk())
-
     } catch (e) {
-      console.log("Failed ", e)
+      console.log('Failed ', e)
       showToast('Failed to send feedback!')
     }
   }

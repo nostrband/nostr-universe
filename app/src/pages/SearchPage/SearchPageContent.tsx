@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState, FC, CSSProperties } from 'react'
+import React, { useCallback, useEffect, useState, FC, CSSProperties } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import CloseIcon from '@mui/icons-material/Close'
 import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
@@ -10,7 +11,15 @@ import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/Suggeste
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
-import { StyledForm, StyledInput, StyledInputBox } from './styled'
+import {
+  GroupHeader,
+  GroupItems,
+  StyledAutocomplete,
+  StyledAutocompleteInput,
+  StyledForm,
+  StyledPopper
+} from './styled'
+import { StyledInputBox } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
@@ -21,16 +30,27 @@ import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNot
 import { dbi } from '@/modules/db'
 import { v4 as uuidv4 } from 'uuid'
 import { SearchTerm } from '@/modules/types/db'
-import { IconButton } from '@mui/material'
+import { IconButton, Box, Autocomplete, FilterOptionsState } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
-import CloseIcon from '@mui/icons-material/Close'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import { RecentQueries } from './components/RecentQueries/RecentQueries'
 import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { selectCurrentWorkspaceTabs } from '@/store/store'
 
 const MAX_HISTORY = 10
+
+interface IOptionApp {
+  id: string
+  icon: string
+  label: string
+  url: string
+  groupName: string
+  groupValue: string
+}
 
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
@@ -38,6 +58,8 @@ export const SearchPageContent = () => {
 
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
+  const { apps = [] } = useAppSelector((state) => state.apps)
+  const tabs = useAppSelector(selectCurrentWorkspaceTabs)
   const dispatch = useAppDispatch()
 
   const [suggestion, setSuggestion] = useState('')
@@ -53,7 +75,78 @@ export const SearchPageContent = () => {
   const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
 
   const { handleOpenContextMenu } = useOpenModalSearchParams()
-  const inputRef = useRef<HTMLElement>()
+
+  const [selectApp, setSelectApp] = useState<IOptionApp | string | null>(null)
+  const [openGroup, setOpenGroup] = useState<{ [key: string]: boolean }>({
+    tabs: false,
+    apps: false
+  })
+
+  const optionsApps: IOptionApp[] = apps.map((app, i) => ({
+    id: `app-${i}`,
+    icon: app.picture,
+    label: app.name,
+    url: app.url,
+    groupName: 'Apps',
+    groupValue: 'apps'
+  }))
+  const optionsTabs: IOptionApp[] = tabs.map((tab, i) => ({
+    id: `tab-${i}`,
+    icon: tab.icon,
+    label: tab.title,
+    url: tab.url,
+    groupName: 'Tabs',
+    groupValue: 'tabs'
+  }))
+
+  const getOptions = [...optionsTabs, ...optionsApps]
+
+  const filterOptions = (options: IOptionApp[], state: FilterOptionsState<IOptionApp>) => {
+    const inputValue = state.inputValue.toLowerCase()
+
+    const filteredOptions = options.filter((option) => {
+      const label = option.label.toLowerCase()
+      const url = option.url.toLowerCase()
+      return label.includes(inputValue) || url.includes(inputValue)
+    })
+
+    const sortGroup: Record<string, IOptionApp[]> = {}
+
+    filteredOptions.forEach((obj) => {
+      if (!sortGroup[obj.groupValue]) {
+        sortGroup[obj.groupValue] = []
+      }
+      sortGroup[obj.groupValue].push(obj)
+    })
+
+    if (selectApp && typeof selectApp === 'object') {
+      for (const group in sortGroup) {
+        if (!openGroup[group]) {
+          const currentIndex = sortGroup[group].findIndex((el) => el.id === selectApp.id)
+
+          if (currentIndex >= 0 && currentIndex > 2) {
+            const newData = [...sortGroup[group]]
+            const element = newData[currentIndex]
+            newData.splice(currentIndex, 1)
+
+            newData.unshift(element)
+
+            sortGroup[group] = newData
+          }
+        }
+      }
+    }
+
+    for (const group in sortGroup) {
+      if (!openGroup[group]) {
+        sortGroup[group] = sortGroup[group].slice(0, 3)
+      }
+    }
+
+    const concatSortGroupArrays: IOptionApp[] = ([] as IOptionApp[]).concat(...Object.values(sortGroup))
+
+    return concatSortGroupArrays
+  }
 
   const onSearch = useCallback(
     (str: string): boolean => {
@@ -152,38 +245,11 @@ export const SearchPageContent = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    e.stopPropagation()
-    inputRef.current?.blur()
-    const value = suggestion || searchValue
-    console.log("value", value)
+    const value = typeof selectApp === 'string' || selectApp === null ? suggestion || searchValue : selectApp.url
+    console.log('value', value)
     dispatch(setSearchValue({ searchValue: value }))
     setSuggestion('')
     searchHandler(value)
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // we had a suggestion and user clicked backspace?
-    const reduced = searchValue.length > e.target.value.length
-    if (reduced) {
-      const wasSug = suggestion != ''
-      if (wasSug) {
-        setSuggestion('')
-        setTimeout(() => {
-          e.target.setSelectionRange(searchValue.length, searchValue.length)
-        }, 0)
-        return
-      }
-    }
-    dispatch(setSearchValue({ searchValue: e.target.value }))
-
-    if (!reduced && e.target.value.trim().length) {
-      const suggestion = searchHistoryOptions.find((s) =>
-        s.value.toLowerCase().startsWith(e.target.value.toLowerCase())
-      )
-      setSuggestion(suggestion?.value || '')
-    } else {
-      setSuggestion('')
-    }
   }
 
   const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -370,6 +436,44 @@ export const SearchPageContent = () => {
     )
   }
 
+  const handleOpenGrop = (group: string) => {
+    const keyGroup = group.toLowerCase()
+
+    setOpenGroup((prev) => ({ ...prev, [keyGroup]: !prev[keyGroup] }))
+  }
+
+  const handleSelect = (_: React.SyntheticEvent<Element, Event>, selectedValue: IOptionApp | null | string) => {
+    setSelectApp(selectedValue)
+  }
+
+  const onInputChange = (_: React.SyntheticEvent<Element, Event>, textValue: string) => {
+    // we had a suggestion and user clicked backspace?
+    const reduced = searchValue.length > textValue.length
+    if (reduced && suggestion.length !== searchValue.length) {
+      const wasSug = suggestion != ''
+      if (wasSug) {
+        setSuggestion('')
+        setTimeout(() => {
+          dispatch(setSearchValue({ searchValue }))
+        }, 0)
+        return
+      }
+    }
+    dispatch(setSearchValue({ searchValue: textValue }))
+
+    if (!reduced && textValue.trim().length) {
+      const suggestion = searchHistoryOptions.find((s) => s.value.toLowerCase().startsWith(textValue.toLowerCase()))
+      setSuggestion(suggestion?.value || '')
+    } else {
+      setSuggestion('')
+    }
+  }
+
+  const isOptionEqualToValue = (option: IOptionApp, value: IOptionApp) =>
+    option.label === value.label && option.url === value.url
+  const getOptionLabel = (option: string | IOptionApp) =>
+    typeof option === 'string' ? option : `${option.label} - ${option.url}`
+
   const handleAcceptSuggestion = () => {
     const isSuggestionExists = suggestion.trim().length !== 0
     if (!isSuggestionExists) return undefined
@@ -380,28 +484,66 @@ export const SearchPageContent = () => {
     <StyledWrapVisibility isShow={isShow}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
-          <StyledInput
-            placeholder="Search"
-            endAdornment={
-              <>
-                {searchValue && (
-                  <IconButton type="button" color="inherit" size="medium" onClick={handleClear}>
-                    <CloseIcon />
-                  </IconButton>
-                )}
-                <IconButton type="submit" color="inherit" size="medium" onClick={(e) => e.stopPropagation()}>
-                  <SearchOutlinedIcon />
-                </IconButton>
-              </>
-            }
-            onChange={handleChange}
-            value={searchValue}
-            inputProps={{
-              autoFocus: false,
-              ref: inputRef
-            }}
-            onClick={handleAcceptSuggestion}
-          />
+          <StyledAutocomplete>
+            <Autocomplete
+              placeholder="Search"
+              popupIcon={false}
+              onChange={handleSelect}
+              onInputChange={onInputChange}
+              inputValue={searchValue}
+              value={selectApp ? selectApp : null}
+              isOptionEqualToValue={isOptionEqualToValue}
+              PopperComponent={StyledPopper}
+              fullWidth
+              options={getOptions}
+              getOptionLabel={getOptionLabel}
+              filterOptions={filterOptions}
+              groupBy={(option) => option.groupName}
+              sx={{ position: 'absolute', background: 'none' }}
+              renderGroup={(params) => {
+                return (
+                  <li key={params.key}>
+                    <GroupHeader>
+                      {params.group}
+                      <div onClick={() => handleOpenGrop(params.group)}>
+                        {openGroup[params.group.toLocaleLowerCase()] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      </div>
+                    </GroupHeader>
+                    <GroupItems>{params.children}</GroupItems>
+                  </li>
+                )
+              }}
+              renderOption={(props, option) => (
+                <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option.id}>
+                  <img loading="lazy" width="20" srcSet={option.icon} src={option.icon} alt={option.label} />
+                  {option.label} - {option.url}
+                </Box>
+              )}
+              freeSolo
+              renderInput={(params) => (
+                <StyledAutocompleteInput
+                  {...params}
+                  onClick={handleAcceptSuggestion}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {Boolean(searchValue.length) && (
+                          <IconButton type="button" color="inherit" size="medium" onClick={handleClear}>
+                            <CloseIcon />
+                          </IconButton>
+                        )}
+                        <IconButton type="submit" color="inherit" size="medium">
+                          <SearchOutlinedIcon />
+                        </IconButton>
+                      </>
+                    )
+                  }}
+                  placeholder="Search"
+                />
+              )}
+            />
+          </StyledAutocomplete>
           <StyledInputBox>
             <div className="suggestion_block">
               <span className="hidden_part">{searchValue}</span>

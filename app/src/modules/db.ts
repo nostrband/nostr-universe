@@ -35,10 +35,14 @@ export const dbi = {
   },
   listSignedZapRequests: async (pubkey: string) => {
     try {
-      return (await db.signedEvents.where({
-        pubkey,
-        kind: KIND_ZAP_REQUEST
-      }).toArray()).sort((a, b) => b.timestamp - a.timestamp)
+      return (
+        await db.signedEvents
+          .where({
+            pubkey,
+            kind: KIND_ZAP_REQUEST
+          })
+          .toArray()
+      ).sort((a, b) => b.timestamp - a.timestamp)
     } catch (error) {
       console.log(`List signedEvents error: ${error}`)
       return []
