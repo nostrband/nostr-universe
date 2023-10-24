@@ -48,7 +48,8 @@ interface IDropdownOption {
   icon: string
   label: string
   value: string
-  type: 'app' | 'tab'
+  type: 'app' | 'tab',
+  group: string
 }
 
 export const SearchPageContent = () => {
@@ -82,6 +83,14 @@ export const SearchPageContent = () => {
     apps: false
   })
 
+  const getTypeName = (type: string) => {
+    switch (type) {
+      case 'app': return 'Apps'
+      case 'tab': return 'Tabs'
+    }
+    return 'Other'
+  }
+
   // FIXME add pins!
   const optionsApps: IDropdownOption[] = apps.map((app, i) => {
     return {
@@ -89,7 +98,8 @@ export const SearchPageContent = () => {
       icon: app.picture,
       label: app.name,
       value: app.naddr || app.url,
-      type: 'app'
+      type: 'app',
+      group: getTypeName('app')
     }
   })
 
@@ -106,17 +116,10 @@ export const SearchPageContent = () => {
       icon: tab.icon,
       label,
       value: tab.id,
-      type: 'tab'
+      type: 'tab',
+      group: getTypeName('tab')
     }
   })
-
-  const getTypeName = (type: string) => {
-    switch (type) {
-      case 'app': return 'Apps'
-      case 'tab': return 'Tabs'
-    }
-    return 'Other'
-  }
 
   const getOptions = [...optionsTabs, ...optionsApps]
 
@@ -132,10 +135,10 @@ export const SearchPageContent = () => {
     const sortGroup: Record<string, IDropdownOption[]> = {}
 
     filteredOptions.forEach((obj) => {
-      if (!sortGroup[obj.type]) {
-        sortGroup[obj.type] = []
+      if (!sortGroup[obj.group]) {
+        sortGroup[obj.group] = []
       }
-      sortGroup[obj.type].push(obj)
+      sortGroup[obj.group].push(obj)
     })
 
     if (selectApp && typeof selectApp === 'object') {
@@ -456,10 +459,8 @@ export const SearchPageContent = () => {
     )
   }
 
-  const handleOpenGrop = (group: string) => {
-    const keyGroup = group.toLowerCase()
-
-    setOpenGroup((prev) => ({ ...prev, [keyGroup]: !prev[keyGroup] }))
+  const handleOpenGroup = (group: string) => {
+    setOpenGroup((prev) => ({ ...prev, [group]: !prev[group] }))
   }
 
   const handleSelect = (_: React.SyntheticEvent<Element, Event>, selectedValue: IDropdownOption | null | string) => {
@@ -514,6 +515,10 @@ export const SearchPageContent = () => {
     }
   }
 
+  const getGroupCount = (group: string) => {
+    return getOptions.filter(o => o.group === group).length
+  }
+
   return (
     <StyledWrapVisibility isShow={isShow}>
       <Container>
@@ -531,15 +536,15 @@ export const SearchPageContent = () => {
               options={getOptions}
               getOptionLabel={getOptionLabel}
               filterOptions={filterOptions}
-              groupBy={(option) => getTypeName(option.type)}
+              groupBy={(option) => option.group}
               sx={{ position: 'absolute', background: 'none' }}
               renderGroup={(params) => {
                 return (
                   <li key={params.key}>
                     <GroupHeader>
-                      {params.group}
-                      <div onClick={() => handleOpenGrop(params.group)}>
-                        {openGroup[params.group.toLocaleLowerCase()] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      {params.group} ({getGroupCount(params.group)})
+                      <div onClick={() => handleOpenGroup(params.group)}>
+                        {openGroup[params.group] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                       </div>
                     </GroupHeader>
                     <GroupItems>{params.children}</GroupItems>
