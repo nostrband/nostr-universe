@@ -17,7 +17,8 @@ import {
   StyledAutocomplete,
   StyledAutocompleteButton,
   StyledAutocompleteInput,
-  StyledForm
+  StyledForm,
+  StyledPopper
 } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
@@ -447,6 +448,11 @@ export const SearchPageContent = () => {
     dispatch(setSearchValue({ searchValue: textValue }))
   }
 
+  const isOptionEqualToValue = (option: IOptionApp, value: IOptionApp) =>
+    option.label === value.label && option.url === value.url
+  const getOptionLabel = (option: string | IOptionApp) =>
+    typeof option === 'string' ? option : `${option.label} - ${option.url}`
+
   return (
     <StyledWrapVisibility isShow={isShow}>
       <Container>
@@ -459,17 +465,17 @@ export const SearchPageContent = () => {
               onInputChange={onInputChange}
               inputValue={searchValue}
               value={selectApp ? selectApp : null}
-              isOptionEqualToValue={(option, value) => option.label === value.label && option.url === value.url}
-              id="country-select-demo"
+              isOptionEqualToValue={isOptionEqualToValue}
+              PopperComponent={StyledPopper}
               fullWidth
               options={getOptions}
-              getOptionLabel={(option) => (typeof option === 'string' ? option : `${option.label} - ${option.url}`)}
+              getOptionLabel={getOptionLabel}
               filterOptions={filterOptions}
               groupBy={(option) => option.groupName}
               renderGroup={(params) => {
                 return (
                   <li key={params.key}>
-                    <GroupHeader sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <GroupHeader>
                       {params.group}
                       <div onClick={() => handleOpenGrop(params.group)}>
                         {openGroup[params.group.toLocaleLowerCase()] ? <ExpandLessIcon /> : <ExpandMoreIcon />}

@@ -72,7 +72,7 @@ const ADDR_TYPES = ['', 'npub', 'note', 'nevent', 'nprofile', 'naddr']
 export const nostrbandRelay = 'wss://relay.nostr.band/'
 export const nostrbandRelayAll = 'wss://relay.nostr.band/all'
 
-const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol']//, 'wss://relay.nostr.bg', 'wss://nostr.mom']
+const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol'] //, 'wss://relay.nostr.bg', 'wss://nostr.mom']
 const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 const allRelays = [nostrbandRelayAll, ...writeRelays]
 
@@ -202,6 +202,7 @@ function getEventAddr(e: NDKEvent | AugmentedEvent): string {
 }
 
 function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
+  // eslint-disable-next-line
   return new Promise(async (ok) => {
     const start = Date.now()
     const events = await ndk.fetchEvents(filter, {}, NDKRelaySet.fromRelayUrls(readRelays, ndk))
@@ -2243,7 +2244,7 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
       reconnected = true
       ndk.pool.removeRelay(r.url)
       const newRelay = new NDKRelay(r.url)
-      ndk.pool.addRelay(newRelay, /*connect*/false)
+      ndk.pool.addRelay(newRelay, /*connect*/ false)
       await newRelay.connect()
     }
   }

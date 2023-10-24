@@ -1,7 +1,16 @@
 import { forwardRef } from 'react'
-import { styled, Typography, TypographyProps, Box, IconButton, TextField } from '@mui/material'
+import {
+  styled,
+  Typography,
+  TypographyProps,
+  Box,
+  IconButton,
+  TextField,
+  Popper,
+  autocompleteClasses
+} from '@mui/material'
 import { purple } from '@mui/material/colors'
-import { lighten, darken } from '@mui/system'
+import { darken } from '@mui/system'
 
 export const StyledForm = styled('form')(() => ({
   marginBottom: 15
@@ -80,19 +89,24 @@ export const StyledAutocompleteInput = styled(TextField)(({ theme }) => ({
   },
   '.MuiOutlinedInput-notchedOutline': {
     border: 'none'
+  },
+  '.MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
+    right: 59
   }
 }))
 
 export const StyledAutocomplete = styled(Box)(() => ({
-  display: 'flex',
-  gap: 10,
+  position: 'relative',
   width: '100%'
 }))
 
 export const StyledAutocompleteButton = styled(Box)(({ theme }) => ({
   background: theme.palette.secondary.main,
+  position: 'absolute',
+  top: 0,
+  right: 0,
   minWidth: 56,
-  minHeight: 50,
+  minHeight: 56,
   display: 'flex',
   borderRadius: theme.shape.borderRadius,
   color: '#fff',
@@ -105,13 +119,34 @@ export const GroupHeader = styled('div')(({ theme }) => ({
   position: 'sticky',
   top: '-8px',
   padding: '4px 10px',
-  color: theme.palette.primary.main,
-  backgroundColor:
-    theme.palette.mode === 'light'
-      ? lighten(theme.palette.primary.light, 0.85)
-      : darken(theme.palette.primary.main, 0.8)
+  color: theme.palette.primary.contrastText,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  backgroundColor: darken(theme.palette.secondary.contrastText, 0.8)
 }))
 
 export const GroupItems = styled('ul')({
   padding: 0
 })
+
+export const StyledPopper = styled(Popper)(({ theme }) => ({
+  width: '100%',
+  [`& .${autocompleteClasses.listbox}`]: {
+    boxSizing: 'border-box',
+    background: theme.palette.secondary.main,
+    '& ul': {
+      padding: 0,
+      margin: 0,
+      background: theme.palette.secondary.main,
+      '& li:hover': {
+        background: darken(theme.palette.secondary.contrastText, 0.5),
+        color: theme.palette.primary.contrastText
+      },
+      '.MuiAutocomplete-option[aria-selected="true"].Mui-focused, .MuiAutocomplete-option[aria-selected="true"]': {
+        background: darken(theme.palette.secondary.contrastText, 0.6),
+        color: theme.palette.primary.contrastText
+      }
+    }
+  }
+}))
