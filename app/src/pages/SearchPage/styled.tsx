@@ -3,11 +3,12 @@ import { styled, InputBase, Typography, TypographyProps, Box, IconButton } from 
 import { purple } from '@mui/material/colors'
 
 export const StyledForm = styled('form')(() => ({
-  marginBottom: 15
+  marginBottom: 15,
+  position: 'relative'
 }))
 
 export const StyledInput = styled(InputBase)(({ theme }) => ({
-  background: theme.palette.secondary.main,
+  background: 'transparent',
   width: '100%',
   minHeight: 50,
   borderRadius: theme.shape.borderRadius,
@@ -17,7 +18,37 @@ export const StyledInput = styled(InputBase)(({ theme }) => ({
   '&:placeholder': {
     color: '#C9C9C9'
   },
-  gap: '0.5rem'
+  gap: '0.5rem',
+  position: 'absolute',
+  zIndex: 2,
+  letterSpacing: '0.5px'
+}))
+
+export const StyledInputBox = styled('div')(({ theme }) => ({
+  width: '100%',
+  minHeight: 50,
+  background: theme.palette.secondary.main,
+  borderRadius: theme.shape.borderRadius,
+  fontSize: 14,
+  padding: '4px 16px',
+  display: 'flex',
+  alignItems: 'center',
+  letterSpacing: '0.5px',
+  '& .suggestion_block': {
+    whiteSpace: 'nowrap',
+    maxWidth: 'calc(100% - 1rem - 80px)',
+    overflow: 'auto'
+  },
+  '& .hidden_part': {
+    opacity: 0,
+    height: 'fit-content'
+  },
+  '& .suggestion_value': {
+    background: theme.palette.secondary.light,
+    color: '#fff',
+    height: 'fit-content',
+    display: 'inline-block'
+  }
 }))
 
 const color = purple[100]
