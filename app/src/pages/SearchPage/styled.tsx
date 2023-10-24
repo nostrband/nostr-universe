@@ -23,7 +23,7 @@ export const StyledInputBox = styled('div')(({ theme }) => ({
   background: theme.palette.secondary.main,
   borderRadius: theme.shape.borderRadius,
   fontSize: 14,
-  padding: '4px 16px',
+  padding: '4px 16px 4px 14px',
   display: 'flex',
   alignItems: 'center',
   letterSpacing: '0.5px',
@@ -103,10 +103,14 @@ export const StyledAutocompleteInput = styled(TextField)(({ theme }) => ({
   width: '100%',
   minHeight: 56,
   borderRadius: theme.shape.borderRadius,
-  color: '#fff',
-  fontSize: 14,
   '&:placeholder': {
     color: '#C9C9C9'
+  },
+  '& .MuiInputBase-root': {
+    fontSize: 14,
+    letterSpacing: '0.5px',
+    color: '#fff',
+    padding: '8px 9px'
   },
   gap: '0.5rem',
   '.MuiFormLabel-root, .Mui-focused, .MuiAutocomplete-input, .MuiChip-label': {
