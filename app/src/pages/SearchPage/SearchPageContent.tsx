@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, FC, CSSProperties } from 'react'
+import React, { useCallback, useEffect, useState, FC, CSSProperties, useRef } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import CloseIcon from '@mui/icons-material/Close'
 import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
@@ -43,13 +43,12 @@ import { selectCurrentWorkspaceTabs } from '@/store/store'
 
 const MAX_HISTORY = 10
 
-interface IOptionApp {
+interface IDropdownOption {
   id: string
   icon: string
   label: string
-  url: string
-  groupName: string
-  groupValue: string
+  value: string
+  type: 'app' | 'tab'
 }
 
 export const SearchPageContent = () => {
@@ -70,53 +69,73 @@ export const SearchPageContent = () => {
 
   const [isLoading, setIsLoading] = useState(false)
   const [lastValue, setLastValue] = useState('')
+  const inputRef = useRef<HTMLElement>()
 
   const [searchHistoryOptions, setSearchHistoryOptions] = useState<SearchTerm[]>([])
   const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
 
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpenTab } = useOpenModalSearchParams()
 
-  const [selectApp, setSelectApp] = useState<IOptionApp | string | null>(null)
+  const [selectApp, setSelectApp] = useState<IDropdownOption | string | null>(null)
   const [openGroup, setOpenGroup] = useState<{ [key: string]: boolean }>({
     tabs: false,
     apps: false
   })
 
-  const optionsApps: IOptionApp[] = apps.map((app, i) => ({
-    id: `app-${i}`,
-    icon: app.picture,
-    label: app.name,
-    url: app.url,
-    groupName: 'Apps',
-    groupValue: 'apps'
-  }))
-  const optionsTabs: IOptionApp[] = tabs.map((tab, i) => ({
-    id: `tab-${i}`,
-    icon: tab.icon,
-    label: tab.title,
-    url: tab.url,
-    groupName: 'Tabs',
-    groupValue: 'tabs'
-  }))
+  // FIXME add pins!
+  const optionsApps: IDropdownOption[] = apps.map((app, i) => {
+    return {
+      id: `app-${i}`,
+      icon: app.picture,
+      label: app.name,
+      value: app.naddr || app.url,
+      type: 'app'
+    }
+  })
+
+  const optionsTabs: IDropdownOption[] = tabs.map((tab, i) => {
+    let label = `${tab.title}: ${tab.url}`
+    try {
+      const u = new URL(tab.url)
+      label = `${tab.title}: ${u.hostname.replace(/^www/i, '')}`
+      if (u.pathname != '/')
+        label += u.pathname
+    } catch {}
+    return {
+      id: `tab-${i}`,
+      icon: tab.icon,
+      label,
+      value: tab.id,
+      type: 'tab'
+    }
+  })
+
+  const getTypeName = (type: string) => {
+    switch (type) {
+      case 'app': return 'Apps'
+      case 'tab': return 'Tabs'
+    }
+    return 'Other'
+  }
 
   const getOptions = [...optionsTabs, ...optionsApps]
 
-  const filterOptions = (options: IOptionApp[], state: FilterOptionsState<IOptionApp>) => {
+  const filterOptions = (options: IDropdownOption[], state: FilterOptionsState<IDropdownOption>) => {
     const inputValue = state.inputValue.toLowerCase()
 
     const filteredOptions = options.filter((option) => {
       const label = option.label.toLowerCase()
-      const url = option.url.toLowerCase()
+      const url = option.value.toLowerCase()
       return label.includes(inputValue) || url.includes(inputValue)
     })
 
-    const sortGroup: Record<string, IOptionApp[]> = {}
+    const sortGroup: Record<string, IDropdownOption[]> = {}
 
     filteredOptions.forEach((obj) => {
-      if (!sortGroup[obj.groupValue]) {
-        sortGroup[obj.groupValue] = []
+      if (!sortGroup[obj.type]) {
+        sortGroup[obj.type] = []
       }
-      sortGroup[obj.groupValue].push(obj)
+      sortGroup[obj.type].push(obj)
     })
 
     if (selectApp && typeof selectApp === 'object') {
@@ -143,7 +162,7 @@ export const SearchPageContent = () => {
       }
     }
 
-    const concatSortGroupArrays: IOptionApp[] = ([] as IOptionApp[]).concat(...Object.values(sortGroup))
+    const concatSortGroupArrays: IDropdownOption[] = ([] as IDropdownOption[]).concat(...Object.values(sortGroup))
 
     return concatSortGroupArrays
   }
@@ -245,7 +264,8 @@ export const SearchPageContent = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const value = typeof selectApp === 'string' || selectApp === null ? suggestion || searchValue : selectApp.url
+    inputRef.current?.blur()
+    const value = typeof selectApp === 'string' || selectApp === null ? suggestion || searchValue : selectApp.value
     console.log('value', value)
     dispatch(setSearchValue({ searchValue: value }))
     setSuggestion('')
@@ -442,7 +462,7 @@ export const SearchPageContent = () => {
     setOpenGroup((prev) => ({ ...prev, [keyGroup]: !prev[keyGroup] }))
   }
 
-  const handleSelect = (_: React.SyntheticEvent<Element, Event>, selectedValue: IOptionApp | null | string) => {
+  const handleSelect = (_: React.SyntheticEvent<Element, Event>, selectedValue: IDropdownOption | null | string) => {
     setSelectApp(selectedValue)
   }
 
@@ -469,15 +489,29 @@ export const SearchPageContent = () => {
     }
   }
 
-  const isOptionEqualToValue = (option: IOptionApp, value: IOptionApp) =>
-    option.label === value.label && option.url === value.url
-  const getOptionLabel = (option: string | IOptionApp) =>
-    typeof option === 'string' ? option : `${option.label} - ${option.url}`
+  const isOptionEqualToValue = (option: IDropdownOption, value: IDropdownOption) =>
+    option.label === value.label && option.value === value.value
 
+  const getOptionLabel = (option: string | IDropdownOption) => {
+    if (typeof option === 'string') return option
+    return option.value
+  }
+    
   const handleAcceptSuggestion = () => {
     const isSuggestionExists = suggestion.trim().length !== 0
     if (!isSuggestionExists) return undefined
     dispatch(setSearchValue({ searchValue: suggestion }))
+  }
+
+  const onOptionClick = (option: IDropdownOption) => {
+    switch (option.type) {
+      case 'tab': 
+        handleOpenTab(option.value)
+        break
+      default:
+        onSearch(option.value)
+        break
+    }
   }
 
   return (
@@ -486,7 +520,6 @@ export const SearchPageContent = () => {
         <StyledForm onSubmit={handleSubmit}>
           <StyledAutocomplete>
             <Autocomplete
-              placeholder="Search"
               popupIcon={false}
               onChange={handleSelect}
               onInputChange={onInputChange}
@@ -498,7 +531,7 @@ export const SearchPageContent = () => {
               options={getOptions}
               getOptionLabel={getOptionLabel}
               filterOptions={filterOptions}
-              groupBy={(option) => option.groupName}
+              groupBy={(option) => getTypeName(option.type)}
               sx={{ position: 'absolute', background: 'none' }}
               renderGroup={(params) => {
                 return (
@@ -514,9 +547,12 @@ export const SearchPageContent = () => {
                 )
               }}
               renderOption={(props, option) => (
-                <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} key={option.id}>
-                  <img loading="lazy" width="20" srcSet={option.icon} src={option.icon} alt={option.label} />
-                  {option.label} - {option.url}
+                <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} 
+                  key={option.id}
+                  onClick={() => onOptionClick(option)}
+                >
+                  <img loading="lazy" width="20" srcSet={option.icon} src={option.icon} />
+                  <div style={{whiteSpace: 'nowrap', overflowX: 'hidden', textOverflow: 'ellipsis'}}>{option.label}</div>
                 </Box>
               )}
               freeSolo
@@ -539,7 +575,7 @@ export const SearchPageContent = () => {
                       </>
                     )
                   }}
-                  placeholder="Search"
+                  placeholder="Keyword, url, npub or note id"
                 />
               )}
             />
