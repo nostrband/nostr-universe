@@ -115,7 +115,7 @@ const defaultApps = [
   {
     naddr: 'naddr1qqxnzd3cx5urydfcxqunzd3nqgsru22d9lfnnwck54qr4phrvey50h2q33xc0gqxv5j03ftn4efu4rsrqsqqql8kr7wmdc',
     name: 'Pinstr',
-    picture: 'https://pinstr.app/favicon.ico',
+    picture: 'https://pinstr.app/assets/pinstr.svg',
     url: 'https://pinstr.app/',
     about:
       'Pinstr is a decentralized and open-source social network for curating and sharing your interests with the world. With Pinstr, you can easily organize and discover new ideas, inspiration, and recommendations.',
@@ -125,7 +125,7 @@ const defaultApps = [
   {
     naddr: 'naddr1qqxnzd3cxuenywfk8ycnqvenqgs86nsy2qatyes4m40jnmqgk5558jl979a6escp9vnzyr92yv4tznqrqsqqql8kdg24gq',
     name: 'Habla',
-    picture: '',
+    picture: 'https://habla.news/favicon.png',
     url: 'https://habla.news/',
     about: 'Habla allows you to read, write, curate and monetize long form content over Nostr.',
     kinds: [0, 30023],
@@ -157,6 +157,209 @@ const defaultApps = [
       { url: 'https://highlighter.com/p/<bech32>', type: 'npub' },
       { url: 'https://highlighter.com/e/<bech32>', type: 'note' }
     ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3cxccrvd34xser2dpkqgszv6q4uryjzr06xfxxew34wwc5hmjfmfpqn229d72gfegsdn2q3fgrqsqqql8kyuj9ug',
+    name: 'noStrudel',
+    picture: 'https://nostrudel.ninja/apple-touch-icon.png',
+    url: 'https://nostrudel.ninja/',
+    about: 'A simple web based nostr client focused on exploring nostr',
+    kinds: [0, 1, 30000, 30001, 30030, 30311, 34550],
+    urls: [
+      { url: 'https://nostrudel.ninja/#/u/<bech32>', type: 'npub' },
+      { url: 'https://nostrudel.ninja/#/u/<bech32>', type: 'nprofile' },
+      { url: 'https://nostrudel.ninja/#/n/<bech32>', type: 'note' },
+      { url: 'https://nostrudel.ninja/#/n/<bech32>', type: 'nevent' },
+      { url: 'https://nostrudel.ninja/#/l/<bech32>', type: 'naddr' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exc6nqdfexvcrqde3qgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8k9596qe',
+    name: 'Zephyr',
+    picture: 'https://image.nostr.build/e0c3dbd9fc2111f04428ce2e9e7b058ba7346cc12238bfbb5747b97d583a491a.png',
+    url: 'https://zephyr.coracle.social/',
+    about: 'Slow down and meditate on what your friends are saying. Embrace inefficiency. Internalize, invent, understand, remember.',
+  },
+  {
+    naddr: 'naddr1qqxnzd3excerydpcxu6n2dfsqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kdu5r0z',
+    name: 'Nostatus',
+    picture: 'https://nostatus.vercel.app//android-chrome-192x192.png',
+    url: 'https://nostatus.vercel.app/',
+    about: 'Nostr client for browsing your friends\' status.',
+  },
+  {
+    naddr: 'naddr1qqxnzd3ex5unywf3xyenjd33qgsdxm5qs0a8kdk6aejxew9nlx074g7cnedrjeggws0sq03p4s9khmqrqsqqql8kzv7862',
+    name: 'Shopstr',
+    picture: 'https://shopstr.store/shopstr.ico',
+    url: 'https://shopstr.store/',
+    about: 'A decentralized classifieds marketplace using Lightning and Cashu.',
+  },
+  {
+    naddr: 'naddr1qqxnzd3ex5urjdfnxy6rzwpnqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8klwwwzp',
+    name: 'Oddbean',
+    picture: 'https://oddbean.com/static/oddbean.svg?7b162b894c8bdf0f',
+    url: 'https://oddbean.com/',
+    about: 'Oddbean is a discussion site built on the nostr protocol. You may notice that the design is heavily inspired by Hacker News and Reddit.',
+    kinds: [0, 1],
+    urls: [
+      { url: 'https://oddbean.com/e/<bech32>', type: 'note' },
+      { url: 'https://oddbean.com/u/<bech32>', type: 'npub' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exscnsvpsxqurxdehqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8k48gnse',
+    name: 'Stacker.News',
+    picture: 'https://stacker.news/favicon.png',
+    url: 'https://stacker.news/',
+    about: 'It\'s like Hacker News but we pay you Bitcoin',
+  },
+  {
+    naddr: 'naddr1qqxnzd3exgurzvpjxsurwv3hqgsypwwgtll74lqu4huvxzjwtjyxvrlkujt35rw8y026ke6ttesmg5grqsqqql8kjwp3ul',
+    name: 'nostree',
+    picture: 'https://nostree.me/favicon.svg',
+    url: 'https://nostree.me',
+    about: 'A Nostr-based application to create, manage and discover link lists, and other stuff.',
+    kinds: [0, 30000, 30001],
+    urls: [
+      { url: 'https://nostree.me/<bech32>', type: 'npub' },
+      { url: 'https://nostree.me/<bech32>', type: 'nprofile' },
+      { url: 'https://nostree.me/a/<bech32>', type: 'naddr' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exscnwdf48qunjv3eqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kqn056u',
+    name: 'Mutiny Wallet',
+    picture: 'https://framerusercontent.com/images/dEeAapDQU71mZTWUltiFqlZSsE.png',
+    url: 'https://app.mutinywallet.com/',
+    about: 'Mutiny is a self-custodial lightning wallet that runs in the browser.',
+  },
+  {
+    naddr: 'naddr1qqxnzd3exscnwdfh8qunvwpeqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8k0wajyp',
+    name: 'Alby',
+    picture: 'https://getalby.com/alby_icon_yellow_128x128.png',
+    url: 'https://getalby.com/',
+    about: 'Your Bitcoin & Nostr companion for the web. Connect your wallet, use Bitcoin & Nostr apps with the Alby Extension. Create an Alby Account to get a lightning wallet for payments wherever you go.',
+  },
+  {
+    naddr: 'naddr1qqxnzd3exverzde4xyunxwf4qgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8ka7nhhr',
+    name: 'Nostrrr',
+    picture: '',
+    url: 'https://nostrrr.com/',
+    about: 'Nostr relay browser',
+  },
+  {
+    naddr: 'naddr1qqxnzd3exvmr2wfkxccnjwpeqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kymu3d8',
+    name: 'Filestr',
+    picture: '',
+    url: 'https://filestr.vercel.app/',
+    about: 'A nostr file explorer',
+    kinds: [0, 1063],
+    urls: [
+      { url: 'https://filestr.vercel.app/p/<bech32>', type: 'nprofile' },
+      { url: 'https://filestr.vercel.app/e/<bech32>', type: 'nevent' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exvcnyvpkx56n2vpkqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8ku0tmyn',
+    name: 'Blowater',
+    picture: 'https://blowater.deno.dev/logo.png',
+    url: 'https://blowater.deno.dev/',
+    about: 'Blowater is a delightful Nostr client that focuses on DM.',
+  },
+  {
+    naddr: 'naddr1qqxnzd3exgur2deh8yunqdf3qgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kldvhed',
+    name: 'NostrChat',
+    picture: 'https://www.nostrchat.io/favicon.ico',
+    url: 'https://www.nostrchat.io/',
+    about: 'A decentralized DM and chat application',
+    kinds: [0],
+    urls: [
+      { url: 'https://www.nostrchat.io/dm/<bech32>', type: 'npub' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exycrwwphxgunjve4qgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kw4vkcq',
+    name: 'Primal',
+    picture: 'https://primal.net/assets/favicon-66add1cc.ico',
+    url: 'https://primal.net/',
+    about: 'Primal is a fast Nostr web client.',
+    kinds: [0, 1],
+    urls: [
+      { url: 'https://primal.net/p/<bech32>', type: 'npub' },
+      { url: 'https://primal.net/e/<bech32>', type: 'note' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exgmnqvfh8ymnzdekqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8ktcvhl3',
+    name: 'Zapplepay',
+    picture: 'https://www.zapplepay.com/favicon.ico',
+    url: 'https://zapplepay.com/',
+    about: 'Zaps can\'t be stopped',
+  },
+  {
+    naddr: 'naddr1qqxnzd3exgenxwf4xqcnyd3sqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8knxy3s7',
+    name: 'Stemstr',
+    picture: 'https://stemstr.app/apple-touch-icon.png',
+    url: 'https://stemstr.app/',
+    about: 'Where music gets made',
+    kinds: [0, 1808],
+    urls: [
+      { url: 'https://stemstr.app/user/<bech32>', type: 'npub' },
+      { url: 'https://stemstr.app/thread/<bech32>', type: 'note' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exgenxwf4xqcnyd3sqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8knxy3s7',
+    name: 'Stemstr',
+    picture: 'https://stemstr.app/apple-touch-icon.png',
+    url: 'https://stemstr.app/',
+    about: 'Where music gets made',
+    kinds: [0, 1808],
+    urls: [
+      { url: 'https://stemstr.app/user/<bech32>', type: 'npub' },
+      { url: 'https://stemstr.app/thread/<bech32>', type: 'note' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exgenxwphxuenjwpsqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8khly63z',
+    name: 'Swarmstr',
+    picture: 'https://swarmstr.com/apple-touch-icon.png',
+    url: 'https://swarmstr.com/',
+    about: 'Find answers to your questions. Assist others in resolving theirs.',
+    kinds: [1],
+    urls: [
+      { url: 'https://swarmstr.com/?e=<bech32>', type: 'nevent' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exgenxdekxymrqvfhqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kgkpa8e',
+    name: 'Zap.Stream',
+    picture: 'https://zap.stream/logo.png',
+    url: 'https://zap.stream/',
+    about: 'Live Streaming on Nostr',
+    kinds: [0, 30311],
+    urls: [
+      { url: 'https://zap.stream/p/<bech32>', type: 'npub' },
+      { url: 'https://zap.stream/<bech32>', type: 'naddr' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exgenxdeexvervwpnqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8k9e8lns',
+    name: 'ZapLife',
+    picture: '',
+    url: 'https://zaplife.lol/',
+    about: 'Watch zaps flow in real-time.',
+    kinds: [0],
+    urls: [
+      { url: 'https://zaplife.lol/p/<bech32>', type: 'npub' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3exvcnyv3nxuunvdfhqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kcnr0xx',
+    name: 'FlyCat',
+    picture: 'https://flycat.club/favicon.ico',
+    url: 'https://flycat.club/',
+    about: 'Flycat nostr client',
   }
 ]
 
