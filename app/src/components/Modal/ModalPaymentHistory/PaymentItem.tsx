@@ -1,9 +1,17 @@
 import { useState } from 'react'
-import { Alert, Chip, IconButton, Menu, MenuItem } from '@mui/material'
+import { Alert, Avatar, Chip, IconButton, Menu, MenuItem, Typography } from '@mui/material'
+import DoDisturbOnOutlinedIcon from '@mui/icons-material/DoDisturbOnOutlined'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
-import { StyledViewTitle, StyledWrapper, StyledHead, StyledItemBlock, StyledItemFooter } from './styled'
+import {
+  StyledViewTitle,
+  StyledWrapper,
+  StyledItemBlock,
+  StyledPaymentAmountActions,
+  StyledWrapperAmount,
+  StyledPaymentAmount
+} from './styled'
 import { copyToClipBoard, getProfileName } from '@/utils/helpers/prepare-data'
-import { formatDateHours } from '@/consts/index'
+import { formatHours } from '@/consts/index'
 import { format } from 'date-fns'
 import { MetaEvent } from '@/types/meta-event'
 
@@ -43,42 +51,56 @@ export const PaymentItem = ({
     handleClose()
   }
 
-  const getName = walletName || walletId
+  const getNameWallet = walletName || walletId
   const getUrl = new URL(url).hostname
-  const getTime = format(new Date(time), formatDateHours)
+  const getTime = format(new Date(time), formatHours)
+  const getAmount = amount / 1000
 
   return (
     <StyledWrapper>
-      <StyledHead>
-        <StyledViewTitle>-{amount / 1000} sats</StyledViewTitle>
-        <IconButton
-          color="inherit"
-          size="medium"
-          id="demo-positioned-button"
-          aria-controls={open ? 'demo-positioned-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
-          onClick={handleClick}
-        >
-          <MoreHorizOutlinedIcon />
-        </IconButton>
-      </StyledHead>
-      <StyledItemBlock>
-        <Chip color="secondary" label={`Wallet: ${getName}`} />
-      </StyledItemBlock>
+      <StyledWrapperAmount>
+        <StyledPaymentAmount>
+          {receiverPubkey ? (
+            <Avatar src={receiver?.profile?.picture} />
+          ) : (
+            <Avatar>
+              <DoDisturbOnOutlinedIcon />
+            </Avatar>
+          )}
+          <div>
+            <StyledViewTitle>{receiverPubkey ? getProfileName(receiverPubkey, receiver) : 'Payment'}</StyledViewTitle>
+            <Typography variant="body1" component="div">{`From: ${getNameWallet}`}</Typography>
+            <Typography variant="body2" component="div">{`At: ${getUrl}`}</Typography>
+          </div>
+        </StyledPaymentAmount>
+
+        <StyledPaymentAmountActions>
+          <StyledViewTitle>- {getAmount} sats</StyledViewTitle>
+          <Chip color="secondary" label={getTime} />
+          <IconButton
+            color="inherit"
+            size="medium"
+            id="demo-positioned-button"
+            aria-controls={open ? 'demo-positioned-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? 'true' : undefined}
+            onClick={handleClick}
+          >
+            <MoreHorizOutlinedIcon />
+          </IconButton>
+        </StyledPaymentAmountActions>
+      </StyledWrapperAmount>
       {!preimage && (
         <StyledItemBlock>
           <Alert severity="error">Payment not confirmed</Alert>
         </StyledItemBlock>
       )}
-      {false && receiverPubkey && (
+
+      {receiverPubkey && (
         <StyledItemBlock>
           <Alert severity="info">Zap to {getProfileName(receiverPubkey, receiver)}</Alert>
         </StyledItemBlock>
       )}
-      <StyledItemFooter>
-        On {getUrl} at {getTime}
-      </StyledItemFooter>
       <Menu
         id="demo-positioned-menu"
         aria-labelledby="demo-positioned-button"

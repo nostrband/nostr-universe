@@ -363,24 +363,25 @@ const defaultApps = [
     name: 'nostr.kiwi',
     picture: 'https://nostr.kiwi/images/logo/rounded-512.png',
     url: 'https://nostr.kiwi/',
-    about: 'A progressive web app to share notes and curate content in communities. Compatible natively on all mobile devices.'
+    about:
+      'A progressive web app to share notes and curate content in communities. Compatible natively on all mobile devices.'
   },
   {
     naddr: 'naddr1qqxnzd3exycrswfjxycnxvfkqgsvt7mwejrkupzcu0k2nyvwxuxte5mkjqw9s3s9ztl9x7jxukxr3wcrqsqqql8kz23mgn',
     name: 'nosbin',
     picture: 'https://nosbin.com/logo.png',
     url: 'https://nosbin.com/',
-    about: 'nosbin allows you to quickly upload code snippets to nostr! Simply cut, paste, and post. Provides code highlighting for any language.'
+    about:
+      'nosbin allows you to quickly upload code snippets to nostr! Simply cut, paste, and post. Provides code highlighting for any language.'
   },
   {
     naddr: 'naddr1qqxnzd3exqmnjvf38qmrjwpsqgst03hkj9w04xnzllm2rupxqn0g3s3ud3kx6xu0vtrucyr5nuc8aqgrqsqqql8kcqcp4e',
     name: 'Slidestr',
     picture: 'https://slidestr.net/slidestr.svg',
     url: 'https://slidestr.net/',
-    about: 'Shows slide shows of images and videos on the nostr platform. Filter images by tags and create beautiful slide show. Also features a grid view to browse through images. Currently in BETA. Currently only shows public data, a user login is not possible yet',
-    urls: [
-      { url: 'https://slidestr.net/p/<bech32>', type: 'npub' },
-    ]
+    about:
+      'Shows slide shows of images and videos on the nostr platform. Filter images by tags and create beautiful slide show. Also features a grid view to browse through images. Currently in BETA. Currently only shows public data, a user login is not possible yet',
+    urls: [{ url: 'https://slidestr.net/p/<bech32>', type: 'npub' }]
   },
   {
     naddr: 'naddr1qqxnzd3cxcurxdpjxy6nvvp4qgsr7acdvhf6we9fch94qwhpy0nza36e3tgrtkpku25ppuu80f69kfqrqsqqql8kvt4fza',

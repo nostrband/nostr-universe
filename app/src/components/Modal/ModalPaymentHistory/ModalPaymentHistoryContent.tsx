@@ -10,32 +10,113 @@ import { dbi } from '@/modules/db'
 import { Input } from '@/shared/Input/Input'
 import { useAppSelector } from '@/store/hooks/redux'
 import { formatDate } from '@/consts'
-import { addDays, isAfter, isEqual, isWithinInterval, startOfDay } from 'date-fns'
+import { addDays, format, isAfter, isEqual, isWithinInterval, startOfDay } from 'date-fns'
 import { MetaEvent } from '@/types/meta-event'
-import { getTagValue } from '@/modules/nostr'
+import { fetchMetas, getTagValue } from '@/modules/nostr'
 
 // const paymentsMoc: TypePayment[] = [
 //   {
 //     id: '1',
 //     walletId: '11',
 //     url: 'http://www.pay.com/3434343/',
-//     timestamp: 1697539587019,
+//     timestamp: 1698244639194,
 //     walletName: 'Wallet 1',
 //     amount: 100,
 //     invoice: 'invoice 1',
 //     preimage: 'preimage 1',
-//     pubkey: 'pubkey'
+//     pubkey: 'pubkey',
+//     descriptionHash: '556y56y56y56y56y5y56yy56',
+//     receiverPubkey: 'eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f'
 //   },
 //   {
 //     id: '2',
 //     walletId: '22',
 //     url: 'http://www.pay.com/65656566/',
-//     timestamp: 1697539587019,
+//     timestamp: 1698244639194,
 //     walletName: 'Wallet 2',
 //     amount: 10,
 //     invoice: 'invoice 2',
 //     preimage: '',
-//     pubkey: 'pubkey'
+//     pubkey: 'pubkey',
+//     descriptionHash: '3r34r34r34r34r34r3',
+//     receiverPubkey: '460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c'
+//   },
+//   {
+//     id: '3',
+//     walletId: '33',
+//     url: 'http://www.pay.com/225225522222225/',
+//     timestamp: 1698180374113,
+//     walletName: 'Wallet 3',
+//     amount: 150,
+//     invoice: 'invoice 3',
+//     preimage: 'preimage 3',
+//     pubkey: 'pubkey',
+//     descriptionHash: '556y56y56y56y56y5y56yy56',
+//     receiverPubkey: 'eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f'
+//   },
+//   {
+//     id: '4',
+//     walletId: '44',
+//     url: 'http://www.pay.com/225225522222225/',
+//     timestamp: 1698180374113,
+//     walletName: 'Wallet 4',
+//     amount: 150,
+//     invoice: 'invoice 4',
+//     preimage: 'preimage 4',
+//     pubkey: 'pubkey',
+//     descriptionHash: '8838e83e38e38e38e38e38ej83je83',
+//     receiverPubkey: ''
+//   }
+// ]
+
+// const metaEventsMoc: MetaEvent[] = [
+//   {
+//     order: 1,
+//     identifier: '1',
+//     kind: 255,
+//     tags: [['tag 1'], ['tag 2']],
+//     content: 'content 1',
+//     created_at: 1698244639194,
+//     pubkey: 'eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f',
+//     id: '1',
+//     sig: '11',
+//     profile: {
+//       name: 'Lyn Alren',
+//       picture: 'picture 1',
+//       about: 'string',
+//       nip05: 'string',
+//       lud06: 'string',
+//       lud16: 'string',
+//       display_name: 'Lyn Alren',
+//       website: 'string',
+//       banner: 'string',
+//       npub: 'string',
+//       pubkey: 'eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f'
+//     }
+//   },
+//   {
+//     order: 2,
+//     identifier: '2',
+//     kind: 255,
+//     tags: [['tag 2'], ['tag 2']],
+//     content: 'content 2',
+//     created_at: 2698244639294,
+//     pubkey: '460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c',
+//     id: '2',
+//     sig: '22',
+//     profile: {
+//       name: 'Vitor Pamplona',
+//       picture: 'picture 2',
+//       about: 'string',
+//       nip05: 'string',
+//       lud06: 'string',
+//       lud16: 'string',
+//       display_name: 'Vitor Pamplona',
+//       website: 'string',
+//       banner: 'string',
+//       npub: 'string',
+//       pubkey: '460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c'
+//     }
 //   }
 // ]
 
@@ -81,7 +162,47 @@ export const ModalPaymentHistoryContent = () => {
         }
       })
 
-      setPayments(res)
+      const removeDublicatePayments = () => {
+        // O(n)
+        const uniqueValues = new Set()
+        return res
+          .filter((obj) => {
+            const value = obj.receiverPubkey
+
+            if (!uniqueValues.has(value) && Boolean(value.length)) {
+              uniqueValues.add(value)
+              return true
+            }
+
+            return false
+          })
+          .map((el) => el.receiverPubkey)
+      }
+
+      const getMetas = await fetchMetas(removeDublicatePayments())
+
+      const updatedPayments = () => {
+        const metaEventHash: { [key: string]: MetaEvent } = {}
+
+        getMetas.forEach((metaEvent) => {
+          metaEventHash[metaEvent.pubkey] = metaEvent
+        })
+
+        return res.map((payment) => {
+          const metaEvent = metaEventHash[payment.receiverPubkey]
+
+          if (metaEvent) {
+            return {
+              ...payment,
+              receiver: metaEvent
+            }
+          }
+
+          return payment
+        })
+      }
+
+      setPayments(updatedPayments())
     } catch (error) {
       console.log(error)
     }
@@ -149,6 +270,23 @@ export const ModalPaymentHistoryContent = () => {
     return filteredByFields && filteredByAmount && filteredByDate
   })
 
+  const paymentsByDate = filteredPayments.reduce((result: { [key: string]: TypePayment[] }, payment) => {
+    const paymentDate = startOfDay(new Date(payment.timestamp))
+    const formattedDate = format(paymentDate, 'd MMMM yyyy')
+
+    if (!result[formattedDate]) {
+      result[formattedDate] = []
+    }
+
+    result[formattedDate].push(payment)
+    return result
+  }, {})
+
+  const convertToGroups = Object.entries(paymentsByDate).map(([date, payments]) => ({
+    title: date,
+    payments
+  }))
+
   return (
     <Container>
       <StyledFilterField sx={{ marginTop: 1 }}>
@@ -214,17 +352,22 @@ export const ModalPaymentHistoryContent = () => {
           }}
         />
       </StyledFilterField>
-      {filteredPayments.map((payment) => (
-        <PaymentItem
-          key={payment.id}
-          url={payment.url}
-          time={payment.timestamp}
-          walletName={payment.walletName}
-          amount={payment.amount}
-          preimage={payment.preimage}
-          receiverPubkey={payment.receiverPubkey}
-          receiver={payment.receiver}
-        />
+      {convertToGroups.map((groupPayments) => (
+        <>
+          <h1>{groupPayments.title}</h1>
+          {groupPayments.payments.map((payment) => (
+            <PaymentItem
+              key={payment.id}
+              url={payment.url}
+              time={payment.timestamp}
+              walletName={payment.walletName}
+              amount={payment.amount}
+              preimage={payment.preimage}
+              receiverPubkey={payment.receiverPubkey}
+              receiver={payment.receiver}
+            />
+          ))}
+        </>
       ))}
     </Container>
   )
