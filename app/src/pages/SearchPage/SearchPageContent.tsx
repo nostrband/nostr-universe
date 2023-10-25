@@ -137,8 +137,12 @@ export const SearchPageContent = () => {
     })
   }
 
-  const filterOptions = (options: IDropdownOption[], state: FilterOptionsState<IDropdownOption>) => {
-    const filteredOptions = filterOptionsByValue(options, state.inputValue)
+  const filterOptions = (options: IDropdownOption[]) => {
+
+    // NOTE: using state.inputValue instead of searchValue is buggy:
+    // - enter long non-matching value to have empty dropdown
+    // - click out and then back to input - all items show up
+    const filteredOptions = filterOptionsByValue(options, searchValue)
 
     const sortGroup: Record<string, IDropdownOption[]> = {}
 
