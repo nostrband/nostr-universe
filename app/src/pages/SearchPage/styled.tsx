@@ -34,7 +34,8 @@ export const StyledInputBox = styled('div')(({ theme }) => ({
   },
   '& .hidden_part': {
     opacity: 0,
-    height: 'fit-content'
+    height: 'fit-content',
+    pointerEvents: 'none'
   },
   '& .suggestion_value': {
     background: theme.palette.secondary.light,
