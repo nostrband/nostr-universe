@@ -357,6 +357,58 @@ const defaultApps = [
     picture: 'https://flycat.club/favicon.ico',
     url: 'https://flycat.club/',
     about: 'Flycat nostr client'
+  },
+  {
+    naddr: 'naddr1qqxnzd3c8qurjvfjxq6rgde3qgswlsm7jlayltt8neryk7npssqfklx8vpdvavx97445vnftnp4xpuqrqsqqql8kpxyysn',
+    name: 'nostr.kiwi',
+    picture: 'https://nostr.kiwi/images/logo/rounded-512.png',
+    url: 'https://nostr.kiwi/',
+    about: 'A progressive web app to share notes and curate content in communities. Compatible natively on all mobile devices.'
+  },
+  {
+    naddr: 'naddr1qqxnzd3exycrswfjxycnxvfkqgsvt7mwejrkupzcu0k2nyvwxuxte5mkjqw9s3s9ztl9x7jxukxr3wcrqsqqql8kz23mgn',
+    name: 'nosbin',
+    picture: 'https://nosbin.com/logo.png',
+    url: 'https://nosbin.com/',
+    about: 'nosbin allows you to quickly upload code snippets to nostr! Simply cut, paste, and post. Provides code highlighting for any language.'
+  },
+  {
+    naddr: 'naddr1qqxnzd3exqmnjvf38qmrjwpsqgst03hkj9w04xnzllm2rupxqn0g3s3ud3kx6xu0vtrucyr5nuc8aqgrqsqqql8kcqcp4e',
+    name: 'Slidestr',
+    picture: 'https://slidestr.net/slidestr.svg',
+    url: 'https://slidestr.net/',
+    about: 'Shows slide shows of images and videos on the nostr platform. Filter images by tags and create beautiful slide show. Also features a grid view to browse through images. Currently in BETA. Currently only shows public data, a user login is not possible yet',
+    urls: [
+      { url: 'https://slidestr.net/p/<bech32>', type: 'npub' },
+    ]
+  },
+  {
+    naddr: 'naddr1qqxnzd3cxcurxdpjxy6nvvp4qgsr7acdvhf6we9fch94qwhpy0nza36e3tgrtkpku25ppuu80f69kfqrqsqqql8kvt4fza',
+    name: 'Nostr Nests',
+    picture: 'https://nostrnests.com/img/nostrich-nest.png',
+    url: 'https://nostrnests.com/',
+    about: 'Nostr Nests is an audio space for chatting, brainstorming, debating, jamming, micro-conferences and more.'
+  },
+  {
+    naddr: 'naddr1qqxnzd3exvmnqdecxgunzdp5qgspc5hteqn9fezrlyjsrd7sefjeu79htlwuh8z6vhck3my526vvj2srqsqqql8kdn9cuy',
+    name: 'Relay.Guide',
+    picture: '',
+    url: 'https://relay.guide/',
+    about: 'A tool for discovering and managing your relays'
+  },
+  {
+    naddr: 'naddr1qqxnzd3exvcnxd34xgunqdpeqgs04xzt6ldm9qhs0ctw0t58kf4z57umjzmjg6jywu0seadwtqqc75srqsqqql8kar40zs',
+    name: 'Vendata',
+    picture: 'https://cdn.nostr.build/i/5405e8be436c0ed902846119f351f8898aa06ec94b51e635f0ed50d727a9fc68.png',
+    url: 'https://vendata.io/',
+    about: 'Client to interact with Data Vending Machines'
+  },
+  {
+    naddr: 'naddr1qqxnzd3exscnwd3jx5erwdp4qgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kdcm4sw',
+    name: 'w3.do',
+    picture: 'https://w3.do/favicon.ico',
+    url: 'https://w3.do/',
+    about: 'URL Shortener on NOSTR Network'
   }
 ]
 
