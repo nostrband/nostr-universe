@@ -31,7 +31,7 @@ import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNot
 import { dbi } from '@/modules/db'
 import { v4 as uuidv4 } from 'uuid'
 import { SearchTerm } from '@/modules/types/db'
-import { IconButton, Box, Autocomplete, FilterOptionsState } from '@mui/material'
+import { IconButton, Box, Autocomplete } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
