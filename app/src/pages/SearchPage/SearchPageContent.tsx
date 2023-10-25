@@ -17,6 +17,7 @@ import {
   StyledAutocomplete,
   StyledAutocompleteInput,
   StyledForm,
+  StyledOptionText,
   StyledPopper
 } from './styled'
 import { StyledInputBox } from './styled'
@@ -40,6 +41,7 @@ import {
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 import { selectCurrentWorkspaceTabs } from '@/store/store'
+import { AppIcon } from '@/shared/AppIcon/AppIcon'
 
 const MAX_HISTORY = 10
 
@@ -48,7 +50,7 @@ interface IDropdownOption {
   icon: string
   label: string
   value: string
-  type: 'app' | 'tab',
+  type: 'app' | 'tab'
   group: string
 }
 
@@ -85,8 +87,10 @@ export const SearchPageContent = () => {
 
   const getTypeName = (type: string) => {
     switch (type) {
-      case 'app': return 'Apps'
-      case 'tab': return 'Tabs'
+      case 'app':
+        return 'Apps'
+      case 'tab':
+        return 'Tabs'
     }
     return 'Other'
   }
@@ -108,9 +112,10 @@ export const SearchPageContent = () => {
     try {
       const u = new URL(tab.url)
       label = `${tab.title}: ${u.hostname.replace(/^www./i, '')}`
-      if (u.pathname != '/')
-        label += u.pathname
-    } catch {}
+      if (u.pathname != '/') label += u.pathname
+    } catch {
+      /* empty */
+    }
     return {
       id: `tab-${i}`,
       icon: tab.icon,
@@ -504,7 +509,7 @@ export const SearchPageContent = () => {
     if (typeof option === 'string') return option
     return option.value
   }
-    
+
   const handleAcceptSuggestion = () => {
     const isSuggestionExists = suggestion.trim().length !== 0
     if (!isSuggestionExists) return undefined
@@ -513,7 +518,7 @@ export const SearchPageContent = () => {
 
   const onOptionClick = (option: IDropdownOption) => {
     switch (option.type) {
-      case 'tab': 
+      case 'tab':
         handleOpenTab(option.value)
         break
       default:
@@ -523,8 +528,7 @@ export const SearchPageContent = () => {
   }
 
   const getGroupCount = (group: string) => {
-    return filterOptionsByValue(getOptions, searchValue)
-      .filter(o => o.group === group).length
+    return filterOptionsByValue(getOptions, searchValue).filter((o) => o.group === group).length
   }
 
   return (
@@ -549,23 +553,18 @@ export const SearchPageContent = () => {
               renderGroup={(params) => {
                 return (
                   <li key={params.key}>
-                    <GroupHeader>
+                    <GroupHeader onClick={() => handleOpenGroup(params.group)}>
                       {params.group} ({getGroupCount(params.group)})
-                      <div onClick={() => handleOpenGroup(params.group)}>
-                        {openGroup[params.group] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                      </div>
+                      {openGroup[params.group] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </GroupHeader>
                     <GroupItems>{params.children}</GroupItems>
                   </li>
                 )
               }}
               renderOption={(props, option) => (
-                <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props} 
-                  key={option.id}
-                  onClick={() => onOptionClick(option)}
-                >
-                  <img loading="lazy" width="20" srcSet={option.icon} src={option.icon} />
-                  <div style={{whiteSpace: 'nowrap', overflowX: 'hidden', textOverflow: 'ellipsis'}}>{option.label}</div>
+                <Box component="li" {...props} key={option.id} onClick={() => onOptionClick(option)}>
+                  <AppIcon isPreviewTab isRounded={true} picture={option.icon} alt={option.label} />
+                  <StyledOptionText>{option.label}</StyledOptionText>
                 </Box>
               )}
               freeSolo
