@@ -107,7 +107,7 @@ export const SearchPageContent = () => {
     let label = `${tab.title}: ${tab.url}`
     try {
       const u = new URL(tab.url)
-      label = `${tab.title}: ${u.hostname.replace(/^www/i, '')}`
+      label = `${tab.title}: ${u.hostname.replace(/^www./i, '')}`
       if (u.pathname != '/')
         label += u.pathname
     } catch {}
