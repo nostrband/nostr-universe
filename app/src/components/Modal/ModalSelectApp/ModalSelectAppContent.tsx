@@ -105,7 +105,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
 
       // kind might be provided explicitly,
       // or might be encoded in the addr
-      const paramKind = getParamKind || String(addr.kind || '')
+      const paramKind = getParamKind || String(addr.kind !== undefined ? addr.kind : '')
 
       // if kind known in advance,
       // we might have last app for this kind in db,

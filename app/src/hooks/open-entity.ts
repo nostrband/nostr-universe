@@ -222,10 +222,9 @@ export const useOpenApp = () => {
       }
 
       // find an existing app for this url
-      const origin = getOrigin(entity.url)
       const app = entity.appNaddr
         ? apps.find((app) => app.naddr === entity.appNaddr)
-        : apps.find((app) => app.url.startsWith(origin))
+        : apps.find((app) => entity.url.startsWith(app.url))
 
       if (app) {
         await open(

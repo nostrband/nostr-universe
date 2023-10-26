@@ -34,6 +34,16 @@ export const StyledViewTitle = styled(
   whiteSpace: 'nowrap'
 }))
 
+export const StyledViewText = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography variant="body1" component="div" ref={ref} {...props} />
+  })
+)(() => ({
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+  overflowX: 'hidden'
+}))
+
 export const StyledFilterField = styled(Box)(() => ({
   marginBottom: 10,
   '&:first-type': {
@@ -73,18 +83,9 @@ export const StyledPaymentAmountActions = styled(Box)(() => ({
 
 export const StyledPaymentAmount = styled(Box)(() => ({
   display: 'flex',
-  gap: 10
-}))
-
-export const StyledUrl = styled(
-  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
-    return <Typography variant="body1" component="div" ref={ref} {...props} />
-  })
-)(() => ({
-  whiteSpace: 'nowrap',
+  gap: 10,
   overflowX: 'hidden',
-  textOverflow: 'ellipsis',
-  maxWidth: '100%'
+  flex: 1
 }))
 
 export const StyledViewTitleName = styled(
