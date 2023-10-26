@@ -3,18 +3,8 @@ import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
 import { styled } from '@mui/material/styles'
 import { Box, Typography, TypographyProps } from '@mui/material'
 
-export const StyledHead = styled(Box)(() => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center'
-}))
-
 export const StyledItemBlock = styled(Box)(() => ({
   marginBottom: 10
-}))
-
-export const StyledItemFooter = styled(Box)(() => ({
-  fontSize: '0.7em'
 }))
 
 export const StyledWrapper = styled(Box)(({ theme }) => ({
@@ -26,6 +16,12 @@ export const StyledWrapper = styled(Box)(({ theme }) => ({
   '&:not(:last-child)': {
     marginBottom: 10
   }
+}))
+
+export const StyledWrapperAmount = styled(Box)(() => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  width: '100%'
 }))
 
 export const StyledViewTitle = styled(
@@ -66,4 +62,15 @@ export const StyledDatePicker = styled(MobileDatePicker)(({ theme }) => ({
   '.MuiInputBase-input': {
     color: '#fff'
   }
+}))
+
+export const StyledPaymentAmountActions = styled(Box)(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-end'
+}))
+
+export const StyledPaymentAmount = styled(Box)(() => ({
+  display: 'flex',
+  gap: 10
 }))
