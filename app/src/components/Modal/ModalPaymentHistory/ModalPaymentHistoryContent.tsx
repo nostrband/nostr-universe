@@ -343,7 +343,7 @@ export const ModalPaymentHistoryContent = () => {
       </StyledFilterField>
       {convertToGroups.map((groupPayments) => (
         <>
-          <h1>{groupPayments.title}</h1>
+          <h3>{groupPayments.title}</h3>
           {groupPayments.payments.map((payment) => (
             <PaymentItem
               key={payment.id}
