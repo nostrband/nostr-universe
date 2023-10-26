@@ -70,12 +70,12 @@ export const PaymentItem = ({
           <div>
             <StyledViewTitle>{receiverPubkey ? getProfileName(receiverPubkey, receiver) : 'Payment'}</StyledViewTitle>
             <Typography variant="body1" component="div">{`From: ${getNameWallet}`}</Typography>
-            <Typography variant="body2" component="div">{`At: ${getUrl}`}</Typography>
+            <Typography variant="body1" component="div">{`At: ${getUrl}`}</Typography>
           </div>
         </StyledPaymentAmount>
 
         <StyledPaymentAmountActions>
-          <StyledViewTitle>- {getAmount} sats</StyledViewTitle>
+          <StyledViewTitle>{getAmount} sats</StyledViewTitle>
           <Chip color="secondary" label={getTime} />
           <IconButton
             color="inherit"
@@ -93,12 +93,6 @@ export const PaymentItem = ({
       {!preimage && (
         <StyledItemBlock>
           <Alert severity="error">Payment not confirmed</Alert>
-        </StyledItemBlock>
-      )}
-
-      {receiverPubkey && (
-        <StyledItemBlock>
-          <Alert severity="info">Zap to {getProfileName(receiverPubkey, receiver)}</Alert>
         </StyledItemBlock>
       )}
       <Menu

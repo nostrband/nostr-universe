@@ -138,7 +138,7 @@ type TypePayment = {
 export const ModalPaymentHistoryContent = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const [payments, setPayments] = useState<TypePayment[]>([])
-  const [startDate, setStartDate] = useState<Date | null>(startOfDay(new Date()))
+  const [startDate, setStartDate] = useState<Date | null>(startOfDay(Date.now() - 7 * 24 * 3600 * 1000))
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [filterContentValue, setFilterContentValue] = useState('')
   const [filterAmount, setFilterAmount] = useState<string | number>('')
@@ -163,20 +163,9 @@ export const ModalPaymentHistoryContent = () => {
       })
 
       const removeDublicatePayments = () => {
-        // O(n)
-        const uniqueValues = new Set()
-        return res
-          .filter((obj) => {
-            const value = obj.receiverPubkey
-
-            if (!uniqueValues.has(value) && Boolean(value.length)) {
-              uniqueValues.add(value)
-              return true
-            }
-
-            return false
-          })
-          .map((el) => el.receiverPubkey)
+        return [... new Set(res
+          .filter((e) => !!e.receiverPubkey)
+          .map((e) => e.receiverPubkey))]
       }
 
       const getMetas = await fetchMetas(removeDublicatePayments())
@@ -289,17 +278,6 @@ export const ModalPaymentHistoryContent = () => {
 
   return (
     <Container>
-      <StyledFilterField sx={{ marginTop: 1 }}>
-        <Input
-          placeholder="Filter minimal amount"
-          onChange={handleChangeAmount}
-          value={filterAmount}
-          type="number"
-          inputProps={{
-            autoFocus: false
-          }}
-        />
-      </StyledFilterField>
       <StyledFilterField>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Grid container spacing={0} marginTop="-8px">
@@ -341,6 +319,17 @@ export const ModalPaymentHistoryContent = () => {
             </Grid>
           </Grid>
         </LocalizationProvider>
+      </StyledFilterField>
+      <StyledFilterField sx={{ marginTop: 1 }}>
+        <Input
+          placeholder="Filter minimal amount"
+          onChange={handleChangeAmount}
+          value={filterAmount}
+          type="number"
+          inputProps={{
+            autoFocus: false
+          }}
+        />
       </StyledFilterField>
       <StyledFilterField>
         <Input
