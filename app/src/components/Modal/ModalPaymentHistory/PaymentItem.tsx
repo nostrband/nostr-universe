@@ -8,7 +8,10 @@ import {
   StyledItemBlock,
   StyledPaymentAmountActions,
   StyledWrapperAmount,
-  StyledPaymentAmount
+  StyledPaymentAmount,
+  StyledUrl,
+  StyledViewTitleName,
+  StyledPaymentInfo
 } from './styled'
 import { copyToClipBoard, getProfileName } from '@/utils/helpers/prepare-data'
 import { formatHours } from '@/consts/index'
@@ -67,11 +70,13 @@ export const PaymentItem = ({
               <DoDisturbOnOutlinedIcon />
             </Avatar>
           )}
-          <div>
-            <StyledViewTitle>{receiverPubkey ? getProfileName(receiverPubkey, receiver) : 'Payment'}</StyledViewTitle>
+          <StyledPaymentInfo>
+            <StyledViewTitleName>
+              {receiverPubkey ? getProfileName(receiverPubkey, receiver) : 'Payment'}
+            </StyledViewTitleName>
             <Typography variant="body1" component="div">{`From: ${getNameWallet}`}</Typography>
-            <Typography variant="body1" component="div">{`At: ${getUrl}`}</Typography>
-          </div>
+            <StyledUrl>{`At: ${getUrl}`}</StyledUrl>
+          </StyledPaymentInfo>
         </StyledPaymentAmount>
 
         <StyledPaymentAmountActions>

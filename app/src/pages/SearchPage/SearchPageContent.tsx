@@ -42,6 +42,7 @@ import {
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 import { selectCurrentWorkspaceTabs } from '@/store/store'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
+import { getProfileName } from '@/utils/helpers/prepare-data'
 
 const MAX_HISTORY = 10
 
@@ -50,7 +51,7 @@ interface IDropdownOption {
   icon: string
   label: string
   value: string
-  type: 'app' | 'tab'
+  type: 'app' | 'tab' | 'profile'
   group: string
 }
 
@@ -62,6 +63,7 @@ export const SearchPageContent = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { apps = [] } = useAppSelector((state) => state.apps)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
+  const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
   const [suggestion, setSuggestion] = useState('')
@@ -82,7 +84,8 @@ export const SearchPageContent = () => {
   const [selectApp, setSelectApp] = useState<IDropdownOption | string | null>(null)
   const [openGroup, setOpenGroup] = useState<{ [key: string]: boolean }>({
     tabs: false,
-    apps: false
+    apps: false,
+    contactList: false
   })
 
   const getTypeName = (type: string) => {
@@ -91,6 +94,8 @@ export const SearchPageContent = () => {
         return 'Apps'
       case 'tab':
         return 'Tabs'
+      case 'profile':
+        return 'Profiles'
     }
     return 'Other'
   }
@@ -106,6 +111,25 @@ export const SearchPageContent = () => {
       group: getTypeName('app')
     }
   })
+
+  const optionsProfiles: IDropdownOption[] = contactList
+    ? contactList.contactEvents
+        .filter((event) => {
+          return event.profile !== undefined
+        })
+        .map((event, i) => {
+          const name = getProfileName(event.pubkey, event)
+
+          return {
+            id: `profile-${i}`,
+            icon: event.profile!.picture as string,
+            label: name,
+            value: event.profile!.pubkey as string,
+            type: 'profile',
+            group: getTypeName('profile')
+          }
+        })
+    : []
 
   const optionsTabs: IDropdownOption[] = tabs.map((tab, i) => {
     let label = `${tab.title}: ${tab.url}`
@@ -126,7 +150,7 @@ export const SearchPageContent = () => {
     }
   })
 
-  const getOptions = [...optionsTabs, ...optionsApps]
+  const getOptions = [...optionsTabs, ...optionsApps, ...optionsProfiles]
 
   const filterOptionsByValue = (options: IDropdownOption[], str: string) => {
     const inputValue = str.toLowerCase()
@@ -292,9 +316,9 @@ export const SearchPageContent = () => {
     setSuggestion('')
   }
 
-  const handleOpenProfile = (profile: MetaEvent) => {
+  const handleOpenProfile = (pubkey: string) => {
     const nprofile = nip19.nprofileEncode({
-      pubkey: profile.pubkey,
+      pubkey: pubkey,
       relays: [nostrbandRelay]
     })
 
@@ -520,6 +544,9 @@ export const SearchPageContent = () => {
       case 'tab':
         handleOpenTab(option.value)
         break
+      case 'profile':
+        handleOpenProfile(option.value)
+        break
       default:
         onSearch(option.value)
         break
@@ -544,6 +571,7 @@ export const SearchPageContent = () => {
               isOptionEqualToValue={isOptionEqualToValue}
               PopperComponent={StyledPopper}
               fullWidth
+              freeSolo
               options={getOptions}
               getOptionLabel={getOptionLabel}
               filterOptions={filterOptions}
@@ -566,7 +594,6 @@ export const SearchPageContent = () => {
                   <StyledOptionText>{option.label}</StyledOptionText>
                 </Box>
               )}
-              freeSolo
               renderInput={(params) => (
                 <StyledAutocompleteInput
                   {...params}

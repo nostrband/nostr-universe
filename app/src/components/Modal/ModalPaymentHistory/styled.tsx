@@ -30,7 +30,8 @@ export const StyledViewTitle = styled(
   })
 )(({ theme }) => ({
   fontWeight: 'bold',
-  color: theme.palette.light.light
+  color: theme.palette.light.light,
+  whiteSpace: 'nowrap'
 }))
 
 export const StyledFilterField = styled(Box)(() => ({
@@ -73,4 +74,34 @@ export const StyledPaymentAmountActions = styled(Box)(() => ({
 export const StyledPaymentAmount = styled(Box)(() => ({
   display: 'flex',
   gap: 10
+}))
+
+export const StyledUrl = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography variant="body1" component="div" ref={ref} {...props} />
+  })
+)(() => ({
+  whiteSpace: 'nowrap',
+  overflowX: 'hidden',
+  textOverflow: 'ellipsis',
+  maxWidth: '100%'
+}))
+
+export const StyledViewTitleName = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography variant="h6" component="div" ref={ref} {...props} />
+  })
+)(({ theme }) => ({
+  fontWeight: 'bold',
+  color: theme.palette.light.light,
+  whiteSpace: 'nowrap',
+  overflowX: 'hidden',
+  textOverflow: 'ellipsis',
+  maxWidth: '100%'
+}))
+
+export const StyledPaymentInfo = styled(Box)(() => ({
+  whiteSpace: 'nowrap',
+  overflowX: 'hidden',
+  textOverflow: 'ellipsis'
 }))
