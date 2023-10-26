@@ -13,6 +13,7 @@ import { formatDate } from '@/consts'
 import { addDays, format, isAfter, isEqual, isWithinInterval, startOfDay } from 'date-fns'
 import { MetaEvent } from '@/types/meta-event'
 import { fetchMetas, getTagValue } from '@/modules/nostr'
+import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
 
 // const paymentsMoc: TypePayment[] = [
 //   {
@@ -141,9 +142,11 @@ export const ModalPaymentHistoryContent = () => {
   const [startDate, setStartDate] = useState<Date | null>(startOfDay(Date.now() - 7 * 24 * 3600 * 1000))
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [filterContentValue, setFilterContentValue] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [filterAmount, setFilterAmount] = useState<string | number>('')
 
   const getPayments = async () => {
+    setIsLoading(true)
     try {
       const res = (await dbi.listPayments(currentPubkey)) as TypePayment[]
       const zaps = await dbi.listSignedZapRequests(currentPubkey)
@@ -163,9 +166,7 @@ export const ModalPaymentHistoryContent = () => {
       })
 
       const removeDublicatePayments = () => {
-        return [... new Set(res
-          .filter((e) => !!e.receiverPubkey)
-          .map((e) => e.receiverPubkey))]
+        return [...new Set(res.filter((e) => !!e.receiverPubkey).map((e) => e.receiverPubkey))]
       }
 
       const getMetas = await fetchMetas(removeDublicatePayments())
@@ -192,6 +193,7 @@ export const ModalPaymentHistoryContent = () => {
       }
 
       setPayments(updatedPayments())
+      setIsLoading(false)
     } catch (error) {
       console.log(error)
     }
@@ -341,23 +343,29 @@ export const ModalPaymentHistoryContent = () => {
           }}
         />
       </StyledFilterField>
-      {convertToGroups.map((groupPayments) => (
-        <>
-          <h3>{groupPayments.title}</h3>
-          {groupPayments.payments.map((payment) => (
-            <PaymentItem
-              key={payment.id}
-              url={payment.url}
-              time={payment.timestamp}
-              walletName={payment.walletName}
-              amount={payment.amount}
-              preimage={payment.preimage}
-              receiverPubkey={payment.receiverPubkey}
-              receiver={payment.receiver}
-            />
-          ))}
-        </>
-      ))}
+      {isLoading ? (
+        <LoadingContainer>
+          <LoadingSpinner />
+        </LoadingContainer>
+      ) : (
+        convertToGroups.map((groupPayments) => (
+          <>
+            <h3>{groupPayments.title}</h3>
+            {groupPayments.payments.map((payment) => (
+              <PaymentItem
+                key={payment.id}
+                url={payment.url}
+                time={payment.timestamp}
+                walletName={payment.walletName}
+                amount={payment.amount}
+                preimage={payment.preimage}
+                receiverPubkey={payment.receiverPubkey}
+                receiver={payment.receiver}
+              />
+            ))}
+          </>
+        ))
+      )}
     </Container>
   )
 }

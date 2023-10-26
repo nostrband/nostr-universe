@@ -4,7 +4,6 @@ import { nip19 } from '@nostrband/nostr-tools'
 import { nostrbandRelay, subscribeContactList } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
-import { MetaEvent } from '@/types/meta-event'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { Profile } from '@/shared/Profile/Profile'
 import {
@@ -25,9 +24,9 @@ export const ContactList = memo(function ContactList() {
   const dispatch = useAppDispatch()
 
   const handleOpenProfile = useCallback(
-    (profile: MetaEvent) => {
+    (pubkey: string) => {
       const nprofile = nip19.nprofileEncode({
-        pubkey: profile.pubkey,
+        pubkey: pubkey,
         relays: [nostrbandRelay]
       })
 
