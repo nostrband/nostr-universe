@@ -33,6 +33,16 @@ export const StyledViewTitle = styled(
   color: theme.palette.light.light
 }))
 
+export const StyledViewText = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography variant="body1" component="div" ref={ref} {...props} />
+  })
+)(({ }) => ({
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+  overflowX: 'hidden'
+}))
+
 export const StyledFilterField = styled(Box)(() => ({
   marginBottom: 10,
   '&:first-type': {

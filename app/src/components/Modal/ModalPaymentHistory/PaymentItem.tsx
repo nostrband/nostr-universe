@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Alert, Avatar, Chip, IconButton, Menu, MenuItem, Typography } from '@mui/material'
+import { Alert, Avatar, Chip, IconButton, Menu, MenuItem } from '@mui/material'
 import DoDisturbOnOutlinedIcon from '@mui/icons-material/DoDisturbOnOutlined'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
 import {
   StyledViewTitle,
+  StyledViewText,
   StyledWrapper,
   StyledItemBlock,
   StyledPaymentAmountActions,
@@ -69,8 +70,8 @@ export const PaymentItem = ({
           )}
           <div>
             <StyledViewTitle>{receiverPubkey ? getProfileName(receiverPubkey, receiver) : 'Payment'}</StyledViewTitle>
-            <Typography variant="body1" component="div">{`From: ${getNameWallet}`}</Typography>
-            <Typography variant="body1" component="div">{`At: ${getUrl}`}</Typography>
+            <StyledViewText>{`From: ${getNameWallet}`}</StyledViewText>
+            <StyledViewText>{`At: ${getUrl}`}</StyledViewText>
           </div>
         </StyledPaymentAmount>
 

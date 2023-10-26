@@ -50,7 +50,7 @@ export const ModalSignedEventsContent = () => {
   const [content, setContent] = useState('')
   const [events, setEvents] = useState<TypeSignEvent[]>([])
   const [kinds, setKinds] = useState<KindOptionType[]>([])
-  const [startDate, setStartDate] = useState<Date | null>(startOfDay(new Date()))
+  const [startDate, setStartDate] = useState<Date | null>(startOfDay(Date.now() - 7 * 24 * 3600 * 1000))
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [filterContentValue, setFilterContentValue] = useState('')
   const isShowDialog = Boolean(content)
@@ -133,15 +133,6 @@ export const ModalSignedEventsContent = () => {
   return (
     <Container>
       <StyledFilterField>
-        <StyledAutocomplete
-          multiple
-          id="tags-standard"
-          onChange={handleKindChange}
-          options={getTransformedKindEvents}
-          renderInput={(params) => <StyledInput {...params} placeholder="Event kinds" />}
-        />
-      </StyledFilterField>
-      <StyledFilterField>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Grid container spacing={0} marginTop="-8px">
             <Grid item xs={6}>
@@ -182,6 +173,15 @@ export const ModalSignedEventsContent = () => {
             </Grid>
           </Grid>
         </LocalizationProvider>
+      </StyledFilterField>
+      <StyledFilterField>
+        <StyledAutocomplete
+          multiple
+          id="tags-standard"
+          onChange={handleKindChange}
+          options={getTransformedKindEvents}
+          renderInput={(params) => <StyledInput {...params} placeholder="Event kinds" />}
+        />
       </StyledFilterField>
       <StyledFilterField>
         <Input
