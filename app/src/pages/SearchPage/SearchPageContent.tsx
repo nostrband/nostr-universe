@@ -95,7 +95,7 @@ export const SearchPageContent = () => {
       case 'tab':
         return 'Tabs'
       case 'profile':
-        return 'Profiles'
+        return 'Following'
     }
     return 'Other'
   }
@@ -150,7 +150,7 @@ export const SearchPageContent = () => {
     }
   })
 
-  const getOptions = [...optionsTabs, ...optionsApps, ...optionsProfiles]
+  const getOptions = [...optionsProfiles, ...optionsTabs, ...optionsApps]
 
   const filterOptionsByValue = (options: IDropdownOption[], str: string) => {
     const inputValue = str.toLowerCase()
@@ -502,7 +502,7 @@ export const SearchPageContent = () => {
     setSelectApp(selectedValue)
   }
 
-  const onInputChange = (_: React.SyntheticEvent<Element, Event>, textValue: string) => {
+  const onInputChange = (event: React.SyntheticEvent<Element, Event>, textValue: string) => {
     // we had a suggestion and user clicked backspace?
     const reduced = searchValue.length > textValue.length
     if (reduced && suggestion.length !== searchValue.length) {
@@ -510,7 +510,11 @@ export const SearchPageContent = () => {
       if (wasSug) {
         setSuggestion('')
         setTimeout(() => {
-          dispatch(setSearchValue({ searchValue }))
+          // NOTE: re-setting searchValue back doesn't help on
+          // the real device, we have to specifically set the cursor
+          // dispatch(setSearchValue({ searchValue }))
+          (event.target as HTMLInputElement).setSelectionRange(
+            searchValue.length, searchValue.length)
         }, 0)
         return
       }
