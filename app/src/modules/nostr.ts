@@ -710,7 +710,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   // fetch apps ('handlers')
   const filter: NDKFilter = {
     kinds: [KIND_APP],
-    limit: 50
+    limit: 100
   }
   if (kinds.length > 0) filter['#k'] = kinds.map((k) => '' + k)
 
