@@ -1,9 +1,20 @@
 import { useState } from 'react'
-import { Alert, Chip, IconButton, Menu, MenuItem } from '@mui/material'
+import { Alert, Avatar, Chip, IconButton, Menu, MenuItem } from '@mui/material'
+import DoDisturbOnOutlinedIcon from '@mui/icons-material/DoDisturbOnOutlined'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
-import { StyledViewTitle, StyledWrapper, StyledHead, StyledItemBlock, StyledItemFooter } from './styled'
+import {
+  StyledViewTitle,
+  StyledViewText,
+  StyledWrapper,
+  StyledItemBlock,
+  StyledPaymentAmountActions,
+  StyledWrapperAmount,
+  StyledPaymentAmount,
+  StyledViewTitleName,
+  StyledPaymentInfo
+} from './styled'
 import { copyToClipBoard, getProfileName } from '@/utils/helpers/prepare-data'
-import { formatDateHours } from '@/consts/index'
+import { formatHours } from '@/consts/index'
 import { format } from 'date-fns'
 import { MetaEvent } from '@/types/meta-event'
 
@@ -18,7 +29,16 @@ interface IPaymentItem {
   receiver?: MetaEvent
 }
 
-export const PaymentItem = ({ url, time, walletName, walletId, amount, preimage, receiverPubkey, receiver }: IPaymentItem) => {
+export const PaymentItem = ({
+  url,
+  time,
+  walletName,
+  walletId,
+  amount,
+  preimage,
+  receiverPubkey,
+  receiver
+}: IPaymentItem) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -34,42 +54,52 @@ export const PaymentItem = ({ url, time, walletName, walletId, amount, preimage,
     handleClose()
   }
 
-  const getName = walletName || walletId
+  const getNameWallet = walletName || walletId
   const getUrl = new URL(url).hostname
-  const getTime = format(new Date(time), formatDateHours)
+  const getTime = format(new Date(time), formatHours)
+  const getAmount = amount / 1000
 
   return (
     <StyledWrapper>
-      <StyledHead>
-        <StyledViewTitle>-{amount / 1000} sats</StyledViewTitle>
-        <IconButton
-          color="inherit"
-          size="medium"
-          id="demo-positioned-button"
-          aria-controls={open ? 'demo-positioned-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
-          onClick={handleClick}
-        >
-          <MoreHorizOutlinedIcon />
-        </IconButton>
-      </StyledHead>
-      <StyledItemBlock>
-        <Chip color="secondary" label={`Wallet: ${getName}`} />
-      </StyledItemBlock>
+      <StyledWrapperAmount>
+        <StyledPaymentAmount>
+          {receiverPubkey ? (
+            <Avatar src={receiver?.profile?.picture} />
+          ) : (
+            <Avatar>
+              <DoDisturbOnOutlinedIcon />
+            </Avatar>
+          )}
+          <StyledPaymentInfo>
+            <StyledViewTitleName>
+              {receiverPubkey ? getProfileName(receiverPubkey, receiver) : 'Payment'}
+            </StyledViewTitleName>
+            <StyledViewText variant="body1" component="div">{`From: ${getNameWallet}`}</StyledViewText>
+            <StyledViewText>{`At: ${getUrl}`}</StyledViewText>
+          </StyledPaymentInfo>
+        </StyledPaymentAmount>
+
+        <StyledPaymentAmountActions>
+          <StyledViewTitle>{getAmount} sats</StyledViewTitle>
+          <Chip color="secondary" label={getTime} />
+          <IconButton
+            color="inherit"
+            size="medium"
+            id="demo-positioned-button"
+            aria-controls={open ? 'demo-positioned-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? 'true' : undefined}
+            onClick={handleClick}
+          >
+            <MoreHorizOutlinedIcon />
+          </IconButton>
+        </StyledPaymentAmountActions>
+      </StyledWrapperAmount>
       {!preimage && (
         <StyledItemBlock>
           <Alert severity="error">Payment not confirmed</Alert>
         </StyledItemBlock>
       )}
-      {false && receiverPubkey && (
-        <StyledItemBlock>
-          <Alert severity="info">Zap to {getProfileName(receiverPubkey, receiver)}</Alert>
-        </StyledItemBlock>
-      )}
-      <StyledItemFooter>
-        On {getUrl} at {getTime}
-      </StyledItemFooter>
       <Menu
         id="demo-positioned-menu"
         aria-labelledby="demo-positioned-button"

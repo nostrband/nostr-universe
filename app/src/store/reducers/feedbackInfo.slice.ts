@@ -22,27 +22,24 @@ export const feedbackInfoSlice = createSlice({
   }
 })
 
-export const getFeedbackInfoThunk = createAsyncThunk(
-  'feedbackInfo/getFeedbackInfo',
-  async (_, { dispatch }) => {
-    try {
-      dispatch(setHideNPSWidget())
-      //await dbi.setFlag('', 'nextFeedbackTime', Date.now())
-      const feedbackTime = await dbi.getNextFeedbackTime()
+export const getFeedbackInfoThunk = createAsyncThunk('feedbackInfo/getFeedbackInfo', async (_, { dispatch }) => {
+  try {
+    dispatch(setHideNPSWidget())
+    //await dbi.setFlag('', 'nextFeedbackTime', Date.now())
+    const feedbackTime = await dbi.getNextFeedbackTime()
 
-      if (!feedbackTime) {
-        // don't show feedback request to new users
-        await dbi.advanceFeedbackTime();
-        return 
-      }
-
-      if (feedbackTime < Date.now()) {
-        return dispatch(setShowNPSWidget())
-      }
-    } catch (error) {
-      console.log(error)
+    if (!feedbackTime) {
+      // don't show feedback request to new users
+      await dbi.advanceFeedbackTime()
+      return
     }
+
+    if (feedbackTime < Date.now()) {
+      return dispatch(setShowNPSWidget())
+    }
+  } catch (error) {
+    console.log(error)
   }
-)
+})
 
 export const { setShowNPSWidget, setHideNPSWidget } = feedbackInfoSlice.actions

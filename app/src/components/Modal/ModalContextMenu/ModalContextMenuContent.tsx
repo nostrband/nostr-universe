@@ -14,6 +14,7 @@ import PlayCircleOutlineOutlinedIcon from '@mui/icons-material/PlayCircleOutline
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
+import StarHalfOutlinedIcon from '@mui/icons-material/StarHalfOutlined'
 import {
   StyledListItemAppIcon,
   StyledInput,
@@ -116,13 +117,18 @@ export const ModalContextMenuContent = () => {
   }
 
   const handleZap = async () => {
-    const ZAP_URL = 'https://zapper.nostrapps.org/zap?id='
-    openBlank({ url: `${ZAP_URL}${b32}` }, { replace: true })
+    const url = `https://zapper.nostrapps.org/zap?id=${b32}`
+    openBlank({ url }, { replace: true })
   }
 
   const handleReplies = async () => {
-    const URL = 'https://replies.nostrapps.org/?id='
-    openBlank({ url: `${URL}${b32}` }, { replace: true })
+    const url = `https://replies.nostrapps.org/?id=${b32}`
+    openBlank({ url }, { replace: true })
+  }
+
+  const handleReviewApp = async () => {
+    const url = `https://nostrapp.link/a/${b32}/review`
+    openBlank({ url }, { replace: true })
   }
 
   const handleShareTabUrl = async () => {
@@ -252,6 +258,7 @@ export const ModalContextMenuContent = () => {
           {isApp && renderItem('Launch app', <PlayCircleOutlineOutlinedIcon />, handleLaunchApp)}
           {isApp && !pin && renderItem('Pin app', <PushPinOutlinedIcon />, handlePinApp)}
           {isApp && !!pin && renderItem('Unpin app', <DeleteOutlineOutlinedIcon />, handleUnpinApp)}
+          {isApp && renderItem('Review app', <StarHalfOutlinedIcon />, handleReviewApp)}
           {b32 && renderOpenWith()}
           {b32 && renderItem('Zap', <FlashOnIcon />, handleZap)}
           {b32 && renderItem('View replies', <ForumOutlinedIcon />, handleReplies)}

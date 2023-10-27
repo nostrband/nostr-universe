@@ -78,6 +78,7 @@ export const getTransformedKindEvents: KindOptionType[] = Object.entries(kindEve
 }))
 
 export const formatDateHours = 'dd.MM.yyyy HH:mm:ss'
+export const formatHours = 'HH:mm'
 export const formatDate = 'dd.MM.yyyy'
 
 export const feedbackPeriodMs = 7 * 24 * 60 * 60 * 1000 // 1 week

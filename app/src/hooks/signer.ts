@@ -16,14 +16,12 @@ export const useSigner = () => {
   const signEvent = useCallback(
     async (event: NostrEvent, pubkey?: string, url?: string) => {
       if (!pubkey) pubkey = currentPubkey
-      const signedEvent = nsbKeys.includes(pubkey)
-        ? await nsbSignEvent(pubkey, event)
-        : await keystore.signEvent(event)
+      const signedEvent = nsbKeys.includes(pubkey) ? await nsbSignEvent(pubkey, event) : await keystore.signEvent(event)
 
       const eventJson = JSON.stringify(signedEvent)
-      console.log("signed", JSON.stringify(eventJson))
+      console.log('signed', JSON.stringify(eventJson))
       const eventZapHash = bytesToHex(sha256(new TextEncoder().encode(eventJson)))
-      console.log("signed event zap hash", eventZapHash)
+      console.log('signed event zap hash', eventZapHash)
 
       // do not wait for it
       dbi.addSignedEvent({
@@ -34,7 +32,7 @@ export const useSigner = () => {
         eventZapHash,
         url,
         pubkey,
-        id: v4(),
+        id: v4()
       })
 
       return signedEvent

@@ -3,18 +3,8 @@ import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
 import { styled } from '@mui/material/styles'
 import { Box, Typography, TypographyProps } from '@mui/material'
 
-export const StyledHead = styled(Box)(() => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center'
-}))
-
 export const StyledItemBlock = styled(Box)(() => ({
   marginBottom: 10
-}))
-
-export const StyledItemFooter = styled(Box)(() => ({
-  fontSize: '0.7em'
 }))
 
 export const StyledWrapper = styled(Box)(({ theme }) => ({
@@ -28,13 +18,30 @@ export const StyledWrapper = styled(Box)(({ theme }) => ({
   }
 }))
 
+export const StyledWrapperAmount = styled(Box)(() => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  width: '100%'
+}))
+
 export const StyledViewTitle = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
     return <Typography variant="h6" component="div" ref={ref} {...props} />
   })
 )(({ theme }) => ({
   fontWeight: 'bold',
-  color: theme.palette.light.light
+  color: theme.palette.light.light,
+  whiteSpace: 'nowrap'
+}))
+
+export const StyledViewText = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography variant="body1" component="div" ref={ref} {...props} />
+  })
+)(() => ({
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+  overflowX: 'hidden'
 }))
 
 export const StyledFilterField = styled(Box)(() => ({
@@ -66,4 +73,36 @@ export const StyledDatePicker = styled(MobileDatePicker)(({ theme }) => ({
   '.MuiInputBase-input': {
     color: '#fff'
   }
+}))
+
+export const StyledPaymentAmountActions = styled(Box)(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-end'
+}))
+
+export const StyledPaymentAmount = styled(Box)(() => ({
+  display: 'flex',
+  gap: 10,
+  overflowX: 'hidden',
+  flex: 1
+}))
+
+export const StyledViewTitleName = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography variant="h6" component="div" ref={ref} {...props} />
+  })
+)(({ theme }) => ({
+  fontWeight: 'bold',
+  color: theme.palette.light.light,
+  whiteSpace: 'nowrap',
+  overflowX: 'hidden',
+  textOverflow: 'ellipsis',
+  maxWidth: '100%'
+}))
+
+export const StyledPaymentInfo = styled(Box)(() => ({
+  whiteSpace: 'nowrap',
+  overflowX: 'hidden',
+  textOverflow: 'ellipsis'
 }))

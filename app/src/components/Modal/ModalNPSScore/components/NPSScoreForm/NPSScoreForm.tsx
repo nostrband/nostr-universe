@@ -60,16 +60,16 @@ export const NPSScoreForm: FC<NPSScoreFormProps> = ({ onSubmit }) => {
   return (
     <form onSubmit={handleSubmit}>
       <FieldWrapper>
-        <StyledLabel>
-          On a scale 0-10, how likely are you recommend Spring to a friend or colleague?
-        </StyledLabel>
+        <StyledLabel>On a scale 0-10, how likely are you recommend Spring to a friend or colleague?</StyledLabel>
         <Rating selectedRating={selectedRating} onRateChange={ratingChangeHandler} />
       </FieldWrapper>
 
       <FieldWrapper>
         <StyledLabel htmlFor="reason">What is the primary reason for the score you gave us?</StyledLabel>
-        <StyledTextarea id="reason" onChange={answersChangeHandler(ANSWER_FIELDS.PRIMARY_REASON)}
-          placeholder='optional'
+        <StyledTextarea
+          id="reason"
+          onChange={answersChangeHandler(ANSWER_FIELDS.PRIMARY_REASON)}
+          placeholder="optional"
         />
       </FieldWrapper>
 
@@ -77,8 +77,10 @@ export const NPSScoreForm: FC<NPSScoreFormProps> = ({ onSubmit }) => {
         <StyledLabel htmlFor="improvement">
           Is there anything specific that Spring can do to improve your experience?
         </StyledLabel>
-        <StyledTextarea id="improvement" onChange={answersChangeHandler(ANSWER_FIELDS.EXPERIENCE_IMPROVEMENT)}
-          placeholder='optional'
+        <StyledTextarea
+          id="improvement"
+          onChange={answersChangeHandler(ANSWER_FIELDS.EXPERIENCE_IMPROVEMENT)}
+          placeholder="optional"
         />
       </FieldWrapper>
 
@@ -86,15 +88,15 @@ export const NPSScoreForm: FC<NPSScoreFormProps> = ({ onSubmit }) => {
         <FieldWrapper>
           <Stack direction="row" component="label" alignItems="center">
             <SwitchControl checked={sendAsUser} onChange={handleSenderTypeChange} />
-            {!sendAsUser && (<StyledLabel spacing={false}>Send anonymously</StyledLabel>)}
+            {!sendAsUser && <StyledLabel spacing={false}>Send anonymously</StyledLabel>}
             {sendAsUser && <StyledLabel spacing={false}>Send as «{username}»</StyledLabel>}
           </Stack>
         </FieldWrapper>
       )}
 
       <FieldWrapper>
-        Your feedback will be send as an encrypted direct message on Nostr,
-        it is private and you can be as honest as you need to be.
+        Your feedback will be send as an encrypted direct message on Nostr, it is private and you can be as honest as
+        you need to be.
       </FieldWrapper>
 
       <ActionsContainer>

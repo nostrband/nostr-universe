@@ -13,7 +13,8 @@ const getVariantApp = (isPreviewTab: boolean, isRounded: boolean, size: AppNostr
   if (isRounded) {
     return {
       height: 34,
-      width: 34,
+      minWidth: 34,
+      maxWidth: 34,
       borderRadius: '7px'
     }
   }
@@ -21,7 +22,8 @@ const getVariantApp = (isPreviewTab: boolean, isRounded: boolean, size: AppNostr
   if (isPreviewTab) {
     return {
       height: 34,
-      width: 34,
+      minWidth: 34,
+      maxWidth: 34,
       borderRadius: '50%'
     }
   }

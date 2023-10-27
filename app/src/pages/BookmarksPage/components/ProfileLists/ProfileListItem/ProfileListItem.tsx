@@ -28,7 +28,7 @@ export const ProfileListItem: FC<ProfileListItemProps> = ({
       <StyledProfilesCount>
         {profilesCount} {profileText}
       </StyledProfilesCount>
-      {description && (<StyledContent contentLine={1}>{description}</StyledContent>)}
+      {description && <StyledContent contentLine={1}>{description}</StyledContent>}
     </StyledWrapper>
   )
 }

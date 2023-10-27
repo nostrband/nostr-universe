@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState, FC, CSSProperties } from 'react'
+import React, { useCallback, useEffect, useState, FC, CSSProperties, useRef } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { useOpenApp } from '@/hooks/open-entity'
+import CloseIcon from '@mui/icons-material/Close'
 import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
@@ -11,7 +11,16 @@ import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/Suggeste
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
 import { StyledTitle as StyledTitleLongPost } from '@/pages/MainPage/components/LongPosts/styled'
 import { LoadingContainer, LoadingSpinner } from '@/shared/LoadingSpinner/LoadingSpinner'
-import { StyledForm, StyledInput } from './styled'
+import {
+  GroupHeader,
+  GroupItems,
+  StyledAutocomplete,
+  StyledAutocompleteInput,
+  StyledForm,
+  StyledOptionText,
+  StyledPopper
+} from './styled'
+import { StyledInputBox } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
@@ -22,25 +31,42 @@ import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNot
 import { dbi } from '@/modules/db'
 import { v4 as uuidv4 } from 'uuid'
 import { SearchTerm } from '@/modules/types/db'
-import { IconButton } from '@mui/material'
+import { IconButton, Box, Autocomplete } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
-import CloseIcon from '@mui/icons-material/Close'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import { RecentQueries } from './components/RecentQueries/RecentQueries'
 import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { selectCurrentWorkspaceTabs } from '@/store/store'
+import { AppIcon } from '@/shared/AppIcon/AppIcon'
+import { getProfileName } from '@/utils/helpers/prepare-data'
 
 const MAX_HISTORY = 10
+
+interface IDropdownOption {
+  id: string
+  icon: string
+  label: string
+  value: string
+  type: 'app' | 'tab' | 'profile'
+  group: string
+}
 
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'search'
 
-  const { openBlank } = useOpenApp()
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
+  const { apps = [] } = useAppSelector((state) => state.apps)
+  const tabs = useAppSelector(selectCurrentWorkspaceTabs)
+  const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
+
+  const [suggestion, setSuggestion] = useState('')
 
   const [profiles, setProfiles] = useState<MetaEvent[] | null>(null)
   const [notes, setNotes] = useState<AuthoredEvent[] | null>(null)
@@ -48,12 +74,136 @@ export const SearchPageContent = () => {
 
   const [isLoading, setIsLoading] = useState(false)
   const [lastValue, setLastValue] = useState('')
+  const inputRef = useRef<HTMLElement>()
 
   const [searchHistoryOptions, setSearchHistoryOptions] = useState<SearchTerm[]>([])
   const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
 
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
-  const inputRef = useRef<HTMLElement>()
+  const { handleOpenContextMenu, handleOpenTab } = useOpenModalSearchParams()
+
+  const [selectApp, setSelectApp] = useState<IDropdownOption | string | null>(null)
+  const [openGroup, setOpenGroup] = useState<{ [key: string]: boolean }>({
+    tabs: false,
+    apps: false,
+    contactList: false
+  })
+
+  const getTypeName = (type: string) => {
+    switch (type) {
+      case 'app':
+        return 'Apps'
+      case 'tab':
+        return 'Tabs'
+      case 'profile':
+        return 'Following'
+    }
+    return 'Other'
+  }
+
+  // FIXME add pins!
+  const optionsApps: IDropdownOption[] = apps.map((app, i) => {
+    return {
+      id: `app-${i}`,
+      icon: app.picture,
+      label: app.name,
+      value: app.naddr || app.url,
+      type: 'app',
+      group: getTypeName('app')
+    }
+  })
+
+  const optionsProfiles: IDropdownOption[] = contactList
+    ? contactList.contactEvents
+        .filter((event) => {
+          return event.profile !== undefined
+        })
+        .map((event, i) => {
+          const name = getProfileName(event.pubkey, event)
+
+          return {
+            id: `profile-${i}`,
+            icon: event.profile!.picture as string,
+            label: name,
+            value: event.profile!.pubkey as string,
+            type: 'profile',
+            group: getTypeName('profile')
+          }
+        })
+    : []
+
+  const optionsTabs: IDropdownOption[] = tabs.map((tab, i) => {
+    let label = `${tab.title}: ${tab.url}`
+    try {
+      const u = new URL(tab.url)
+      label = `${tab.title}: ${u.hostname.replace(/^www./i, '')}`
+      if (u.pathname != '/') label += u.pathname
+    } catch {
+      /* empty */
+    }
+    return {
+      id: `tab-${i}`,
+      icon: tab.icon,
+      label,
+      value: tab.id,
+      type: 'tab',
+      group: getTypeName('tab')
+    }
+  })
+
+  const getOptions = [...optionsProfiles, ...optionsTabs, ...optionsApps]
+
+  const filterOptionsByValue = (options: IDropdownOption[], str: string) => {
+    const inputValue = str.toLowerCase()
+    return options.filter((option) => {
+      const label = option.label.toLowerCase()
+      const url = option.value.toLowerCase()
+      return label.includes(inputValue) || url.includes(inputValue)
+    })
+  }
+
+  const filterOptions = (options: IDropdownOption[]) => {
+    // NOTE: using state.inputValue instead of searchValue is buggy:
+    // - enter long non-matching value to have empty dropdown
+    // - click out and then back to input - all items show up
+    const filteredOptions = filterOptionsByValue(options, searchValue)
+
+    const sortGroup: Record<string, IDropdownOption[]> = {}
+
+    filteredOptions.forEach((obj) => {
+      if (!sortGroup[obj.group]) {
+        sortGroup[obj.group] = []
+      }
+      sortGroup[obj.group].push(obj)
+    })
+
+    if (selectApp && typeof selectApp === 'object') {
+      for (const group in sortGroup) {
+        if (!openGroup[group]) {
+          const currentIndex = sortGroup[group].findIndex((el) => el.id === selectApp.id)
+
+          if (currentIndex >= 0 && currentIndex > 2) {
+            const newData = [...sortGroup[group]]
+            const element = newData[currentIndex]
+            newData.splice(currentIndex, 1)
+
+            newData.unshift(element)
+
+            sortGroup[group] = newData
+          }
+        }
+      }
+    }
+
+    for (const group in sortGroup) {
+      if (!openGroup[group]) {
+        sortGroup[group] = sortGroup[group].slice(0, 3)
+      }
+    }
+
+    const concatSortGroupArrays: IDropdownOption[] = ([] as IDropdownOption[]).concat(...Object.values(sortGroup))
+
+    return concatSortGroupArrays
+  }
 
   const onSearch = useCallback(
     (str: string): boolean => {
@@ -75,24 +225,24 @@ export const SearchPageContent = () => {
 
       return false
     },
-    [handleOpenContextMenu, openBlank]
+    [handleOpenContextMenu]
   )
 
   const loadEvents = useCallback(
-    async (searchValue: string) => {
+    async (value: string) => {
       setIsLoading(true)
-      console.log('searching', searchValue)
-      searchProfiles(searchValue)
+      console.log('searching', value)
+      searchProfiles(value)
         .then((data) => {
           console.log('profiles', data)
           setProfiles(data)
         })
-        .then(() => searchNotes(searchValue))
+        .then(() => searchNotes(value))
         .then((data) => {
           console.log('notes', data)
           setNotes(data)
         })
-        .then(() => searchLongNotes(searchValue))
+        .then(() => searchLongNotes(value))
         .then((data) => {
           console.log('long notes', data)
           setLongNotes(data)
@@ -105,14 +255,13 @@ export const SearchPageContent = () => {
   const updateSearchHistory = useCallback(
     (history: SearchTerm[]) => {
       history.sort((a, b) => a.value.localeCompare(b.value))
-      // eslint-disable-next-line
-      // @ts-ignore
-      const filtered: SearchTerm[] = history
+
+      const filtered = history
         .map((e, i, a) => {
           if (!i || a[i - 1].value !== e.value) return e
         })
         .filter((e) => e !== undefined)
-        .slice(0, MAX_HISTORY)
+        .slice(0, MAX_HISTORY) as SearchTerm[]
 
       filtered.sort((a, b) => b.timestamp - a.timestamp)
 
@@ -124,20 +273,21 @@ export const SearchPageContent = () => {
   const searchHandler = useCallback(
     (value: string) => {
       if (value.trim().length > 0) {
+        const trimmedValue = value.trim()
         // if custom handler executed then we don't proceed
-        if (onSearch(value)) return
+        if (onSearch(trimmedValue)) return
 
-        if (value !== lastValue) {
+        if (trimmedValue !== lastValue) {
           setNotes(null)
           setLongNotes(null)
           setProfiles(null)
         }
-        setLastValue(value)
-        loadEvents(value)
+        setLastValue(trimmedValue)
+        loadEvents(trimmedValue)
 
         const term = {
           id: uuidv4(),
-          value: value,
+          value: trimmedValue,
           timestamp: Date.now(),
           pubkey: currentPubkey
         }
@@ -153,20 +303,22 @@ export const SearchPageContent = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     inputRef.current?.blur()
-    searchHandler(searchValue)
+    const value = typeof selectApp === 'string' || selectApp === null ? suggestion || searchValue : selectApp.value
+    console.log('value', value)
+    dispatch(setSearchValue({ searchValue: value }))
+    setSuggestion('')
+    searchHandler(value)
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setSearchValue({ searchValue: e.target.value }))
-  }
-
-  const handleClear = () => {
+  const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
     dispatch(setSearchValue({ searchValue: '' }))
+    setSuggestion('')
   }
 
-  const handleOpenProfile = (profile: MetaEvent) => {
+  const handleOpenProfile = (pubkey: string) => {
     const nprofile = nip19.nprofileEncode({
-      pubkey: profile.pubkey,
+      pubkey: pubkey,
       relays: [nostrbandRelay]
     })
 
@@ -192,15 +344,6 @@ export const SearchPageContent = () => {
 
     handleOpenContextMenu({ bech32: naddr })
   }
-
-  useEffect(() => {
-    if (searchValue.trim().length) {
-      // WHY? It's re-searching on any state change,
-      // which makes no sense, and doesn't help anywhere else
-      //      loadEvents(searchValue)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadEvents])
 
   const getSearchHistory = useCallback(async () => {
     if (!currentPubkey) return undefined
@@ -231,7 +374,7 @@ export const SearchPageContent = () => {
       dispatch(setSearchValue({ searchValue: searchTerm.value }))
       searchHandler(searchTerm.value)
     },
-    [searchHandler, dispatch, setSearchValue]
+    [searchHandler, dispatch]
   )
 
   const renderContent = () => {
@@ -351,31 +494,142 @@ export const SearchPageContent = () => {
     )
   }
 
+  const handleOpenGroup = (group: string) => {
+    setOpenGroup((prev) => ({ ...prev, [group]: !prev[group] }))
+  }
+
+  const handleSelect = (_: React.SyntheticEvent<Element, Event>, selectedValue: IDropdownOption | null | string) => {
+    setSelectApp(selectedValue)
+  }
+
+  const onInputChange = (event: React.SyntheticEvent<Element, Event>, textValue: string) => {
+    // we had a suggestion and user clicked backspace?
+    const reduced = searchValue.length > textValue.length
+    if (reduced && suggestion.length !== searchValue.length) {
+      const wasSug = suggestion != ''
+      if (wasSug) {
+        setSuggestion('')
+        setTimeout(() => {
+          // NOTE: re-setting searchValue back doesn't help on
+          // the real device, we have to specifically set the cursor
+          // dispatch(setSearchValue({ searchValue }))
+          (event.target as HTMLInputElement).setSelectionRange(
+            searchValue.length, searchValue.length)
+        }, 0)
+        return
+      }
+    }
+    dispatch(setSearchValue({ searchValue: textValue }))
+
+    if (!reduced && textValue.trim().length) {
+      const suggestion = searchHistoryOptions.find((s) => s.value.toLowerCase().startsWith(textValue.toLowerCase()))
+      setSuggestion(suggestion?.value || '')
+    } else {
+      setSuggestion('')
+    }
+  }
+
+  const isOptionEqualToValue = (option: IDropdownOption, value: IDropdownOption) =>
+    option.label === value.label && option.value === value.value
+
+  const getOptionLabel = (option: string | IDropdownOption) => {
+    if (typeof option === 'string') return option
+    return option.value
+  }
+
+  const handleAcceptSuggestion = () => {
+    const isSuggestionExists = suggestion.trim().length !== 0
+    if (!isSuggestionExists) return undefined
+    dispatch(setSearchValue({ searchValue: suggestion }))
+  }
+
+  const onOptionClick = (option: IDropdownOption) => {
+    switch (option.type) {
+      case 'tab':
+        handleOpenTab(option.value)
+        break
+      case 'profile':
+        handleOpenProfile(option.value)
+        break
+      default:
+        onSearch(option.value)
+        break
+    }
+  }
+
+  const getGroupCount = (group: string) => {
+    return filterOptionsByValue(getOptions, searchValue).filter((o) => o.group === group).length
+  }
+
   return (
     <StyledWrapVisibility isShow={isShow}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
-          <StyledInput
-            placeholder="Search"
-            endAdornment={
-              <>
-                {searchValue && (
-                  <IconButton type="button" color="inherit" size="medium" onClick={handleClear}>
-                    <CloseIcon />
-                  </IconButton>
-                )}
-                <IconButton type="submit" color="inherit" size="medium">
-                  <SearchOutlinedIcon />
-                </IconButton>
-              </>
-            }
-            onChange={handleChange}
-            value={searchValue}
-            inputProps={{
-              autoFocus: false,
-              ref: inputRef
-            }}
-          />
+          <StyledAutocomplete>
+            <Autocomplete
+              popupIcon={false}
+              onChange={handleSelect}
+              onInputChange={onInputChange}
+              inputValue={searchValue}
+              value={selectApp ? selectApp : null}
+              isOptionEqualToValue={isOptionEqualToValue}
+              PopperComponent={StyledPopper}
+              fullWidth
+              freeSolo
+              options={getOptions}
+              getOptionLabel={getOptionLabel}
+              filterOptions={filterOptions}
+              groupBy={(option) => option.group}
+              sx={{ position: 'absolute', background: 'none' }}
+              renderGroup={(params) => {
+                return (
+                  <li key={params.key}>
+                    <GroupHeader onClick={() => handleOpenGroup(params.group)}>
+                      {params.group} ({getGroupCount(params.group)})
+                      {openGroup[params.group] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </GroupHeader>
+                    <GroupItems>{params.children}</GroupItems>
+                  </li>
+                )
+              }}
+              renderOption={(props, option) => (
+                <Box component="li" {...props} key={option.id} onClick={() => onOptionClick(option)}>
+                  <AppIcon isPreviewTab isRounded={true} picture={option.icon} alt={option.label} />
+                  <StyledOptionText>{option.label}</StyledOptionText>
+                </Box>
+              )}
+              renderInput={(params) => (
+                <StyledAutocompleteInput
+                  {...params}
+                  onClick={handleAcceptSuggestion}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {Boolean(searchValue.length) && (
+                          <IconButton type="button" color="inherit" size="medium" onClick={handleClear}>
+                            <CloseIcon />
+                          </IconButton>
+                        )}
+                        <IconButton type="submit" color="inherit" size="medium">
+                          <SearchOutlinedIcon />
+                        </IconButton>
+                      </>
+                    )
+                  }}
+                  placeholder="Keyword, url, npub or note id"
+                />
+              )}
+            />
+          </StyledAutocomplete>
+          <StyledInputBox>
+            <div className="suggestion_block">
+              <span className="hidden_part">{searchValue}</span>
+              <span className="suggestion_value">
+                {suggestion.substring(searchValue.length).replace(/ /g, '\u00A0')}
+              </span>
+            </div>
+          </StyledInputBox>
         </StyledForm>
       </Container>
 

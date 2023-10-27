@@ -20,7 +20,7 @@ export const StyledList = styled(List)(() => ({
 }))
 
 export const StyledItemButton = styled(ListItemButton)(({ theme }) => ({
-  borderTop: '1px solid',
+  borderBottom: '1px solid',
   padding: '10px 0',
   borderColor: theme.palette.secondary.light
 }))
