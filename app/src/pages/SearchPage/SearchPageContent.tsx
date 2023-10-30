@@ -17,6 +17,7 @@ import {
   StyledAutocomplete,
   StyledAutocompleteInput,
   StyledForm,
+  StyledOptionText,
   StyledPopper
 } from './styled'
 import { StyledInputBox } from './styled'
@@ -30,7 +31,7 @@ import { ItemLongNote } from '@/components/ItemsContent/ItemLongNote/ItemLongNot
 import { dbi } from '@/modules/db'
 import { v4 as uuidv4 } from 'uuid'
 import { SearchTerm } from '@/modules/types/db'
-import { IconButton, Box, Autocomplete, FilterOptionsState } from '@mui/material'
+import { IconButton, Box, Autocomplete } from '@mui/material'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
@@ -40,6 +41,8 @@ import {
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 import { selectCurrentWorkspaceTabs } from '@/store/store'
+import { AppIcon } from '@/shared/AppIcon/AppIcon'
+import { getProfileName } from '@/utils/helpers/prepare-data'
 
 import { addSearchClickEventToDB } from './utils/helpers'
 import { AugmentedEvent } from '@/types/augmented-event'
@@ -51,7 +54,7 @@ interface IDropdownOption {
   icon: string
   label: string
   value: string
-  type: 'app' | 'tab'
+  type: 'app' | 'tab' | 'profile'
   group: string
 }
 
@@ -83,7 +86,8 @@ export const SearchPageContent = () => {
   const [selectApp, setSelectApp] = useState<IDropdownOption | string | null>(null)
   const [openGroup, setOpenGroup] = useState<{ [key: string]: boolean }>({
     tabs: false,
-    apps: false
+    apps: false,
+    contactList: false
   })
 
   const getTypeName = (type: string) => {
@@ -92,6 +96,8 @@ export const SearchPageContent = () => {
         return 'Apps'
       case 'tab':
         return 'Tabs'
+      case 'profile':
+        return 'Following'
     }
     return 'Other'
   }
@@ -108,6 +114,25 @@ export const SearchPageContent = () => {
     }
   })
 
+  const optionsProfiles: IDropdownOption[] = contactList
+    ? contactList.contactEvents
+        .filter((event) => {
+          return event.profile !== undefined
+        })
+        .map((event, i) => {
+          const name = getProfileName(event.pubkey, event)
+
+          return {
+            id: `profile-${i}`,
+            icon: event.profile!.picture as string,
+            label: name,
+            value: event.profile!.pubkey as string,
+            type: 'profile',
+            group: getTypeName('profile')
+          }
+        })
+    : []
+
   const optionsTabs: IDropdownOption[] = tabs.map((tab, i) => {
     let label = `${tab.title}: ${tab.url}`
     try {
@@ -115,7 +140,7 @@ export const SearchPageContent = () => {
       label = `${tab.title}: ${u.hostname.replace(/^www./i, '')}`
       if (u.pathname != '/') label += u.pathname
     } catch {
-      //
+      /* empty */
     }
     return {
       id: `tab-${i}`,
@@ -127,7 +152,7 @@ export const SearchPageContent = () => {
     }
   })
 
-  const getOptions = [...optionsTabs, ...optionsApps]
+  const getOptions = [...optionsProfiles, ...optionsTabs, ...optionsApps]
 
   const filterOptionsByValue = (options: IDropdownOption[], str: string) => {
     const inputValue = str.toLowerCase()
@@ -138,8 +163,11 @@ export const SearchPageContent = () => {
     })
   }
 
-  const filterOptions = (options: IDropdownOption[], state: FilterOptionsState<IDropdownOption>) => {
-    const filteredOptions = filterOptionsByValue(options, state.inputValue)
+  const filterOptions = (options: IDropdownOption[]) => {
+    // NOTE: using state.inputValue instead of searchValue is buggy:
+    // - enter long non-matching value to have empty dropdown
+    // - click out and then back to input - all items show up
+    const filteredOptions = filterOptionsByValue(options, searchValue)
 
     const sortGroup: Record<string, IDropdownOption[]> = {}
 
@@ -276,13 +304,14 @@ export const SearchPageContent = () => {
     addSearchClickEventToDB(e, currentPubkey, searchValue)
   }
 
-  const handleOpenProfile = (profile: MetaEvent) => {
+  const handleOpenProfile = (pubkey: string, profile?: MetaEvent) => {
     const nprofile = nip19.nprofileEncode({
-      pubkey: profile.pubkey,
+      pubkey: pubkey,
       relays: [nostrbandRelay]
     })
-
-    handleAddSearchClickEvent(profile)
+    if (profile) {
+      handleAddSearchClickEvent(profile)
+    }
     handleOpenContextMenu({ bech32: nprofile })
   }
 
@@ -325,7 +354,7 @@ export const SearchPageContent = () => {
 
       return (
         <HorizontalSwipeVirtualItem style={style} index={index} itemCount={profiles.length}>
-          <Profile onClick={handleOpenProfile} profile={profile} />
+          <Profile onClick={() => handleOpenProfile(profile.pubkey, profile)} profile={profile} />
         </HorizontalSwipeVirtualItem>
       )
     }
@@ -440,7 +469,7 @@ export const SearchPageContent = () => {
     setSelectApp(selectedValue)
   }
 
-  const onInputChange = (_: React.SyntheticEvent<Element, Event>, textValue: string) => {
+  const onInputChange = (event: React.SyntheticEvent<Element, Event>, textValue: string) => {
     // we had a suggestion and user clicked backspace?
     const reduced = searchValue.length > textValue.length
     if (reduced && suggestion.length !== searchValue.length) {
@@ -448,7 +477,10 @@ export const SearchPageContent = () => {
       if (wasSug) {
         setSuggestion('')
         setTimeout(() => {
-          dispatch(setSearchValue({ searchValue }))
+          // NOTE: re-setting searchValue back doesn't help on
+          // the real device, we have to specifically set the cursor
+          // dispatch(setSearchValue({ searchValue }))
+          ;(event.target as HTMLInputElement).setSelectionRange(searchValue.length, searchValue.length)
         }, 0)
         return
       }
@@ -482,6 +514,9 @@ export const SearchPageContent = () => {
       case 'tab':
         handleOpenTab(option.value)
         break
+      case 'profile':
+        handleOpenProfile(option.value)
+        break
       default:
         onSearch(option.value)
         break
@@ -512,6 +547,7 @@ export const SearchPageContent = () => {
               isOptionEqualToValue={isOptionEqualToValue}
               PopperComponent={StyledPopper}
               fullWidth
+              freeSolo
               options={getOptions}
               getOptionLabel={getOptionLabel}
               filterOptions={filterOptions}
@@ -520,31 +556,20 @@ export const SearchPageContent = () => {
               renderGroup={(params) => {
                 return (
                   <li key={params.key}>
-                    <GroupHeader>
+                    <GroupHeader onClick={() => handleOpenGroup(params.group)}>
                       {params.group} ({getGroupCount(params.group)})
-                      <div onClick={() => handleOpenGroup(params.group)}>
-                        {openGroup[params.group] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                      </div>
+                      {openGroup[params.group] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </GroupHeader>
                     <GroupItems>{params.children}</GroupItems>
                   </li>
                 )
               }}
               renderOption={(props, option) => (
-                <Box
-                  component="li"
-                  sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
-                  {...props}
-                  key={option.id}
-                  onClick={() => onOptionClick(option)}
-                >
-                  <img loading="lazy" width="20" srcSet={option.icon} src={option.icon} alt={option.label} />
-                  <div style={{ whiteSpace: 'nowrap', overflowX: 'hidden', textOverflow: 'ellipsis' }}>
-                    {option.label}
-                  </div>
+                <Box component="li" {...props} key={option.id} onClick={() => onOptionClick(option)}>
+                  <AppIcon isPreviewTab isRounded={true} picture={option.icon} alt={option.label} />
+                  <StyledOptionText>{option.label}</StyledOptionText>
                 </Box>
               )}
-              freeSolo
               renderInput={(params) => (
                 <StyledAutocompleteInput
                   {...params}
@@ -591,11 +616,7 @@ export const SearchPageContent = () => {
             />
           )}
 
-          <RecentEvents
-            onOpenProfile={handleOpenProfile}
-            onOpenLongNote={handleOpenLongNote}
-            onOpenNote={handleOpenNote}
-          />
+          <RecentEvents />
         </>
       )}
 

@@ -34,7 +34,8 @@ export const StyledInputBox = styled('div')(({ theme }) => ({
   },
   '& .hidden_part': {
     opacity: 0,
-    height: 'fit-content'
+    height: 'fit-content',
+    pointerEvents: 'none'
   },
   '& .suggestion_value': {
     background: theme.palette.secondary.light,
@@ -140,7 +141,8 @@ export const GroupHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  backgroundColor: darken(theme.palette.secondary.contrastText, 0.8)
+  backgroundColor: darken(theme.palette.secondary.contrastText, 0.8),
+  zIndex: 1
 }))
 
 export const GroupItems = styled('ul')({
@@ -152,6 +154,7 @@ export const StyledPopper = styled(Popper)(({ theme }) => ({
   [`& .${autocompleteClasses.listbox}`]: {
     boxSizing: 'border-box',
     background: theme.palette.secondary.main,
+    maxHeight: 'calc(100vh - 180px)',
     '& ul': {
       padding: 0,
       margin: 0,
@@ -166,4 +169,11 @@ export const StyledPopper = styled(Popper)(({ theme }) => ({
       }
     }
   }
+}))
+
+export const StyledOptionText = styled(Box)(() => ({
+  whiteSpace: 'nowrap',
+  overflowX: 'hidden',
+  textOverflow: 'ellipsis',
+  marginLeft: 10
 }))

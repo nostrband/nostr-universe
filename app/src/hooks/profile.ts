@@ -26,7 +26,11 @@ import {
   fetchBestLongNotesThunk,
   fetchBestNotesThunk,
   fetchBookmarkListsThunk,
-  fetchProfileListsThunk
+  fetchProfileListsThunk,
+  setBestLongNotes,
+  setBestNotes,
+  setBookmarkLists,
+  setProfileLists
 } from '@/store/reducers/bookmarks.slice'
 import { getFeedbackInfoThunk } from '@/store/reducers/feedbackInfo.slice'
 import { useSigner } from './signer'
@@ -37,7 +41,7 @@ export const useUpdateProfile = () => {
   const { decrypt } = useSigner()
 
   const setContacts = useCallback(
-    async (contactList: ContactListEvent) => {
+    async (contactList?: ContactListEvent) => {
       if (contactList?.contactEvents) {
         const lastContacts = await dbi.listLastContacts(contactList.pubkey)
         console.log('lastContacts', lastContacts)
@@ -66,17 +70,19 @@ export const useUpdateProfile = () => {
       } else {
         dispatch(setCurrentProfile({ profile: null }))
       }
+  
       // Reset previous events state for showing loaders
+      setContacts()
       dispatch(setHighlights({ highlights: null }))
       dispatch(setBigZaps({ bigZaps: null }))
       dispatch(setLongPosts({ longPosts: null }))
       dispatch(setCommunities({ communities: null }))
       dispatch(setLiveEvents({ liveEvents: null }))
 
-      dispatch(fetchBestNotesThunk(currentPubKey))
-      dispatch(fetchBestLongNotesThunk(currentPubKey))
-      dispatch(fetchProfileListsThunk({ pubkey: currentPubKey, decrypt }))
-      dispatch(fetchBookmarkListsThunk({ pubkey: currentPubKey, decrypt }))
+      dispatch(setBestNotes({ bestNotes: [] }))
+      dispatch(setBestLongNotes({ bestLongNotes: [] }))
+      dispatch(setProfileLists({ profileLists: [] }))
+      dispatch(setBookmarkLists({ bookmarkLists: [] }))
 
       subscribeProfiles(keys, async (profile: MetaEvent) => {
         if (profile) {
@@ -126,6 +132,11 @@ export const useUpdateProfile = () => {
           console.log('new communities', communities)
           dispatch(setCommunities({ communities }))
         }
+
+        dispatch(fetchBestNotesThunk(currentPubKey))
+        dispatch(fetchBestLongNotesThunk(currentPubKey))
+        dispatch(fetchProfileListsThunk({ pubkey: currentPubKey, decrypt }))
+        dispatch(fetchBookmarkListsThunk({ pubkey: currentPubKey, decrypt }))
       })
     },
     [dispatch, setContacts, getProfile]

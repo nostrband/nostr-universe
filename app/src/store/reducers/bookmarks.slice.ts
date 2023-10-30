@@ -34,7 +34,20 @@ const initialState: IBookmarksContent = {
 export const bookmarksSlice = createSlice({
   name: 'bookmarks',
   initialState,
-  reducers: {},
+  reducers: {
+    setBestNotes: (state, action) => {
+      state.bestNotes = action.payload.bestNotes
+    },
+    setBestLongNotes: (state, action) => {
+      state.bestLongNotes = action.payload.bestLongNotes
+    },
+    setProfileLists: (state, action) => {
+      state.profileLists = action.payload.profileLists
+    },
+    setBookmarkLists: (state, action) => {
+      state.bookmarkLists = action.payload.bookmarkLists
+    },
+  },
   extraReducers(builder) {
     builder
       .addCase(fetchBestNotesThunk.pending, (state) => {
@@ -84,6 +97,9 @@ export const bookmarksSlice = createSlice({
       })
   }
 })
+
+export const { setBestNotes, setBestLongNotes, setProfileLists, setBookmarkLists } =
+  bookmarksSlice.actions
 
 export const fetchBestNotesThunk = createAsyncThunk<ReactionTargetEvent[], string>(
   'bookmarks/fetchBestNotesThunk',
