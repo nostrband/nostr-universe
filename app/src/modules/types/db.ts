@@ -82,6 +82,15 @@ export interface FeedbackInfo {
   timestamp: number
 }
 
+export interface SearchClickEvent {
+  id: string
+  pubkey: string
+  timestamp: number
+  kind: number
+  addr: string
+  query: string
+}
+
 export interface DbSchema extends Dexie {
   tabs: Dexie.Table<Tab, number>
   pins: Dexie.Table<Pin, number>
@@ -95,4 +104,5 @@ export interface DbSchema extends Dexie {
   lastKindApps: Dexie.Table<LastKindApps, number>
   searchHistory: Dexie.Table<SearchTerm, number>
   feedbacksInfo: Dexie.Table<FeedbackInfo, number>
+  searchClickHistory: Dexie.Table<SearchClickEvent, number>
 }
