@@ -37,7 +37,11 @@ export const RecentProfile = memo(function Profile({
       />
       <StyledProfileAvatar src={url} ref={viewRef} imgProps={{ loading: 'lazy' }} />
       <StyledProfileName>{name}</StyledProfileName>
-      {!isContact && <StyledAboutProfile variant="caption">{about}</StyledAboutProfile>}
+      {!isContact && (
+        <StyledAboutProfile variant="caption" sx={{ flex: 1 }}>
+          {about}
+        </StyledAboutProfile>
+      )}
       {queryTimeInfo && <StyledQueryTimeInfo sx={{ margin: 0 }}>{queryTimeInfo}</StyledQueryTimeInfo>}
     </StyledProfile>
   )
