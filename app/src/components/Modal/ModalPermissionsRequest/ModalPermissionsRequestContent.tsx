@@ -4,10 +4,24 @@ import { Button } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { useAppSelector } from '@/store/hooks/redux'
-import { StyledButtonContainer, StyledFormControl, StyledInfo, StyledTitle, SwitchControl } from './styled'
+import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import {
+  StyledButtonContainer,
+  StyledField,
+  StyledFormControl,
+  StyledInfo,
+  StyledInputButton,
+  StyledPermInfoUser,
+  StyledTitle,
+  SwitchControl
+} from './styled'
 import { Container } from '@/layout/Container/Conatiner'
 import { selectTab } from '@/store/reducers/tab.slice'
 import { IModalPermissionsRequestContent } from './types'
+import { copyToClipBoard, getProfileImage } from '@/utils/helpers/prepare-data'
+import { getRenderedUsername } from '@/utils/helpers/general'
+import { Input } from '@/shared/Input/Input'
 
 export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IModalPermissionsRequestContent) => {
   const { replyCurrentPermRequest } = useOpenApp()
@@ -15,6 +29,8 @@ export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IMo
   const [lastPermRequestId, setLastPermRequestId] = useState('')
   const [searchParams] = useSearchParams()
   const currentPermId = searchParams.get('permId') || ''
+  const { currentProfile } = useAppSelector((state) => state.profile)
+  const { currentPubkey } = useAppSelector((state) => state.keys)
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
   const permReq = permissionRequests.find((permReq) => permReq.id === currentPermId)
   const tab = useAppSelector((state) => selectTab(state, permReq?.tabId || ''))
@@ -92,15 +108,48 @@ export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IMo
 
   const { label, payload } = prepareLabelAndPayload()
 
+  const progileImage = getProfileImage(currentProfile)
+  const profileName = getRenderedUsername(currentProfile, currentPubkey)
+
+  const handleCopyPayload = () => {
+    if (payload) {
+      copyToClipBoard(payload)
+    }
+  }
+
+  const preparePaylod = payload ? JSON.stringify(JSON.parse(payload), null, 2) : ''
+
   return (
     <Container>
-      <StyledInfo>
-        <AppIcon size="large" picture={tab?.icon} alt={tab?.title} isOutline={false} />
-        <StyledTitle variant="h6">{tab?.title}</StyledTitle>
-      </StyledInfo>
+      <StyledPermInfoUser>
+        <StyledInfo>
+          <AppIcon size="medium" picture={tab?.icon} alt={tab?.title} isOutline={false} />
+          <StyledTitle variant="body1">{tab?.title}</StyledTitle>
+        </StyledInfo>
+        <SwapHorizOutlinedIcon />
+        <StyledInfo>
+          <AppIcon size="medium" picture={progileImage} alt={profileName} isOutline={false} />
+          <StyledTitle variant="body1">{profileName}</StyledTitle>
+        </StyledInfo>
+      </StyledPermInfoUser>
 
       <StyledTitle variant="body1">{label}</StyledTitle>
-      {payload && <StyledTitle variant="body2">{payload}</StyledTitle>}
+      {payload && (
+        <StyledField>
+          <Input
+            endAdornment={
+              <StyledInputButton color="inherit" size="medium" onClick={handleCopyPayload}>
+                <ContentCopyIcon />
+              </StyledInputButton>
+            }
+            readOnly
+            multiline
+            rows={10}
+            value={preparePaylod}
+          />
+        </StyledField>
+      )}
+
       <StyledFormControl
         control={<SwitchControl checked={isRemember} onChange={(e) => setIsRemember(e.target.checked)} />}
         label="Remember, don't ask again"

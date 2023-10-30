@@ -513,8 +513,7 @@ export const SearchPageContent = () => {
           // NOTE: re-setting searchValue back doesn't help on
           // the real device, we have to specifically set the cursor
           // dispatch(setSearchValue({ searchValue }))
-          (event.target as HTMLInputElement).setSelectionRange(
-            searchValue.length, searchValue.length)
+          ;(event.target as HTMLInputElement).setSelectionRange(searchValue.length, searchValue.length)
         }, 0)
         return
       }
@@ -594,7 +593,12 @@ export const SearchPageContent = () => {
               }}
               renderOption={(props, option) => (
                 <Box component="li" {...props} key={option.id} onClick={() => onOptionClick(option)}>
-                  <AppIcon isPreviewTab isRounded={true} picture={option.icon} alt={option.label} />
+                  <AppIcon
+                    isPreviewTab={option.type === 'profile' ? true : false}
+                    isRounded={option.type !== 'profile' ? true : false}
+                    picture={option.icon}
+                    alt={option.label}
+                  />
                   <StyledOptionText>{option.label}</StyledOptionText>
                 </Box>
               )}
