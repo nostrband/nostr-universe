@@ -15,7 +15,7 @@ export const StyledAppBar = styled(AppBar)(({ theme }) => ({
 
 export const StyledDialog = styled(Dialog)(({ theme }) => ({
   '.MuiDialog-paper': {
-    paddingTop: 60,
+    paddingTop: 65,
     backgroundColor: theme.palette.background.default
   }
 }))

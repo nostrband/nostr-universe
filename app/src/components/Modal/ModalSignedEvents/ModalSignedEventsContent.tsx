@@ -13,7 +13,7 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { KindOptionType, formatDate, getTransformedKindEvents } from '@/consts'
 import { addDays, isAfter, isEqual, isWithinInterval, startOfDay } from 'date-fns'
 
-// const eventsMoc = [
+// const eventsMoc: TypeSignEvent[] = [
 //   {
 //     id: '1',
 //     url: 'http://www.google.com/3434343/',
@@ -48,9 +48,9 @@ export const ModalSignedEventsContent = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { handleOpen } = useOpenModalSearchParams()
   const [content, setContent] = useState('')
-  const [events, setEvents] = useState([])
+  const [events, setEvents] = useState<TypeSignEvent[]>([])
   const [kinds, setKinds] = useState<KindOptionType[]>([])
-  const [startDate, setStartDate] = useState<Date | null>(startOfDay(new Date()))
+  const [startDate, setStartDate] = useState<Date | null>(startOfDay(Date.now() - 7 * 24 * 3600 * 1000))
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [filterContentValue, setFilterContentValue] = useState('')
   const isShowDialog = Boolean(content)
@@ -65,7 +65,7 @@ export const ModalSignedEventsContent = () => {
 
   const getEvents = async () => {
     try {
-      const res = await dbi.getSignedEvents(currentPubkey)
+      const res = await dbi.listSignedEvents(currentPubkey)
       setEvents(res)
     } catch (error) {
       console.log(error)
@@ -133,15 +133,6 @@ export const ModalSignedEventsContent = () => {
   return (
     <Container>
       <StyledFilterField>
-        <StyledAutocomplete
-          multiple
-          id="tags-standard"
-          onChange={handleKindChange}
-          options={getTransformedKindEvents}
-          renderInput={(params) => <StyledInput {...params} placeholder="Event kinds" />}
-        />
-      </StyledFilterField>
-      <StyledFilterField>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Grid container spacing={0} marginTop="-8px">
             <Grid item xs={6}>
@@ -182,6 +173,15 @@ export const ModalSignedEventsContent = () => {
             </Grid>
           </Grid>
         </LocalizationProvider>
+      </StyledFilterField>
+      <StyledFilterField>
+        <StyledAutocomplete
+          multiple
+          id="tags-standard"
+          onChange={handleKindChange}
+          options={getTransformedKindEvents}
+          renderInput={(params) => <StyledInput {...params} placeholder="Event kinds" />}
+        />
       </StyledFilterField>
       <StyledFilterField>
         <Input

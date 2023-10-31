@@ -13,7 +13,8 @@ const getVariantApp = (isPreviewTab: boolean, isRounded: boolean, size: AppNostr
   if (isRounded) {
     return {
       height: 34,
-      width: 34,
+      minWidth: 34,
+      maxWidth: 34,
       borderRadius: '7px'
     }
   }
@@ -21,7 +22,8 @@ const getVariantApp = (isPreviewTab: boolean, isRounded: boolean, size: AppNostr
   if (isPreviewTab) {
     return {
       height: 34,
-      width: 34,
+      minWidth: 34,
+      maxWidth: 34,
       borderRadius: '50%'
     }
   }
@@ -78,6 +80,6 @@ export const StyledAppImg = styled(function BoxDisplayName(props: IAvatarProps) 
   fontWeight: 'bold',
   fontSize: isPreviewTab ? APP_NAME_FONT_SIZE_VALUE[APP_NOSTR_SIZE.EXTRA_SMALL] : APP_NAME_FONT_SIZE_VALUE[size],
   '.MuiAvatar-img': {
-    objectFit: isSmall ? 'scale-down' : 'cover',
+    objectFit: isSmall ? 'scale-down' : 'cover'
   }
 }))

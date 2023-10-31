@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { IconButton, Menu, MenuItem } from '@mui/material'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
-import { StyledViewTitle, StyledWrapper, StyledInputWrap, StyledHead } from './styled'
+import { StyledViewTitle, StyledWrapper, StyledInputWrap, StyledHead, StyledItemFooter } from './styled'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { formatDateHours, kindEvents } from '@/consts/index'
 import { Input } from '@/shared/Input/Input'
@@ -91,7 +91,9 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
           value={eventId}
         />
       </StyledInputWrap>
-      By {getUrl} at {getTime}
+      <StyledItemFooter>
+        By {getUrl} at {getTime}
+      </StyledItemFooter>
       <Menu
         id="demo-positioned-menu"
         aria-labelledby="demo-positioned-button"

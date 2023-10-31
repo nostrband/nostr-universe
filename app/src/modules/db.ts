@@ -3,9 +3,12 @@
 
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
+import { feedbackPeriodMs } from '@/consts'
+import { KIND_ZAP_REQUEST } from './nostr'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
+db.version(19).stores({
 db.version(19).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
@@ -18,9 +21,11 @@ db.version(19).stores({
   perms: '[pubkey+app+name],[pubkey+app],value',
   contentFeedSettings: 'id, pubkey, settings_json',
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
-  signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson',
+  signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson,eventZapHash',
   searchHistory: 'id,pubkey,timestamp,value',
-  localRelayEvents: 'id,pubkey,kind,created_at'
+  localRelayEvents: 'id,pubkey,kind,created_at',
+  payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
+  searchClickHistory: 'id,pubkey,timestamp,addr,query,kind'
 })
 
 export const dbi = {
@@ -31,12 +36,51 @@ export const dbi = {
       console.log(`Add signedEvent to DB error: ${error}`)
     }
   },
-  getSignedEvents: async (pubkey: string) => {
+  listSignedZapRequests: async (pubkey: string) => {
+    try {
+      return (
+        await db.signedEvents
+          .where({
+            pubkey,
+            kind: KIND_ZAP_REQUEST
+          })
+          .toArray()
+      ).sort((a, b) => b.timestamp - a.timestamp)
+    } catch (error) {
+      console.log(`List signedEvents error: ${error}`)
+      return []
+    }
+  },
+  listSignedEvents: async (pubkey: string) => {
     try {
       return (await db.signedEvents.where('pubkey').equals(pubkey).toArray()).sort((a, b) => b.timestamp - a.timestamp)
     } catch (error) {
       console.log(`List signedEvents error: ${error}`)
       return []
+    }
+  },
+  addPayment: async (payment) => {
+    try {
+      await db.payments.add(payment)
+    } catch (error) {
+      console.log(`Add payment to DB error: ${error}`)
+    }
+  },
+  listPayments: async (pubkey: string) => {
+    try {
+      return (await db.payments.where('pubkey').equals(pubkey).toArray()).sort((a, b) => b.timestamp - a.timestamp)
+    } catch (error) {
+      console.log(`List payments error: ${error}`)
+      return []
+    }
+  },
+  updatePayment: async (id, preimage) => {
+    try {
+      await db.payments.where('id').equals(id).modify({
+        preimage
+      })
+    } catch (error) {
+      console.log(`Update payment in DB error: ${JSON.stringify(error)}`)
     }
   },
   addTab: async (tab) => {
@@ -358,6 +402,48 @@ export const dbi = {
       }
     } catch (error) {
       console.log(`Bulk delete excess search history in DB error: ${error}`)
+    }
+  },
+  getNextFeedbackTime: async () => {
+    return Number((await dbi.getFlag('', 'nextFeedbackTime')) || '0')
+  },
+  advanceFeedbackTime: async () => {
+    await dbi.setFlag('', 'nextFeedbackTime', Date.now() + feedbackPeriodMs)
+  },
+  addSearchClickEvent: async (searchEvent) => {
+    try {
+      const existingEvent = await db.searchClickHistory
+        .filter(
+          (event) =>
+            event.pubkey === searchEvent.pubkey && event.addr === searchEvent.addr && event.query === searchEvent.query
+        )
+        .first()
+
+      if (existingEvent) {
+        existingEvent.timestamp = searchEvent.timestamp
+        await db.searchClickHistory.put(existingEvent)
+      } else {
+        await db.searchClickHistory.add(searchEvent)
+      }
+    } catch (error) {
+      console.log(`Add searchEvent to DB error: ${error}`)
+    }
+  },
+  listSearchClickHistory: async (pubkey) => {
+    try {
+      const list = await db.searchClickHistory.where('pubkey').equals(pubkey).toArray()
+
+      return list.sort((a, b) => b.timestamp - a.timestamp).slice(0, 30)
+    } catch (error) {
+      console.log(`List searchClickHistory error: ${error}`)
+      return []
+    }
+  },
+  deleteSearchClickEvent: async (id) => {
+    try {
+      await db.searchClickHistory.delete(id)
+    } catch (error) {
+      console.log(`Delete searchClickEvent in DB error: ${JSON.stringify(error)}`)
     }
   },
   listLocalRelayEvents: async () => {

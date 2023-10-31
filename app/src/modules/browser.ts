@@ -35,9 +35,9 @@ const destroy = async (id, idle) => {
 }
 
 const releaseIdle = () => {
-  console.log('infos ', Object.keys(infos).length)
-  console.log('refs ', Object.keys(refs).length)
-  console.log('freeRefs ', freeRefs.length)
+  // console.log('infos ', Object.keys(infos).length)
+  // console.log('refs ', Object.keys(refs).length)
+  // console.log('freeRefs ', freeRefs.length)
 
   // sort tabs by lastActive and canRelease
   const tabs = Object.values(refs)
@@ -49,17 +49,17 @@ const releaseIdle = () => {
       return a.lastActiveTime - b.lastActiveTime
     else return a.canRelease ? -1 : 1
   })
-  console.log(
-    'releaseIdle tabs',
-    JSON.stringify(
-      tabs.map((t) => ({
-        id: t.id,
-        url: t.info.url,
-        lastActiveTime: t.info.lastActiveTime,
-        canRelease: t.info.canRelease
-      }))
-    )
-  )
+  // console.log(
+  //   'releaseIdle tabs',
+  //   JSON.stringify(
+  //     tabs.map((t) => ({
+  //       id: t.id,
+  //       url: t.info.url,
+  //       lastActiveTime: t.info.lastActiveTime,
+  //       canRelease: t.info.canRelease
+  //     }))
+  //   )
+  // )
 
   // release active tabs that can/should be released
   while (tabs.length > 0) {
@@ -331,7 +331,7 @@ const nostrMenuConnect = () => {
       if (!isActive()) return
 
       const sel = window.getSelection().toString()
-      if (data.text !== sel) {
+      if (sel && data.text !== sel) {
         data.text = sel
         data.bech32 = await getBech32(sel)
         data.href = getMaybeUrl(sel)
@@ -346,12 +346,14 @@ const nostrMenuConnect = () => {
   }
 
   window.nostrCordovaPlugin.onClipboardWriteText = async (text) => {
-    console.log('onClipboardWriteText', text)
     const data = {
       text,
-      bech32: await getBech32(text),
       href: getMaybeUrl(text)
     }
+
+    try {
+      data.bech32 = await getBech32(text)
+    } catch {}
 
     showMenu(data)
   }
@@ -485,7 +487,7 @@ async function executeScriptAsync(code, name) {
 
 async function executeFuncAsync(name, fn, ...args) {
   const code = `(${fn.toString()})(...${JSON.stringify(args)})`
-  console.log('fn', name, 'code', code)
+  //console.log('fn', name, 'code', code)
   return this.executeScriptAsync(code, name)
 }
 
@@ -502,7 +504,7 @@ function setEventListeners(ref) {
   }
 
   ref.addEventListener('loadstart', async (event) => {
-    console.log('loadstart ', event.url, 'released', JSON.stringify(ref))
+    console.log('loadstart ', event.url)
     if (ref.info.released) return
     if (ref.info.state === 'starting') return
 
@@ -557,6 +559,7 @@ function setEventListeners(ref) {
     } else {
       err = `Unknown method ${method}`
     }
+    console.log('method', method, 'reply', JSON.stringify(reply), 'err', err)
 
     function fn(id, method, jsonReply, err) {
       const req = window.nostrCordovaPlugin.requests[id]

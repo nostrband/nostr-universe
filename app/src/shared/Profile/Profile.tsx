@@ -15,7 +15,7 @@ export const Profile = memo(function Profile({ profile, isContact, onClick = () 
   const about = profile.profile?.about
 
   return (
-    <StyledProfile onClick={() => onClick(profile)}>
+    <StyledProfile onClick={() => onClick(profile.pubkey)}>
       <StyledProfileAvatar src={url} ref={viewRef} imgProps={{ loading: 'lazy' }} />
       <StyledProfileName>{name}</StyledProfileName>
       {!isContact && <StyledAboutProfile variant="caption">{about}</StyledAboutProfile>}

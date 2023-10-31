@@ -1,11 +1,15 @@
-import { getTabGroupId } from "@/modules/AppInitialisation/utils"
-import { dbi } from "@/modules/db"
-import { useAppDispatch, useAppSelector } from "@/store/hooks/redux"
-import { deletePermissionRequest, setPermissionRequest, setPermissionRequestProcessing } from "@/store/reducers/permissionRequests.slice"
-import { deletePermWorkspace, setPermsWorkspace } from "@/store/reducers/workspaces.slice"
-import { MODAL_PARAMS_KEYS } from "@/types/modal"
-import { ITab } from "@/types/tab"
-import { useOpenModalSearchParams } from "./modal"
+import { getTabGroupId } from '@/modules/AppInitialisation/utils'
+import { dbi } from '@/modules/db'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import {
+  deletePermissionRequest,
+  setPermissionRequest,
+  setPermissionRequestProcessing
+} from '@/store/reducers/permissionRequests.slice'
+import { deletePermWorkspace, setPermsWorkspace } from '@/store/reducers/workspaces.slice'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { ITab } from '@/types/tab'
+import { useOpenModalSearchParams } from './modal'
 import { v4 as uuidv4 } from 'uuid'
 
 export const usePerms = () => {
@@ -72,7 +76,12 @@ export const usePerms = () => {
     }
   }
 
-  const requestPerm = (tab: ITab, req: any, cb: (allow: boolean) => void) => {
+  const requestPerm = (
+    tab: ITab,
+    // eslint-disable-next-line
+    req: any,
+    cb: (allow: boolean) => void
+  ) => {
     const r = {
       ...req,
       id: uuidv4(),
@@ -108,6 +117,7 @@ export const usePerms = () => {
     handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_REQ, { search: { permId: r.id } })
   }
 
+  // eslint-disable-next-line
   const requestPermExec = (tab: ITab, perm: any, exec: () => any, error: any) => {
     return new Promise((ok, err) => {
       requestPerm(tab, perm, async (allowed) => {

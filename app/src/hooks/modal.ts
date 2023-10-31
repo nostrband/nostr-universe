@@ -45,7 +45,7 @@ export const useOpenModalSearchParams = () => {
         { replace: extraOptions?.replace }
       )
     },
-    [searchParams, location, navigate, getEnumParam]
+    [location, navigate, getEnumParam]
   )
 
   const handleClose = useCallback(
@@ -83,10 +83,22 @@ export const useOpenModalSearchParams = () => {
     [handleOpen]
   )
 
+  const handleOpenTab = useCallback(
+    // eslint-disable-next-line
+    (tabId: string, options?: any) => {
+      handleOpen(MODAL_PARAMS_KEYS.TAB_MODAL, {
+        search: { tabId },
+        ...options
+      })
+    },
+    [handleOpen]
+  )
+
   return {
     handleClose,
     handleOpen,
     getModalOpened,
-    handleOpenContextMenu
+    handleOpenContextMenu,
+    handleOpenTab
   }
 }

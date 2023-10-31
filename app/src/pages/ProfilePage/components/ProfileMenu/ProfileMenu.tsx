@@ -2,6 +2,7 @@ import { ListItemButton, ListItemAvatar } from '@mui/material'
 // import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 // import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined'
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined'
+import PaymentIcon from '@mui/icons-material/Payment'
 import TocOutlinedIcon from '@mui/icons-material/TocOutlined'
 import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
@@ -16,11 +17,11 @@ import { checkNsbSigner, reconnect } from '@/modules/nostr'
 import { showToast } from '@/utils/helpers/general'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useState } from 'react'
-import { useSignEvent } from '@/hooks/sign-event'
+import { useSigner } from '@/hooks/signer'
 
 export const ProfilMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
-  const { signEvent } = useSignEvent()
+  const { signEvent } = useSigner()
   const { currentPubkey, nsbKeys } = useAppSelector((state) => state.keys)
   const [checkNSB, setCheckNSB] = useState(false)
 
@@ -111,6 +112,14 @@ export const ProfilMenu = () => {
                 </StyledListItemIcon>
               </ListItemAvatar>
               <StyledListItemText primary="Signed events" />
+            </ListItemButton>
+            <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PAYMENT_HISTORY_MODAL, { append: true })}>
+              <ListItemAvatar>
+                <StyledListItemIcon>
+                  <PaymentIcon />
+                </StyledListItemIcon>
+              </ListItemAvatar>
+              <StyledListItemText primary="Payment history" />
             </ListItemButton>
             {isNsb && (
               <ListItemButton disabled={checkNSB} onClick={handleNsbConnect}>

@@ -53,7 +53,7 @@ export const checkIsCurrentUser = (pubkey: string, account: MetaEvent | null) =>
 
 export const showToast = (message: string) => {
   try {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // eslint-disable-next-line
     // @ts-ignore
     window.plugins.toast.showShortBottom(message)
   } catch {
