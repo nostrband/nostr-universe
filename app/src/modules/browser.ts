@@ -559,7 +559,7 @@ function setEventListeners(ref) {
     } else {
       err = `Unknown method ${method}`
     }
-    console.log("method", method, "reply", JSON.stringify(reply), "err", err)
+    console.log('method', method, 'reply', JSON.stringify(reply), 'err', err)
 
     function fn(id, method, jsonReply, err) {
       const req = window.nostrCordovaPlugin.requests[id]
