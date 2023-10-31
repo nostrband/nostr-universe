@@ -15,6 +15,15 @@ export const StyledTitle = styled(
   maxWidth: 100
 }))
 
+export const StyledLabel = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography ref={ref} {...props} />
+  })
+)(({ theme }) => ({
+  color: theme.palette.primary.contrastText,
+  fontWeight: 'bold',
+}))
+
 export const StyledInfo = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',

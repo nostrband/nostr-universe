@@ -14,6 +14,7 @@ import {
   StyledInputButton,
   StyledPermInfoUser,
   StyledTitle,
+  StyledLabel,
   SwitchControl
 } from './styled'
 import { Container } from '@/layout/Container/Conatiner'
@@ -133,7 +134,7 @@ export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IMo
         </StyledInfo>
       </StyledPermInfoUser>
 
-      <StyledTitle variant="body1">{label}</StyledTitle>
+      <StyledLabel variant="body1">{label}</StyledLabel>
       {payload && (
         <StyledField>
           <Input
