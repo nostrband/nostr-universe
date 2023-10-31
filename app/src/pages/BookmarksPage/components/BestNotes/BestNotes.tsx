@@ -14,7 +14,6 @@ import { AuthoredEvent } from '@/types/authored-event'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNotes/SkeletonTrendingNotes'
 import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 
 const BestNotes = () => {

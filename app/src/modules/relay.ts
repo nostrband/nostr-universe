@@ -1,9 +1,10 @@
 //! @ts-nocheck
 import { matchFilter, matchFilters } from '@nostrband/nostr-tools'
 import { dbi } from './db'
-import { KIND_CONTACT_LIST, KIND_META, getEventAddr } from './nostr'
+import { getEventAddr } from './nostr'
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
+import { Kinds } from './const/kinds'
 
 
 const events: NostrEvent[] = []
@@ -35,9 +36,9 @@ export function addLocalRelayEvent(e: NostrEvent) {
 
   put(eventsByKind, e.kind+'')
   put(eventsByAuthor, e.pubkey)
-  const replaceAuthorKind = e.kind === KIND_META || e.kind === KIND_CONTACT_LIST
+  const replaceAuthorKind = e.kind === Kinds.META || e.kind === Kinds.CONTACT_LIST
   put(eventsByAuthorKind, e.kind + ':' + e.pubkey, replaceAuthorKind)
-  const replaceAddr = e.kind === KIND_META || e.kind === KIND_CONTACT_LIST
+  const replaceAddr = e.kind === Kinds.META || e.kind === Kinds.CONTACT_LIST
     || (e.kind >= 10000 && e.kind < 20000)
     || (e.kind >= 30000 && e.kind < 40000)
   put(eventsByAddr, getEventAddr(e), replaceAddr)
