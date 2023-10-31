@@ -8,7 +8,7 @@ import { KIND_ZAP_REQUEST } from './nostr'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(18).stores({
+db.version(19).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -22,7 +22,8 @@ db.version(18).stores({
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
   signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson,eventZapHash',
   searchHistory: 'id,pubkey,timestamp,value',
-  payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash'
+  payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
+  searchClickHistory: 'id,pubkey,timestamp,addr,query,kind'
 })
 
 export const dbi = {
@@ -406,5 +407,41 @@ export const dbi = {
   },
   advanceFeedbackTime: async () => {
     await dbi.setFlag('', 'nextFeedbackTime', Date.now() + feedbackPeriodMs)
+  },
+  addSearchClickEvent: async (searchEvent) => {
+    try {
+      const existingEvent = await db.searchClickHistory
+        .filter(
+          (event) =>
+            event.pubkey === searchEvent.pubkey && event.addr === searchEvent.addr && event.query === searchEvent.query
+        )
+        .first()
+
+      if (existingEvent) {
+        existingEvent.timestamp = searchEvent.timestamp
+        await db.searchClickHistory.put(existingEvent)
+      } else {
+        await db.searchClickHistory.add(searchEvent)
+      }
+    } catch (error) {
+      console.log(`Add searchEvent to DB error: ${error}`)
+    }
+  },
+  listSearchClickHistory: async (pubkey) => {
+    try {
+      const list = await db.searchClickHistory.where('pubkey').equals(pubkey).toArray()
+
+      return list.sort((a, b) => b.timestamp - a.timestamp).slice(0, 30)
+    } catch (error) {
+      console.log(`List searchClickHistory error: ${error}`)
+      return []
+    }
+  },
+  deleteSearchClickEvent: async (id) => {
+    try {
+      await db.searchClickHistory.delete(id)
+    } catch (error) {
+      console.log(`Delete searchClickEvent in DB error: ${JSON.stringify(error)}`)
+    }
   }
 }

@@ -6,7 +6,7 @@ export const StyledProfile = styled(Box)(({ theme }) => ({
   display: 'inline-flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '15px 5px',
+  padding: '15px 5px 5px 5px',
   // minWidth: 140,
   width: '100%',
   overflow: 'hidden',
