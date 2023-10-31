@@ -23,6 +23,7 @@ export const StyledWrapper = styled(Wrapper)({
   display: 'flex',
   flexDirection: 'column',
   paddingTop: '1.5rem',
+  paddingBottom: '0.5rem',
   position: 'relative'
 })
 

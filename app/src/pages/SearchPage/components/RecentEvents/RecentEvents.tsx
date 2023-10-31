@@ -151,7 +151,7 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
       )
     }
 
-    if (tabValue === EVENTS.NOTES && currentTabEvents?.length) {
+    if (tabValue === EVENTS.LONG_POSTS && currentTabEvents?.length) {
       const RowLongNote: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
         const longNote = currentTabEvents[index].event as LongNoteEvent
         const queryInfo = currentTabEvents[index]
@@ -174,7 +174,7 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
 
       return (
         <HorizontalSwipeVirtualContent
-          itemHight={113}
+          itemHight={165}
           itemSize={225}
           itemCount={currentTabEvents.length}
           RowComponent={RowLongNote}

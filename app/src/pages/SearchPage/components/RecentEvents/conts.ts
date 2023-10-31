@@ -31,6 +31,7 @@ export const prepareRecentEvents = (recentEvents: RecentEvent[] = []) => {
           acc[eventKey] = []
         }
         acc[eventKey].push(current)
+        acc[eventKey].sort((a, b) => b.timestamp - a.timestamp)
       }
       return acc
     },

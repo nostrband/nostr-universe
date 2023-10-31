@@ -42,6 +42,10 @@ export const useSearchHistory = () => {
     }
   }, [currentPubkey, updateSearchHistory])
 
+  const putSearchHistory = useCallback((term: SearchTerm) => {
+    updateSearchHistory([term, ...searchHistory])
+  }, [searchHistory, updateSearchHistory])
+
   useEffect(() => {
     getSearchHistory()
   }, [getSearchHistory])
@@ -56,6 +60,7 @@ export const useSearchHistory = () => {
   return {
     searchHistory,
     isSearchHistoryLoading,
+    putSearchHistory,
     handleDeleteSearchTerm: deleteSearchTermHandler
   }
 }

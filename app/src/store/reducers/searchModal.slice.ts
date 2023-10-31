@@ -1,9 +1,10 @@
 import { dbi } from '@/modules/db'
-import { fetchFullyAugmentedEventsByAddrs, parseAddr } from '@/modules/nostr'
+import { fetchFullyAugmentedEventsByAddrs, getEventNip19, parseAddr } from '@/modules/nostr'
 import { SearchClickEvent } from '@/modules/types/db'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { RootState } from '../store'
+import { EventAddr } from '@/types/event-addr'
 
 export type RecentEvent = SearchClickEvent & { event: AugmentedEvent }
 
@@ -65,26 +66,33 @@ export const fetchRecentEventsThunk = createAsyncThunk<void, { currentPubkey: st
       // dispatch(setRecentEvents({ recentEvents }))
 
       const searchClickHistory = await dbi.listSearchClickHistory(currentPubkey)
-      const addrPromises = []
 
+      let addrs: EventAddr[] = []
       for (const searchItem of searchClickHistory) {
         const addr = parseAddr(searchItem.addr)
         if (addr) {
-          addrPromises.push(fetchFullyAugmentedEventsByAddrs([addr], contactList))
+          addrs.push(addr)
         }
       }
 
-      const eventResults = await Promise.all(addrPromises)
+      const events = await fetchFullyAugmentedEventsByAddrs(addrs, contactList)
+      console.log("fetchFullyAugmentedEventsByAddrs", events)
       const recentEvents: RecentEvent[] = []
 
-      for (let i = 0; i < searchClickHistory.length; i++) {
-        const searchItem = searchClickHistory[i]
-        const [event] = eventResults[i]
-
-        if (event) {
+      for (const event of events) {
+        const addr = getEventNip19(event)
+        const searchItem = searchClickHistory.find(e => e.addr === addr)
+        if (searchItem)
           recentEvents.push({ event, ...searchItem })
-        }
       }
+      // for (let i = 0; i < searchClickHistory.length; i++) {
+      //   const searchItem = searchClickHistory[i]
+      //   const [event] = events[i]
+
+      //   if (event) {
+      //     recentEvents.push({ event, ...searchItem })
+      //   }
+      // }
 
       dispatch(setRecentEvents({ recentEvents }))
       fulfillWithValue(recentEvents)

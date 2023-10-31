@@ -79,7 +79,7 @@ export const SearchPageContent = () => {
   const [lastValue, setLastValue] = useState('')
   const inputRef = useRef<HTMLElement>()
 
-  const { searchHistory, isSearchHistoryLoading, handleDeleteSearchTerm } = useSearchHistory()
+  const { searchHistory, isSearchHistoryLoading, putSearchHistory, handleDeleteSearchTerm } = useSearchHistory()
 
   const { handleOpenContextMenu, handleOpenTab } = useOpenModalSearchParams()
 
@@ -276,12 +276,12 @@ export const SearchPageContent = () => {
           pubkey: currentPubkey
         }
 
-        // updateSearchHistory([term, ...searchHistoryOptions])
+        putSearchHistory(term)
 
         dbi.addSearchTerm(term)
       }
     },
-    [currentPubkey, lastValue, loadEvents, onSearch]
+    [currentPubkey, lastValue, loadEvents, onSearch, putSearchHistory]
   )
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

@@ -210,7 +210,7 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
       const augmentedEvent = rawEvent(e)
       putEventToCache(augmentedEvent)
     }
-    console.log('fetched in', Date.now() - start, 'ms from', readRelays.length, 'relays', JSON.stringify(filter))
+    console.log('fetched '+events.size+' in', Date.now() - start, 'ms from', readRelays.length, 'relays', JSON.stringify(filter))
     ok(events)
   })
 }
@@ -458,9 +458,8 @@ async function collectEvents(reqs: Promise<Set<NDKEvent>>[] | Promise<Set<NDKEve
 
 async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<AugmentedEvent[]> {
   const ids = []
-  const pubkeys = []
-  const kinds = []
-  const d_tags = []
+  const kindPubkeys = []
+  const kindPubkeyDtags = []
 
   const events: AugmentedEvent[] = []
   for (const addr of addrs) {
@@ -484,27 +483,58 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
 
     if (id.includes(':')) {
       const v = id.split(':')
-      kinds.push(v[0])
-      pubkeys.push(v[1])
-      if (v[2]) d_tags.push(v[2])
+      if (v[2]) {
+        kindPubkeyDtags.push(id)
+      } else {
+        kindPubkeys.push(id)
+      }
     } else {
       ids.push(id)
     }
   }
 
   const idFilter: NDKFilter = {}
+  const kindPubkeyFilter: NDKFilter = {}
   const addrFilter: NDKFilter = {}
 
-  idFilter.ids = [...new Set(ids)]
-  addrFilter.authors = [...new Set(pubkeys)]
-  addrFilter.kinds = [...new Set(kinds)]
-  if (d_tags.length > 0) addrFilter['#d'] = [...new Set(d_tags)]
+  // NOTE: only supply addrs of same type (id/kind+pubkey/kind+pubkey+dtag)
+  const addrsToFilter = (addrs: string[], filter: NDKFilter) => {
+    const ids: string[] = []
+    const pubkeys: string[] = []
+    const kinds: number[] = []
+    const dtags: string[] = []
+    addrs.forEach(id => {
+      const v = id.split(':')
+      if (v.length === 1) {
+        ids.push(id)
+      } else {
+        kinds.push(Number(v[0]))
+        pubkeys.push(v[1])
+        if (v.length >= 3 && v[2] !== "")
+          dtags.push(v[2])
+      }
+    })
+    if (ids.length > 0) {
+      filter.ids = [...new Set(ids)]
+    } else {
+      filter.authors = [...new Set(pubkeys)]
+      filter.kinds = [...new Set(kinds)]
+      if (dtags.length > 0)
+        filter["#d"] = [...new Set(dtags)]
+    }
+  }
 
-  console.log('loading events by filters', JSON.stringify(idFilter), JSON.stringify(addrFilter))
+  addrsToFilter(ids, idFilter)
+  addrsToFilter(kindPubkeys, kindPubkeyFilter)
+  addrsToFilter(kindPubkeyDtags, addrFilter)
+
+  console.log('loading events by filters', 
+    JSON.stringify(idFilter), JSON.stringify(kindPubkeyFilter), JSON.stringify(addrFilter))
 
   const reqs = []
-  if (idFilter.ids.length > 0) reqs.push(fetchEventsRead(ndk, idFilter))
-  if (addrFilter.authors.length > 0) reqs.push(fetchEventsRead(ndk, addrFilter))
+  if (idFilter.ids?.length > 0) reqs.push(fetchEventsRead(ndk, idFilter))
+  if (kindPubkeyFilter.authors?.length > 0) reqs.push(fetchEventsRead(ndk, kindPubkeyFilter))
+  if (addrFilter.authors?.length > 0) reqs.push(fetchEventsRead(ndk, addrFilter))
 
   const ndkEvents = await collectEvents(reqs)
   events.push(...[...ndkEvents].map((e) => rawEvent(e)))
@@ -547,6 +577,9 @@ export async function fetchFullyAugmentedEventsByAddrs(
         a = await augmentEventAuthors(events)
 
         switch (kind) {
+          case KIND_META: 
+            a = await augmentMetaEvents(a)
+            break
           case KIND_LONG_NOTE:
             a = await augmentLongNotes(a)
             break
@@ -619,11 +652,10 @@ function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPu
   const metas = new Map<string, MetaEvent>()
   for (const e of events) {
     if (e.kind === KIND_META) {
-      const m = createMetaEvent(e)
-      m.profile = parseProfileJson(e)
-      metas.set(e.pubkey, e)
+      const [m] = augmentMetaEvents([e])
+      metas.set(m.pubkey, m)
 
-      if (metaPubkey && metaPubkey === e.pubkey) info.meta = e
+      if (metaPubkey && metaPubkey === m.pubkey) info.meta = m
     }
   }
 
@@ -1161,11 +1193,7 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
     const augmentedEvents = await fetchEventsByIds({ ids: top.ids, kinds: [KIND_META] })
 
     // convert to meta events
-    const metaEvents = augmentedEvents.map((e) => {
-      const c = createMetaEvent(e)
-      c.profile = parseProfileJson(c)
-      return c
-    })
+    const metaEvents = augmentMetaEvents(augmentedEvents)
 
     // put to cache
     metaEvents.forEach((e) => putEventToCache(e))
@@ -1202,12 +1230,8 @@ export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
     })
 
     // drop ndk stuff
-    const metaEvents = [...ndkEvents.values()].map((e) => createMetaEvent(rawEvent(e)))
-
-    // parse profiles
-    metaEvents.forEach((e) => {
-      e.profile = parseProfileJson(e)
-    })
+    const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e))
+    const metaEvents = augmentMetaEvents(augmentedEvents)
 
     // put to cache
     metaEvents.forEach((e) => putEventToCache(e))
@@ -1231,6 +1255,15 @@ async function augmentEventAuthors(events: AugmentedEvent[]): Promise<AuthoredEv
   }
 
   return authoredEvents
+}
+
+function augmentMetaEvents(events: AugmentedEvent[]): MetaEvent[] {
+  const metaEvents = events.map((e) => {
+    const m = createMetaEvent(e)
+    m.profile = parseProfileJson(m)
+    return m
+  })
+  return metaEvents
 }
 
 interface IFetchEventByIdsParams {
@@ -1858,8 +1891,7 @@ class Subscription<OutputEventType> {
 }
 
 const profileSub = new Subscription<MetaEvent>('profile', (p: AugmentedEvent) => {
-  const m = createMetaEvent(p)
-  m.profile = parseProfileJson(p)
+  const [m] = augmentMetaEvents([p])
   return Promise.resolve(m)
 })
 

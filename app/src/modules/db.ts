@@ -8,7 +8,7 @@ import { KIND_ZAP_REQUEST } from './nostr'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(18).stores({
+db.version(19).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
