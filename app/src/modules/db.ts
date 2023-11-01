@@ -3,8 +3,9 @@
 
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
-import { feedbackPeriodMs } from '@/consts'
+import { feedbackPeriodMs, formatDateHours } from '@/consts'
 import { KIND_ZAP_REQUEST } from './nostr'
+import { format, setDay } from 'date-fns'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
@@ -23,7 +24,8 @@ db.version(19).stores({
   signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson,eventZapHash',
   searchHistory: 'id,pubkey,timestamp,value',
   payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
-  searchClickHistory: 'id,pubkey,timestamp,addr,query,kind'
+  searchClickHistory: 'id,pubkey,timestamp,addr,query,kind',
+  appOfTheDayHistory: '&naddr'
 })
 
 export const dbi = {
@@ -442,6 +444,32 @@ export const dbi = {
       await db.searchClickHistory.delete(id)
     } catch (error) {
       console.log(`Delete searchClickEvent in DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  getAOTDShownDate: async () => {
+    return (await dbi.getFlag('', 'appOfDayShownDate')) || ''
+  },
+  shiftAOTDShownDate: async () => {
+    await dbi.setFlag('', 'appOfDayShownDate', format(setDay(new Date(), 1), formatDateHours))
+  },
+  resetAOTDShownDate: async () => {
+    await dbi.setFlag('', 'appOfDayShownDate', '')
+  },
+  listAOTDHistory: async () => {
+    try {
+      const list = await db.appOfTheDayHistory.toArray()
+      return list
+    } catch (error) {
+      console.log(`Get listAOTDHistory in DB error: ${error}`)
+      return []
+    }
+  },
+  addAOTD: async (appNaddr) => {
+    try {
+      await db.appOfTheDayHistory.add({ naddr: appNaddr })
+    } catch (error) {
+      console.log(`Add AOTD to history in DB error: ${error}`)
+      return []
     }
   }
 }

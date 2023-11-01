@@ -105,4 +105,5 @@ export interface DbSchema extends Dexie {
   searchHistory: Dexie.Table<SearchTerm, number>
   feedbacksInfo: Dexie.Table<FeedbackInfo, number>
   searchClickHistory: Dexie.Table<SearchClickEvent, number>
+  appOfTheDayHistory: Dexie.Table<Pick<App, 'naddr'>, number>
 }

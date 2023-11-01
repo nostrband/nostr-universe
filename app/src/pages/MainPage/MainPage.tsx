@@ -16,6 +16,7 @@ import { CONTENT_FEEDS } from '@/types/content-feed'
 import { useCallback, Fragment } from 'react'
 import { selectCurrentWorkspaceFeedSettings, selectKeys } from '@/store/store'
 import { NPSWidget } from '@/components/NPSWidget/NPSWidget'
+import { AppOfDayWidget } from '@/components/AppOfDayWidget/AppOfDayWidget'
 
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
@@ -73,6 +74,7 @@ export const MainPage = () => {
     <StyledWrapVisibility isShow={isShow}>
       {guest && <WelcomeWidget />}
       {isShowWidget && <NPSWidget />}
+      <AppOfDayWidget />
       {renderFeeds()}
     </StyledWrapVisibility>
   )

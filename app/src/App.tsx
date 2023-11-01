@@ -28,6 +28,7 @@ import { ModalSignedEvents } from './components/Modal/ModalSignedEvents/ModalSig
 import { BookmarksPage } from './pages/BookmarksPage/BookmarksPage'
 import { ModalNPSScore } from './components/Modal/ModalNPSScore/ModalNPSScore'
 import { ModalPaymentHistory } from './components/Modal/ModalPaymentHistory/ModalPaymentHistory'
+import { ModalAppOfTheDay } from './components/Modal/ModalAppOfTheDay/ModalAppOfTheDay'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -122,6 +123,7 @@ export const App = () => {
       <ModalSignedEvents />
       <ModalNPSScore />
       <ModalPaymentHistory />
+      <ModalAppOfTheDay />
     </>
   )
 }

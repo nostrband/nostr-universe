@@ -1,10 +1,10 @@
 /* eslint-disable */
 // @ts-nocheck
 import { coracleIcon, irisIcon, nostrIcon, satelliteIcon, snortIcon } from '@/assets'
-import { DEFAULT_PUBKEY } from '@/consts'
+import { DEFAULT_PUBKEY, formatDate } from '@/consts'
 import { db, dbi } from '@/modules/db'
 import { keystore } from '@/modules/keystore'
-import { addWalletInfo, setNsbSigner, subscribeProfiles } from '@/modules/nostr'
+import { addWalletInfo, setNsbSigner } from '@/modules/nostr'
 import { walletstore } from '@/modules/walletstore'
 import { setCurrentPubkey, setKeys, setReadKeys, setNsbKeys } from '@/store/reducers/keys.slice'
 import { addTabs } from '@/store/reducers/tab.slice'
@@ -12,7 +12,8 @@ import { addWorkspaces } from '@/store/reducers/workspaces.slice'
 import { DEFAULT_CONTENT_FEED_SETTINGS } from '@/types/content-feed'
 import { WorkSpace } from '@/types/workspace'
 import { getOrigin } from '@/utils/helpers/prepare-data'
-import { v4 as uuidv4 } from 'uuid'
+import { format } from 'date-fns'
+import { v4 as uuidv4, v4 } from 'uuid'
 
 // ?? зачем дефолтные аппы ??
 const defaultApps = [
@@ -572,4 +573,91 @@ export const loadKeys = async (dispatch): Promise<[keys: string[], currentPubkey
   if (nsbKey) setNsbSigner(nsbKey.token)
 
   return [keys, currentPubkey, readKeys, nsbKeys]
+}
+
+export const clearAllNotifications = () => {
+  if (window.cordova) {
+    window.cordova.plugins.notification.local.clearAll()
+  }
+}
+
+const filterShownApps = async (apps = []) => {
+  const shownApps = await dbi.listAOTDHistory()
+  console.log(shownApps, 'HISH shown apps')
+
+  return apps.filter((app) => {
+    const appIsShown = shownApps.find(({ naddr }) => app.naddr === naddr)
+    if (appIsShown) {
+      return false
+    }
+    return true
+  })
+}
+
+const isAppOfDayAlreadyShownToday = async () => {
+  const currentDate = format(new Date(), formatDate)
+  const shownDate = await dbi.getAOTDShownDate()
+  if (!shownDate) {
+    return false
+  }
+  const [shownDateWithoutTime] = shownDate.split(' ')
+  console.log(shownDate, currentDate !== shownDateWithoutTime, 'HISH dates')
+
+  return currentDate !== shownDateWithoutTime
+}
+
+async function getRandomAppFromFilteredApps(apps = []) {
+  const randomIndex = Math.floor(Math.random() * apps.length)
+  const randomApp = apps[randomIndex]
+  await dbi.addAOTD(randomApp.naddr)
+  apps.splice(randomIndex, 1)
+  return randomApp
+}
+
+export const bootstrapNotifications = async (apps) => {
+  try {
+    // FOR TEST
+    await dbi.resetAOTDShownDate()
+
+    console.log('HISH start bootstrapNotifications function exec')
+
+    if (await isAppOfDayAlreadyShownToday()) {
+      return console.log('Shown today', 'HISH')
+    }
+
+    console.log('HISH start schedule')
+
+    const filteredApps = await filterShownApps(apps)
+    const filteredAppsCopy = [...filteredApps]
+    if (!filteredApps.length) return
+
+    for (let day = 0; day < 7; day++) {
+      const randomApp = await getRandomAppFromFilteredApps(filteredAppsCopy)
+
+      if (randomApp) {
+        const notificationDate = new Date()
+        notificationDate.setDate(notificationDate.getDate() + day)
+        notificationDate.setSeconds(notificationDate.getSeconds() + 20)
+
+        const notificationOptions = {
+          id: day + 1,
+          title: 'App of the Day',
+          text: `App of the Day: ${randomApp.name}, check it out!`,
+          icon: randomApp.picture,
+          trigger: { at: notificationDate }
+        }
+
+        if (window.cordova) {
+          console.log('HISH cordova is exists')
+
+          window.cordova.plugins.notification.local.schedule(notificationOptions, () => {
+            console.log('HISH callback after showing notification')
+          })
+        }
+      }
+    }
+    await dbi.shiftAOTDShownDate()
+  } catch (error) {
+    console.log(error, JSON.stringify(error), 'HISH ERROR')
+  }
 }
