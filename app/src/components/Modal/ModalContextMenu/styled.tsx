@@ -77,7 +77,7 @@ export const StyledMenuWrapper = styled(Box)(({ theme }) => ({
 }))
 
 export const StyledItemSelectedEvent = styled(Box)(() => ({
-  marginBottom: 10
+  marginBottom: '1rem'
 }))
 
 export const StyledItemSelectedEventActions = styled(Box)(() => ({
