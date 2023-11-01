@@ -2082,7 +2082,6 @@ export async function addWalletInfo(info: WalletInfo): Promise<void> {
 }
 
 export async function sendPayment(info: WalletInfo, payreq: string): Promise<{ preimage: string }> {
-  localStorage.debug = 'ndk:-'
 
   const relay = await addRelay(info.relay)
   console.log('relay', relay.url, 'status', relay.status)
