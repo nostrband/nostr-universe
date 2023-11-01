@@ -122,7 +122,9 @@ export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IMo
   if (payload) {
     try {
       preparePayload = JSON.stringify(JSON.parse(payload), null, 2)
-    } catch {}
+    } catch {
+      /* empty */
+    }
   }
 
   return (

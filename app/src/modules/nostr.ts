@@ -210,7 +210,14 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter): Promise<Set<NDKEvent>> {
       const augmentedEvent = rawEvent(e)
       putEventToCache(augmentedEvent)
     }
-    console.log('fetched '+events.size+' in', Date.now() - start, 'ms from', readRelays.length, 'relays', JSON.stringify(filter))
+    console.log(
+      'fetched ' + events.size + ' in',
+      Date.now() - start,
+      'ms from',
+      readRelays.length,
+      'relays',
+      JSON.stringify(filter)
+    )
     ok(events)
   })
 }
@@ -503,15 +510,14 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
     const pubkeys: string[] = []
     const kinds: number[] = []
     const dtags: string[] = []
-    addrs.forEach(id => {
+    addrs.forEach((id) => {
       const v = id.split(':')
       if (v.length === 1) {
         ids.push(id)
       } else {
         kinds.push(Number(v[0]))
         pubkeys.push(v[1])
-        if (v.length >= 3 && v[2] !== "")
-          dtags.push(v[2])
+        if (v.length >= 3 && v[2] !== '') dtags.push(v[2])
       }
     })
     if (ids.length > 0) {
@@ -519,8 +525,7 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
     } else {
       filter.authors = [...new Set(pubkeys)]
       filter.kinds = [...new Set(kinds)]
-      if (dtags.length > 0)
-        filter["#d"] = [...new Set(dtags)]
+      if (dtags.length > 0) filter['#d'] = [...new Set(dtags)]
     }
   }
 
@@ -528,8 +533,12 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
   addrsToFilter(kindPubkeys, kindPubkeyFilter)
   addrsToFilter(kindPubkeyDtags, addrFilter)
 
-  console.log('loading events by filters', 
-    JSON.stringify(idFilter), JSON.stringify(kindPubkeyFilter), JSON.stringify(addrFilter))
+  console.log(
+    'loading events by filters',
+    JSON.stringify(idFilter),
+    JSON.stringify(kindPubkeyFilter),
+    JSON.stringify(addrFilter)
+  )
 
   const reqs = []
   if (idFilter.ids?.length > 0) reqs.push(fetchEventsRead(ndk, idFilter))
@@ -577,7 +586,7 @@ export async function fetchFullyAugmentedEventsByAddrs(
         a = await augmentEventAuthors(events)
 
         switch (kind) {
-          case KIND_META: 
+          case KIND_META:
             a = await augmentMetaEvents(a)
             break
           case KIND_LONG_NOTE:
@@ -2082,7 +2091,6 @@ export async function addWalletInfo(info: WalletInfo): Promise<void> {
 }
 
 export async function sendPayment(info: WalletInfo, payreq: string): Promise<{ preimage: string }> {
-
   const relay = await addRelay(info.relay)
   console.log('relay', relay.url, 'status', relay.status)
 

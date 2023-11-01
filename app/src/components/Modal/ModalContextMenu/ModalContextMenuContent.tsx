@@ -21,7 +21,8 @@ import {
   StyledItemIconAvatar,
   StyledItemText,
   StyledMenuWrapper,
-  StyledItemIconButton
+  StyledItemIconButton,
+  StyledItemSelectedEvent
 } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
@@ -37,16 +38,19 @@ import { useOpenApp } from '@/hooks/open-entity'
 import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
 import { ReactNode, useCallback, useEffect, useState } from 'react'
 import { AugmentedEvent } from '@/types/augmented-event'
-import { useAppSelector } from '@/store/hooks/redux'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { AppEvent } from '@/types/app-event'
 import { showToast } from '@/utils/helpers/general'
 import { usePins } from '@/hooks/pins'
 import { selectCurrentWorkspace } from '@/store/store'
 import { AppNostr } from '@/types/app-nostr'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
+import { setCurrentEvent } from '@/store/reducers/selectedEvent.slice'
+import { ItemSelectedEvent } from './ItemSelectedEvent'
 
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
+  const dispatch = useAppDispatch()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { openApp, openBlank, sendTabPayment } = useOpenApp()
   const { onPinApp, findAppPin, onDeletePinnedApp } = usePins()
@@ -55,6 +59,7 @@ export const ModalContextMenuContent = () => {
   const [lastApp, setLastApp] = useState<AppNostr | null>(null)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
+  const { currentEvent } = useAppSelector((state) => state.selectedEvent)
   const tabId = searchParams.get('tabId') || ''
   const tabUrl = searchParams.get('tabUrl') || ''
   const text = searchParams.get('text') || ''
@@ -100,6 +105,14 @@ export const ModalContextMenuContent = () => {
       load()
     }
   }, [b32])
+
+  useEffect(() => {
+    return () => {
+      if (currentEvent) {
+        dispatch(setCurrentEvent({ currentEvent: null }))
+      }
+    }
+  }, [])
 
   const handleOpenModalSelect = () => {
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
@@ -241,6 +254,12 @@ export const ModalContextMenuContent = () => {
 
   return (
     <Container>
+      {currentEvent && (
+        <StyledItemSelectedEvent>
+          <ItemSelectedEvent currentEvent={currentEvent} />{' '}
+        </StyledItemSelectedEvent>
+      )}
+
       {value && (
         <StyledInput
           endAdornment={

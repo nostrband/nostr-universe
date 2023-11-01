@@ -14,6 +14,7 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { MetaEvent } from '@/types/meta-event'
 
 export const SuggestedProfiles = memo(function SuggestedProfiles() {
   const { currentPubkey } = useAppSelector((state) => state.keys)
@@ -27,9 +28,9 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenProfile = useCallback(
-    (pubkey: string) => {
+    (profile: MetaEvent) => {
       const nprofile = nip19.nprofileEncode({
-        pubkey: pubkey,
+        pubkey: profile.pubkey,
         relays: [nostrbandRelay]
       })
 

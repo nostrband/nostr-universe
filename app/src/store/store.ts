@@ -18,6 +18,7 @@ import { bookmarksSlice } from './reducers/bookmarks.slice'
 import memoizeOne from 'memoize-one'
 import { feedbackInfoSlice } from './reducers/feedbackInfo.slice'
 import { isGuest } from '@/utils/helpers/prepare-data'
+import { selectedEventSlice } from './reducers/selectedEvent.slice'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -30,6 +31,7 @@ export const rootReducer = combineReducers({
   permissionRequests: permissionRequestsSlice.reducer,
   positionScrollPage: positionScrollPageSlice.reducer,
   searchModal: searchModalSlice.reducer,
+  selectedEvent: selectedEventSlice.reducer,
   [userService.reducerPath]: userService.reducer,
   [bookmarksSlice.name]: bookmarksSlice.reducer,
   [feedbackInfoSlice.name]: feedbackInfoSlice.reducer

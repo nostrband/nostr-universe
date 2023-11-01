@@ -16,6 +16,7 @@ import { SkeletonContactList } from '@/components/Skeleton/SkeletonContactList/S
 import { selectKeys } from '@/store/store'
 import { setContactList } from '@/store/reducers/contentWorkspace'
 import { ContactListEvent } from '@/types/contact-list-event'
+import { MetaEvent } from '@/types/meta-event'
 
 export const ContactList = memo(function ContactList() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
@@ -24,9 +25,9 @@ export const ContactList = memo(function ContactList() {
   const dispatch = useAppDispatch()
 
   const handleOpenProfile = useCallback(
-    (pubkey: string) => {
+    (profile: MetaEvent) => {
       const nprofile = nip19.nprofileEncode({
-        pubkey: pubkey,
+        pubkey: profile.pubkey,
         relays: [nostrbandRelay]
       })
 

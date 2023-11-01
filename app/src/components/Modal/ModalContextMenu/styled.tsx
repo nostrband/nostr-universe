@@ -8,8 +8,13 @@ import {
   InputBase,
   Box,
   ListItemAvatar,
-  IconButton
+  IconButton,
+  IconButtonProps
 } from '@mui/material'
+
+interface ExpandMoreProps extends IconButtonProps {
+  expand: boolean
+}
 
 export const StyledInfoItem = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
@@ -69,4 +74,27 @@ export const StyledMenuWrapper = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.secondary.main,
   overflow: 'hidden',
   marginTop: '1rem'
+}))
+
+export const StyledItemSelectedEvent = styled(Box)(() => ({
+  marginBottom: 10
+}))
+
+export const StyledItemSelectedEventActions = styled(Box)(() => ({
+  display: 'flex'
+}))
+
+export const ExpandMore = styled(
+  forwardRef<HTMLAnchorElement, ExpandMoreProps>(function IconButtonDisplayName(props) {
+    const exclude = new Set(['expand'])
+    const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
+
+    return <IconButton color="decorate" {...omitProps} />
+  })
+)(({ theme, expand }) => ({
+  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
+  marginLeft: 'auto',
+  transition: theme.transitions.create('transform', {
+    duration: theme.transitions.duration.shortest
+  })
 }))

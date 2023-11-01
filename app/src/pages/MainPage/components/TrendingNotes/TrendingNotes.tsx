@@ -6,6 +6,8 @@ import { nostrbandRelay } from '@/modules/nostr'
 import { StyledTitle, StyledWrapper } from './styled'
 import { AuthoredEvent } from '@/types/authored-event'
 import { memo, useCallback, FC, CSSProperties } from 'react'
+import { useAppDispatch } from '@/store/hooks/redux'
+import { setCurrentEvent } from '@/store/reducers/selectedEvent.slice'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
@@ -18,6 +20,7 @@ import {
 export const TrendingNotes = memo(function TrendingNotes() {
   const { data, isFetching: isLoading, refetch: refetchTrendingNotes } = userService.useFetchTrendingNotesQuery('')
   const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const dispatch = useAppDispatch()
 
   const handleOpenNote = useCallback(
     (note: AuthoredEvent) => {
@@ -25,6 +28,17 @@ export const TrendingNotes = memo(function TrendingNotes() {
         relays: [nostrbandRelay],
         id: note.id
       })
+
+      dispatch(
+        setCurrentEvent({
+          currentEvent: {
+            author: note.author,
+            time: note.created_at,
+            content: note.content,
+            pubkey: note.pubkey
+          }
+        })
+      )
 
       handleOpenContextMenu({ bech32: ntrendingnote })
     },
