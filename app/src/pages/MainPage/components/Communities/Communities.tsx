@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { fetchFollowedCommunities, getTagValue, nostrbandRelay } from '@/modules/nostr'
+import { fetchFollowedCommunities } from '@/modules/nostr'
 import { StyledTitle, StyledWrapper } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { CommunityEvent } from '@/types/communities'
@@ -22,15 +21,8 @@ export const Communities = memo(function Communities() {
   const dispatch = useAppDispatch()
 
   const handleOpenCommuniti = useCallback(
-    (note: CommunityEvent) => {
-      const naddr = nip19.naddrEncode({
-        pubkey: note.pubkey,
-        kind: note.kind,
-        identifier: getTagValue(note, 'd'),
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: naddr })
+    (event: CommunityEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )

@@ -224,11 +224,10 @@ export class LocalRelayClient {
   }
 }
 
-async function init() {
+export async function initLocalRelay() {
   const start = Date.now()
   const dbEvents = await dbi.listLocalRelayEvents()
   for (const e of dbEvents) 
     addLocalRelayEvent(e)
   console.log("local events", events.length, "loaded in", Date.now() - start, "ms")
 }
-init()

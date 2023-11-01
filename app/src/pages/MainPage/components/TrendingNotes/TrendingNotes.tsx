@@ -1,8 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { userService } from '@/store/services/user.service'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { StyledTitle, StyledWrapper } from './styled'
 import { AuthoredEvent } from '@/types/authored-event'
 import { memo, useCallback, FC, CSSProperties } from 'react'
@@ -20,13 +18,8 @@ export const TrendingNotes = memo(function TrendingNotes() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenNote = useCallback(
-    (note: AuthoredEvent) => {
-      const ntrendingnote = nip19.neventEncode({
-        relays: [nostrbandRelay],
-        id: note.id
-      })
-
-      handleOpenContextMenu({ bech32: ntrendingnote })
+    (event: AuthoredEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )

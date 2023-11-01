@@ -43,10 +43,9 @@ import { EventAddr } from '@/types/event-addr'
 import { ProfileListEvent, createProfileListEvent } from '@/types/profile-list-event'
 import { Bookmark, BookmarkListEvent, createBookmarkListEvent } from '@/types/bookmark-list-event'
 import { dbi } from './db'
-import { LocalRelayClient, addLocalRelayEvent } from './relay'
+import { addLocalRelayEvent } from './relay'
 import { 
   cacheRelay,
-  cacheRelayHostname,
   nostrbandRelay,
   nsbRelays,
   allRelays,
@@ -54,94 +53,8 @@ import {
   writeRelays
 } from './const/relays'
 import { Kinds } from './const/kinds'
+import { overrideWebSocket } from './relay-proxy'
 
-class LocalRelayWebSocket extends EventTarget {
-  closed: boolean = false
-  binaryType: 'blob' | 'arrayBuffer' = 'blob'
-  onopen: ((event: Event) => void) | null = null
-  onclose: ((event: CloseEvent) => void) | null = null
-  onmessage: ((event: MessageEvent) => void) | null = null
-  onerror: ((event: Event) => void) | null = null
-  relay: LocalRelayClient
-
-  constructor(url: string) {
-    super()
-
-    this.relay = new LocalRelayClient((msg: any) => {
-      this.reply(msg)
-    })
-
-    const self = this
-    Object.defineProperty(this, 'bufferedAmount', {
-      value: 0
-    })
-    Object.defineProperty(this, 'extensions', {
-      value: ''
-    })
-    Object.defineProperty(this, 'protocol', {
-      value: ''
-    })
-    Object.defineProperty(this, 'readyState', {
-      get: function () {
-        return self.closed ? 3 : 1 // CLOSED / OPEN
-      }
-    })
-    Object.defineProperty(this, 'url', {
-      value: url
-    })    
-    Object.defineProperty(this, 'url', {
-      value: url
-    })    
-
-    // call onopen on next cycle
-    setTimeout(() => {
-      if (this.closed) return
-      if (this.onopen)
-        this.onopen(new Event('open'))
-      this.dispatchEvent(new Event('open'))
-    }, 0)
-  }
-
-  reply(obj: any) {
-    const str = JSON.stringify(obj)
-    if (this.onmessage)
-      this.onmessage(new MessageEvent('message', {
-        data: str,
-      }))
-    this.dispatchEvent(new MessageEvent('message', { 
-      data: str
-    }))
-  }
-
-  send(data: string) {
-    if (this.closed || typeof data !== 'string') return
-    this.relay.handle(data)
-  }
-
-  close() {
-    if (this.closed) return
-    this.closed = true
-    if (this.onclose)
-      this.onclose(new CloseEvent('close', {wasClean: true}))
-    this.dispatchEvent(new CloseEvent('close', {wasClean: true}))
-    this.relay.cleanup()
-  }
-}
-
-const overrideWebSocket = () => {
-  const Src = window.WebSocket
-  // @ts-ignore
-  // NOTE: must be a 'function() {}', not '() => {}'
-  window.WebSocket = function (url: string | URL, protocols: any) {
-    try {
-      const u = new URL(url)
-      if (u.hostname === cacheRelayHostname) {
-        return new LocalRelayWebSocket(u.toString())
-      }
-    } catch {}
-    return new Src(url, protocols)
-  }
-}
 overrideWebSocket()
 
 const MAX_TOP_APPS = 200
@@ -152,7 +65,7 @@ const PLATFORMS = ['web']
 const ADDR_TYPES = ['', 'npub', 'note', 'nevent', 'nprofile', 'naddr']
 
 // global ndk instance for now
-let ndk: NDK = null
+export let ndk: NDK = null
 const nsbNDK: NDK = new NDK({ explicitRelayUrls: nsbRelays })
 nsbNDK
   .connect(5000)
@@ -206,6 +119,20 @@ function parseContentJson(c: string): object {
   }
 }
 
+export function getNprofile(pubkey: string) {
+  return nip19.nprofileEncode({
+    pubkey: pubkey,
+    relays: [nostrbandRelay]
+  })
+}
+
+export function getNevent(eventId: string) {
+  return nip19.neventEncode({
+    id: eventId,
+    relays: [nostrbandRelay]
+  })
+}
+
 export function parseProfileJson(e: NostrEvent): Meta {
   // all meta fields are optional so 'as' works fine
   const profile = createMeta(parseContentJson(e.content))
@@ -235,7 +162,7 @@ export function getEventNip19(e: NDKEvent | AugmentedEvent): string {
   }
 }
 
-function getEventAddr(e: NDKEvent | AugmentedEvent): string {
+export function getEventAddr(e: NDKEvent | AugmentedEvent): string {
   let addr = e.id
   if (
     e.kind === Kinds.META ||
@@ -810,7 +737,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   // fetch apps ('handlers')
   const filter: NDKFilter = {
     kinds: [Kinds.APP],
-    limit: 50
+    limit: 100
   }
   if (kinds.length > 0) filter['#k'] = kinds.map((k) => '' + k)
 
@@ -2388,4 +2315,4 @@ export function reconnect() {
   checkReconnect(nsbNDK, true)
 }
 
-localStorage.debug = 'ndk:*'
+localStorage.debug = ''

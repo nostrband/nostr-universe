@@ -20,9 +20,8 @@ import { RecentEvent, deleteRecentEventByIdThunk } from '@/store/reducers/search
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { Skeleton, Stack } from '@mui/material'
 import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/SkeletonProfiles'
-import { nostrbandRelay } from '@/modules/nostr'
-import { nip19 } from '@nostrband/nostr-tools'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { AugmentedEvent } from '@/types/augmented-event'
 
 export const RecentEvents = memo(function RecentEventsDisplayName() {
   const { recentEvents, isRecentEventsLoading } = useAppSelector((state) => state.searchModal)
@@ -63,33 +62,8 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
     dispatch(deleteRecentEventByIdThunk(id))
   }
 
-  const handleOpenProfile = (profile: MetaEvent) => {
-    const nprofile = nip19.nprofileEncode({
-      pubkey: profile.pubkey,
-      relays: [nostrbandRelay]
-    })
-
-    handleOpenContextMenu({ bech32: nprofile })
-  }
-
-  const handleOpenNote = (note: AuthoredEvent) => {
-    const nevent = nip19.neventEncode({
-      relays: [nostrbandRelay],
-      id: note.id
-    })
-
-    handleOpenContextMenu({ bech32: nevent })
-  }
-
-  const handleOpenLongNote = (longNote: LongNoteEvent) => {
-    const naddr = nip19.naddrEncode({
-      pubkey: longNote.pubkey,
-      kind: longNote.kind,
-      identifier: longNote.identifier,
-      relays: [nostrbandRelay]
-    })
-
-    handleOpenContextMenu({ bech32: naddr })
+  const handleOpenEvent = (event: AugmentedEvent) => {
+    handleOpenContextMenu({ event })
   }
 
   const renderContent = () => {
@@ -103,7 +77,7 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
         return (
           <HorizontalSwipeVirtualItem style={style} index={index} itemCount={currentTabEvents.length}>
             <RecentProfile
-              onClick={() => handleOpenProfile(profile)}
+              onClick={() => handleOpenEvent(profile)}
               profile={profile}
               queryTimeInfo={queryInfoText}
               onDeleteRecentEvent={() => handleDeleteRecentEvent(queryInfo.id)}
@@ -129,7 +103,7 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
         return (
           <HorizontalSwipeVirtualItem style={style} index={index} itemCount={currentTabEvents.length}>
             <RecentNote
-              onClick={() => handleOpenNote(note)}
+              onClick={() => handleOpenEvent(note)}
               time={note.created_at}
               content={note.content}
               pubkey={note.pubkey}
@@ -159,7 +133,7 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
         return (
           <HorizontalSwipeVirtualItem style={style} index={index} itemCount={currentTabEvents.length}>
             <RecentLongNote
-              onClick={() => handleOpenLongNote(longNote)}
+              onClick={() => handleOpenEvent(longNote)}
               time={longNote.created_at}
               content={longNote.content}
               subtitle={longNote.title}

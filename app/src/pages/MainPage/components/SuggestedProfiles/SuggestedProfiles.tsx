@@ -2,8 +2,6 @@ import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
 import { userService } from '@/store/services/user.service'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
@@ -28,12 +26,7 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
 
   const handleOpenProfile = useCallback(
     (pubkey: string) => {
-      const nprofile = nip19.nprofileEncode({
-        pubkey: pubkey,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: nprofile })
+      handleOpenContextMenu({ pubkey })
     },
     [handleOpenContextMenu]
   )

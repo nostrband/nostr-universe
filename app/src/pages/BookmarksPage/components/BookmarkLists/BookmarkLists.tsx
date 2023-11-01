@@ -13,8 +13,6 @@ import { useSigner } from '@/hooks/signer'
 import { BookmarkListItem } from './BookmarkListItem/BookmarkListItem'
 import { BookmarkListEvent } from '@/types/bookmark-list-event'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { SkeletonBookmarkLists } from '@/components/Skeleton/SkeletonBookmarkLists/SkeletonBookmarkLists'
 
 export const BookmarkLists = () => {
@@ -29,15 +27,8 @@ export const BookmarkLists = () => {
   }, [currentPubkey, dispatch, decrypt])
 
   const handleOpenBookmark = useCallback(
-    (bookmark: BookmarkListEvent) => {
-      const naddr = nip19.naddrEncode({
-        pubkey: bookmark.pubkey,
-        kind: bookmark.kind,
-        identifier: bookmark.identifier,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: naddr })
+    (event: BookmarkListEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )

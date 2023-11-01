@@ -13,8 +13,8 @@ import { BestNoteItem } from './BestNoteItem/BestNoteItem'
 import { AuthoredEvent } from '@/types/authored-event'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNotes/SkeletonTrendingNotes'
-import { nip19 } from '@nostrband/nostr-tools'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { getEventNip19 } from '@/modules/nostr'
 
 const BestNotes = () => {
   const { bestNotes, isBestNotesLoading } = useAppSelector((state) => state.bookmarks)
@@ -28,10 +28,7 @@ const BestNotes = () => {
 
   const handleOpenNote = useCallback(
     (note: AuthoredEvent) => {
-      const noteId = nip19.neventEncode({
-        relays: [nostrbandRelay],
-        id: note.id
-      })
+      const noteId = getEventNip19(note)
 
       handleOpenContextMenu({ bech32: noteId })
     },

@@ -26,7 +26,6 @@ import {
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
 import {
-  KIND_APP,
   fetchExtendedEventByBech32,
   getHandlerEventUrl,
   parseAddr,
@@ -44,6 +43,7 @@ import { usePins } from '@/hooks/pins'
 import { selectCurrentWorkspace } from '@/store/store'
 import { AppNostr } from '@/types/app-nostr'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
+import { Kinds } from '@/modules/const/kinds'
 
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
@@ -66,7 +66,7 @@ export const ModalContextMenuContent = () => {
   const b32 = stringToBech32(value || tabUrl)
   const [invoice] = stringToBolt11(value || tabUrl)
   if (!value) value = b32 || invoice || tabUrl // from tabUrl
-  const isApp = kind === KIND_APP
+  const isApp = kind === Kinds.APP
   const pin = event && isApp ? findAppPin(event as AppEvent) : null
   const addr = b32 ? parseAddr(b32) : undefined
   if (addr && kind !== undefined) addr.kind = kind

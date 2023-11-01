@@ -2,8 +2,6 @@ import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
 import { userService } from '@/store/services/user.service'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/SkeletonProfiles'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
@@ -24,12 +22,7 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
 
   const handleOpenProfile = useCallback(
     (pubkey: string) => {
-      const nprofile = nip19.nprofileEncode({
-        pubkey: pubkey,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: nprofile })
+      handleOpenContextMenu({ pubkey })
     },
     [handleOpenContextMenu]
   )

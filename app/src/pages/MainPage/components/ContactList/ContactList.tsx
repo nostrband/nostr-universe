@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay, subscribeContactList } from '@/modules/nostr'
+import { subscribeContactList } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { memo, useCallback, FC, CSSProperties } from 'react'
@@ -25,12 +24,7 @@ export const ContactList = memo(function ContactList() {
 
   const handleOpenProfile = useCallback(
     (pubkey: string) => {
-      const nprofile = nip19.nprofileEncode({
-        pubkey: pubkey,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: nprofile })
+      handleOpenContextMenu({ pubkey })
     },
     [handleOpenContextMenu]
   )

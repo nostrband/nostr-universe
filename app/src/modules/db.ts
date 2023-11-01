@@ -4,12 +4,11 @@
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
 import { feedbackPeriodMs } from '@/consts'
-import { KIND_ZAP_REQUEST } from './nostr'
+import { Kinds } from './const/kinds'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(19).stores({
-db.version(19).stores({
+db.version(20).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -25,7 +24,8 @@ db.version(19).stores({
   searchHistory: 'id,pubkey,timestamp,value',
   localRelayEvents: 'id,pubkey,kind,created_at',
   payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
-  searchClickHistory: 'id,pubkey,timestamp,addr,query,kind'
+  searchClickHistory: 'id,pubkey,timestamp,addr,query,kind',
+  syncQueue: 'id,pubkey,since,until',
 })
 
 export const dbi = {
@@ -42,7 +42,7 @@ export const dbi = {
         await db.signedEvents
           .where({
             pubkey,
-            kind: KIND_ZAP_REQUEST
+            kind: Kinds.ZAP_REQUEST
           })
           .toArray()
       ).sort((a, b) => b.timestamp - a.timestamp)
@@ -461,6 +461,20 @@ export const dbi = {
       console.log(`Put localRelayEvents error: ${error}`)
     }
   },
-
+  listSyncQueue: async (pubkey: string) => {
+    try {
+      return await db.syncQueue.where('pubkey').equals(pubkey).toArray()
+    } catch (error) {
+      console.log(`List syncQueue error: ${error}`)
+      return []
+    }
+  },
+  putSyncQueue: async (filter) => {
+    try {
+      await db.syncQueue.put(filter)
+    } catch (error) {
+      console.log(`Put syncQueue error: ${error}`)
+    }
+  },
 
 }

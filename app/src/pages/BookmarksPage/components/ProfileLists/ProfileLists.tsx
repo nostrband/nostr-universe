@@ -11,9 +11,6 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { fetchProfileListsThunk } from '@/store/reducers/bookmarks.slice'
 import { useSigner } from '@/hooks/signer'
 import { ProfileListItem } from './ProfileListItem/ProfileListItem'
-
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { ProfileListEvent } from '@/types/profile-list-event'
 import { SkeletonBookmarkLists } from '@/components/Skeleton/SkeletonBookmarkLists/SkeletonBookmarkLists'
@@ -30,15 +27,8 @@ export const ProfileLists = () => {
   }, [currentPubkey, dispatch, decrypt])
 
   const handleOpenProfile = useCallback(
-    (profile: ProfileListEvent) => {
-      const naddr = nip19.naddrEncode({
-        pubkey: profile.pubkey,
-        kind: profile.kind,
-        identifier: profile.identifier,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: naddr })
+    (event: ProfileListEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
