@@ -5,6 +5,7 @@ import { getEventAddr } from './nostr'
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
 import { Kinds } from './const/kinds'
+import { onBeforeNewEvent } from './sync'
 
 
 const events: NostrEvent[] = []
@@ -17,6 +18,8 @@ const subs = new Map<string, any>()
 
 export function addLocalRelayEvent(e: NostrEvent) {
   if (eventById.has(e.id)) return false
+
+  onBeforeNewEvent(e)
 
   const index = events.length
 

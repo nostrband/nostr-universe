@@ -24,7 +24,15 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
         false
       )
 
+      console.log('loading keys...')
+
       const [keys, currentPubKey] = await loadKeys(dispatch)
+
+      console.log('ndk connecting...')
+
+      await connect()
+
+      console.log('ndk connected')
 
       // we have to wait until relay is initialized
       // and then sync starts because if user proceeds 
@@ -35,12 +43,7 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       // that startSync would wait until local relay is ready 
       await initLocalRelay()
       await startSync(currentPubKey)
-
       for (const key of keys) await loadWorkspace(key, dispatch)
-
-      console.log('ndk connected')
-
-      await connect()
 
       await reloadWallets()
 

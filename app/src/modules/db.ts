@@ -25,7 +25,7 @@ db.version(20).stores({
   localRelayEvents: 'id,pubkey,kind,created_at',
   payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
   searchClickHistory: 'id,pubkey,timestamp,addr,query,kind',
-  syncQueue: 'id,pubkey,since,until',
+  syncTasks: 'id,pubkey,type,since,until',
 })
 
 export const dbi = {
@@ -454,27 +454,33 @@ export const dbi = {
       return []
     }
   },
-  putLocalRelayEvent: async (e) => {
+  putLocalRelayEvents: async (es) => {
     try {
-      await db.localRelayEvents.put(e)
+      await db.localRelayEvents.bulkPut(es)
     } catch (error) {
       console.log(`Put localRelayEvents error: ${error}`)
     }
   },
-  listSyncQueue: async (pubkey: string) => {
+  listSyncTasks: async (pubkey: string) => {
     try {
-      return await db.syncQueue.where('pubkey').equals(pubkey).toArray()
+      return await db.syncTasks.where('pubkey').equals(pubkey).toArray()
     } catch (error) {
-      console.log(`List syncQueue error: ${error}`)
+      console.log(`List syncTasks error: ${error}`)
       return []
     }
   },
-  putSyncQueue: async (filter) => {
+  putSyncTasks: async (tasks) => {
     try {
-      await db.syncQueue.put(filter)
+      await db.syncTasks.bulkPut(tasks)
     } catch (error) {
-      console.log(`Put syncQueue error: ${error}`)
+      console.log(`Put syncTasks error: ${error}`)
     }
   },
-
+  deleteSyncTask: async (id) => {
+    try {
+      await db.syncTasks.delete(id)
+    } catch (error) {
+      console.log(`Delete syncTasks in DB error: ${JSON.stringify(error)}`)
+    }
+  }
 }

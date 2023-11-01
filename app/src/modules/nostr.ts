@@ -96,17 +96,23 @@ const metaCache = new Map<string, MetaEvent>()
 const eventCache = new Map<string, AugmentedEvent>()
 const addrCache = new Map<string, AugmentedEvent>()
 
-function rawEvent(e: NDKEvent): AugmentedEvent {
+export function nostrEvent(e: NDKEvent) {
   return {
     id: e.id,
-    pubkey: e.pubkey,
     created_at: e.created_at,
+    pubkey: e.pubkey,
     kind: e.kind,
     tags: e.tags,
     content: e.content,
+    sig: e.sig
+  }
+}
+
+function rawEvent(e: NDKEvent): AugmentedEvent {
+  return {
+    ...nostrEvent(e),
     identifier: getTagValue(e, 'd'),
     order: e.created_at,
-    sig: e.sig
   }
 }
 
@@ -176,8 +182,8 @@ export function getEventAddr(e: NDKEvent | AugmentedEvent): string {
 }
 
 interface IFetchOptions {
-  cacheOnly: boolean,
-  noCache: boolean
+  cacheOnly?: boolean,
+  noCache?: boolean
 }
 
 function fetchEventsRead(ndk: NDK, filter: NDKFilter, options?: IFetchOptions): Promise<Set<NDKEvent>> {
@@ -286,7 +292,7 @@ export async function fetchApps() {
     const ndkEvents = await fetchEventsRead(ndk, {
       kinds: [Kinds.APP],
       limit: MAX_TOP_APPS
-    })
+    }, { cacheOnly: true })
 
     events = [...ndkEvents.values()].map((e) => rawEvent(e))
   }
@@ -741,32 +747,17 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   }
   if (kinds.length > 0) filter['#k'] = kinds.map((k) => '' + k)
 
-  //  let events = await collectEvents(fetchEventsRead(ndk, filter));
-  //  console.log('events', events);
-
-  const top: NostrTop | null = null // await ndk.fetchTop(filter, NDKRelaySet.fromRelayUrls([nostrbandRelayAll], ndk))
-  console.log('top kind apps', top?.ids.length)
-
-  let ndkEvents: NDKEvent[] = []
-  if (top?.ids.length) {
-    // fetch the app events themselves from the list
-    ndkEvents = await collectEvents(fetchEventsRead(ndk, { ids: top.ids }))
-  } else {
-    console.log('top apps empty, fetching new ones')
-    // load non-best apps from other relays just to avoid
-    // completely breaking the UX due to our relay being down
-    ndkEvents = await collectEvents(fetchEventsRead(ndk, filter))
-  }
-  //  console.log('events', events);
+  // load cached apps
+  const ndkEvents = await fetchEventsRead(ndk, filter, { cacheOnly: true })
 
   const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e))
 
-  if (top)
-    top.ids.forEach((id: string, i: number) => {
-      const e = augmentedEvents.find((e) => e.id == id)
-      if (e) e.order = top.ids.length - i
-    })
-  else augmentedEvents.forEach((e, i) => (e.order = augmentedEvents.length - i))
+  // if (top)
+  //   top.ids.forEach((id: string, i: number) => {
+  //     const e = augmentedEvents.find((e) => e.id == id)
+  //     if (e) e.order = top.ids.length - i
+  //   })
+  augmentedEvents.forEach((e, i) => (e.order = augmentedEvents.length - i))
 
   // we need profiles in case app info inherits content
   // from it's profile
@@ -775,15 +766,15 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
     for (const e of augmentedEvents) pubkeys.push(e.pubkey)
     pubkeys = [...new Set(pubkeys)]
 
-    const metasNdkEvents = await collectEvents(
-      fetchEventsRead(ndk, {
-        kinds: [Kinds.META],
-        authors: Object.keys(pubkeys)
-      })
-    )
+    const metaEvents = await fetchMetas(Object.keys(pubkeys))
+    // const metasNdkEvents = await fetchEventsRead(ndk, {
+    //   kinds: [Kinds.META],
+    //   authors: Object.keys(pubkeys)
+    // })
     //    console.log('metas', metas);
 
-    augmentedEvents.push(...metasNdkEvents.map((e) => rawEvent(e)))
+    //augmentedEvents.push(...[...metasNdkEvents.values()].map((e) => rawEvent(e)))
+    augmentedEvents.push(...metaEvents)
   }
 
   // parse
@@ -959,7 +950,8 @@ export async function fetchProfileLists(
   const authoredLists = await fetchPubkeyAuthoredEvents({
     kind: Kinds.PROFILE_LIST,
     pubkeys: [pubkey],
-    limit: 200
+    limit: 200,
+    cacheOnly: true
   })
 
   const tagsToPubkeys = (tags?: string[][]): string[] => {
@@ -1011,7 +1003,8 @@ export async function fetchBookmarkLists(
   const authoredLists = await fetchPubkeyAuthoredEvents({
     kind: Kinds.BOOKMARKS,
     pubkeys: [pubkey],
-    limit: 100
+    limit: 100,
+    cacheOnly: true
   })
 
   const tagsToBookmarks = (tags?: string[][]): Bookmark[] => {
@@ -1102,7 +1095,7 @@ async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]):
     authors: [pubkey],
     kinds: [Kinds.NOTE, Kinds.REACTION, Kinds.REPOST],
     limit: 100
-  })
+  }, { cacheOnly: true })
 
   const events: ReactionTargetEvent[] = [...ndkEvents.values()].map((e) =>
     createReactionTargetEvent(createAuthoredEvent(rawEvent(e)))
@@ -1218,33 +1211,31 @@ export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
     else reqPubkeys.add(p)
   })
 
-  const fetch = async () => {
+  const fetch = async (cacheOnly: boolean) => {
     const ndkEvents = await fetchEventsRead(ndk, {
       kinds: [Kinds.META],
       authors: [...reqPubkeys]
-    })
+    }, { cacheOnly })
 
-    // drop ndk stuff
     const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e))
     const metaEvents = augmentMetaEvents(augmentedEvents)
 
-    for (const { pubkey } of metaEvents)
-      reqPubkeys.delete(pubkey)
+    const wasSize = reqPubkeys.size
+    metaEvents.forEach((e) => reqPubkeys.delete(e.pubkey))
+    metaEvents.forEach((e) => putEventToCache(e))
+    metas.push(...metaEvents)
 
-    return metaEvents
+    return [wasSize, metaEvents.length]
   }
 
   if (reqPubkeys.size > 0) {
-    const size = reqPubkeys.size
-    const metaEvents = await fetch()
+    const [reqs, fetched] = await fetch(true)
+    console.log('fetchMetas cached', reqs, fetched)
+  }
 
-    // put to cache
-    metaEvents.forEach((e) => putEventToCache(e))
-
-    // merge with cached results
-    metas.push(...metaEvents)
-
-    console.log('meta fetch from remote relay ', metaEvents.length, 'cache', metaCache.size, 'req', size)
+  if (reqPubkeys.size > 0) {
+    const [reqs, fetched] = await fetch(false)
+    console.log('fetchMetas remote', reqs, fetched)
   }
 
   return metas
@@ -1290,24 +1281,29 @@ async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise
     }
   })
 
-  const fetch = async () => {
+  const fetch = async (cacheOnly: boolean) => {
     const ndkEvents = await fetchEventsRead(ndk, {
       ids: [...reqIds],
       kinds
-    })
+    }, { cacheOnly })
     //    console.log('ids', ids, 'reqIds', reqIds, 'kinds', kinds, 'events', ndkEvents)
 
-    return [...ndkEvents.values()].filter((e) => ids.includes(e.id)).map((e) => rawEvent(e))
+    const wasSize = reqIds.size
+    const events = [...ndkEvents.values()].filter((e) => ids.includes(e.id)).map((e) => rawEvent(e))
+    events.forEach((e) => reqIds.delete(e.id))
+    events.forEach((e) => putEventToCache(e))
+    results.push(...events)
+    return [wasSize, events.length]
   }
 
   if (reqIds.size > 0) {
-    const augmentedEvents = await fetch()
+    const [reqs, fetched] = await fetch(true)
+    console.log('fetchEventsByIds cached', reqs, fetched)
+  }
 
-    augmentedEvents.forEach((e) => putEventToCache(e))
-
-    results.push(...augmentedEvents)
-
-    console.log('event cache extended', eventCache.size)
+  if (reqIds.size > 0) {
+    const [reqs, fetched] = await fetch(false)
+    console.log('fetchEventsByIds remote', reqs, fetched)
   }
 
   // desc by tm
@@ -1554,6 +1550,7 @@ interface IFetchPubkeyEventsParams {
   tagged?: boolean
   limit?: number
   identifiers?: string[]
+  cacheOnly?: boolean
 }
 
 async function fetchPubkeyEvents({
@@ -1561,7 +1558,8 @@ async function fetchPubkeyEvents({
   pubkeys,
   tagged = false,
   limit = 30,
-  identifiers = undefined
+  identifiers = undefined,
+  cacheOnly = false
 }: IFetchPubkeyEventsParams): Promise<AugmentedEvent[]> {
   const pks = [...pubkeys]
   if (pks.length > 200) pks.length = 200
@@ -1576,7 +1574,7 @@ async function fetchPubkeyEvents({
 
   if (identifiers && identifiers.length > 0) filter['#d'] = identifiers
 
-  const ndkEvents = await fetchEventsRead(ndk, filter)
+  const ndkEvents = await fetchEventsRead(ndk, filter, { cacheOnly })
 //  console.log("fetchEventsRead ndkEvents", ndkEvents)
   const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e))
 
@@ -1596,7 +1594,8 @@ async function fetchPubkeyAuthoredEvents(params: IFetchPubkeyEventsParams): Prom
 export async function fetchFollowedLongNotes(contactPubkeys: string[]): Promise<LongNoteEvent[]> {
   const events = await fetchPubkeyAuthoredEvents({
     kind: Kinds.LONG_NOTE,
-    pubkeys: contactPubkeys
+    pubkeys: contactPubkeys,
+    cacheOnly: true
   })
   return await augmentLongNotes(events)
 }
@@ -1604,7 +1603,8 @@ export async function fetchFollowedLongNotes(contactPubkeys: string[]): Promise<
 export async function fetchFollowedHighlights(contactPubkeys: string[]): Promise<HighlightEvent[]> {
   const events = await fetchPubkeyAuthoredEvents({
     kind: Kinds.HIGHLIGHT,
-    pubkeys: contactPubkeys
+    pubkeys: contactPubkeys,
+    cacheOnly: true
   })
   return events.map((e) => createHighlightEvent(e))
 }
@@ -1614,7 +1614,8 @@ export async function fetchFollowedZaps(contactPubkeys: string[], minZap: number
     kind: Kinds.ZAP,
     pubkeys: contactPubkeys,
     tagged: true,
-    limit: 200
+    limit: 200,
+    cacheOnly: true
   })
   return await augmentZaps(events, minZap)
 }
@@ -1623,12 +1624,13 @@ export async function fetchFollowedCommunities(contactPubkeys: string[]): Promis
   const approvalEvents = await fetchPubkeyEvents({
     kind: Kinds.COMMUNITY_APPROVAL,
     pubkeys: contactPubkeys,
-    limit: 100
+    limit: 100,
+    cacheOnly: true
   })
 
   // desc
   sortDesc(approvalEvents)
-  //  console.log("approvals", approvals);
+  console.log("approvals", approvalEvents);
 
   const approvals: CommunityApprovalInfo[] = approvalEvents
     .map((e) => {
@@ -1644,6 +1646,9 @@ export async function fetchFollowedCommunities(contactPubkeys: string[]): Promis
     })
   //  console.log("addrs", addrs);
 
+  if (approvals.length === 0) return []
+
+  // FIXME switch to fetchEventsByAddrs
   const authoredEvents = await fetchPubkeyAuthoredEvents({
     kind: Kinds.COMMUNITY,
     pubkeys: [...new Set(approvals.map((a) => a.communityPubkey))],
@@ -1799,7 +1804,8 @@ export async function fetchFollowedLiveEvents(contactPubkeys: string[], limit: n
   let events = await fetchPubkeyEvents({
     kind: Kinds.LIVE_EVENT,
     pubkeys: contactPubkeys,
-    tagged: true
+    tagged: true,
+    cacheOnly: true
   })
 
   return await augmentLiveEvents(events, contactPubkeys, limit)
@@ -2187,8 +2193,9 @@ export function putEventToCache(e: AugmentedEvent | MetaEvent) {
   if (e.kind === Kinds.META as number) metaCache.set(e.pubkey, e)
   eventCache.set(e.id, e)
   addrCache.set(getEventAddr(e), e)
-  if (addLocalRelayEvent(e)) {
-    dbi.putLocalRelayEvent(e)
+  const ne = nostrEvent(e)
+  if (addLocalRelayEvent(ne)) {
+    dbi.putLocalRelayEvents([ne])
   }
 }
 
