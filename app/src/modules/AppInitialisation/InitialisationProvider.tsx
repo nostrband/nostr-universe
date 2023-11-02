@@ -5,7 +5,7 @@ import { useUpdateProfile } from '@/hooks/profile'
 import { setProfiles } from '@/store/reducers/profile.slice'
 import { IInitialisationProvider } from './types'
 import { connect, fetchApps, nostrOnResume } from '../nostr'
-import { bootstrapNotifications, clearAllNotifications, loadKeys, loadWorkspace, reloadWallets } from './utils'
+import { bootstrapNotifications, loadKeys, loadWorkspace, reloadWallets } from './utils'
 import { dbi } from '../db'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
@@ -21,7 +21,6 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
         },
         false
       )
-      clearAllNotifications()
 
       const [keys, currentPubKey] = await loadKeys(dispatch)
 
@@ -45,7 +44,7 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       dispatch(setApps({ apps }))
       dispatch(setLoading({ isLoading: false }))
 
-      bootstrapNotifications(apps)
+      bootstrapNotifications(apps, dispatch)
     } catch (err) {
       console.log('error init app', err)
     }

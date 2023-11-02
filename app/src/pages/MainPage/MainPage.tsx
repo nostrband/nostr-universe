@@ -24,6 +24,7 @@ export const MainPage = () => {
 
   const { keys } = useAppSelector(selectKeys)
   const { isShowWidget } = useAppSelector((state) => state.feedbackInfo)
+  const { isShowAOTDWidget } = useAppSelector((state) => state.notifications)
 
   const guest = !keys.length || isGuest(keys[0])
 
@@ -74,7 +75,7 @@ export const MainPage = () => {
     <StyledWrapVisibility isShow={isShow}>
       {guest && <WelcomeWidget />}
       {isShowWidget && <NPSWidget />}
-      <AppOfDayWidget />
+      {isShowAOTDWidget && <AppOfDayWidget />}
       {renderFeeds()}
     </StyledWrapVisibility>
   )

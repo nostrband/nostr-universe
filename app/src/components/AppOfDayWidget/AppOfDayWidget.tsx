@@ -4,15 +4,23 @@ import { Container } from '@/layout/Container/Conatiner'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { Button } from '@mui/material'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { dbi } from '@/modules/db'
+import { useAppDispatch } from '@/store/hooks/redux'
+import { setIsShowAOTDWidget } from '@/store/reducers/notifications.slice'
 
 export const AppOfDayWidget = () => {
   const { handleOpen } = useOpenModalSearchParams()
+  const dispatch = useAppDispatch()
 
   const handleOpenAppOfTheDayModal = () => {
     handleOpen(MODAL_PARAMS_KEYS.APP_OF_THE_DAY_MODAL)
   }
 
-  const handleSkip = () => {}
+  const handleSkip = () => {
+    dbi.setAOTDShownDate().then(() => {
+      dispatch(setIsShowAOTDWidget({ isShow: false }))
+    })
+  }
 
   return (
     <StyledContainer>
