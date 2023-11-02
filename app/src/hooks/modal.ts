@@ -45,7 +45,7 @@ export const useOpenModalSearchParams = () => {
         { replace: extraOptions?.replace }
       )
     },
-    [searchParams, location, navigate, getEnumParam]
+    [location, navigate, getEnumParam]
   )
 
   const handleClose = useCallback(

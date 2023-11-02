@@ -46,7 +46,7 @@ export const bookmarksSlice = createSlice({
     },
     setBookmarkLists: (state, action) => {
       state.bookmarkLists = action.payload.bookmarkLists
-    },
+    }
   },
   extraReducers(builder) {
     builder
@@ -98,8 +98,7 @@ export const bookmarksSlice = createSlice({
   }
 })
 
-export const { setBestNotes, setBestLongNotes, setProfileLists, setBookmarkLists } =
-  bookmarksSlice.actions
+export const { setBestNotes, setBestLongNotes, setProfileLists, setBookmarkLists } = bookmarksSlice.actions
 
 export const fetchBestNotesThunk = createAsyncThunk<ReactionTargetEvent[], string>(
   'bookmarks/fetchBestNotesThunk',

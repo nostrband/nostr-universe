@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, FC, CSSProperties, useRef } from 'react'
+import React, { useCallback, useState, FC, CSSProperties, useRef, useEffect } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import CloseIcon from '@mui/icons-material/Close'
 import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
@@ -22,7 +22,7 @@ import {
 } from './styled'
 import { StyledInputBox } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setSearchValue } from '@/store/reducers/searchModal.slice'
+import { fetchRecentEventsThunk, setSearchValue } from '@/store/reducers/searchModal.slice'
 import { useSearchParams } from 'react-router-dom'
 import { StyledWrapVisibility } from '../styled'
 import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
@@ -44,7 +44,10 @@ import { selectCurrentWorkspaceTabs } from '@/store/store'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { getProfileName } from '@/utils/helpers/prepare-data'
 
-const MAX_HISTORY = 10
+import { addSearchClickEventToDB } from './utils/helpers'
+import { AugmentedEvent } from '@/types/augmented-event'
+import { useSearchHistory } from './utils/history'
+import { RecentEvents } from './components/RecentEvents/RecentEvents'
 
 interface IDropdownOption {
   id: string
@@ -61,9 +64,9 @@ export const SearchPageContent = () => {
 
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
+  const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const { apps = [] } = useAppSelector((state) => state.apps)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
-  const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
 
   const [suggestion, setSuggestion] = useState('')
@@ -76,8 +79,7 @@ export const SearchPageContent = () => {
   const [lastValue, setLastValue] = useState('')
   const inputRef = useRef<HTMLElement>()
 
-  const [searchHistoryOptions, setSearchHistoryOptions] = useState<SearchTerm[]>([])
-  const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false)
+  const { searchHistory, isSearchHistoryLoading, putSearchHistory, handleDeleteSearchTerm } = useSearchHistory()
 
   const { handleOpenContextMenu, handleOpenTab } = useOpenModalSearchParams()
 
@@ -252,24 +254,6 @@ export const SearchPageContent = () => {
     [setIsLoading, setProfiles, setNotes, setLongNotes]
   )
 
-  const updateSearchHistory = useCallback(
-    (history: SearchTerm[]) => {
-      history.sort((a, b) => a.value.localeCompare(b.value))
-
-      const filtered = history
-        .map((e, i, a) => {
-          if (!i || a[i - 1].value !== e.value) return e
-        })
-        .filter((e) => e !== undefined)
-        .slice(0, MAX_HISTORY) as SearchTerm[]
-
-      filtered.sort((a, b) => b.timestamp - a.timestamp)
-
-      setSearchHistoryOptions(filtered)
-    },
-    [setSearchHistoryOptions]
-  )
-
   const searchHandler = useCallback(
     (value: string) => {
       if (value.trim().length > 0) {
@@ -292,12 +276,12 @@ export const SearchPageContent = () => {
           pubkey: currentPubkey
         }
 
-        updateSearchHistory([term, ...searchHistoryOptions])
+        putSearchHistory(term)
 
         dbi.addSearchTerm(term)
       }
     },
-    [currentPubkey, lastValue, loadEvents, onSearch, searchHistoryOptions, updateSearchHistory]
+    [currentPubkey, lastValue, loadEvents, onSearch, putSearchHistory]
   )
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -316,12 +300,18 @@ export const SearchPageContent = () => {
     setSuggestion('')
   }
 
-  const handleOpenProfile = (pubkey: string) => {
+  const handleAddSearchClickEvent = (e: AugmentedEvent) => {
+    addSearchClickEventToDB(e, currentPubkey, searchValue)
+  }
+
+  const handleOpenProfile = (pubkey: string, profile?: MetaEvent) => {
     const nprofile = nip19.nprofileEncode({
       pubkey: pubkey,
       relays: [nostrbandRelay]
     })
-
+    if (profile) {
+      handleAddSearchClickEvent(profile)
+    }
     handleOpenContextMenu({ bech32: nprofile })
   }
 
@@ -331,6 +321,7 @@ export const SearchPageContent = () => {
       id: note.id
     })
 
+    handleAddSearchClickEvent(note)
     handleOpenContextMenu({ bech32: nevent })
   }
 
@@ -341,33 +332,9 @@ export const SearchPageContent = () => {
       identifier: longNote.identifier,
       relays: [nostrbandRelay]
     })
-
+    handleAddSearchClickEvent(longNote)
     handleOpenContextMenu({ bech32: naddr })
   }
-
-  const getSearchHistory = useCallback(async () => {
-    if (!currentPubkey) return undefined
-
-    setIsSearchHistoryLoading(true)
-    const history = await dbi
-      .getSearchHistory(currentPubkey, MAX_HISTORY * 10)
-      .finally(() => setIsSearchHistoryLoading(false))
-
-    if (history) {
-      updateSearchHistory(history)
-    }
-  }, [currentPubkey, updateSearchHistory, setIsSearchHistoryLoading])
-
-  useEffect(() => {
-    getSearchHistory()
-  }, [getSearchHistory, isShow])
-
-  const deleteSearchTermHandler = useCallback(
-    (id: string) => {
-      dbi.deleteSearchTerm(id).then(getSearchHistory)
-    },
-    [getSearchHistory]
-  )
 
   const clickSearchTermItemHandler = useCallback(
     (searchTerm: SearchTerm) => {
@@ -387,7 +354,7 @@ export const SearchPageContent = () => {
 
       return (
         <HorizontalSwipeVirtualItem style={style} index={index} itemCount={profiles.length}>
-          <Profile onClick={handleOpenProfile} profile={profile} />
+          <Profile onClick={(pubkey: string) => handleOpenProfile(pubkey, profile)} profile={profile} />
         </HorizontalSwipeVirtualItem>
       )
     }
@@ -513,8 +480,7 @@ export const SearchPageContent = () => {
           // NOTE: re-setting searchValue back doesn't help on
           // the real device, we have to specifically set the cursor
           // dispatch(setSearchValue({ searchValue }))
-          (event.target as HTMLInputElement).setSelectionRange(
-            searchValue.length, searchValue.length)
+          ;(event.target as HTMLInputElement).setSelectionRange(searchValue.length, searchValue.length)
         }, 0)
         return
       }
@@ -522,7 +488,7 @@ export const SearchPageContent = () => {
     dispatch(setSearchValue({ searchValue: textValue }))
 
     if (!reduced && textValue.trim().length) {
-      const suggestion = searchHistoryOptions.find((s) => s.value.toLowerCase().startsWith(textValue.toLowerCase()))
+      const suggestion = searchHistory.find((s) => s.value.toLowerCase().startsWith(textValue.toLowerCase()))
       setSuggestion(suggestion?.value || '')
     } else {
       setSuggestion('')
@@ -561,6 +527,12 @@ export const SearchPageContent = () => {
     return filterOptionsByValue(getOptions, searchValue).filter((o) => o.group === group).length
   }
 
+  useEffect(() => {
+    if (contactList) {
+      dispatch(fetchRecentEventsThunk({ currentPubkey, contactList: contactList.contactPubkeys }))
+    }
+  }, [currentPubkey, contactList, dispatch, isShow])
+
   return (
     <StyledWrapVisibility isShow={isShow}>
       <Container>
@@ -594,7 +566,12 @@ export const SearchPageContent = () => {
               }}
               renderOption={(props, option) => (
                 <Box component="li" {...props} key={option.id} onClick={() => onOptionClick(option)}>
-                  <AppIcon isPreviewTab isRounded={true} picture={option.icon} alt={option.label} />
+                  <AppIcon
+                    isPreviewTab={option.type === 'profile' ? true : false}
+                    isRounded={option.type !== 'profile' ? true : false}
+                    picture={option.icon}
+                    alt={option.label}
+                  />
                   <StyledOptionText>{option.label}</StyledOptionText>
                 </Box>
               )}
@@ -635,14 +612,16 @@ export const SearchPageContent = () => {
 
       {!searchValue && (
         <>
-          {searchHistoryOptions.length > 0 && (
+          {searchHistory.length > 0 && (
             <RecentQueries
               isLoading={isSearchHistoryLoading}
-              queries={searchHistoryOptions}
-              onDeleteSearchTerm={deleteSearchTermHandler}
+              queries={searchHistory}
+              onDeleteSearchTerm={handleDeleteSearchTerm}
               onClickSearchTerm={clickSearchTermItemHandler}
             />
           )}
+
+          <RecentEvents />
         </>
       )}
 

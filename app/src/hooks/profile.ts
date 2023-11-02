@@ -70,7 +70,7 @@ export const useUpdateProfile = () => {
       } else {
         dispatch(setCurrentProfile({ profile: null }))
       }
-  
+
       // Reset previous events state for showing loaders
       setContacts()
       dispatch(setHighlights({ highlights: null }))

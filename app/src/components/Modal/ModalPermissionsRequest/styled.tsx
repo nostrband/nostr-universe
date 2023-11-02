@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import { styled } from '@mui/material/styles'
-import { Typography, TypographyProps, Box, SwitchProps, Switch, FormControlLabel } from '@mui/material'
+import { Typography, IconButton, TypographyProps, Box, SwitchProps, Switch, FormControlLabel } from '@mui/material'
 
 export const StyledTitle = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
@@ -8,20 +8,44 @@ export const StyledTitle = styled(
   })
 )(({ theme }) => ({
   color: theme.palette.primary.contrastText,
-  fontWeight: 'bold'
+  fontWeight: 'bold',
+  whiteSpace: 'nowrap',
+  overflowX: 'hidden',
+  textOverflow: 'ellipsis',
+  maxWidth: 100
 }))
 
-export const StyledInfo = styled(Box)(() => ({
+export const StyledLabel = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography ref={ref} {...props} />
+  })
+)(({ theme }) => ({
+  color: theme.palette.primary.contrastText,
+  fontWeight: 'bold',
+}))
+
+export const StyledInfo = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   flexDirection: 'column',
   gap: 10,
-  marginBottom: 10
+  marginBottom: 10,
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: theme.palette.secondary.main,
+  padding: 15
 }))
 
 export const StyledButtonContainer = styled(Box)(() => ({
   display: 'flex',
   gap: 10
+}))
+
+export const StyledField = styled(Box)(() => ({
+  marginBottom: 10
+}))
+
+export const StyledInputButton = styled(IconButton)(() => ({
+  marginBottom: 'auto'
 }))
 
 export const StyledFormControl = styled(FormControlLabel)(() => ({
@@ -75,4 +99,11 @@ export const SwitchControl = styled((props: SwitchProps) => (
       duration: 500
     })
   }
+}))
+
+export const StyledPermInfoUser = styled(Box)(() => ({
+  display: 'flex',
+  gap: 10,
+  alignItems: 'center',
+  justifyContent: 'center'
 }))
