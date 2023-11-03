@@ -926,7 +926,7 @@ export async function fetchEventByBech32(b32: string): Promise<AugmentedEvent | 
   return await fetchEventByAddr(ndk, addr)
 }
 
-export async function fetchExtendedEventByBech32(b32: string, contactList?: string[]): Promise<AugmentedEvent | null> {
+export async function fetchExtendedEventByBech32(b32: string, contactList?: string[]): Promise<AuthoredEvent | null> {
   const addr = parseAddr(b32)
   console.log('b32', b32, 'addr', JSON.stringify(addr))
   if (!addr) throw new Error('Bad address')
@@ -953,6 +953,9 @@ export async function fetchExtendedEventByBech32(b32: string, contactList?: stri
       a = await augmentEventAuthors([e])
 
       switch (e.kind) {
+        case KIND_META:
+          a = await augmentMetaEvents(a)
+          break
         case KIND_LONG_NOTE:
           a = await augmentLongNotes(a)
           break

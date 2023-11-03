@@ -13,8 +13,6 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
-import { useAppDispatch } from '@/store/hooks/redux'
-import { setCurrentEvent } from '@/store/reducers/selectedEvent.slice'
 import { MetaEvent } from '@/types/meta-event'
 
 export const TrendingProfiles = memo(function TrendingProfiles() {
@@ -24,7 +22,6 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
     refetch: refetchTrendingProfiles
   } = userService.useFetchTrendingProfilesQuery('')
   const { handleOpenContextMenu } = useOpenModalSearchParams()
-  const dispatch = useAppDispatch()
 
   const handleOpenProfile = useCallback(
     (profile: MetaEvent) => {
@@ -33,18 +30,9 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
         relays: [nostrbandRelay]
       })
 
-      dispatch(
-        setCurrentEvent({
-          currentEvent: {
-            author: profile,
-            content: profile.profile?.about,
-            pubkey: profile.pubkey
-          }
-        })
-      )
-
       handleOpenContextMenu({ bech32: nprofile })
     },
+
     [handleOpenContextMenu]
   )
 
