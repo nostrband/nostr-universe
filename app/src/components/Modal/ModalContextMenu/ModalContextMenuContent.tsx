@@ -250,8 +250,8 @@ export const ModalContextMenuContent = () => {
           const profileEvent = {
             author: eventCurrent.author,
             pubkey: eventCurrent.pubkey,
-            time: eventCurrent.created_at,
             content: eventCurrent.author?.profile?.about,
+            website: eventCurrent.author?.profile?.website,
             kind: eventCurrent.kind
           }
 
@@ -262,12 +262,7 @@ export const ModalContextMenuContent = () => {
             author: eventCurrent.author,
             pubkey: eventCurrent.pubkey,
             time: eventCurrent.created_at,
-            content:
-              eventCurrent.content ||
-              getTagValue(eventCurrent, 'summary') ||
-              getTagValue(eventCurrent, 'description') ||
-              getTagValue(eventCurrent, 'alt'),
-            title: getTagValue(eventCurrent, 'title') || getTagValue(eventCurrent, 'name'),
+            content: eventCurrent.content,
             kind: eventCurrent.kind
           }
 
@@ -279,12 +274,11 @@ export const ModalContextMenuContent = () => {
             pubkey: eventCurrent.pubkey,
             time: eventCurrent.created_at,
             kind: eventCurrent.kind,
-            content:
-              eventCurrent.content ||
-              getTagValue(eventCurrent, 'summary') ||
+            content: getTagValue(eventCurrent, 'summary') ||
               getTagValue(eventCurrent, 'description') ||
               getTagValue(eventCurrent, 'alt'),
-            title: getTagValue(eventCurrent, 'title') || getTagValue(eventCurrent, 'name')
+            title: getTagValue(eventCurrent, 'title') ||
+              getTagValue(eventCurrent, 'name')
           }
 
           return <ItemEventMultipurpose event={defaultEvent} />

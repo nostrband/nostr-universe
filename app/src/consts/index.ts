@@ -11,7 +11,7 @@ export const APP_NOSTR_SIZE = {
   EXTRA_SMALL: 'extra-small'
 } as const
 
-export const kindEvents: { [key: string]: string } = {
+export const kindNames: { [key: string]: string } = {
   '0': 'Profile',
   '1': 'Note',
   '3': 'Contact List',
@@ -72,7 +72,7 @@ export interface KindOptionType {
   kind: string
 }
 
-export const getTransformedKindEvents: KindOptionType[] = Object.entries(kindEvents).map(([key, value]) => ({
+export const getTransformedKindEvents: KindOptionType[] = Object.entries(kindNames).map(([key, value]) => ({
   label: value,
   kind: key
 }))

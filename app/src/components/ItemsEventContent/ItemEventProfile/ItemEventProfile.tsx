@@ -7,6 +7,8 @@ import { ExpandMore, StyledItemSelectedEventActions } from './styled'
 import { MetaEvent } from '@/types/meta-event'
 import { ContentCollapse } from '@/shared/ContentComponents/ContentCollapse/Content'
 import { KindView } from '@/shared/ContentComponents/KindView/KindView'
+import { kindNames } from '@/consts'
+import { WebsiteView } from '@/shared/ContentComponents/WebsiteView/WebsiteView'
 
 interface IItemEventProfile {
   event: {
@@ -14,6 +16,7 @@ interface IItemEventProfile {
     author?: MetaEvent
     pubkey: string
     kind: number
+    website?: string
   }
 }
 
@@ -25,18 +28,23 @@ export const ItemEventProfile = ({ event }: IItemEventProfile) => {
     setOpenContent((prev) => !prev)
   }
 
+  const kind = kindNames[event.kind] || event.kind
+
   return (
     <Wrapper>
       <Head>
         <ProfileInfo profile={event.author} pubkey={event.pubkey} />
       </Head>
 
+      {event.website && (
+        <WebsiteView url={event.website} />
+      )}
       {event.content && (
         <ContentCollapse maxContentLength={MAX_LENGTH_CONTENT} open={openContent} text={event.content} />
       )}
 
       <StyledItemSelectedEventActions>
-        <KindView>{event.kind}</KindView>
+        <KindView>{kind}</KindView>
         {event.content && event.content.length > MAX_LENGTH_CONTENT && (
           <ExpandMore expand={openContent} onClick={handleExpandClick}>
             <ExpandMoreIcon />

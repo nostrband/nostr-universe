@@ -9,6 +9,7 @@ import { MetaEvent } from '@/types/meta-event'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 import { ContentCollapse } from '@/shared/ContentComponents/ContentCollapse/Content'
 import { KindView } from '@/shared/ContentComponents/KindView/KindView'
+import { kindNames } from '@/consts'
 
 interface IItemEventMultipurpose {
   event: {
@@ -29,6 +30,8 @@ export const ItemEventMultipurpose = ({ event }: IItemEventMultipurpose) => {
     setOpenContent((prev) => !prev)
   }
 
+  const kind = kindNames[event.kind] || event.kind
+
   return (
     <Wrapper>
       <Head>
@@ -42,7 +45,7 @@ export const ItemEventMultipurpose = ({ event }: IItemEventMultipurpose) => {
       )}
 
       <StyledItemSelectedEventActions>
-        <KindView>{event.kind}</KindView>
+        <KindView>{kind}</KindView>
         {event.content && event.content.length > MAX_LENGTH_CONTENT && (
           <ExpandMore expand={openContent} onClick={handleExpandClick}>
             <ExpandMoreIcon />

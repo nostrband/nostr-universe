@@ -2,7 +2,7 @@ import { forwardRef } from 'react'
 import { styled } from '@mui/material/styles'
 import { TypographyProps, Typography } from '@mui/material'
 
-export const StyledKindView = styled(
+export const StyledWebsiteView = styled(
   forwardRef<HTMLAnchorElement, TypographyProps>(function AppNameDisplayName(props, ref) {
     return <Typography variant="body2" component="div" ref={ref} {...props} />
   })
@@ -13,5 +13,5 @@ export const StyledKindView = styled(
   display: '-webkit-box',
   WebkitLineClamp: 1,
   WebkitBoxOrient: 'vertical',
-  fontSize: '0.7em'
+  fontSize: 'smaller'
 }))
