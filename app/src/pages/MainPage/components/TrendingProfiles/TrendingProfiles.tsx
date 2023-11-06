@@ -13,6 +13,7 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { MetaEvent } from '@/types/meta-event'
 
 export const TrendingProfiles = memo(function TrendingProfiles() {
   const {
@@ -23,14 +24,15 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenProfile = useCallback(
-    (pubkey: string) => {
+    (profile: MetaEvent) => {
       const nprofile = nip19.nprofileEncode({
-        pubkey: pubkey,
+        pubkey: profile.pubkey,
         relays: [nostrbandRelay]
       })
 
       handleOpenContextMenu({ bech32: nprofile })
     },
+
     [handleOpenContextMenu]
   )
 

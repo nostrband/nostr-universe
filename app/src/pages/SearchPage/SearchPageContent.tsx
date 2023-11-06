@@ -354,7 +354,7 @@ export const SearchPageContent = () => {
 
       return (
         <HorizontalSwipeVirtualItem style={style} index={index} itemCount={profiles.length}>
-          <Profile onClick={(pubkey: string) => handleOpenProfile(pubkey, profile)} profile={profile} />
+          <Profile onClick={(profile: MetaEvent) => handleOpenProfile(profile.pubkey, profile)} profile={profile} />
         </HorizontalSwipeVirtualItem>
       )
     }

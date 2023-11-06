@@ -67,7 +67,7 @@ export const fetchRecentEventsThunk = createAsyncThunk<void, { currentPubkey: st
 
       const searchClickHistory = await dbi.listSearchClickHistory(currentPubkey)
 
-      let addrs: EventAddr[] = []
+      const addrs: EventAddr[] = []
       for (const searchItem of searchClickHistory) {
         const addr = parseAddr(searchItem.addr)
         if (addr) {
@@ -76,14 +76,13 @@ export const fetchRecentEventsThunk = createAsyncThunk<void, { currentPubkey: st
       }
 
       const events = await fetchFullyAugmentedEventsByAddrs(addrs, contactList)
-      console.log("fetchFullyAugmentedEventsByAddrs", events)
+      console.log('fetchFullyAugmentedEventsByAddrs', events)
       const recentEvents: RecentEvent[] = []
 
       for (const event of events) {
         const addr = getEventNip19(event)
-        const searchItem = searchClickHistory.find(e => e.addr === addr)
-        if (searchItem)
-          recentEvents.push({ event, ...searchItem })
+        const searchItem = searchClickHistory.find((e) => e.addr === addr)
+        if (searchItem) recentEvents.push({ event, ...searchItem })
       }
       // for (let i = 0; i < searchClickHistory.length; i++) {
       //   const searchItem = searchClickHistory[i]
