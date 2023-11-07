@@ -4,7 +4,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
 import { StyledViewTitle, StyledWrapper, StyledInputWrap, StyledHead, StyledItemFooter } from './styled'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
-import { formatDateHours, kindEvents } from '@/consts/index'
+import { formatDateHours, kindNames } from '@/consts/index'
 import { Input } from '@/shared/Input/Input'
 import { format } from 'date-fns'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
@@ -57,7 +57,7 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
       }
     })
   }
-  const getKind = kindEvents[kind] + ` (${kind})` || `Kind ${kind}`
+  const getKind = kindNames[kind] + ` (${kind})` || `Kind ${kind}`
   const getUrl = new URL(url).hostname
   const getTime = format(new Date(time), formatDateHours)
   return (

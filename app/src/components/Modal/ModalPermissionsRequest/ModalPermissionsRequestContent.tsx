@@ -118,7 +118,14 @@ export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IMo
     }
   }
 
-  const preparePaylod = payload ? JSON.stringify(JSON.parse(payload), null, 2) : ''
+  let preparePayload = payload || ''
+  if (payload) {
+    try {
+      preparePayload = JSON.stringify(JSON.parse(payload), null, 2)
+    } catch {
+      /* empty */
+    }
+  }
 
   return (
     <Container>
@@ -146,7 +153,7 @@ export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IMo
             readOnly
             multiline
             rows={10}
-            value={preparePaylod}
+            value={preparePayload}
           />
         </StyledField>
       )}

@@ -54,7 +54,7 @@ export const TrendingNotes = memo(function TrendingNotes() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={data.length} RowComponent={Row} />
+    return <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={data.length} RowComponent={Row} />
   }, [isLoading, refetchTrendingNotes, handleOpenNote, data])
 
   return (

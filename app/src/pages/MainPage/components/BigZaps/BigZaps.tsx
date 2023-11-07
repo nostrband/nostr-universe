@@ -83,7 +83,7 @@ export const BigZaps = memo(function BigZaps() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
+    return <HorizontalSwipeVirtualContent itemHeight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
   }, [bigZaps, handleReloadBigZaps, handleOpenBigZap])
 
   return (

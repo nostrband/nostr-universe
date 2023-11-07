@@ -42,9 +42,12 @@ export const useSearchHistory = () => {
     }
   }, [currentPubkey, updateSearchHistory])
 
-  const putSearchHistory = useCallback((term: SearchTerm) => {
-    updateSearchHistory([term, ...searchHistory])
-  }, [searchHistory, updateSearchHistory])
+  const putSearchHistory = useCallback(
+    (term: SearchTerm) => {
+      updateSearchHistory([term, ...searchHistory])
+    },
+    [searchHistory, updateSearchHistory]
+  )
 
   useEffect(() => {
     getSearchHistory()

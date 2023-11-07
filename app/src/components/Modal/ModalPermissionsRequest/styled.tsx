@@ -21,7 +21,7 @@ export const StyledLabel = styled(
   })
 )(({ theme }) => ({
   color: theme.palette.primary.contrastText,
-  fontWeight: 'bold',
+  fontWeight: 'bold'
 }))
 
 export const StyledInfo = styled(Box)(({ theme }) => ({

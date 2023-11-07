@@ -11,6 +11,7 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { MetaEvent } from '@/types/meta-event'
 
 export const TrendingProfiles = memo(function TrendingProfiles() {
   const {
@@ -21,9 +22,10 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenProfile = useCallback(
-    (pubkey: string) => {
-      handleOpenContextMenu({ pubkey })
+    (event: MetaEvent) => {
+      handleOpenContextMenu({ event })
     },
+
     [handleOpenContextMenu]
   )
 
@@ -51,7 +53,7 @@ export const TrendingProfiles = memo(function TrendingProfiles() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHight={170} itemSize={140} itemCount={data.length} RowComponent={Row} />
+    return <HorizontalSwipeVirtualContent itemHeight={170} itemSize={140} itemCount={data.length} RowComponent={Row} />
   }, [isLoading, data, refetchTrendingProfiles, handleOpenProfile])
 
   return (

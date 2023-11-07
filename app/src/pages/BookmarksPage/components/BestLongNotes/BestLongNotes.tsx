@@ -63,7 +63,7 @@ export const BestLongNotes = () => {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={125}
+        itemHeight={125}
         itemSize={225}
         itemCount={bestLongNotes.length}
         RowComponent={Row}

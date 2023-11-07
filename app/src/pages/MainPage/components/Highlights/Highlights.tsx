@@ -67,7 +67,7 @@ export const Highlights = memo(function Highlights() {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={highlights.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={highlights.length} RowComponent={Row} />
     )
   }, [highlights, handleReloadHighlights, handleOpenHighlight])
 

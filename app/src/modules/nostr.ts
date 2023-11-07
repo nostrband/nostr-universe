@@ -504,15 +504,14 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
     const pubkeys: string[] = []
     const kinds: number[] = []
     const dtags: string[] = []
-    addrs.forEach(id => {
+    addrs.forEach((id) => {
       const v = id.split(':')
       if (v.length === 1) {
         ids.push(id)
       } else {
         kinds.push(Number(v[0]))
         pubkeys.push(v[1])
-        if (v.length >= 3 && v[2] !== "")
-          dtags.push(v[2])
+        if (v.length >= 3 && v[2] !== '') dtags.push(v[2])
       }
     })
     if (ids.length > 0) {
@@ -520,8 +519,7 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
     } else {
       filter.authors = [...new Set(pubkeys)]
       filter.kinds = [...new Set(kinds)]
-      if (dtags.length > 0)
-        filter["#d"] = [...new Set(dtags)]
+      if (dtags.length > 0) filter['#d'] = [...new Set(dtags)]
     }
   }
 
@@ -529,8 +527,12 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
   addrsToFilter(kindPubkeys, kindPubkeyFilter)
   addrsToFilter(kindPubkeyDtags, addrFilter)
 
-  console.log('loading events by filters', 
-    JSON.stringify(idFilter), JSON.stringify(kindPubkeyFilter), JSON.stringify(addrFilter))
+  console.log(
+    'loading events by filters',
+    JSON.stringify(idFilter),
+    JSON.stringify(kindPubkeyFilter),
+    JSON.stringify(addrFilter)
+  )
 
   const reqs = []
   if (idFilter.ids?.length > 0) reqs.push(fetchEventsRead(ndk, idFilter))
@@ -903,7 +905,7 @@ export async function fetchEventByBech32(b32: string): Promise<AugmentedEvent | 
   return await fetchEventByAddr(ndk, addr)
 }
 
-export async function fetchExtendedEventByBech32(b32: string, contactList?: string[]): Promise<AugmentedEvent | null> {
+export async function fetchExtendedEventByBech32(b32: string, contactList?: string[]): Promise<AuthoredEvent | null> {
   const addr = parseAddr(b32)
   console.log('b32', b32, 'addr', JSON.stringify(addr))
   if (!addr) throw new Error('Bad address')
@@ -930,6 +932,9 @@ export async function fetchExtendedEventByBech32(b32: string, contactList?: stri
       a = await augmentEventAuthors([e])
 
       switch (e.kind as number) {
+        case Kinds.META:
+          a = await augmentMetaEvents(a)
+          break
         case Kinds.LONG_NOTE:
           a = await augmentLongNotes(a)
           break
@@ -974,7 +979,7 @@ export async function fetchProfileLists(
         const tags = JSON.parse(content) as string[][]
         list.privateProfilePubkeys = tagsToPubkeys(tags.filter((t: string[]) => t.length >= 2 && t[0] === 'p'))
       } catch (e) {
-        console.log('bad list payload ', list.id, list.content, e)
+//        console.log('bad list payload ', list.id, list.content, e)
       }
     }
 
@@ -1653,7 +1658,7 @@ export async function fetchFollowedCommunities(contactPubkeys: string[]): Promis
     kind: Kinds.COMMUNITY,
     pubkeys: [...new Set(approvals.map((a) => a.communityPubkey))],
     identifiers: [...new Set(approvals.map((a) => a.communityIdentifier))],
-    limit: 100
+    limit: 100,
   })
 
   const communities = await augmentCommunities(authoredEvents)
@@ -2102,8 +2107,6 @@ export async function addWalletInfo(info: WalletInfo): Promise<void> {
 }
 
 export async function sendPayment(info: WalletInfo, payreq: string): Promise<{ preimage: string }> {
-  localStorage.debug = 'ndk:-'
-
   const relay = await addRelay(info.relay)
   console.log('relay', relay.url, 'status', relay.status)
 

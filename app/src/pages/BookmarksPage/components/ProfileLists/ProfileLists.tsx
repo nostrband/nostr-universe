@@ -57,7 +57,7 @@ export const ProfileLists = () => {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={100}
+        itemHeight={100}
         itemSize={225}
         itemCount={profileLists.length}
         RowComponent={Row}

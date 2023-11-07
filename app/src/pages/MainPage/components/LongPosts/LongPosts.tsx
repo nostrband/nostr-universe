@@ -67,7 +67,7 @@ export const LongPosts = memo(function LongPosts() {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={longPosts.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={longPosts.length} RowComponent={Row} />
     )
   }, [longPosts, handleReloadLongPosts, handleOpenLongPosts])
 

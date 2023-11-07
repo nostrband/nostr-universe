@@ -65,7 +65,7 @@ export const LiveEvents = memo(function LiveEvents() {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={liveEvents.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={liveEvents.length} RowComponent={Row} />
     )
   }, [liveEvents, handleReloadLiveEvents, handleOpenLiveEvent])
 

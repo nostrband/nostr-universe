@@ -44,8 +44,8 @@ export const ModalImportKeyContent = ({ handleCloseModal }: IModalImportKeyConte
     setSearchValue(e.target.value)
   }
 
-  const handleProfileSetKey = async (pubkey: string) => {
-    await addReadOnlyKey(pubkey)
+  const handleProfileSetKey = async (profile: MetaEvent) => {
+    await addReadOnlyKey(profile.pubkey)
     handleCloseModal()
   }
 

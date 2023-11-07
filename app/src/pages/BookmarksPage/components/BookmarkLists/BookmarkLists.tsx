@@ -57,7 +57,7 @@ export const BookmarkLists = () => {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={100}
+        itemHeight={100}
         itemSize={225}
         itemCount={bookmarkLists.length}
         RowComponent={Row}

@@ -66,7 +66,7 @@ const BestNotes = () => {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHight={125} itemSize={225} itemCount={bestNotes.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent itemHeight={125} itemSize={225} itemCount={bestNotes.length} RowComponent={Row} />
     )
   }, [bestNotes, handleOpenNote, isBestNotesLoading, reloadBestNotes])
 

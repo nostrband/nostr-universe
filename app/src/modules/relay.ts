@@ -19,6 +19,7 @@ const subs = new Map<string, any>()
 export function addLocalRelayEvent(e: NostrEvent) {
   if (eventById.has(e.id)) return false
 
+//  console.log("addLocalRelayEvent kind", e.kind, "id", e.id, "pubkey", e.pubkey)
   onBeforeNewEvent(e)
 
   const index = events.length
@@ -233,4 +234,8 @@ export async function initLocalRelay() {
   for (const e of dbEvents) 
     addLocalRelayEvent(e)
   console.log("local events", events.length, "loaded in", Date.now() - start, "ms")
+}
+
+export function getEventsCount() {
+  return events.length
 }

@@ -12,6 +12,7 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { MetaEvent } from '@/types/meta-event'
 
 export const SuggestedProfiles = memo(function SuggestedProfiles() {
   const { currentPubkey } = useAppSelector((state) => state.keys)
@@ -25,8 +26,8 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenProfile = useCallback(
-    (pubkey: string) => {
-      handleOpenContextMenu({ pubkey })
+    (event: MetaEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -55,7 +56,7 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHight={164} itemSize={140} itemCount={data.length} RowComponent={Row} />
+    return <HorizontalSwipeVirtualContent itemHeight={164} itemSize={140} itemCount={data.length} RowComponent={Row} />
   }, [isLoading, data, handleOpenProfile, refetchSuggestedProfiles])
 
   return (

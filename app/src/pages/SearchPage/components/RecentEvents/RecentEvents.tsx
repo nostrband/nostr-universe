@@ -87,7 +87,7 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
       }
       return (
         <HorizontalSwipeVirtualContent
-          itemHight={192}
+          itemHeight={192}
           itemSize={140}
           itemCount={currentTabEvents.length}
           RowComponent={RowProfile}
@@ -117,7 +117,7 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
 
       return (
         <HorizontalSwipeVirtualContent
-          itemHight={165}
+          itemHeight={165}
           itemSize={225}
           itemCount={currentTabEvents.length}
           RowComponent={RowTrendingNote}
@@ -148,7 +148,7 @@ export const RecentEvents = memo(function RecentEventsDisplayName() {
 
       return (
         <HorizontalSwipeVirtualContent
-          itemHight={165}
+          itemHeight={165}
           itemSize={225}
           itemCount={currentTabEvents.length}
           RowComponent={RowLongNote}

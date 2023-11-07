@@ -333,7 +333,7 @@ export const SearchPageContent = () => {
 
       return (
         <HorizontalSwipeVirtualItem style={style} index={index} itemCount={profiles.length}>
-          <Profile onClick={(pubkey: string) => handleOpenProfile(pubkey, profile)} profile={profile} />
+          <Profile onClick={(profile: MetaEvent) => handleOpenProfile(profile.pubkey, profile)} profile={profile} />
         </HorizontalSwipeVirtualItem>
       )
     }
@@ -390,7 +390,7 @@ export const SearchPageContent = () => {
             </Container>
 
             <HorizontalSwipeVirtualContent
-              itemHight={164}
+              itemHeight={164}
               itemSize={140}
               itemCount={profiles.length}
               RowComponent={RowProfile}
@@ -407,7 +407,7 @@ export const SearchPageContent = () => {
             </Container>
 
             <HorizontalSwipeVirtualContent
-              itemHight={141}
+              itemHeight={141}
               itemSize={225}
               itemCount={notes.length}
               RowComponent={RowTrendingNote}
@@ -424,7 +424,7 @@ export const SearchPageContent = () => {
             </Container>
 
             <HorizontalSwipeVirtualContent
-              itemHight={113}
+              itemHeight={113}
               itemSize={225}
               itemCount={longNotes.length}
               RowComponent={RowLongNote}

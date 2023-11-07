@@ -15,6 +15,7 @@ import { SkeletonContactList } from '@/components/Skeleton/SkeletonContactList/S
 import { selectKeys } from '@/store/store'
 import { setContactList } from '@/store/reducers/contentWorkspace'
 import { ContactListEvent } from '@/types/contact-list-event'
+import { MetaEvent } from '@/types/meta-event'
 
 export const ContactList = memo(function ContactList() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
@@ -23,8 +24,8 @@ export const ContactList = memo(function ContactList() {
   const dispatch = useAppDispatch()
 
   const handleOpenProfile = useCallback(
-    (pubkey: string) => {
-      handleOpenContextMenu({ pubkey })
+    (event: MetaEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -63,7 +64,7 @@ export const ContactList = memo(function ContactList() {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={114}
+        itemHeight={114}
         itemSize={115}
         itemCount={contactList?.contactEvents.length}
         RowComponent={RowContact}
