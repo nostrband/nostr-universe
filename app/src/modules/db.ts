@@ -4,11 +4,11 @@
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
 import { feedbackPeriodMs } from '@/consts'
-import { KIND_ZAP_REQUEST } from './nostr'
+import { Kinds } from './const/kinds'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(19).stores({
+db.version(20).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -22,8 +22,10 @@ db.version(19).stores({
   lastKindApps: 'id,pubkey,kind,naddr,app_json',
   signedEvents: 'id,pubkey,timestamp,url,kind,eventId,eventJson,eventZapHash',
   searchHistory: 'id,pubkey,timestamp,value',
+  localRelayEvents: 'id,pubkey,kind,created_at',
   payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
-  searchClickHistory: 'id,pubkey,timestamp,addr,query,kind'
+  searchClickHistory: 'id,pubkey,timestamp,addr,query,kind',
+  syncTasks: 'id,pubkey,type,since,until',
 })
 
 export const dbi = {
@@ -40,7 +42,7 @@ export const dbi = {
         await db.signedEvents
           .where({
             pubkey,
-            kind: KIND_ZAP_REQUEST
+            kind: Kinds.ZAP_REQUEST
           })
           .toArray()
       ).sort((a, b) => b.timestamp - a.timestamp)
@@ -442,6 +444,43 @@ export const dbi = {
       await db.searchClickHistory.delete(id)
     } catch (error) {
       console.log(`Delete searchClickEvent in DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  listLocalRelayEvents: async () => {
+    try {
+      return await db.localRelayEvents.toCollection().toArray()
+    } catch (error) {
+      console.log(`List localRelayEvents error: ${JSON.stringify(error)}`)
+      return []
+    }
+  },
+  putLocalRelayEvents: async (es) => {
+    try {
+      await db.localRelayEvents.bulkPut(es)
+    } catch (error) {
+      console.log(`Put localRelayEvents error: ${error}`)
+    }
+  },
+  listSyncTasks: async (pubkey: string) => {
+    try {
+      return await db.syncTasks.where('pubkey').equals(pubkey).toArray()
+    } catch (error) {
+      console.log(`List syncTasks error: ${error}`)
+      return []
+    }
+  },
+  putSyncTasks: async (tasks) => {
+    try {
+      await db.syncTasks.bulkPut(tasks)
+    } catch (error) {
+      console.log(`Put syncTasks error: ${error}`)
+    }
+  },
+  deleteSyncTask: async (id) => {
+    try {
+      await db.syncTasks.delete(id)
+    } catch (error) {
+      console.log(`Delete syncTasks in DB error: ${JSON.stringify(error)}`)
     }
   }
 }

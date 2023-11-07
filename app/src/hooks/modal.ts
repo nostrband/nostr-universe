@@ -2,6 +2,8 @@ import { useNavigate, useSearchParams, createSearchParams, useLocation } from 'r
 import queryString from 'query-string'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useCallback } from 'react'
+import { AugmentedEvent } from '@/types/augmented-event'
+import { getEventNip19, getNprofile } from '@/modules/nostr'
 
 type SearchParamsType = {
   [key: string]: string
@@ -11,6 +13,14 @@ export type IExtraOptions = {
   search?: SearchParamsType
   replace?: boolean
   append?: boolean
+}
+
+export interface IContextMenuParams {
+  event?: AugmentedEvent
+  pubkey?: string
+  bech32?: string
+  url?: string
+  replace?: boolean
 }
 
 export const useOpenModalSearchParams = () => {
@@ -71,7 +81,11 @@ export const useOpenModalSearchParams = () => {
   )
 
   const handleOpenContextMenu = useCallback(
-    ({ bech32 = '', url = '', replace = false }: { bech32?: string; url?: string; replace?: boolean }) => {
+    ({ event, pubkey = '', bech32 = '', url = '', replace = false }: IContextMenuParams) => {
+
+      if (!bech32 && event) bech32 = getEventNip19(event)
+      if (!bech32 && pubkey) bech32 = getNprofile(pubkey)
+
       handleOpen(MODAL_PARAMS_KEYS.CONTEXT_MENU, {
         search: {
           bech32: bech32,

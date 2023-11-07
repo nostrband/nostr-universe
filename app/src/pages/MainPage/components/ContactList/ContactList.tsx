@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay, subscribeContactList } from '@/modules/nostr'
+import { subscribeContactList } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { memo, useCallback, FC, CSSProperties } from 'react'
@@ -25,13 +24,8 @@ export const ContactList = memo(function ContactList() {
   const dispatch = useAppDispatch()
 
   const handleOpenProfile = useCallback(
-    (profile: MetaEvent) => {
-      const nprofile = nip19.nprofileEncode({
-        pubkey: profile.pubkey,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: nprofile })
+    (event: MetaEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -70,7 +64,7 @@ export const ContactList = memo(function ContactList() {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={114}
+        itemHeight={114}
         itemSize={115}
         itemCount={contactList?.contactEvents.length}
         RowComponent={RowContact}

@@ -12,8 +12,6 @@ import {
 import { BestLongNoteItem } from './BestLongNoteItem/BestLongNoteItem'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { fetchBestLongNotesThunk } from '@/store/reducers/bookmarks.slice'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 
 export const BestLongNotes = () => {
@@ -27,15 +25,8 @@ export const BestLongNotes = () => {
   }, [currentPubkey, dispatch])
 
   const handleOpenLongPosts = useCallback(
-    (longPost: LongNoteEvent) => {
-      const naddr = nip19.naddrEncode({
-        pubkey: longPost.pubkey,
-        kind: longPost.kind,
-        identifier: longPost.identifier,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: naddr })
+    (event: LongNoteEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -72,7 +63,7 @@ export const BestLongNotes = () => {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={125}
+        itemHeight={125}
         itemSize={225}
         itemCount={bestLongNotes.length}
         RowComponent={Row}

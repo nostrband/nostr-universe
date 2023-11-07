@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   fetchFollowedCommunities,
   fetchFollowedHighlights,
@@ -16,9 +16,8 @@ import {
   setContactList,
   setHighlights,
   setLiveEvents,
-  setLongPosts
+  setLongPosts,
 } from '@/store/reducers/contentWorkspace'
-import { dbi } from '@/modules/db'
 import { MIN_ZAP_AMOUNT } from '@/consts'
 import { MetaEvent } from '@/types/meta-event'
 import { ContactListEvent } from '@/types/contact-list-event'
@@ -34,17 +33,26 @@ import {
 } from '@/store/reducers/bookmarks.slice'
 import { getFeedbackInfoThunk } from '@/store/reducers/feedbackInfo.slice'
 import { useSigner } from './signer'
+import { startSync } from '@/modules/sync'
+import { isGuest } from '@/utils/helpers/prepare-data'
+import { useSync } from './sync'
+import { useAsyncThrottle } from './async'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
   const { profiles } = useAppSelector((state) => state.profile)
+  const { contactList } = useAppSelector((state) => state.contentWorkSpace)
+  const { currentPubkey } = useAppSelector((state) => state.keys)
   const { decrypt } = useSigner()
+  const sync = useSync()
+  const asyncThrottle = useAsyncThrottle(3000)
 
   const setContacts = useCallback(
     async (contactList?: ContactListEvent) => {
       if (contactList?.contactEvents) {
-        const lastContacts = await dbi.listLastContacts(contactList.pubkey)
-        console.log('lastContacts', lastContacts)
+        //const lastContacts = await dbi.listLastContacts(contactList.pubkey)
+        //console.log('lastContacts', lastContacts)
+        // FIXME sort by lastContacts.tm
       }
 
       dispatch(setContactList({ contactList }))
@@ -59,9 +67,61 @@ export const useUpdateProfile = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const reloadFeeds = useCallback(async () => {
+    if (isGuest(currentPubkey)) return
+
+    console.log("sync reloadFeeds", Date.now())
+    if (contactList) {
+      setContacts(contactList)
+
+      const highlights = await fetchFollowedHighlights(contactList.contactPubkeys).catch(() => {
+        dispatch(setHighlights({ highlights: null }))
+      })
+      console.log('new highlights', highlights)
+      dispatch(setHighlights({ highlights }))
+
+      const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT).catch(() => {
+        dispatch(setBigZaps({ bigZaps: null }))
+      })
+      console.log('new zaps', bigZaps)
+      dispatch(setBigZaps({ bigZaps }))
+
+      const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys).catch(() => {
+        dispatch(setLongPosts({ longPosts: null }))
+      })
+      console.log('new long notes', longPosts)
+      dispatch(setLongPosts({ longPosts }))
+
+      const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys).catch(() => {
+        dispatch(setLiveEvents({ liveEvents: null }))
+      })
+      console.log('new live events', liveEvents)
+      dispatch(setLiveEvents({ liveEvents }))
+
+      const communities = await fetchFollowedCommunities(contactList.contactPubkeys).catch(() => {
+        dispatch(setCommunities({ communities: null }))
+      })
+      console.log('new communities', communities)
+      dispatch(setCommunities({ communities }))
+    }
+
+    dispatch(fetchBestNotesThunk(currentPubkey))
+    dispatch(fetchBestLongNotesThunk(currentPubkey))
+    dispatch(fetchProfileListsThunk({ pubkey: currentPubkey, decrypt }))
+    dispatch(fetchBookmarkListsThunk({ pubkey: currentPubkey, decrypt }))
+
+  }, [contactList, dispatch, sync])
+
+  useEffect(() => {
+    asyncThrottle(reloadFeeds)
+  }, [reloadFeeds])
+
   return useCallback(
-    async (keys: string[], currentPubKey: string) => {
-      const currentProfile = getProfile(currentPubKey)
+    async (keys: string[], currentPubkey: string) => {
+
+      await startSync(currentPubkey)
+
+      const currentProfile = getProfile(currentPubkey)
 
       dispatch(getFeedbackInfoThunk())
 
@@ -86,7 +146,7 @@ export const useUpdateProfile = () => {
 
       subscribeProfiles(keys, async (profile: MetaEvent) => {
         if (profile) {
-          if (profile.pubkey === currentPubKey) {
+          if (profile.pubkey === currentPubkey) {
             dispatch(setCurrentProfile({ profile }))
           }
 
@@ -96,47 +156,10 @@ export const useUpdateProfile = () => {
         }
       })
 
-      subscribeContactList(currentPubKey, async (contactList: ContactListEvent) => {
+      subscribeContactList(currentPubkey, async (contactList: ContactListEvent) => {
         console.log('contact list update', contactList)
 
-        if (contactList) {
-          setContacts(contactList)
-
-          const highlights = await fetchFollowedHighlights(contactList.contactPubkeys).catch(() => {
-            dispatch(setHighlights({ highlights: null }))
-          })
-          console.log('new highlights', highlights)
-          dispatch(setHighlights({ highlights }))
-
-          const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT).catch(() => {
-            dispatch(setBigZaps({ bigZaps: null }))
-          })
-          console.log('new zaps', bigZaps)
-          dispatch(setBigZaps({ bigZaps }))
-
-          const longPosts = await fetchFollowedLongNotes(contactList.contactPubkeys).catch(() => {
-            dispatch(setLongPosts({ longPosts: null }))
-          })
-          console.log('new long notes', longPosts)
-          dispatch(setLongPosts({ longPosts }))
-
-          const liveEvents = await fetchFollowedLiveEvents(contactList.contactPubkeys).catch(() => {
-            dispatch(setLiveEvents({ liveEvents: null }))
-          })
-          console.log('new live events', liveEvents)
-          dispatch(setLiveEvents({ liveEvents }))
-
-          const communities = await fetchFollowedCommunities(contactList.contactPubkeys).catch(() => {
-            dispatch(setCommunities({ communities: null }))
-          })
-          console.log('new communities', communities)
-          dispatch(setCommunities({ communities }))
-        }
-
-        dispatch(fetchBestNotesThunk(currentPubKey))
-        dispatch(fetchBestLongNotesThunk(currentPubKey))
-        dispatch(fetchProfileListsThunk({ pubkey: currentPubKey, decrypt }))
-        dispatch(fetchBookmarkListsThunk({ pubkey: currentPubKey, decrypt }))
+        if (contactList) setContacts(contactList)
       })
     },
     [dispatch, setContacts, getProfile]

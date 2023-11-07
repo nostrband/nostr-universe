@@ -7,10 +7,9 @@ import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { formatDateHours, kindNames } from '@/consts/index'
 import { Input } from '@/shared/Input/Input'
 import { format } from 'date-fns'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { IExtraOptions } from '@/hooks/modal'
+import { getNevent } from '@/modules/nostr'
 
 interface ISignedEvent {
   url: string
@@ -49,10 +48,7 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
     handleClose()
   }
   const handleOpenWith = () => {
-    const addr = nip19.neventEncode({
-      id: eventId,
-      relays: [nostrbandRelay]
-    })
+    const addr = getNevent(eventId)
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
       search: {

@@ -58,7 +58,7 @@ export const AppsNostro = memo(function AppsNostro() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHight={105} itemSize={80} itemCount={apps.length} RowComponent={Row} />
+    return <HorizontalSwipeVirtualContent itemHeight={105} itemSize={80} itemCount={apps.length} RowComponent={Row} />
   }, [handleOpenApp, apps, isLoading, handleReloadApps])
 
   return (

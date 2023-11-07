@@ -1,11 +1,10 @@
 import React, { useCallback, useState, FC, CSSProperties, useRef, useEffect } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import CloseIcon from '@mui/icons-material/Close'
-import { nostrbandRelay, searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
+import { searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
 import { AuthoredEvent } from '@/types/authored-event'
 import { LongNoteEvent } from '@/types/long-note-event'
 import { MetaEvent } from '@/types/meta-event'
-import { nip19 } from '@nostrband/nostr-tools'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from '@/pages/MainPage/components/SuggestedProfiles/styled'
 import { StyledTitle as StyledTitleNotes } from '@/pages/MainPage/components/TrendingNotes/styled'
@@ -305,35 +304,15 @@ export const SearchPageContent = () => {
   }
 
   const handleOpenProfile = (pubkey: string, profile?: MetaEvent) => {
-    const nprofile = nip19.nprofileEncode({
-      pubkey: pubkey,
-      relays: [nostrbandRelay]
-    })
     if (profile) {
       handleAddSearchClickEvent(profile)
     }
-    handleOpenContextMenu({ bech32: nprofile })
+    handleOpenContextMenu({ pubkey, event: profile })
   }
 
-  const handleOpenNote = (note: AuthoredEvent) => {
-    const nevent = nip19.neventEncode({
-      relays: [nostrbandRelay],
-      id: note.id
-    })
-
-    handleAddSearchClickEvent(note)
-    handleOpenContextMenu({ bech32: nevent })
-  }
-
-  const handleOpenLongNote = (longNote: LongNoteEvent) => {
-    const naddr = nip19.naddrEncode({
-      pubkey: longNote.pubkey,
-      kind: longNote.kind,
-      identifier: longNote.identifier,
-      relays: [nostrbandRelay]
-    })
-    handleAddSearchClickEvent(longNote)
-    handleOpenContextMenu({ bech32: naddr })
+  const handleOpenEvent = (event: AugmentedEvent) => {
+    handleAddSearchClickEvent(event)
+    handleOpenContextMenu({ event })
   }
 
   const clickSearchTermItemHandler = useCallback(
@@ -369,7 +348,7 @@ export const SearchPageContent = () => {
       return (
         <HorizontalSwipeVirtualItem style={style} index={index} itemCount={notes.length}>
           <ItemTrendingNote
-            onClick={() => handleOpenNote(note)}
+            onClick={() => handleOpenEvent(note)}
             time={note.created_at}
             content={note.content}
             pubkey={note.pubkey}
@@ -389,7 +368,7 @@ export const SearchPageContent = () => {
       return (
         <HorizontalSwipeVirtualItem style={style} index={index} itemCount={longNotes.length}>
           <ItemLongNote
-            onClick={() => handleOpenLongNote(longNote)}
+            onClick={() => handleOpenEvent(longNote)}
             time={longNote.created_at}
             content={longNote.content}
             subtitle={longNote.title}
@@ -411,7 +390,7 @@ export const SearchPageContent = () => {
             </Container>
 
             <HorizontalSwipeVirtualContent
-              itemHight={164}
+              itemHeight={164}
               itemSize={140}
               itemCount={profiles.length}
               RowComponent={RowProfile}
@@ -428,7 +407,7 @@ export const SearchPageContent = () => {
             </Container>
 
             <HorizontalSwipeVirtualContent
-              itemHight={141}
+              itemHeight={141}
               itemSize={225}
               itemCount={notes.length}
               RowComponent={RowTrendingNote}
@@ -445,7 +424,7 @@ export const SearchPageContent = () => {
             </Container>
 
             <HorizontalSwipeVirtualContent
-              itemHight={113}
+              itemHeight={113}
               itemSize={225}
               itemCount={longNotes.length}
               RowComponent={RowLongNote}

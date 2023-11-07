@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { fetchFollowedLongNotes, getTagValue, nostrbandRelay } from '@/modules/nostr'
+import { fetchFollowedLongNotes } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { LongNoteEvent } from '@/types/long-note-event'
@@ -22,15 +21,8 @@ export const LongPosts = memo(function LongPosts() {
   const dispatch = useAppDispatch()
 
   const handleOpenLongPosts = useCallback(
-    (longPost: LongNoteEvent) => {
-      const naddr = nip19.naddrEncode({
-        pubkey: longPost.pubkey,
-        kind: longPost.kind,
-        identifier: getTagValue(longPost, 'd'),
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: naddr })
+    (event: LongNoteEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -75,7 +67,7 @@ export const LongPosts = memo(function LongPosts() {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={longPosts.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={longPosts.length} RowComponent={Row} />
     )
   }, [longPosts, handleReloadLongPosts, handleOpenLongPosts])
 

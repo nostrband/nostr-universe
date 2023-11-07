@@ -27,7 +27,6 @@ import {
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { useSearchParams } from 'react-router-dom'
 import {
-  KIND_APP,
   fetchExtendedEventByBech32,
   getHandlerEventUrl,
   getTagValue,
@@ -45,6 +44,7 @@ import { usePins } from '@/hooks/pins'
 import { selectCurrentWorkspace } from '@/store/store'
 import { AppNostr } from '@/types/app-nostr'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
+import { Kinds } from '@/modules/const/kinds'
 import { AuthoredEvent } from '@/types/authored-event'
 import { ItemEventMultipurpose } from '@/components/ItemsEventContent/ItemEventMultipurpose/ItemEventMultipurpose'
 import { ItemEventProfile } from '@/components/ItemsEventContent/ItemEventProfile/ItemEventProfile'
@@ -70,7 +70,7 @@ export const ModalContextMenuContent = () => {
   const b32 = stringToBech32(value || tabUrl)
   const [invoice] = stringToBolt11(value || tabUrl)
   if (!value) value = b32 || invoice || tabUrl // from tabUrl
-  const isApp = kind === KIND_APP
+  const isApp = kind === Kinds.APP
   const pin = event && isApp ? findAppPin(event as AppEvent) : null
   const addr = b32 ? parseAddr(b32) : undefined
   if (addr && kind !== undefined) addr.kind = kind
@@ -276,7 +276,8 @@ export const ModalContextMenuContent = () => {
             kind: eventCurrent.kind,
             content: getTagValue(eventCurrent, 'summary') ||
               getTagValue(eventCurrent, 'description') ||
-              getTagValue(eventCurrent, 'alt'),
+              getTagValue(eventCurrent, 'alt') || 
+              eventCurrent.content,
             title: getTagValue(eventCurrent, 'title') ||
               getTagValue(eventCurrent, 'name')
           }

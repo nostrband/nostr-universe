@@ -3,9 +3,10 @@ import { useSigner } from './signer'
 // eslint-disable-next-line
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
-import { KIND_DM, publishEvent } from '@/modules/nostr'
+import { publishEvent } from '@/modules/nostr'
 import { NOSTR_BAND_PUBKEY } from '@/consts'
 import { nip04, generatePrivateKey, getEventHash, getPublicKey, getSignature } from '@nostrband/nostr-tools'
+import { Kinds } from '@/modules/const/kinds'
 
 export const useFeedback = () => {
   const { signEvent, encrypt } = useSigner()
@@ -13,7 +14,7 @@ export const useFeedback = () => {
   const sendFeedback = async (data: FeedbackInfo) => {
     let event: NostrEvent = {
       content: JSON.stringify(data),
-      kind: KIND_DM,
+      kind: Kinds.DM,
       tags: [
         ['p', NOSTR_BAND_PUBKEY],
         ['t', 'spring-feedback']

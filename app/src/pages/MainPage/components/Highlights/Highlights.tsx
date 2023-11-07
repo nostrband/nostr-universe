@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { fetchFollowedHighlights, nostrbandRelay } from '@/modules/nostr'
+import { fetchFollowedHighlights } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { HighlightEvent } from '@/types/highlight-event'
@@ -22,13 +21,8 @@ export const Highlights = memo(function Highlights() {
   const dispatch = useAppDispatch()
 
   const handleOpenHighlight = useCallback(
-    (highlight: HighlightEvent) => {
-      const nevent = nip19.neventEncode({
-        id: highlight.id,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: nevent })
+    (event: HighlightEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -73,7 +67,7 @@ export const Highlights = memo(function Highlights() {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={highlights.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={highlights.length} RowComponent={Row} />
     )
   }, [highlights, handleReloadHighlights, handleOpenHighlight])
 

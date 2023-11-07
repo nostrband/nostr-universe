@@ -1,6 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { fetchFollowedZaps, getEventNip19 } from '@/modules/nostr'
+import { fetchFollowedZaps } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { ZapEvent } from '@/types/zap-event'
@@ -16,6 +16,7 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { AugmentedEvent } from '@/types/augmented-event'
 
 export const BigZaps = memo(function BigZaps() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
@@ -24,23 +25,21 @@ export const BigZaps = memo(function BigZaps() {
 
   const handleOpenBigZap = useCallback(
     (bigZap: ZapEvent) => {
-      let addr = ''
+      let event: AugmentedEvent | null = null
       if (bigZap.targetEvent) {
-        addr = getEventNip19(bigZap.targetEvent)
+        event = bigZap.targetEvent
       } else if (bigZap.targetMeta) {
-        addr = getEventNip19(bigZap.targetMeta)
-        // addr = nip19.neventEncode({
-        //   id: bigZap.targetMeta.id,
-        //   relays: [nostrbandRelay]
-        // })
-      } else {
+        event = bigZap.targetMeta
+      } 
+      
+      if (!event) {
         // eslint-disable-next-line
         // @ts-ignore
         window.plugins.toast.showShortBottom(`Target events not found`)
+      } else {
+        console.log('bigZap event', event, bigZap)
+        handleOpenContextMenu({ event })
       }
-      console.log('bigZap addr', addr, bigZap)
-
-      handleOpenContextMenu({ bech32: addr })
     },
     [handleOpenContextMenu]
   )
@@ -84,7 +83,7 @@ export const BigZaps = memo(function BigZaps() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
+    return <HorizontalSwipeVirtualContent itemHeight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
   }, [bigZaps, handleReloadBigZaps, handleOpenBigZap])
 
   return (
