@@ -1,7 +1,14 @@
 import { FC, ReactNode, useCallback, useEffect, useState } from 'react'
 import { Container } from '@/layout/Container/Conatiner'
-import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper } from './styled'
-import { List, ListItem, ListItemAvatar, ListItemButton, Stack, Typography } from '@mui/material'
+import {
+  StyledAppDescription,
+  StyledAppName,
+  StyledInput,
+  StyledItemIconAvatar,
+  StyledItemText,
+  StyledMenuWrapper
+} from './styled'
+import { IconButton, List, ListItem, ListItemAvatar, ListItemButton, Stack } from '@mui/material'
 import FlashOnIcon from '@mui/icons-material/FlashOn'
 import PlayCircleOutlineOutlinedIcon from '@mui/icons-material/PlayCircleOutlineOutlined'
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
@@ -9,24 +16,30 @@ import { AppEvent } from '@/types/app-event'
 import { showToast } from '@/utils/helpers/general'
 import { useOpenApp } from '@/hooks/open-entity'
 import { usePins } from '@/hooks/pins'
-import { getDomain } from '@/utils/helpers/prepare-data'
+import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { useAppSelector } from '@/store/hooks/redux'
 import { fetchExtendedEventByBech32, stringToBech32 } from '@/modules/nostr'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
+import MenuIcon from '@mui/icons-material/Menu'
+import { useOpenModalSearchParams } from '@/hooks/modal'
 
 type ModalAppOfTheDayContentProps = {
   handleClose: () => void
+  handleHideWidget: () => void
 }
 
-export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ handleClose }) => {
+export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ handleClose, handleHideWidget }) => {
   const { appOfTheDay } = useAppSelector((state) => state.notifications)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
 
-  const { picture, name, naddr = '' } = appOfTheDay || {}
+  const { picture = '', name = '', naddr = '', url = '', about = '' } = appOfTheDay || {}
 
   const { openBlank } = useOpenApp()
   const { onPinApp } = usePins()
+  const { handleOpenContextMenu } = useOpenModalSearchParams()
+
   const [event, setEvent] = useState<AugmentedEvent | null>(null)
 
   const b32 = stringToBech32(naddr)
@@ -44,12 +57,12 @@ export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ hand
     )
   }, [])
 
-  // useEffect(() => {
-  //   if (!appOfTheDay) {
-  //     handleClose()
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [])
+  useEffect(() => {
+    if (!appOfTheDay) {
+      handleClose()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     setEvent(null)
@@ -68,17 +81,13 @@ export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ hand
       showToast('App url not specified!')
       return
     }
-    openBlank({ url }, { replace: true }).then(() => {
-      handleClose()
-    })
+    openBlank({ url }, { replace: true }).then(handleHideWidget)
   }
   const handleZap = async () => {
     if (naddr) {
       const b32 = stringToBech32(naddr)
       const url = `https://zapper.nostrapps.org/zap?id=${b32}`
-      openBlank({ url }, { replace: true }).then(() => {
-        handleClose()
-      })
+      openBlank({ url }, { replace: true }).then(handleHideWidget)
     }
   }
 
@@ -95,24 +104,41 @@ export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ hand
       name: app.meta?.display_name || app.meta?.display_name || getDomain(url),
       picture: app.meta?.picture || '',
       order: 0
-    })
+    }).then(handleHideWidget)
     showToast('Pinned!')
     handleClose()
   }
 
+  const handleCopyValue = () => {
+    copyToClipBoard(url)
+  }
+
+  const handleAppMenuClick = () => {
+    handleOpenContextMenu({ bech32: naddr })
+  }
+
   return (
     <Container>
-      <Stack flexDirection={'row'} gap={'0.5rem'}>
+      <Stack gap={'0.5rem'} alignItems={'center'}>
         <AppIcon size={'medium'} picture={picture} alt={name} />
-        <Stack>
-          <Typography variant="h6">{name}</Typography>
-        </Stack>
+        <StyledAppName>{name}</StyledAppName>
+        <StyledInput
+          endAdornment={
+            <IconButton color="inherit" size="medium" onClick={handleCopyValue}>
+              <ContentCopyOutlinedIcon />
+            </IconButton>
+          }
+          readOnly
+          value={url}
+        />
+        <StyledAppDescription>{about}</StyledAppDescription>
       </Stack>
       <StyledMenuWrapper>
         <List>
           {renderItem('Launch app', <PlayCircleOutlineOutlinedIcon />, handleLaunchApp)}
           {renderItem('Pin app', <PushPinOutlinedIcon />, handlePinApp)}
           {renderItem('Zap', <FlashOnIcon />, handleZap)}
+          {renderItem('App menu', <MenuIcon />, handleAppMenuClick)}
         </List>
       </StyledMenuWrapper>
     </Container>

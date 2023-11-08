@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { StyledActions, StyledContainer, StyledTitle } from './styled'
 import { Container } from '@/layout/Container/Conatiner'
@@ -20,6 +21,13 @@ export const AppOfDayWidget = () => {
     dbi.setAOTDShownDate().then(() => {
       dispatch(setIsShowAOTDWidget({ isShow: false }))
     })
+    // @ts-ignore
+    if (window.cordova) {
+      // @ts-ignore
+      window.cordova.plugins.notification.local.cancel(APP_OF_THE_DAY_ID, function () {
+        console.log('App of the day widget was skipped!')
+      })
+    }
   }
 
   return (

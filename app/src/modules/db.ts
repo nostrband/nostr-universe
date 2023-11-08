@@ -25,7 +25,7 @@ db.version(19).stores({
   searchHistory: 'id,pubkey,timestamp,value',
   payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
   searchClickHistory: 'id,pubkey,timestamp,addr,query,kind',
-  appOfTheDayHistory: 'id,app,date'
+  appOfTheDayHistory: 'id, app, date'
 })
 
 export const dbi = {
@@ -466,14 +466,20 @@ export const dbi = {
   },
   addAOTD: async (appInfo) => {
     try {
-      await db.appOfTheDayHistory.add(appInfo)
+      const existingAOTD = await db.appOfTheDayHistory.where('date').equals(appInfo.date).first()
+
+      if (existingAOTD) {
+        await db.appOfTheDayHistory.update(existingAOTD.id, appInfo)
+      } else {
+        await db.appOfTheDayHistory.add(appInfo)
+      }
     } catch (error) {
       console.log(`Add AOTD to history in DB error: ${error}`)
     }
   },
   getAOTDByShownDate: async (date) => {
     try {
-      return await db.appOfTheDayHistory.where('date').equals(date).first()
+      return await db.appOfTheDayHistory.where({ date }).first()
     } catch (error) {
       console.log(`Get AOTD to history in DB error: ${error}`)
     }

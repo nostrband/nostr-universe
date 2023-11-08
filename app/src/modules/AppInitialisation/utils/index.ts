@@ -13,7 +13,7 @@ import { addWorkspaces } from '@/store/reducers/workspaces.slice'
 import { DEFAULT_CONTENT_FEED_SETTINGS } from '@/types/content-feed'
 import { WorkSpace } from '@/types/workspace'
 import { getOrigin } from '@/utils/helpers/prepare-data'
-import { add, endOfDay, format, startOfDay } from 'date-fns'
+import { add, format, startOfDay } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
 
 // ?? зачем дефолтные аппы ??
@@ -576,20 +576,32 @@ export const loadKeys = async (dispatch): Promise<[keys: string[], currentPubkey
   return [keys, currentPubkey, readKeys, nsbKeys]
 }
 
-const clearAllNotifications = () => {
-  if (window.cordova) {
-    window.cordova.plugins.notification.local.clearAll()
-  }
+const cancelAllNotifications = () => {
+  return new Promise((resolve) => {
+    if (window.cordova) {
+      cordova.plugins.notification.local.cancelAll(() => {
+        console.log('Cancel previously scheduled notifications')
+        resolve('Cancel all event exec')
+      })
+    } else {
+      resolve('is WEB')
+    }
+  })
 }
 
 const filterShownApps = async (apps = []) => {
-  const shownApps = await dbi.listAOTDHistory()
+  try {
+    const shownApps = await dbi.listAOTDHistory()
+    console.log(JSON.stringify(shownApps), 'shownApps in DB')
 
-  return apps.filter((app) => {
-    const appIsShown = shownApps.find(({ app: shownApp }) => shownApp.naddr === app.naddr)
-    if (appIsShown) return false
-    return true
-  })
+    return apps.filter((app) => {
+      const appIsShown = shownApps.find(({ app: shownApp }) => shownApp?.naddr === app?.naddr)
+      if (appIsShown) return false
+      return true
+    })
+  } catch (error) {
+    console.log(error, '=> filterShownApps error')
+  }
 }
 
 const isAppOfDayAlreadyShownToday = async () => {
@@ -607,86 +619,120 @@ async function getRandomAppFromFilteredApps(apps = []) {
 
 const HOUR_IN_MS = 1000 * 3600
 
+const random = () => {
+  return parseFloat(Math.random().toFixed(3))
+}
+
 function randomDateTime(date = new Date()) {
   const startDateTime = date
   const endDateTime = endOfDay(startDateTime)
-
-  const randomTime = new Date(
-    startDateTime.getTime() + Math.random() * (endDateTime.getTime() - startDateTime.getTime() + HOUR_IN_MS)
-  )
+  const randomEndTime = random() * (endDateTime.getTime() - startDateTime.getTime())
+  const isMoreThanHour = randomEndTime < HOUR_IN_MS ? randomEndTime + HOUR_IN_MS : randomEndTime
+  const randomTime = new Date(startDateTime.getTime() + randomEndTime)
 
   return randomTime
 }
 
-const addNotification = (app = {}, notificationDate = new Date(), id = 0) => {
+const addNotification = (app = {}, notificationDate = new Date(), id = 0, onClick = () => undefined) => {
   const notificationOptions = {
     id: id,
     title: 'App of the Day',
     text: `App of the Day: ${app.name}, check it out!`,
-    icon: app.picture,
-    trigger: { at: notificationDate }
+    icon: app.picture || '',
+    trigger: { at: notificationDate },
+    vibrate: true,
+    data: app
   }
 
   if (window.cordova) {
-    window.cordova.plugins.notification.local.schedule(notificationOptions)
+    window.cordova.plugins.notification.local.schedule(
+      notificationOptions,
+      function (notification) {
+        console.log('scheduled app: ', notification.id, JSON.stringify(notification))
+      },
+      this,
+      { skipPermission: true }
+    )
+    window.cordova.plugins.notification.local.on('click', function (notification) {
+      onClick(notification)
+    })
   }
 }
 
-const scheduleNotificationsForWeek = async (apps = []) => {
+const scheduleNotificationsForWeek = async (apps = [], dispatch) => {
   for (let day = 1; day <= 7; day++) {
     const randomApp = await getRandomAppFromFilteredApps(apps)
     if (!randomApp) return undefined
 
-    const startDate = randomDateTime(startOfDay(new Date()))
-    const notificationDate = add(startDate, {
-      days: day
+    const notificationDate = randomDateTime(startOfDay(add(new Date(), { days: day })))
+    addNotification(randomApp, notificationDate, day, (notification) => {
+      updateAOTDShownDate(JSON.parse(notification.data), dispatch)
     })
-    addNotification(randomApp, notificationDate, day)
   }
 }
 
+export const APP_OF_THE_DAY_ID = 999
+
+const updateAOTDShownDate = async (app, dispatch) => {
+  await dbi.addAOTD({
+    id: uuidv4(),
+    app: app,
+    date: format(new Date(), formatDate)
+  })
+  dispatch(setAppOfTheDay({ app }))
+}
+
 const scheduleAppOfTheDayNotification = async (apps = [], dispatch) => {
-  const currentDate = format(new Date(), formatDate)
-  const existedApp = await dbi.getAOTDByShownDate(currentDate)
+  try {
+    const currentDate = format(new Date(), formatDate)
+    const existedApp = await dbi.getAOTDByShownDate(currentDate)
 
-  if (!existedApp) {
-    const randomAppOfTheDay = await getRandomAppFromFilteredApps(apps)
+    if (!existedApp) {
+      const randomAppOfTheDay = await getRandomAppFromFilteredApps(apps)
 
-    await dbi.addAOTD({
-      id: uuidv4(),
-      app: randomAppOfTheDay,
-      date: format(new Date(), formatDate)
-    })
-    dispatch(setAppOfTheDay({ app: randomAppOfTheDay }))
+      await dbi.addAOTD({
+        id: uuidv4(),
+        app: randomAppOfTheDay,
+        date: format(new Date(), formatDate)
+      })
+      dispatch(setAppOfTheDay({ app: randomAppOfTheDay }))
 
+      const notificationDate = randomDateTime()
+      return addNotification(randomAppOfTheDay, notificationDate, APP_OF_THE_DAY_ID, (notification) => {
+        updateAOTDShownDate(JSON.parse(notification.data), dispatch)
+      })
+    }
+
+    dispatch(setAppOfTheDay({ app: existedApp.app }))
     const notificationDate = randomDateTime()
-    return addNotification(randomAppOfTheDay, notificationDate, Math.floor(Math.random() * 100))
+    return addNotification(existedApp.app, notificationDate, APP_OF_THE_DAY_ID, (notification) => {
+      updateAOTDShownDate(JSON.parse(notification.data), dispatch)
+    })
+  } catch (error) {
+    console.log(error, 'scheduleAppOfTheDayNotification error')
   }
-
-  dispatch(setAppOfTheDay({ app: existedApp.app }))
-  const notificationDate = randomDateTime()
-  return addNotification(existedApp.app, notificationDate, Math.floor(Math.random() * 100))
 }
 
 export const bootstrapNotifications = async (apps, dispatch) => {
   try {
     const isAOTDShown = await isAppOfDayAlreadyShownToday()
+    console.log(isAOTDShown, '=> App of the Day is showed value')
 
     if (isAOTDShown) {
       return dispatch(setIsShowAOTDWidget({ isShow: false }))
     }
 
-    clearAllNotifications()
+    await cancelAllNotifications()
     dispatch(setIsShowAOTDWidget({ isShow: true }))
 
-    const filteredApps = await filterShownApps(apps)
+    const filteredApps = (await filterShownApps(apps)) || []
     const filteredAppsCopy = [...filteredApps]
 
     if (!filteredApps.length) return undefined
 
-    scheduleAppOfTheDayNotification(filteredAppsCopy, dispatch)
-    scheduleNotificationsForWeek(filteredAppsCopy)
+    await scheduleAppOfTheDayNotification(filteredAppsCopy, dispatch)
+    await scheduleNotificationsForWeek(filteredAppsCopy, dispatch)
   } catch (error) {
-    console.log(error)
+    console.log(error, '=> bootstrapNotifications error')
   }
 }
