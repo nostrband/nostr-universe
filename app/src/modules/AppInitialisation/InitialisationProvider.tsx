@@ -4,7 +4,7 @@ import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { setProfiles } from '@/store/reducers/profile.slice'
 import { IInitialisationProvider } from './types'
-import { connect, fetchApps, nostrOnResume } from '../nostr'
+import { connect, fetchApps, isConnected, nostrOnResume } from '../nostr'
 import { loadKeys, loadWorkspace, reloadWallets } from './utils'
 import { dbi } from '../db'
 import { initLocalRelay } from '../relay'
@@ -12,14 +12,17 @@ import { startSync } from '../sync'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
   const dispatch = useAppDispatch()
-  const updateProfile = useUpdateProfile()
+  const { updateProfile, reloadFeeds } = useUpdateProfile()
 
   const initDevice = useCallback(async () => {
     try {
       document.addEventListener(
         'resume',
         () => {
-          nostrOnResume()
+          if (isConnected()) {
+            nostrOnResume()
+            reloadFeeds()
+          }
         },
         false
       )

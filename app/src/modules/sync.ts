@@ -175,7 +175,7 @@ async function processNewEvents() {
 async function processFilter(
   task: ISyncTask, filterTmpl: NDKFilter, postFilter?: (e: NostrEvent) => boolean
 ) {
-  let totalLimit = 3000
+  let totalLimit = 4000
 
   // FIXME use trust rank to calc per-pubkey limit?
   if (filterTmpl.authors?.length > 0)
@@ -196,7 +196,7 @@ async function processFilter(
       ...filterTmpl,
       since: task.since,
       until: lastUntil,
-      limit: 1000,
+      limit: 2000,
     }
 
     const start = Date.now()
@@ -366,24 +366,30 @@ export async function startSync(pubkey: string) {
 
   const contacts = getContactPubkeys(currentContactList)
 
-  const pubkeys = [...contacts, currentPubkey]
-  console.log("sync", currentPubkey, "pubkeys", pubkeys)
+  console.log("sync", currentPubkey, "contacts", contacts)
 
-  const createTasks = async (since: number, until?: number) => {
-    const pubkeyTasks = await createPubkeyTasks(pubkeys, since, until)
+  const appendAppsTasks = async (since: number, until?: number) => {
     const appsTasks = await createAppsTasks(since, until)
-    appendTasks([...appsTasks, ...pubkeyTasks], newQueue)
+    appendTasks([...appsTasks], newQueue)
+  }
+
+  const appendPubkeyTasks = async (pubkeys: string[], since: number, until?: number) => {
+    const pubkeyTasks = await createPubkeyTasks(pubkeys, since, until)
+    appendTasks([...pubkeyTasks], newQueue)
   }
 
   // last cursor
   const now = Math.floor(Date.now() / 1000)
   const lastUntil = Number(await dbi.getFlag(currentPubkey, 'last_until') || '0')
+
   if (lastUntil) {
     const since = lastUntil - 1 // bcs since/until are excluding
     console.log("sync", currentPubkey, "lastUntil", lastUntil, "since", since)
   
     // create tasks for known pubkeys
-    createTasks(since)
+    appendAppsTasks(since)
+    appendPubkeyTasks([currentPubkey], since)
+    appendPubkeyTasks(contacts, since)
   } else {
     // for initial sync, create two tasks, one for the last week
     // and one for the rest of it, to make sure the first week 
@@ -394,8 +400,16 @@ export async function startSync(pubkey: string) {
 
     // order is important, the first one might get picked up before
     // the second one is added
-    createTasks(sinceNew) // (sinceNew, now)
-    createTasks(sinceOld, sinceNew+1) // (sinceOld, sinceNew]
+    // load all apps
+    appendAppsTasks(0)
+    // load recent events of current pubkey
+    appendPubkeyTasks([currentPubkey], sinceNew) // (sinceNew, now)
+    // load recent events of contacts
+    appendPubkeyTasks(contacts, sinceNew) // (sinceNew, now)
+    // load ALL events of current pubkey
+    appendPubkeyTasks([currentPubkey], 0, sinceNew+1) // (sinceNew, now)
+    // load last month of events of contacts
+    appendPubkeyTasks(contacts, sinceOld, sinceNew+1) // (sinceOld, sinceNew]
   }
 
   // write new lastUntil as now
@@ -407,6 +421,11 @@ export async function startSync(pubkey: string) {
 
   // notify
   updateSyncState()
+}
+
+export async function resync(pubkey: string) {
+  await dbi.setFlag(currentPubkey, 'last_until', '')
+  startSync(pubkey)
 }
 
 export function setOnSyncState(cb: (state: ISyncState) => void) {

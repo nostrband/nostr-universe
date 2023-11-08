@@ -116,7 +116,7 @@ export const useUpdateProfile = () => {
     asyncThrottle(reloadFeeds)
   }, [reloadFeeds])
 
-  return useCallback(
+  const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
 
       await startSync(currentPubkey)
@@ -164,4 +164,9 @@ export const useUpdateProfile = () => {
     },
     [dispatch, setContacts, getProfile]
   )
+
+  return {
+    updateProfile,
+    reloadFeeds
+  }
 }

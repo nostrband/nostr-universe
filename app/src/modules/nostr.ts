@@ -57,7 +57,7 @@ import { overrideWebSocket } from './relay-proxy'
 
 overrideWebSocket()
 
-const MAX_TOP_APPS = 200
+const MAX_TOP_APPS = 500
 
 // we only care about web apps
 const PLATFORMS = ['web']
@@ -745,7 +745,7 @@ async function fetchAppsByKinds(ndk: NDK, kinds: number[] = []): Promise<AppInfo
   // fetch apps ('handlers')
   const filter: NDKFilter = {
     kinds: [Kinds.APP],
-    limit: 100
+    limit: 200
   }
   if (kinds.length > 0) filter['#k'] = kinds.map((k) => '' + k)
 
@@ -2312,6 +2312,10 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
     profileSub.onReconnect()
     contactListSub.onReconnect()
   }
+}
+
+export function isConnected() {
+  return !!ndk
 }
 
 export function nostrOnResume() {
