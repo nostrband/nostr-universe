@@ -1,4 +1,15 @@
-import { Avatar, Box, InputBase, ListItemText, Typography, TypographyProps, styled } from '@mui/material'
+import {
+  Avatar,
+  Box,
+  BoxProps,
+  InputBase,
+  ListItemText,
+  Stack,
+  StackProps,
+  Typography,
+  TypographyProps,
+  styled
+} from '@mui/material'
 import { forwardRef } from 'react'
 
 export const StyledMenuWrapper = styled(Box)(({ theme }) => ({
@@ -57,11 +68,54 @@ export const StyledAppName = styled(
 }))
 
 export const StyledAppDescription = styled(Box)(({ theme }) => ({
-  color: theme.palette.light.light,
+  color: theme.palette.text.primary,
   width: '100%',
   display: '-webkit-box',
   WebkitLineClamp: 3,
   WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
-  textOverflow: 'ellipsis'
+  textOverflow: 'ellipsis',
+  textAlign: 'center',
+  fontWeight: '500'
+}))
+
+export const StyledDetailsContainer = styled((props: StackProps) => <Stack gap={'0.5rem'} {...props} />)(
+  ({ theme }) => ({
+    background: theme.palette.secondary.main,
+    borderRadius: theme.shape.borderRadius,
+    width: '100%',
+    padding: '0.75rem'
+  })
+)
+
+export const StyledDetailItem = styled(({ detailTitle, children, ...props }: BoxProps & { detailTitle: string }) => (
+  <Box {...props}>
+    <Typography variant="body2" className="caption" fontWeight={'bold'} flex={1}>
+      {detailTitle}
+    </Typography>
+    <Box className="content" flex={5}>
+      {children}
+    </Box>
+  </Box>
+))(({ theme }) => ({
+  color: theme.palette.light.light,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  '&:not(:first-of-type)': {
+    borderTop: '1px solid #5e5e5e',
+    paddingTop: '0.5rem'
+  },
+  '& .caption': {
+    color: theme.palette.text.primary
+  },
+  '& .content': {
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontWeight: '500',
+    width: '100%'
+  }
 }))

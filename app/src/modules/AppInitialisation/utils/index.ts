@@ -12,8 +12,9 @@ import { addTabs } from '@/store/reducers/tab.slice'
 import { addWorkspaces } from '@/store/reducers/workspaces.slice'
 import { DEFAULT_CONTENT_FEED_SETTINGS } from '@/types/content-feed'
 import { WorkSpace } from '@/types/workspace'
+import { renderDefaultAppIcon } from '@/utils/helpers/general'
 import { getOrigin } from '@/utils/helpers/prepare-data'
-import { add, format, startOfDay } from 'date-fns'
+import { add, format, startOfDay, endOfDay } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
 
 // ?? зачем дефолтные аппы ??
@@ -638,7 +639,7 @@ const addNotification = (app = {}, notificationDate = new Date(), id = 0, onClic
     id: id,
     title: 'App of the Day',
     text: `App of the Day: ${app.name}, check it out!`,
-    icon: app.picture || '',
+    icon: app.picture || renderDefaultAppIcon(app.name) || '',
     trigger: { at: notificationDate },
     vibrate: true,
     data: app
@@ -655,6 +656,19 @@ const addNotification = (app = {}, notificationDate = new Date(), id = 0, onClic
     )
     window.cordova.plugins.notification.local.on('click', function (notification) {
       onClick(notification)
+    })
+    window.cordova.plugins.notification.local.on('clear', function (notification) {
+      const id = notification.id
+      if (notificationOptions.id === id) {
+        window.cordova.plugins.notification.local.schedule(
+          { ...notificationOptions, trigger: { at: randomDateTime() } },
+          function (notification) {
+            console.log('reschedule today app: ', notification.id, JSON.stringify(notification))
+          },
+          this,
+          { skipPermission: true }
+        )
+      }
     })
   }
 }

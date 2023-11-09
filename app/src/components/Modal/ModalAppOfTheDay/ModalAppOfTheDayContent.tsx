@@ -3,12 +3,13 @@ import { Container } from '@/layout/Container/Conatiner'
 import {
   StyledAppDescription,
   StyledAppName,
-  StyledInput,
+  StyledDetailItem,
+  StyledDetailsContainer,
   StyledItemIconAvatar,
   StyledItemText,
   StyledMenuWrapper
 } from './styled'
-import { IconButton, List, ListItem, ListItemAvatar, ListItemButton, Stack } from '@mui/material'
+import { List, ListItem, ListItemAvatar, ListItemButton, Stack } from '@mui/material'
 import FlashOnIcon from '@mui/icons-material/FlashOn'
 import PlayCircleOutlineOutlinedIcon from '@mui/icons-material/PlayCircleOutlineOutlined'
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
@@ -16,25 +17,41 @@ import { AppEvent } from '@/types/app-event'
 import { showToast } from '@/utils/helpers/general'
 import { useOpenApp } from '@/hooks/open-entity'
 import { usePins } from '@/hooks/pins'
-import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
+import { getDomain } from '@/utils/helpers/prepare-data'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { useAppSelector } from '@/store/hooks/redux'
 import { fetchExtendedEventByBech32, stringToBech32 } from '@/modules/nostr'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
-import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
+// import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { kindEvents } from '@/consts'
 
 type ModalAppOfTheDayContentProps = {
   handleClose: () => void
   handleHideWidget: () => void
 }
 
+const IGNORED_KINDS = [0, 1, 2, 3, 4, 5, 6, 7]
+
 export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ handleClose, handleHideWidget }) => {
   const { appOfTheDay } = useAppSelector((state) => state.notifications)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
 
-  const { picture = '', name = '', naddr = '', url = '', about = '' } = appOfTheDay || {}
+  const { picture = '', name = '', naddr = '', url = '', about = '', kinds = [] } = appOfTheDay || {}
+
+  const filteredKinds = kinds.filter((kind) => !IGNORED_KINDS.some((k) => k === kind))
+
+  console.log({ kinds, filteredKinds }, 'HISH')
+
+  const renderKinds = () => {
+    return filteredKinds
+      .map((kind) => {
+        const kindName = kindEvents[kind]
+        return kindName || kind
+      })
+      .join('')
+  }
 
   const { openBlank } = useOpenApp()
   const { onPinApp } = usePins()
@@ -109,9 +126,9 @@ export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ hand
     handleClose()
   }
 
-  const handleCopyValue = () => {
-    copyToClipBoard(url)
-  }
+  // const handleCopyValue = () => {
+  //   copyToClipBoard(url)
+  // }
 
   const handleAppMenuClick = () => {
     handleOpenContextMenu({ bech32: naddr })
@@ -120,9 +137,10 @@ export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ hand
   return (
     <Container>
       <Stack gap={'0.5rem'} alignItems={'center'}>
-        <AppIcon size={'medium'} picture={picture} alt={name} />
+        <AppIcon size={'large'} picture={picture} alt={name} />
         <StyledAppName>{name}</StyledAppName>
-        <StyledInput
+        <StyledAppDescription>{about}</StyledAppDescription>
+        {/* <StyledInput
           endAdornment={
             <IconButton color="inherit" size="medium" onClick={handleCopyValue}>
               <ContentCopyOutlinedIcon />
@@ -130,8 +148,11 @@ export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ hand
           }
           readOnly
           value={url}
-        />
-        <StyledAppDescription>{about}</StyledAppDescription>
+        /> */}
+        <StyledDetailsContainer>
+          <StyledDetailItem detailTitle="URL:">{url}</StyledDetailItem>
+          {filteredKinds.length > 0 && <StyledDetailItem detailTitle="Kinds:">{renderKinds()}</StyledDetailItem>}
+        </StyledDetailsContainer>
       </Stack>
       <StyledMenuWrapper>
         <List>

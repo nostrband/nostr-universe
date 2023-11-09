@@ -34,7 +34,7 @@ export const ModalAppOfTheDay = () => {
 
   return (
     <Modal title="App of the Day" open={isOpen} handleClose={handleCloseModal}>
-      {isOpen && <ModalAppOfTheDayContent handleClose={handleCloseModal} handleHideWidget={hideAOTDWidgetHandler} />}
+      {isOpen && <ModalAppOfTheDayContent handleClose={handleClose} handleHideWidget={hideAOTDWidgetHandler} />}
     </Modal>
   )
 }
