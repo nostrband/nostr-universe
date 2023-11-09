@@ -25,7 +25,7 @@ import { AppIcon } from '@/shared/AppIcon/AppIcon'
 // import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { kindEvents } from '@/consts'
+import { kindNames } from '@/consts'
 
 type ModalAppOfTheDayContentProps = {
   handleClose: () => void
@@ -42,12 +42,10 @@ export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ hand
 
   const filteredKinds = kinds.filter((kind) => !IGNORED_KINDS.some((k) => k === kind))
 
-  console.log({ kinds, filteredKinds }, 'HISH')
-
   const renderKinds = () => {
     return filteredKinds
       .map((kind) => {
-        const kindName = kindEvents[kind]
+        const kindName = kindNames[kind]
         return kindName || kind
       })
       .join('')
