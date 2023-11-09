@@ -36,6 +36,7 @@ import { formatDate } from './consts'
 import { format } from 'date-fns'
 import { useOpenModalSearchParams } from './hooks/modal'
 import { MODAL_PARAMS_KEYS } from './types/modal'
+import { ModalSync } from './components/Modal/ModalSync/ModalSync'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -155,6 +156,7 @@ export const App = () => {
       <ModalNPSScore />
       <ModalPaymentHistory />
       <ModalAppOfTheDay />
+      <ModalSync />
     </>
   )
 }

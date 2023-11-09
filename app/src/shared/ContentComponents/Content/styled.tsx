@@ -8,11 +8,11 @@ export interface IContentStyled extends TypographyProps {
 }
 
 export const StyledContent = styled(
-  forwardRef<HTMLAnchorElement, IContentStyled>(function TypographyDisplayName(props, ref) {
+  forwardRef<HTMLAnchorElement, IContentStyled>(function TypographyDisplayName(props) {
     const exclude = new Set(['isHighlight', 'contentLine'])
     const omitProps = Object.fromEntries(Object.entries(props).filter((e) => !exclude.has(e[0])))
 
-    return <Typography variant="caption" ref={ref} {...omitProps} />
+    return <Typography variant="caption" component="div" {...omitProps} />
   })
 )(({ theme, isHighlight = false, contentLine = 3 }) => ({
   color: theme.palette.text.primary,
@@ -22,5 +22,6 @@ export const StyledContent = styled(
   display: '-webkit-box',
   WebkitLineClamp: contentLine,
   WebkitBoxOrient: 'vertical',
-  fontStyle: isHighlight ? 'italic' : 'normal'
+  fontStyle: isHighlight ? 'italic' : 'normal',
+  wordWrap: 'break-word'
 }))

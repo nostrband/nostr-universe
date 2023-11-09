@@ -9,7 +9,7 @@ const getPubkeyLast4Chars = (pubkey: string) => {
   return pubkey
 }
 
-const failedCache = new Map<string, boolean>()
+const cache = new Map<string, number>()
 
 export const useProfileImageSource = ({
   pubkey,
@@ -39,10 +39,11 @@ export const useProfileImageSource = ({
   const defaultUserImage = ''
   const id = pubkey + mediaType + size
 
+  const cached = cache.get(id) || 0
   useEffect(() => {
     if (!pubkey || !originalImage || isGuest(pubkey)) return
     if (!wasInView) return
-    if (failedCache.get(id)) return
+    if (cached) return
 
     const image = new Image()
     image.onloadstart = function () {
@@ -52,23 +53,28 @@ export const useProfileImageSource = ({
     image.onload = function () {
       setIsLoading(false)
       setIsFailed(false)
+      cache.set(id, 1)
     }
     image.onerror = function () {
       setIsFailed(true)
       setIsLoading(false)
-      failedCache.set(id, true)
+      cache.set(id, -1)
     }
 
     image.src = generatedURL
     image.loading = 'lazy'
-  }, [pubkey, originalImage, generatedURL, wasInView])
+  }, [id, originalImage, generatedURL, wasInView])
 
   const returnedObject = {
     viewRef: ref
   }
 
-  if (isFailed || failedCache.get(id)) {
+  if (isFailed || cached < 0) {
     return { ...returnedObject, url: originalImage }
+  }
+
+  if (cached > 0) {
+    return { ...returnedObject, url: generatedURL }  
   }
 
   if (!wasInView || !pubkey || !originalImage || isGuest(pubkey)) {

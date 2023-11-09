@@ -2,8 +2,6 @@ import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
 import { userService } from '@/store/services/user.service'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { useAppSelector } from '@/store/hooks/redux'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
@@ -14,6 +12,7 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { MetaEvent } from '@/types/meta-event'
 
 export const SuggestedProfiles = memo(function SuggestedProfiles() {
   const { currentPubkey } = useAppSelector((state) => state.keys)
@@ -27,13 +26,8 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const handleOpenProfile = useCallback(
-    (pubkey: string) => {
-      const nprofile = nip19.nprofileEncode({
-        pubkey: pubkey,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: nprofile })
+    (event: MetaEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -62,7 +56,7 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHight={164} itemSize={140} itemCount={data.length} RowComponent={Row} />
+    return <HorizontalSwipeVirtualContent itemHeight={164} itemSize={140} itemCount={data.length} RowComponent={Row} />
   }, [isLoading, data, handleOpenProfile, refetchSuggestedProfiles])
 
   return (

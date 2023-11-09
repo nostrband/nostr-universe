@@ -7,6 +7,7 @@ import TocOutlinedIcon from '@mui/icons-material/TocOutlined'
 import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import PublishedWithChangesOutlinedIcon from '@mui/icons-material/PublishedWithChangesOutlined'
+import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined'
 // import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapper } from './styled'
@@ -16,7 +17,7 @@ import { ModalPermissions } from '@/components/Modal/ModalPermissions/ModalPermi
 import { checkNsbSigner, reconnect } from '@/modules/nostr'
 import { showToast } from '@/utils/helpers/general'
 import { useAppSelector } from '@/store/hooks/redux'
-import { useState } from 'react'
+import { useState, useCallback, ReactNode } from 'react'
 import { useSigner } from '@/hooks/signer'
 
 export const ProfilMenu = () => {
@@ -61,6 +62,19 @@ export const ProfilMenu = () => {
 
   const isNsb = nsbKeys.includes(currentPubkey)
 
+  const renderItem = useCallback((label: string, icon: ReactNode, onClick: () => void) => {
+    return (
+      <ListItemButton onClick={onClick}>
+        <ListItemAvatar>
+          <StyledListItemIcon>
+            {icon}
+          </StyledListItemIcon>
+        </ListItemAvatar>
+        <StyledListItemText primary={label} />
+      </ListItemButton>
+    )
+  }, [])
+
   return (
     <>
       <Container>
@@ -69,92 +83,14 @@ export const ProfilMenu = () => {
             Tools
           </StyledMenuTitle> */}
           <StyledMenuList>
-            <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL, { append: true })}>
-              <ListItemAvatar>
-                <StyledListItemIcon>
-                  <ChecklistOutlinedIcon />
-                </StyledListItemIcon>
-              </ListItemAvatar>
-              <StyledListItemText primary="Key permissions" />
-            </ListItemButton>
-            <ListItemButton
-              onClick={() => handleOpen(MODAL_PARAMS_KEYS.CONTENT_FEEDS_SETTINGS_MODAL, { append: true })}
-            >
-              <ListItemAvatar>
-                <StyledListItemIcon>
-                  <TocOutlinedIcon />
-                </StyledListItemIcon>
-              </ListItemAvatar>
-              <StyledListItemText primary="Content feeds" />
-            </ListItemButton>
-            {false && (
-              <ListItemButton onClick={() => testSignEvent()}>
-                <ListItemAvatar>
-                  <StyledListItemIcon>
-                    <ChecklistOutlinedIcon />
-                  </StyledListItemIcon>
-                </ListItemAvatar>
-                <StyledListItemText primary="Test sign event" />
-              </ListItemButton>
-            )}
-            <ListItemButton onClick={handleReconnect}>
-              <ListItemAvatar>
-                <StyledListItemIcon>
-                  <CachedOutlinedIcon />
-                </StyledListItemIcon>
-              </ListItemAvatar>
-              <StyledListItemText primary="Reconnect relays" />
-            </ListItemButton>
-            <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.SIGNED_EVENTS_MODAL, { append: true })}>
-              <ListItemAvatar>
-                <StyledListItemIcon>
-                  <AssignmentOutlinedIcon />
-                </StyledListItemIcon>
-              </ListItemAvatar>
-              <StyledListItemText primary="Signed events" />
-            </ListItemButton>
-            <ListItemButton onClick={() => handleOpen(MODAL_PARAMS_KEYS.PAYMENT_HISTORY_MODAL, { append: true })}>
-              <ListItemAvatar>
-                <StyledListItemIcon>
-                  <PaymentIcon />
-                </StyledListItemIcon>
-              </ListItemAvatar>
-              <StyledListItemText primary="Payment history" />
-            </ListItemButton>
-            {isNsb && (
-              <ListItemButton disabled={checkNSB} onClick={handleNsbConnect}>
-                <ListItemAvatar>
-                  <StyledListItemIcon>
-                    <PublishedWithChangesOutlinedIcon />
-                  </StyledListItemIcon>
-                </ListItemAvatar>
-                <StyledListItemText primary="Check NsecBunker" />
-              </ListItemButton>
-            )}
-            {/* <ListItemButton>
-            <ListItemAvatar>
-              <StyledListItemIcon>
-                <StoreOutlinedIcon />
-              </StyledListItemIcon>
-            </ListItemAvatar>
-            <StyledListItemText primary="Key vault" />
-          </ListItemButton>
-          <ListItemButton>
-            <ListItemAvatar>
-              <StyledListItemIcon>
-                <PeopleAltOutlinedIcon />
-              </StyledListItemIcon>
-            </ListItemAvatar>
-            <StyledListItemText primary="Contacts" />
-          </ListItemButton>
-          <ListItemButton>
-            <ListItemAvatar>
-              <StyledListItemIcon>
-                <AccountBalanceWalletOutlinedIcon />
-              </StyledListItemIcon>
-            </ListItemAvatar>
-            <StyledListItemText primary="Wallet Connect" />
-          </ListItemButton> */}
+            {renderItem("Key permissions", <ChecklistOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL, { append: true }))}
+            {renderItem("Content feeds", <TocOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.CONTENT_FEEDS_SETTINGS_MODAL))}
+            {false && renderItem("Test sign event", <ChecklistOutlinedIcon />, () => testSignEvent())}
+            {renderItem("Reconnect relays", <CachedOutlinedIcon />, handleReconnect)}
+            {renderItem("Signed events", <AssignmentOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.SIGNED_EVENTS_MODAL))}
+            {renderItem("Payment history", <PaymentIcon />, () => handleOpen(MODAL_PARAMS_KEYS.PAYMENT_HISTORY_MODAL))}
+            {isNsb && renderItem("Check NsecBunker", <PublishedWithChangesOutlinedIcon />, handleNsbConnect)}
+            {renderItem("Event database", <StorageOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.SYNC_MODAL))}
           </StyledMenuList>
         </StyledMenuWrapper>
         <ModalPermissions />

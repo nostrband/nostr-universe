@@ -70,3 +70,7 @@ export const StyledMenuWrapper = styled(Box)(({ theme }) => ({
   overflow: 'hidden',
   marginTop: '1rem'
 }))
+
+export const StyledItemEventPreview = styled(Box)(() => ({
+  marginBottom: '1rem'
+}))

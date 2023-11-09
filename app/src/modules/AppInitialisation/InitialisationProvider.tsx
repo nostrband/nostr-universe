@@ -4,31 +4,49 @@ import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { setProfiles } from '@/store/reducers/profile.slice'
 import { IInitialisationProvider } from './types'
-import { connect, fetchApps, nostrOnResume } from '../nostr'
+import { connect, fetchApps, isConnected, nostrOnResume } from '../nostr'
 import { bootstrapNotifications, loadKeys, loadWorkspace, reloadWallets } from './utils'
 import { dbi } from '../db'
+import { initLocalRelay } from '../relay'
+import { startSync } from '../sync'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
   const dispatch = useAppDispatch()
-  const updateProfile = useUpdateProfile()
+  const { updateProfile, reloadFeeds } = useUpdateProfile()
 
   const initDevice = useCallback(async () => {
     try {
       document.addEventListener(
         'resume',
         () => {
-          nostrOnResume()
+          if (isConnected()) {
+            nostrOnResume()
+            reloadFeeds()
+          }
         },
         false
       )
 
+      console.log('loading keys...')
+
       const [keys, currentPubKey] = await loadKeys(dispatch)
 
-      for (const key of keys) await loadWorkspace(key, dispatch)
+      console.log('ndk connecting...')
+
+      await connect()
 
       console.log('ndk connected')
 
-      await connect()
+      // we have to wait until relay is initialized
+      // and then sync starts because if user proceeds
+      // and switches to another key then we won't know
+      // if relay is ready or not and if we can start syncing
+      // the new key
+      // FIXME rebuild around hooks and state variables so
+      // that startSync would wait until local relay is ready
+      await initLocalRelay()
+      await startSync(currentPubKey)
+      for (const key of keys) await loadWorkspace(key, dispatch)
 
       await reloadWallets()
 

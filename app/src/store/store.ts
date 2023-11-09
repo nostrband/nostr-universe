@@ -19,6 +19,7 @@ import memoizeOne from 'memoize-one'
 import { feedbackInfoSlice } from './reducers/feedbackInfo.slice'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { notificationsSlice } from './reducers/notifications.slice'
+import { syncSlice } from './reducers/sync.slice'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -34,7 +35,8 @@ export const rootReducer = combineReducers({
   [userService.reducerPath]: userService.reducer,
   [bookmarksSlice.name]: bookmarksSlice.reducer,
   [feedbackInfoSlice.name]: feedbackInfoSlice.reducer,
-  [notificationsSlice.name]: notificationsSlice.reducer
+  [notificationsSlice.name]: notificationsSlice.reducer,
+  [syncSlice.name]: syncSlice.reducer
 })
 
 export const createStore = () => {

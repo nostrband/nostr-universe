@@ -3,8 +3,7 @@ import { StyledTitle, StyledWrapper } from './styled'
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { LiveEvent } from '@/types/live-events'
-import { nip19 } from '@nostrband/nostr-tools'
-import { fetchFollowedLiveEvents, getTagValue, nostrbandRelay } from '@/modules/nostr'
+import { fetchFollowedLiveEvents } from '@/modules/nostr'
 import { setLiveEvents } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
@@ -23,14 +22,7 @@ export const LiveEvents = memo(function LiveEvents() {
 
   const handleOpenLiveEvent = useCallback(
     (event: LiveEvent) => {
-      const naddr = nip19.naddrEncode({
-        pubkey: event.pubkey,
-        kind: event.kind,
-        identifier: getTagValue(event, 'd'),
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: naddr })
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -73,7 +65,7 @@ export const LiveEvents = memo(function LiveEvents() {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHight={113} itemSize={225} itemCount={liveEvents.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={liveEvents.length} RowComponent={Row} />
     )
   }, [liveEvents, handleReloadLiveEvents, handleOpenLiveEvent])
 

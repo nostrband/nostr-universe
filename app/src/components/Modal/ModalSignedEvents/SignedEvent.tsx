@@ -4,13 +4,12 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined'
 import { StyledViewTitle, StyledWrapper, StyledInputWrap, StyledHead, StyledItemFooter } from './styled'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
-import { formatDateHours, kindEvents } from '@/consts/index'
+import { formatDateHours, kindNames } from '@/consts/index'
 import { Input } from '@/shared/Input/Input'
 import { format } from 'date-fns'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay } from '@/modules/nostr'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import { IExtraOptions } from '@/hooks/modal'
+import { getNevent } from '@/modules/nostr'
 
 interface ISignedEvent {
   url: string
@@ -49,10 +48,7 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
     handleClose()
   }
   const handleOpenWith = () => {
-    const addr = nip19.neventEncode({
-      id: eventId,
-      relays: [nostrbandRelay]
-    })
+    const addr = getNevent(eventId)
 
     handleOpen(MODAL_PARAMS_KEYS.SELECT_APP, {
       search: {
@@ -61,7 +57,7 @@ export const SignedEvent = ({ url, kind, time, eventId, eventJson, handleShowCon
       }
     })
   }
-  const getKind = kindEvents[kind] + ` (${kind})` || `Kind ${kind}`
+  const getKind = kindNames[kind] + ` (${kind})` || `Kind ${kind}`
   const getUrl = new URL(url).hostname
   const getTime = format(new Date(time), formatDateHours)
   return (
