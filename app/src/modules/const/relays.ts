@@ -5,7 +5,14 @@ export const nostrbandRelay = 'wss://relay.nostr.band/'
 export const nostrbandRelayAll = 'wss://relay.nostr.band/all'
 
 // cacheRelay
-export const readRelays = [nostrbandRelay, 'wss://relay.damus.io', 'wss://nos.lol']//, 'wss://relay.nostr.bg', 'wss://nostr.mom']
+export const readRelays = [
+  nostrbandRelay,
+  'wss://relay.damus.io',
+  'wss://nos.lol',
+  'wss://relay.nostr.bg',
+  'wss://nostr.mom',
+  'wss://relay.current.fyi'
+]
 export const writeRelays = [...readRelays, 'wss://nostr.mutinywallet.com'] // for broadcasting
 export const allRelays = [nostrbandRelayAll, ...writeRelays]
 

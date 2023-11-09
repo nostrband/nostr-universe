@@ -5,6 +5,8 @@ export const enum Kinds {
   DM = 4,
   REPOST = 6,
   REACTION = 7,
+  REPORT = 1984,
+  LABEL = 1985,
   COMMUNITY_APPROVAL = 4550,
   ZAP_REQUEST = 9734,
   ZAP = 9735,

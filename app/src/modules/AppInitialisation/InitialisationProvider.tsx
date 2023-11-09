@@ -1,14 +1,13 @@
 import { useEffect, useCallback } from 'react'
 import { useAppDispatch } from '@/store/hooks/redux'
-import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { useUpdateProfile } from '@/hooks/profile'
 import { setProfiles } from '@/store/reducers/profile.slice'
 import { IInitialisationProvider } from './types'
-import { connect, fetchApps, isConnected, nostrOnResume } from '../nostr'
+import { connect, isConnected, nostrOnResume } from '../nostr'
 import { loadKeys, loadWorkspace, reloadWallets } from './utils'
 import { dbi } from '../db'
 import { initLocalRelay } from '../relay'
-import { startSync } from '../sync'
+// import { startSync } from '../sync'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
   const dispatch = useAppDispatch()
@@ -45,7 +44,7 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       // FIXME rebuild around hooks and state variables so
       // that startSync would wait until local relay is ready 
       await initLocalRelay()
-      await startSync(currentPubKey)
+//      await startSync(currentPubKey)
       for (const key of keys) await loadWorkspace(key, dispatch)
 
       await reloadWallets()
@@ -56,11 +55,6 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       }
 
       await updateProfile(keys, currentPubKey)
-
-      dispatch(setLoading({ isLoading: true }))
-      const apps = await fetchApps()
-      dispatch(setApps({ apps }))
-      dispatch(setLoading({ isLoading: false }))
     } catch (err) {
       console.log('error init app', err)
     }

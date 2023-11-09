@@ -55,7 +55,7 @@ export const ModalSyncContent = () => {
           Received events: {syncState.newEventCount}
         </StyledViewTitle>
         <StyledViewTitle>
-          Total events: {syncState.totalEventCount}
+          Stored events: {syncState.totalEventCount}
         </StyledViewTitle>
 
       </StyledWrap>

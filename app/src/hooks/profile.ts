@@ -1,10 +1,12 @@
 import { useCallback, useEffect } from 'react'
 import {
+  fetchApps,
   fetchFollowedCommunities,
   fetchFollowedHighlights,
   fetchFollowedLiveEvents,
   fetchFollowedLongNotes,
   fetchFollowedZaps,
+  isConnected,
   subscribeContactList,
   subscribeProfiles
 } from '@/modules/nostr'
@@ -37,6 +39,7 @@ import { startSync } from '@/modules/sync'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { useSync } from './sync'
 import { useAsyncThrottle } from './async'
+import { setApps, setLoading } from '@/store/reducers/apps.slice'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
@@ -68,6 +71,14 @@ export const useUpdateProfile = () => {
   }, [])
 
   const reloadFeeds = useCallback(async () => {
+
+    if (!isConnected()) return
+
+    dispatch(setLoading({ isLoading: true }))
+    const apps = await fetchApps()
+    dispatch(setApps({ apps }))
+    dispatch(setLoading({ isLoading: false }))
+
     if (isGuest(currentPubkey)) return
 
     console.log("sync reloadFeeds", Date.now())
@@ -119,7 +130,7 @@ export const useUpdateProfile = () => {
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
 
-      await startSync(currentPubkey)
+      startSync(currentPubkey)
 
       const currentProfile = getProfile(currentPubkey)
 
