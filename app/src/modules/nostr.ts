@@ -1858,10 +1858,11 @@ class Subscription<OutputEventType> {
 
     const sub: NDKSubscription = await ndk.subscribe(
       filter,
-      { closeOnEose: false },
-      NDKRelaySet.fromRelayUrls(readRelays, ndk),
+      { closeOnEose: false, skipVerification: true },
+      NDKRelaySet.fromRelayUrls([cacheRelay], ndk),
       /* autoStart */ false
     )
+    console.log("sub start", filter)
 
     // ensure async callbacks are executed one by one
     const pq = new PromiseQueue()
@@ -1881,7 +1882,7 @@ class Subscription<OutputEventType> {
 
     // call cb on each event
     sub.on('event', (event: NDKEvent, relay: NDKRelay) => {
-      console.log("sub event", event.id, "kind", event.kind, "from relay", relay.url)
+      console.log("sub event", event.id, "at", Date.now(), "kind", event.kind, "from relay", relay.url)
       // dedup
       const dedupKey = event.deduplicationKey()
       const existingEvent = events.get(dedupKey)
@@ -1914,7 +1915,7 @@ class Subscription<OutputEventType> {
     )
 
     // start
-    console.log('start', this.label, 'at', Date.now())
+    console.log('sub start', this.label, 'at', Date.now())
     sub.start()
 
     // store
