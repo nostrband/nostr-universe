@@ -2,7 +2,6 @@ import {
   NDKFilter,
   NDKRelaySet,
   NostrEvent,
-  NDKSubscription
   // @ts-ignore
 } from '@nostrband/ndk'
 // @ts-ignore
