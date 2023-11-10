@@ -8,7 +8,7 @@ import { StyledItemVitual } from './styled'
 interface IHorizontalSwipeVirtualContent {
   RowComponent: FC<{ index: number; style: CSSProperties }>
   itemCount: number
-  itemHight: number
+  itemHeight: number
   itemSize: number
 }
 
@@ -20,7 +20,7 @@ interface IHorizontalSwipeVirtualItem {
 }
 
 export const HorizontalSwipeVirtualContent: FC<IHorizontalSwipeVirtualContent> = memo(
-  function HorizontalSwipeVirtualContent({ RowComponent, itemCount, itemSize, itemHight }) {
+  function HorizontalSwipeVirtualContent({ RowComponent, itemCount, itemSize, itemHeight: itemHight }) {
     return (
       <AutoSizer disableHeight>
         {({ width }) => (

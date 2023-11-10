@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { nip19 } from '@nostrband/nostr-tools'
-import { nostrbandRelay, subscribeContactList } from '@/modules/nostr'
+import { subscribeContactList } from '@/modules/nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { memo, useCallback, FC, CSSProperties } from 'react'
@@ -16,6 +15,7 @@ import { SkeletonContactList } from '@/components/Skeleton/SkeletonContactList/S
 import { selectKeys } from '@/store/store'
 import { setContactList } from '@/store/reducers/contentWorkspace'
 import { ContactListEvent } from '@/types/contact-list-event'
+import { MetaEvent } from '@/types/meta-event'
 
 export const ContactList = memo(function ContactList() {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
@@ -24,13 +24,8 @@ export const ContactList = memo(function ContactList() {
   const dispatch = useAppDispatch()
 
   const handleOpenProfile = useCallback(
-    (pubkey: string) => {
-      const nprofile = nip19.nprofileEncode({
-        pubkey: pubkey,
-        relays: [nostrbandRelay]
-      })
-
-      handleOpenContextMenu({ bech32: nprofile })
+    (event: MetaEvent) => {
+      handleOpenContextMenu({ event })
     },
     [handleOpenContextMenu]
   )
@@ -69,7 +64,7 @@ export const ContactList = memo(function ContactList() {
 
     return (
       <HorizontalSwipeVirtualContent
-        itemHight={114}
+        itemHeight={114}
         itemSize={115}
         itemCount={contactList?.contactEvents.length}
         RowComponent={RowContact}

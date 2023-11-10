@@ -13,7 +13,7 @@ import { useCallback } from 'react'
 
 export const useAddKey = () => {
   const dispatch = useAppDispatch()
-  const updateProfile = useUpdateProfile()
+  const { updateProfile } = useUpdateProfile()
   const { keys, currentPubkey: wasPubkey } = useAppSelector((state) => state.keys)
 
   const setPubkey = useCallback(
@@ -137,7 +137,7 @@ export const useAddKey = () => {
 
 export const useChangeAccount = () => {
   const dispatch = useAppDispatch()
-  const updateProfile = useUpdateProfile()
+  const { updateProfile } = useUpdateProfile()
   const { currentPubkey, readKeys, nsbKeys } = useAppSelector((state) => state.keys)
 
   const changeAccount = async (publicKey: string) => {

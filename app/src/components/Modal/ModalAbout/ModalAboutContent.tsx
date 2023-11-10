@@ -29,7 +29,7 @@ export const ModalAboutContent = () => {
       <StyledWrap>
         <AppIcon isLight size="big" isOutline={false} picture={AppLogo} />
         <StyledViewTitle variant="h5">The Nostr Browser</StyledViewTitle>
-        <StyledViewTitle variant="body1">0.7.0</StyledViewTitle>
+        <StyledViewTitle variant="body1">0.8.0</StyledViewTitle>
         <Typography variant="body1">Spring is an open-source project by Nostr.Band.</Typography>
         {logs && <StyledLogs readOnly={true}>{logs}</StyledLogs>}
       </StyledWrap>

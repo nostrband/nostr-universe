@@ -21,7 +21,7 @@ const initialState: IContentWorkSpace = {
   bigZaps: null,
   longPosts: null,
   communities: null,
-  liveEvents: null
+  liveEvents: null,
 }
 
 export const contentWorkSpaceSlice = createSlice({
@@ -49,9 +49,15 @@ export const contentWorkSpaceSlice = createSlice({
     },
     setLiveEvents: (state, action) => {
       state.liveEvents = action.payload.liveEvents
-    }
+    },
   }
 })
 
-export const { setContactList, setHighlights, setBigZaps, setLongPosts, setCommunities, setLiveEvents } =
-  contentWorkSpaceSlice.actions
+export const {
+  setContactList,
+  setHighlights,
+  setBigZaps,
+  setLongPosts,
+  setCommunities,
+  setLiveEvents
+} = contentWorkSpaceSlice.actions
