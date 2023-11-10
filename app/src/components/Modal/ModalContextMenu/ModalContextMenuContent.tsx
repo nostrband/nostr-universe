@@ -41,16 +41,18 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { AppEvent } from '@/types/app-event'
 import { showToast } from '@/utils/helpers/general'
 import { usePins } from '@/hooks/pins'
-import { selectCurrentWorkspace } from '@/store/store'
+import { selectCurrentWorkspace, selectKeys } from '@/store/store'
 import { AppNostr } from '@/types/app-nostr'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { Kinds } from '@/modules/const/kinds'
 import { AuthoredEvent } from '@/types/authored-event'
 import { ItemEventMultipurpose } from '@/components/ItemsEventContent/ItemEventMultipurpose/ItemEventMultipurpose'
 import { ItemEventProfile } from '@/components/ItemsEventContent/ItemEventProfile/ItemEventProfile'
+import { dbi } from '@/modules/db'
 
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
+  const { currentPubkey } = useAppSelector(selectKeys)
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { openApp, openBlank, sendTabPayment } = useOpenApp()
   const { onPinApp, findAppPin, onDeletePinnedApp } = usePins()
@@ -115,8 +117,15 @@ export const ModalContextMenuContent = () => {
     })
   }
 
-  const handleOpenApp = () => {
+  const handleOpenApp = async () => {
     if (!lastApp) return
+    await dbi.addSelectAppHistory({
+      kind,
+      naddr: lastApp.naddr,
+      pubkey: currentPubkey,
+      timestamp: Date.now(),
+      name: lastApp.name
+    })
     openApp({ ...lastApp, kind: '' + kind }, { replace: true })
   }
 
@@ -274,12 +283,12 @@ export const ModalContextMenuContent = () => {
             pubkey: eventCurrent.pubkey,
             time: eventCurrent.created_at,
             kind: eventCurrent.kind,
-            content: getTagValue(eventCurrent, 'summary') ||
+            content:
+              getTagValue(eventCurrent, 'summary') ||
               getTagValue(eventCurrent, 'description') ||
-              getTagValue(eventCurrent, 'alt') || 
+              getTagValue(eventCurrent, 'alt') ||
               eventCurrent.content,
-            title: getTagValue(eventCurrent, 'title') ||
-              getTagValue(eventCurrent, 'name')
+            title: getTagValue(eventCurrent, 'title') || getTagValue(eventCurrent, 'name')
           }
 
           return <ItemEventMultipurpose event={defaultEvent} />

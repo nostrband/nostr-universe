@@ -18,7 +18,7 @@ import {
   setContactList,
   setHighlights,
   setLiveEvents,
-  setLongPosts,
+  setLongPosts
 } from '@/store/reducers/contentWorkspace'
 import { MIN_ZAP_AMOUNT } from '@/consts'
 import { MetaEvent } from '@/types/meta-event'
@@ -71,7 +71,6 @@ export const useUpdateProfile = () => {
   }, [])
 
   const reloadFeeds = useCallback(async () => {
-
     if (!isConnected()) return
 
     dispatch(setLoading({ isLoading: true }))
@@ -81,7 +80,7 @@ export const useUpdateProfile = () => {
 
     if (isGuest(currentPubkey)) return
 
-    console.log("sync reloadFeeds", Date.now())
+    console.log('sync reloadFeeds', Date.now())
     if (contactList) {
       setContacts(contactList)
 
@@ -120,7 +119,6 @@ export const useUpdateProfile = () => {
     dispatch(fetchBestLongNotesThunk(currentPubkey))
     dispatch(fetchProfileListsThunk({ pubkey: currentPubkey, decrypt }))
     dispatch(fetchBookmarkListsThunk({ pubkey: currentPubkey, decrypt }))
-
   }, [contactList, dispatch, sync])
 
   useEffect(() => {
@@ -129,7 +127,6 @@ export const useUpdateProfile = () => {
 
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
-
       startSync(currentPubkey)
 
       const currentProfile = getProfile(currentPubkey)

@@ -8,7 +8,7 @@ import { Kinds } from './const/kinds'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(20).stores({
+db.version(22).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -26,9 +26,51 @@ db.version(20).stores({
   payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
   searchClickHistory: 'id,pubkey,timestamp,addr,query,kind',
   syncTasks: 'id,pubkey,type,since,until',
+  selectAppHistory: 'timestamp,pubkey,kind,naddr,name',
+  nextSuggestTime: 'timestamp'
 })
 
 export const dbi = {
+  setNextSuggestTime: async (time) => {
+    try {
+      await db.nextSuggestTime.add(time)
+    } catch (error) {
+      console.log(`Add nextSuggestTime to DB error: ${error}`)
+    }
+  },
+  getNextSuggestTime: async () => {
+    try {
+      return await db.nextSuggestTime.toArray()
+    } catch (error) {
+      console.log(`Get nextSuggestTime from DB error: ${error}`)
+    }
+  },
+  addSelectAppHistory: async (app) => {
+    try {
+      await db.selectAppHistory.add(app)
+    } catch (error) {
+      console.log(`Add selectAppHistory to DB error: ${error}`)
+    }
+  },
+  getListSelectAppHistory: async (pubkey: string) => {
+    try {
+      const list = await db.selectAppHistory.where('pubkey').equals(pubkey).toArray()
+
+      const occurrences = {}
+
+      const filteredArray = list.filter((obj) => {
+        const key = `${obj.kind}_${obj.naddr}`
+        occurrences[key] = (occurrences[key] || 0) + 1
+
+        return occurrences[key] === 3
+      })
+
+      return filteredArray.sort((a, b) => b.timestamp - a.timestamp)
+    } catch (error) {
+      console.log(`List selectAppHistory error: ${error}`)
+      return []
+    }
+  },
   addSignedEvent: async (signedEvent) => {
     try {
       await db.signedEvents.add(signedEvent)

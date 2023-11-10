@@ -2,10 +2,11 @@ import {
   NDKFilter,
   NDKRelaySet,
   NostrEvent
+  // eslint-disable-next-line
   // @ts-ignore
 } from '@nostrband/ndk'
-// @ts-ignore
-import { matchFilter, nip19 } from '@nostrband/nostr-tools'
+
+// eslint-disable-next-line
 // @ts-ignore
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { getTagValue, getTags, ndk, nostrEvent } from './nostr'
@@ -24,19 +25,20 @@ interface ISyncTask {
   until: number
   relay: string
   order: number
+  // eslint-disable-next-line
   params: any
 }
 
 export interface ISyncState {
-  todo: number,
+  todo: number
   done: number
   totalEventCount: number
   newEventCount: number
 }
 
 const MAX_ACTIVE_TASKS = 3
-const activeTasks = new Map<string, { relay: string, promise: Promise<void> }>()
-let currentPubkey = ""
+const activeTasks = new Map<string, { relay: string; promise: Promise<void> }>()
+let currentPubkey = ''
 let currentContactList: NostrEvent | null = null
 const queue: ISyncTask[] = []
 const newEvents: NostrEvent[] = []
@@ -46,10 +48,9 @@ let onSyncState: ((s: ISyncState) => void) | null = null
 let nextOrder = 0
 //const logs: string[] = []
 
-function createTask(type: string, params: any, relay: string,
-  since?: number, until?: number): ISyncTask {
-  console.log("sync createTask", currentPubkey, type, relay, "since", since,
-    "until", until, "params", params)
+// eslint-disable-next-line
+function createTask(type: string, params: any, relay: string, since?: number, until?: number): ISyncTask {
+  console.log('sync createTask', currentPubkey, type, relay, 'since', since, 'until', until, 'params', params)
   nextOrder++
   return {
     id: v4(),
@@ -69,14 +70,14 @@ async function appendTasks(tasks: ISyncTask[], taskQueue: ISyncTask[]) {
 }
 
 function updateSyncState() {
-  if (onSyncState) onSyncState({
-    todo: queue.length + activeTasks.size,
-    done,
-    totalEventCount: getEventsCount(),
-    newEventCount,
-  })
+  if (onSyncState)
+    onSyncState({
+      todo: queue.length + activeTasks.size,
+      done,
+      totalEventCount: getEventsCount(),
+      newEventCount
+    })
 }
-
 
 export function onBeforeNewEvent(event: NostrEvent) {
   switch (event.kind as number) {
@@ -89,14 +90,14 @@ export function onBeforeNewEvent(event: NostrEvent) {
 function getContacts(event: NostrEvent): Set<string> {
   return new Set(
     getTags(event, 'p')
-      .map(t => t.length >= 2 ? t[1] : '')
-      .filter(p => p.length === 64)
+      .map((t) => (t.length >= 2 ? t[1] : ''))
+      .filter((p) => p.length === 64)
   )
 }
 
 async function getExistingContactList(pubkey: string): Promise<NostrEvent | null> {
   const contactLists = await fetchLocal({ authors: [pubkey], kinds: [Kinds.CONTACT_LIST] })
-  console.log("sync", pubkey, "contactList", contactLists)
+  console.log('sync', pubkey, 'contactList', contactLists)
   if (contactLists.length === 0) return null
   return contactLists[0]
 }
@@ -119,16 +120,21 @@ function createAppsTasks(since: number, until?: number): ISyncTask[] {
 }
 
 function createPubkeyTasks(pubkeys: string[], since: number, until?: number): ISyncTask[] {
-
   const newQueue: ISyncTask[] = []
 
   let pubkeyBatch: string[] = []
   function pushPubkeyBatch() {
     if (pubkeyBatch.length === 0) return
     for (const relay of readRelays) {
-      const task = createTask('pubkeys', {
-        pubkeys: pubkeyBatch
-      }, relay, since, until)
+      const task = createTask(
+        'pubkeys',
+        {
+          pubkeys: pubkeyBatch
+        },
+        relay,
+        since,
+        until
+      )
       newQueue.push(task)
     }
     pubkeyBatch = []
@@ -136,8 +142,7 @@ function createPubkeyTasks(pubkeys: string[], since: number, until?: number): IS
 
   for (const p of pubkeys) {
     pubkeyBatch.push(p)
-    if (pubkeyBatch.length >= 500)
-      pushPubkeyBatch()
+    if (pubkeyBatch.length >= 500) pushPubkeyBatch()
   }
   pushPubkeyBatch()
 
@@ -152,24 +157,30 @@ async function processNewEvents() {
     return
   }
 
-  if (newEvents.length)
-    console.log("sync processing new events", newEvents.length)
+  if (newEvents.length) console.log('sync processing new events', newEvents.length)
   while (newEvents.length > 0) {
     const event = newEvents.shift()
 
     // new contact list of the current user
-    if (event.pubkey === currentPubkey
-      && event.kind === Kinds.CONTACT_LIST
-      && event.created_at > (currentContactList?.created_at || 0)
+    if (
+      event.pubkey === currentPubkey &&
+      event.kind === Kinds.CONTACT_LIST &&
+      event.created_at > (currentContactList?.created_at || 0)
     ) {
       const newContacts = getContacts(event)
       newContacts.delete(currentPubkey)
 
       const contacts = new Set(getContactPubkeys(currentContactList))
 
-      const newPubkeys = [...newContacts.values()].filter(p => !contacts.has(p))
-      console.log("sync existingContacts", contacts.size, "newContacts", newContacts.size,
-        "newPubkeys", newPubkeys.length)
+      const newPubkeys = [...newContacts.values()].filter((p) => !contacts.has(p))
+      console.log(
+        'sync existingContacts',
+        contacts.size,
+        'newContacts',
+        newContacts.size,
+        'newPubkeys',
+        newPubkeys.length
+      )
 
       const [sinceOld, sinceNew] = getInitSyncRanges()
       const createTasks = async (since: number, until?: number) => {
@@ -188,16 +199,12 @@ async function processNewEvents() {
   }
 }
 
-async function processFilter(
-  task: ISyncTask, filterTmpl: NDKFilter, postFilter?: (e: NostrEvent) => boolean
-) {
+async function processFilter(task: ISyncTask, filterTmpl: NDKFilter, postFilter?: (e: NostrEvent) => boolean) {
   let totalLimit = 4000
 
   // FIXME use trust rank to calc per-pubkey limit?
-  if (filterTmpl.authors?.length > 0)
-    totalLimit = filterTmpl.authors.length * 100
-  if (filterTmpl.authors?.includes(currentPubkey))
-    totalLimit *= 50
+  if (filterTmpl.authors?.length > 0) totalLimit = filterTmpl.authors.length * 100
+  if (filterTmpl.authors?.includes(currentPubkey)) totalLimit *= 50
 
   let total = 0
   let count = 0
@@ -213,14 +220,15 @@ async function processFilter(
       ...filterTmpl,
       since: task.since,
       until: lastUntil,
-      limit: 4000,
+      limit: 4000
     }
 
     const start = Date.now()
     const events = await ndk.fetchEvents(
-      filter, 
-      { subId: task.id }, 
-      NDKRelaySet.fromRelayUrls([task.relay || nostrbandRelay], ndk))
+      filter,
+      { subId: task.id },
+      NDKRelaySet.fromRelayUrls([task.relay || nostrbandRelay], ndk)
+    )
     const newEvents = []
     for (const ndkEvent of events.values()) {
       const e = nostrEvent(ndkEvent)
@@ -232,26 +240,34 @@ async function processFilter(
       ++count
     }
 
-    if (newEvents.length > 0)
-      dbi.putLocalRelayEvents(newEvents)
+    if (newEvents.length > 0) dbi.putLocalRelayEvents(newEvents)
 
     results.push(...newEvents)
     total += count
     newEventCount += count
 
     const now = Date.now()
-    console.log("sync task step events", count, //"mismatched", mismatched, 
-      "total", total, "relay", task.relay, "in", now - start, "ms", filter)
-//    logs.push(`got ${count} from ${task.relay} in ${now - start} total ${total} kinds ${JSON.stringify(filter.kinds)}`)
+    console.log(
+      'sync task step events',
+      count, //"mismatched", mismatched,
+      'total',
+      total,
+      'relay',
+      task.relay,
+      'in',
+      now - start,
+      'ms',
+      filter
+    )
+    //    logs.push(`got ${count} from ${task.relay} in ${now - start} total ${total} kinds ${JSON.stringify(filter.kinds)}`)
 
-    if ((now - lastUpdate) > 10000) {
+    if (now - lastUpdate > 10000) {
       updateSyncState()
       lastUpdate = now
     }
 
     // let other stuff work too
-    await new Promise(ok => setTimeout(ok, 1000))
-
+    await new Promise((ok) => setTimeout(ok, 1000))
   } while (nextUntil < lastUntil && total < totalLimit && nextUntil > task.since)
 
   return results
@@ -264,13 +280,13 @@ function filterBigZap(e: NostrEvent) {
   } catch {
     e.bolt11 = undefined
   }
+  // eslint-disable-next-line
   const amountMsat = Number(e.bolt11?.sections?.find((s: any) => s.name === 'amount')?.value || '')
   return amountMsat >= MIN_ZAP_AMOUNT * 1000
 }
 
 async function executeTask(currentTask: ISyncTask) {
   if (currentTask.type === 'pubkeys') {
-
     const rareFilter: NDKFilter = {
       authors: currentTask.params.pubkeys,
       kinds: [
@@ -281,7 +297,7 @@ async function executeTask(currentTask: ISyncTask) {
         Kinds.COMMUNITY,
         Kinds.LONG_NOTE,
         Kinds.COMMUNITY_APPROVAL,
-        Kinds.HIGHLIGHT,
+        Kinds.HIGHLIGHT
       ]
     }
     // frequent kinds
@@ -298,7 +314,7 @@ async function executeTask(currentTask: ISyncTask) {
       ]
     }
     const refFilter: NDKFilter = {
-      "#p": currentTask.params.pubkeys,
+      '#p': currentTask.params.pubkeys,
       kinds: [Kinds.ZAP, Kinds.LIVE_EVENT]
     }
 
@@ -325,7 +341,6 @@ async function executeTask(currentTask: ISyncTask) {
 }
 
 async function processNextTask() {
-
   await processNewEvents()
   if (!queue.length) {
     setTimeout(processNextTask, 1000)
@@ -334,22 +349,20 @@ async function processNextTask() {
 
   const waitOne = async () => {
     if (!activeTasks.size) return
-    await Promise.race([...activeTasks.values()].map(at => at.promise))
+    await Promise.race([...activeTasks.values()].map((at) => at.promise))
   }
 
   // wait for one of active tasks to finish
-  if (activeTasks.size >= MAX_ACTIVE_TASKS)
-    await waitOne()
+  if (activeTasks.size >= MAX_ACTIVE_TASKS) await waitOne()
 
   // recent stuff first
   queue.sort((a, b) => {
-    if (b.until != a.until)
-      return b.until - a.until // desc
+    if (b.until != a.until) return b.until - a.until // desc
     return a.order - b.order // asc
   })
 
   // take one on an idle relay
-  const relays = [...activeTasks.values()].map(at => at.relay)
+  const relays = [...activeTasks.values()].map((at) => at.relay)
   const nextIndex = queue.findIndex((t) => !relays.find((r) => r === t.relay))
   if (nextIndex < 0) {
     // wait until one task finishes and retry
@@ -360,12 +373,22 @@ async function processNextTask() {
 
   // take next task
   const currentTask = queue[nextIndex]
-  console.log("sync task since", new Date(currentTask.since * 1000),
-    "until", new Date(currentTask.until * 1000),
-    currentTask, "todo", queue.length, "done", done,
-    "active", activeTasks.size)
+  console.log(
+    'sync task since',
+    new Date(currentTask.since * 1000),
+    'until',
+    new Date(currentTask.until * 1000),
+    currentTask,
+    'todo',
+    queue.length,
+    'done',
+    done,
+    'active',
+    activeTasks.size
+  )
   queue.splice(nextIndex, 1)
 
+  // eslint-disable-next-line
   const promise = new Promise<void>(async (ok) => {
     // exec
     await executeTask(currentTask)
@@ -376,7 +399,7 @@ async function processNextTask() {
     // count it
     done++
     activeTasks.delete(currentTask.id)
-    console.log("sync task finished", currentTask)
+    console.log('sync task finished', currentTask)
     updateSyncState()
     ok()
   })
@@ -388,30 +411,30 @@ async function processNextTask() {
   setTimeout(processNextTask, queue.length > 0 ? 0 : 1000)
 }
 
+// eslint-disable-next-line
 async function fetchLocal(filter: any): Promise<any[]> {
   // local relay direct client
+  // eslint-disable-next-line
   let fetchQueue: any[] = []
   let fetchOk: (() => void) | null = null
+  // eslint-disable-next-line
   const client = new LocalRelayClient((msg: any) => {
-    console.log("local relay reply", msg)
+    console.log('local relay reply', msg)
     if (msg.length < 2) return
-    if (msg[0] === "EVENT" && msg.length >= 3)
-      fetchQueue.push(msg[2])
-    else if (msg[0] === "EOSE")
-      fetchOk?.()
-    else
-      console.log("bad local reply")
+    if (msg[0] === 'EVENT' && msg.length >= 3) fetchQueue.push(msg[2])
+    else if (msg[0] === 'EOSE') fetchOk?.()
+    else console.log('bad local reply')
   })
 
   return new Promise((ok) => {
     fetchOk = () => {
-      const close = ["CLOSE", "1"]
+      const close = ['CLOSE', '1']
       client.handle(JSON.stringify(close))
       const events = fetchQueue
       fetchQueue = []
       ok(events)
     }
-    const msg = ["REQ", "1", filter]
+    const msg = ['REQ', '1', filter]
     client.handle(JSON.stringify(msg))
   })
 }
@@ -423,7 +446,6 @@ function getInitSyncRanges() {
 }
 
 export async function startSync(pubkey: string) {
-
   if (currentPubkey === pubkey) return
 
   currentPubkey = pubkey
@@ -440,7 +462,7 @@ export async function startSync(pubkey: string) {
 
   const contacts = getContactPubkeys(currentContactList)
 
-  console.log("sync", currentPubkey, "contacts", contacts)
+  console.log('sync', currentPubkey, 'contacts', contacts)
 
   const appendAppsTasks = async (since: number, until?: number) => {
     const appsTasks = createAppsTasks(since, until)
@@ -454,13 +476,20 @@ export async function startSync(pubkey: string) {
 
   // last cursor
   const now = Math.floor(Date.now() / 1000)
-  const lastUntil = Number(await dbi.getFlag(currentPubkey, 'last_until') || '0')
+  const lastUntil = Number((await dbi.getFlag(currentPubkey, 'last_until')) || '0')
 
   if (lastUntil) {
     const since = lastUntil - 1 // bcs since/until are excluding
-    console.log("sync", currentPubkey,
-      "lastUntil", lastUntil, new Date(lastUntil * 1000),
-      "since", since, new Date(since * 1000))
+    console.log(
+      'sync',
+      currentPubkey,
+      'lastUntil',
+      lastUntil,
+      new Date(lastUntil * 1000),
+      'since',
+      since,
+      new Date(since * 1000)
+    )
 
     // create tasks for known pubkeys
     await appendAppsTasks(since, now)
@@ -468,11 +497,11 @@ export async function startSync(pubkey: string) {
     await appendPubkeyTasks(contacts, since, now)
   } else {
     // for initial sync, create two tasks, one for the last week
-    // and one for the rest of it, to make sure the first week 
+    // and one for the rest of it, to make sure the first week
     // loads faster
     const [sinceOld, sinceNew] = getInitSyncRanges()
 
-    console.log("sync initial", currentPubkey, "sinceOld", sinceOld, "sinceNew", sinceNew)
+    console.log('sync initial', currentPubkey, 'sinceOld', sinceOld, 'sinceNew', sinceNew)
 
     // order is important, the first one might get picked up before
     // the second one is added
@@ -492,7 +521,7 @@ export async function startSync(pubkey: string) {
   await dbi.setFlag(currentPubkey, 'last_until', now + '')
 
   // replace current queue with this pubkey's queue
-  console.log("sync newQueue", newQueue.length, newQueue)
+  console.log('sync newQueue', newQueue.length, newQueue)
   queue.push(...newQueue)
   done = 0
 

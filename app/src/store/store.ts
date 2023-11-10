@@ -34,7 +34,7 @@ export const rootReducer = combineReducers({
   [userService.reducerPath]: userService.reducer,
   [bookmarksSlice.name]: bookmarksSlice.reducer,
   [feedbackInfoSlice.name]: feedbackInfoSlice.reducer,
-  [syncSlice.name]: syncSlice.reducer,
+  [syncSlice.name]: syncSlice.reducer
 })
 
 export const createStore = () => {

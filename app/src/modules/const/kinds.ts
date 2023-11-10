@@ -20,4 +20,3 @@ export const enum Kinds {
   NWC_PAYMENT_REQUEST = 23194,
   NWC_PAYMENT_REPLY = 23195
 }
-

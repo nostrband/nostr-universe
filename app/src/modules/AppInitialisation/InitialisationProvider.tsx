@@ -37,14 +37,14 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
       console.log('ndk connected')
 
       // we have to wait until relay is initialized
-      // and then sync starts because if user proceeds 
+      // and then sync starts because if user proceeds
       // and switches to another key then we won't know
       // if relay is ready or not and if we can start syncing
       // the new key
       // FIXME rebuild around hooks and state variables so
-      // that startSync would wait until local relay is ready 
+      // that startSync would wait until local relay is ready
       await initLocalRelay()
-//      await startSync(currentPubKey)
+      //      await startSync(currentPubKey)
       for (const key of keys) await loadWorkspace(key, dispatch)
 
       await reloadWallets()

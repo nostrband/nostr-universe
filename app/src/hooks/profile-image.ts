@@ -74,7 +74,7 @@ export const useProfileImageSource = ({
   }
 
   if (cached > 0) {
-    return { ...returnedObject, url: generatedURL }  
+    return { ...returnedObject, url: generatedURL }
   }
 
   if (!wasInView || !pubkey || !originalImage || isGuest(pubkey)) {
