@@ -283,7 +283,7 @@ async function processFilters(
     }
 
     // let other stuff work too
-    await new Promise(ok => setTimeout(ok, 1000))
+    await new Promise(ok => setTimeout(ok, 2000))
 
   } while (nextUntil < lastUntil && total < totalLimit && nextUntil > task.since)
 
@@ -334,12 +334,17 @@ async function executeTaskPubkeys(currentTask: ISyncTask) {
     ]
   }
 
-  await processFilters(currentTask,
-    [rareFilter, mainFilter, refFilter],
-    filterBigZap)
-  // await processFilter(currentTask, mainFilter)
-  // await processFilter(currentTask, refFilter, filterBigZap)
-  //    await processFilter(task, allFilter)
+  // await processFilters(currentTask,
+  //   [rareFilter, mainFilter, refFilter],
+  //   filterBigZap)
+
+  await processFilters(currentTask, [rareFilter, refFilter], filterBigZap)
+  await processFilters(currentTask, [mainFilter])
+
+
+  // await processFilters(currentTask, [rareFilter])
+  // await processFilters(currentTask, [mainFilter])
+  // await processFilters(currentTask, [refFilter], filterBigZap)
 }
 
 async function executeTaskMetas(currentTask: ISyncTask) {
