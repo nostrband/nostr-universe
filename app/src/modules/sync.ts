@@ -249,6 +249,9 @@ async function processFilter(
       lastUpdate = now
     }
 
+    // let other stuff work too
+    await new Promise(ok => setTimeout(ok, 1000))
+
   } while (nextUntil < lastUntil && total < totalLimit && nextUntil > task.since)
 
   return results
