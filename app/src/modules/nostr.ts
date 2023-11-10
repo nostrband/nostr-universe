@@ -191,8 +191,7 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter, options?: IFetchOptions): 
   return new Promise(async (ok) => {
     const start = Date.now()
     const relaySet = NDKRelaySet.fromRelayUrls(
- // FIXME DEBUG
-      (true || options?.cacheOnly) 
+      (options?.cacheOnly) 
       ? [cacheRelay]
       : (options?.noCache
         ? readRelays
@@ -535,10 +534,11 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
     JSON.stringify(addrFilter)
   )
 
+  const opts = { cacheOnly: true }
   const reqs = []
-  if (idFilter.ids?.length > 0) reqs.push(fetchEventsRead(ndk, idFilter))
-  if (kindPubkeyFilter.authors?.length > 0) reqs.push(fetchEventsRead(ndk, kindPubkeyFilter))
-  if (addrFilter.authors?.length > 0) reqs.push(fetchEventsRead(ndk, addrFilter))
+  if (idFilter.ids?.length > 0) reqs.push(fetchEventsRead(ndk, idFilter, opts))
+  if (kindPubkeyFilter.authors?.length > 0) reqs.push(fetchEventsRead(ndk, kindPubkeyFilter, opts))
+  if (addrFilter.authors?.length > 0) reqs.push(fetchEventsRead(ndk, addrFilter, opts))
 
   const ndkEvents = await collectEvents(reqs)
   events.push(...[...ndkEvents].map((e) => rawEvent(e)))
@@ -628,14 +628,15 @@ async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEve
 
   console.log('loading event by filter', JSON.stringify(filter))
 
-  const reqs = [fetchEventsRead(ndk, filter)]
+  const opts = { cacheOnly: false }
+  const reqs = [fetchEventsRead(ndk, filter, opts)]
   if (addr.hex && addr.event_id) {
     const profileFilter: NDKFilter = {
       kinds: [0],
       authors: [addr.event_id]
     }
     // console.log("loading profile by filter", profile_filter);
-    reqs.push(fetchEventsRead(ndk, profileFilter))
+    reqs.push(fetchEventsRead(ndk, profileFilter, opts))
   }
 
   const events = await collectEvents(reqs)
@@ -1184,7 +1185,11 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
   if (!top) return events
 
   if (top.ids.length) {
-    const augmentedEvents = await fetchEventsByIds({ ids: top.ids, kinds: [Kinds.META] })
+    const augmentedEvents = await fetchEventsByIds({ 
+      ids: top.ids, 
+      kinds: [Kinds.META],
+      remote: true
+    })
 
     // convert to meta events
     const metaEvents = augmentMetaEvents(augmentedEvents)
@@ -1205,7 +1210,7 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
   return events
 }
 
-export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
+export async function fetchMetas(pubkeys: string[], remote?: boolean): Promise<MetaEvent[]> {
   // dedup
   pubkeys = [...new Set(pubkeys)]
 
@@ -1239,7 +1244,7 @@ export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
     console.log('fetchMetas cached', reqs, fetched)
   }
 
-  if (reqPubkeys.size > 0) {
+  if (remote && reqPubkeys.size > 0) {
     const [reqs, fetched] = await fetch(false)
     console.log('fetchMetas remote', reqs, fetched)
   }
@@ -1247,11 +1252,11 @@ export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   return metas
 }
 
-async function augmentEventAuthors(events: AugmentedEvent[]): Promise<AuthoredEvent[]> {
+async function augmentEventAuthors(events: AugmentedEvent[], remote?: boolean): Promise<AuthoredEvent[]> {
   const authoredEvents = events.map((e) => createAuthoredEvent(e))
   if (authoredEvents.length > 0) {
     // profile infos
-    const metas = await fetchMetas(events.map((e) => e.pubkey))
+    const metas = await fetchMetas(events.map((e) => e.pubkey), remote)
 
     // assign to notes
     authoredEvents.forEach((e) => (e.author = metas.find((m) => m.pubkey === e.pubkey)))
@@ -1272,9 +1277,10 @@ function augmentMetaEvents(events: AugmentedEvent[]): MetaEvent[] {
 interface IFetchEventByIdsParams {
   ids: string[]
   kinds: number[]
+  remote?: boolean
 }
 
-async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise<AugmentedEvent[]> {
+async function fetchEventsByIds({ ids, kinds, remote = false }: IFetchEventByIdsParams): Promise<AugmentedEvent[]> {
   const results: AugmentedEvent[] = []
   const reqIds = new Set<string>()
   ids.forEach((id) => {
@@ -1307,7 +1313,7 @@ async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise
     console.log('fetchEventsByIds cached', reqs, fetched)
   }
 
-  if (reqIds.size > 0) {
+  if (remote && reqIds.size > 0) {
     const [reqs, fetched] = await fetch(false)
     console.log('fetchEventsByIds remote', reqs, fetched)
   }
@@ -1412,7 +1418,7 @@ async function augmentCommunities(events: AugmentedEvent[]): Promise<CommunityEv
   })
 
   console.log('communities meta pubkeys', pubkeys)
-  const metas = await fetchMetas([...pubkeys.values()])
+  const metas = await fetchMetas([...pubkeys.values()], true)
 
   // assign to events
   communities.forEach((e) => {
@@ -1473,7 +1479,7 @@ async function searchEvents({ q, kind, limit = 30 }: SearchEventsParams): Promis
 
 async function searchAuthoredEvents(params: SearchEventsParams): Promise<AuthoredEvent[]> {
   const augmentedEvents = await searchEvents(params)
-  return await augmentEventAuthors(augmentedEvents)
+  return await augmentEventAuthors(augmentedEvents, true)
 }
 
 export async function searchNotes(q: string, limit: number = 30): Promise<AuthoredEvent[]> {
@@ -1594,7 +1600,7 @@ async function fetchPubkeyEvents({
 
 async function fetchPubkeyAuthoredEvents(params: IFetchPubkeyEventsParams): Promise<AuthoredEvent[]> {
   const augmentedEvents = await fetchPubkeyEvents(params)
-  return await augmentEventAuthors(augmentedEvents)
+  return await augmentEventAuthors(augmentedEvents, !params.cacheOnly)
 }
 
 export async function fetchFollowedLongNotes(contactPubkeys: string[]): Promise<LongNoteEvent[]> {

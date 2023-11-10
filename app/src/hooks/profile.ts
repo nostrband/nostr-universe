@@ -50,8 +50,6 @@ export const useUpdateProfile = () => {
   const sync = useSync()
   const asyncThrottle = useAsyncThrottle(10000)
 
-  const reload = sync.reload || (sync.done > 0 && sync.todo === 0)
-
   const setContacts = useCallback(
     async (contactList?: ContactListEvent) => {
       if (contactList?.contactEvents) {
@@ -123,12 +121,13 @@ export const useUpdateProfile = () => {
     dispatch(fetchProfileListsThunk({ pubkey: currentPubkey, decrypt }))
     dispatch(fetchBookmarkListsThunk({ pubkey: currentPubkey, decrypt }))
 
-  }, [contactList, dispatch, reload]) 
+  }, [contactList, dispatch]) 
 
   useEffect(() => {
-    console.log("sync maybeReload")
-    asyncThrottle(reloadFeeds)
-  }, [reloadFeeds])
+    const reload = sync.reload || (sync.done > 0 && sync.todo === 0)
+    if (reload)
+      asyncThrottle(reloadFeeds)
+  }, [reloadFeeds, sync])
 
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
