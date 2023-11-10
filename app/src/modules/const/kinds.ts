@@ -3,6 +3,7 @@ export const enum Kinds {
   NOTE = 1,
   CONTACT_LIST = 3,
   DM = 4,
+  DELETE = 5,
   REPOST = 6,
   REACTION = 7,
   REPORT = 1984,

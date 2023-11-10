@@ -48,7 +48,7 @@ export const useUpdateProfile = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { decrypt } = useSigner()
   const sync = useSync()
-  const asyncThrottle = useAsyncThrottle(3000)
+  const asyncThrottle = useAsyncThrottle(10000)
 
   const setContacts = useCallback(
     async (contactList?: ContactListEvent) => {
@@ -119,11 +119,16 @@ export const useUpdateProfile = () => {
     dispatch(fetchBestLongNotesThunk(currentPubkey))
     dispatch(fetchProfileListsThunk({ pubkey: currentPubkey, decrypt }))
     dispatch(fetchBookmarkListsThunk({ pubkey: currentPubkey, decrypt }))
-  }, [contactList, dispatch, sync])
+  }, [contactList, dispatch])
 
   useEffect(() => {
     asyncThrottle(reloadFeeds)
-  }, [reloadFeeds])
+  }, [contactList])
+
+  useEffect(() => {
+    const reload = sync.reload || (sync.done > 0 && sync.todo === 0)
+    if (reload) asyncThrottle(reloadFeeds)
+  }, [reloadFeeds, sync])
 
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {

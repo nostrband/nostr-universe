@@ -16,6 +16,13 @@ import { dbi } from './db'
 import { v4 } from 'uuid'
 import { Kinds } from './const/kinds'
 import { MIN_ZAP_AMOUNT } from '@/consts'
+import { isGuest } from '@/utils/helpers/prepare-data'
+
+export const enum Types {
+  APPS = 'apps',
+  PUBKEYS = 'pubkeys',
+  METAS = 'metas'
+}
 
 interface ISyncTask {
   id: string
@@ -34,9 +41,10 @@ export interface ISyncState {
   done: number
   totalEventCount: number
   newEventCount: number
+  reload?: boolean
 }
 
-const MAX_ACTIVE_TASKS = 3
+const MAX_ACTIVE_TASKS = 5
 const activeTasks = new Map<string, { relay: string; promise: Promise<void> }>()
 let currentPubkey = ''
 let currentContactList: NostrEvent | null = null
@@ -46,6 +54,7 @@ let done = 0
 let newEventCount = 0
 let onSyncState: ((s: ISyncState) => void) | null = null
 let nextOrder = 0
+let needReload = false
 //const logs: string[] = []
 
 // eslint-disable-next-line
@@ -70,13 +79,15 @@ async function appendTasks(tasks: ISyncTask[], taskQueue: ISyncTask[]) {
 }
 
 function updateSyncState() {
-  if (onSyncState)
-    onSyncState({
-      todo: queue.length + activeTasks.size,
-      done,
-      totalEventCount: getEventsCount(),
-      newEventCount
-    })
+  const state = {
+    todo: queue.length + activeTasks.size,
+    done,
+    totalEventCount: getEventsCount(),
+    newEventCount,
+    reload: needReload
+  }
+  console.log('sync updated state', state)
+  if (onSyncState) onSyncState(state)
 }
 
 export function onBeforeNewEvent(event: NostrEvent) {
@@ -119,7 +130,7 @@ function createAppsTasks(since: number, until?: number): ISyncTask[] {
   return tasks
 }
 
-function createPubkeyTasks(pubkeys: string[], since: number, until?: number): ISyncTask[] {
+function createPubkeyTasks(type: string, pubkeys: string[], since: number, until?: number): ISyncTask[] {
   const newQueue: ISyncTask[] = []
 
   let pubkeyBatch: string[] = []
@@ -127,7 +138,7 @@ function createPubkeyTasks(pubkeys: string[], since: number, until?: number): IS
     if (pubkeyBatch.length === 0) return
     for (const relay of readRelays) {
       const task = createTask(
-        'pubkeys',
+        type,
         {
           pubkeys: pubkeyBatch
         },
@@ -183,28 +194,40 @@ async function processNewEvents() {
       )
 
       const [sinceOld, sinceNew] = getInitSyncRanges()
-      const createTasks = async (since: number, until?: number) => {
-        const pubkeyTasks = createPubkeyTasks(newPubkeys, since, until)
-        await appendTasks(pubkeyTasks, queue)
-      }
 
       const now = Math.floor(Date.now() / 1000)
-      await createTasks(sinceNew, now)
-      await createTasks(sinceOld, sinceNew + 1)
 
+      // we need metas no matter how old!
+      const metaTasks = createPubkeyTasks(Types.METAS, newPubkeys, 0, now)
+      // recent stuff
+      const pubkeyTasksNew = createPubkeyTasks(Types.PUBKEYS, newPubkeys, sinceNew, now)
+      // and then older stuff
+      const pubkeyTasksOld = createPubkeyTasks(Types.PUBKEYS, newPubkeys, sinceOld, sinceNew + 1)
+
+      // append in proper order
+      await appendTasks([...metaTasks, ...pubkeyTasksNew, ...pubkeyTasksOld], queue)
+
+      // notify
       updateSyncState()
 
+      // remember our current CL
       currentContactList = event
     }
   }
 }
 
-async function processFilter(task: ISyncTask, filterTmpl: NDKFilter, postFilter?: (e: NostrEvent) => boolean) {
-  let totalLimit = 4000
+async function processFilters(task: ISyncTask, filterTmpls: NDKFilter[], postFilter?: (e: NostrEvent) => boolean) {
+  const DEFAULT_LIMIT = 4000
 
   // FIXME use trust rank to calc per-pubkey limit?
-  if (filterTmpl.authors?.length > 0) totalLimit = filterTmpl.authors.length * 100
-  if (filterTmpl.authors?.includes(currentPubkey)) totalLimit *= 50
+  let totalLimit = 0
+  for (const filter of filterTmpls) {
+    let limit = DEFAULT_LIMIT
+    if (filter.authors?.length > 0) limit = filter.authors.length * 100
+    //    if (filter.authors?.includes(currentPubkey))
+    //      limit *= 50
+    totalLimit += limit
+  }
 
   let total = 0
   let count = 0
@@ -216,16 +239,32 @@ async function processFilter(task: ISyncTask, filterTmpl: NDKFilter, postFilter?
     lastUntil = nextUntil
     count = 0
 
-    const filter: NDKFilter = {
-      ...filterTmpl,
-      since: task.since,
-      until: lastUntil,
-      limit: 4000
+    const filters: NDKFilter[] = []
+    for (const filterTmpl of filterTmpls) {
+      const filter: NDKFilter = {
+        ...filterTmpl,
+        since: task.since,
+        until: lastUntil,
+        limit: 4000
+      }
+      filters.push(filter)
     }
+
+    // const sub = new NDKSubscription(
+    //   ndk,
+    //   filters,
+    //   { subId: task.id, closeOnEose: true },
+    //   NDKRelaySet.fromRelayUrls([task.relay || nostrbandRelay], ndk)
+    // )
+    // const events: NostrEvent[] = []
+    // sub.on('event', (e: NostrEvent) => events.push(e))
+    // sub.start()
+
+    // await new Promise(ok => sub.on('eose', ok))
 
     const start = Date.now()
     const events = await ndk.fetchEvents(
-      filter,
+      filters,
       { subId: task.id },
       NDKRelaySet.fromRelayUrls([task.relay || nostrbandRelay], ndk)
     )
@@ -252,12 +291,14 @@ async function processFilter(task: ISyncTask, filterTmpl: NDKFilter, postFilter?
       count, //"mismatched", mismatched,
       'total',
       total,
+      'totalLimit',
+      totalLimit,
       'relay',
       task.relay,
       'in',
       now - start,
       'ms',
-      filter
+      filters
     )
     //    logs.push(`got ${count} from ${task.relay} in ${now - start} total ${total} kinds ${JSON.stringify(filter.kinds)}`)
 
@@ -267,7 +308,7 @@ async function processFilter(task: ISyncTask, filterTmpl: NDKFilter, postFilter?
     }
 
     // let other stuff work too
-    await new Promise((ok) => setTimeout(ok, 1000))
+    await new Promise((ok) => setTimeout(ok, 2000))
   } while (nextUntil < lastUntil && total < totalLimit && nextUntil > task.since)
 
   return results
@@ -285,58 +326,74 @@ function filterBigZap(e: NostrEvent) {
   return amountMsat >= MIN_ZAP_AMOUNT * 1000
 }
 
+async function executeTaskPubkeys(currentTask: ISyncTask) {
+  const rareFilter: NDKFilter = {
+    authors: currentTask.params.pubkeys,
+    kinds: [
+      Kinds.LONG_NOTE,
+      Kinds.COMMUNITY_APPROVAL,
+      Kinds.HIGHLIGHT,
+      Kinds.PROFILE_LIST,
+      Kinds.BOOKMARKS,
+      Kinds.COMMUNITY
+    ]
+  }
+  // frequent kinds
+  const mainFilter: NDKFilter = {
+    authors: currentTask.params.pubkeys,
+    kinds: [Kinds.NOTE, Kinds.REPOST, Kinds.REPORT, Kinds.LABEL, Kinds.REACTION, Kinds.DELETE]
+  }
+
+  const refFilter: NDKFilter = {
+    '#p': currentTask.params.pubkeys,
+    kinds: [Kinds.ZAP, Kinds.LIVE_EVENT]
+  }
+
+  // all filters at once cause strfry to slow down
+  // and get cut off by the read timeout :(
+  // await processFilters(currentTask,
+  //   [rareFilter, mainFilter, refFilter],
+  //   filterBigZap)
+
+  await processFilters(currentTask, [rareFilter, refFilter], filterBigZap)
+  await processFilters(currentTask, [mainFilter])
+
+  // all filters separately cause nostr.band to rate limit :(
+  // await processFilters(currentTask, [rareFilter])
+  // await processFilters(currentTask, [mainFilter])
+  // await processFilters(currentTask, [refFilter], filterBigZap)
+}
+
+async function executeTaskMetas(currentTask: ISyncTask) {
+  const filter: NDKFilter = {
+    authors: currentTask.params.pubkeys,
+    kinds: [Kinds.META, Kinds.CONTACT_LIST]
+  }
+
+  await processFilters(currentTask, [filter])
+}
+
+async function executeTaskApps(currentTask: ISyncTask) {
+  const filter: NDKFilter = {
+    kinds: [Kinds.APP]
+  }
+
+  await processFilters(currentTask, [filter])
+}
+
 async function executeTask(currentTask: ISyncTask) {
-  if (currentTask.type === 'pubkeys') {
-    const rareFilter: NDKFilter = {
-      authors: currentTask.params.pubkeys,
-      kinds: [
-        Kinds.META,
-        Kinds.CONTACT_LIST,
-        Kinds.PROFILE_LIST,
-        Kinds.BOOKMARKS,
-        Kinds.COMMUNITY,
-        Kinds.LONG_NOTE,
-        Kinds.COMMUNITY_APPROVAL,
-        Kinds.HIGHLIGHT
-      ]
-    }
-    // frequent kinds
-    const mainFilter: NDKFilter = {
-      authors: currentTask.params.pubkeys,
-      kinds: [
-        Kinds.NOTE,
-        Kinds.REPOST,
-        Kinds.REPORT,
-        Kinds.LABEL
-        // too frequent, ignore for now
-        // Kinds.REACTION,
-        // Kinds.REPOST,
-      ]
-    }
-    const refFilter: NDKFilter = {
-      '#p': currentTask.params.pubkeys,
-      kinds: [Kinds.ZAP, Kinds.LIVE_EVENT]
-    }
+  switch (currentTask.type) {
+    case Types.PUBKEYS:
+      await executeTaskPubkeys(currentTask)
+      break
 
-    await processFilter(currentTask, rareFilter)
-    await processFilter(currentTask, mainFilter)
-    await processFilter(currentTask, refFilter, filterBigZap)
-    //    await processFilter(task, allFilter)
-  } else if (currentTask.type === 'apps') {
-    const filter: NDKFilter = {
-      kinds: [Kinds.APP]
-    }
+    case Types.APPS:
+      await executeTaskApps(currentTask)
+      break
 
-    await processFilter(currentTask, filter)
-    // if (apps.length > 0) {
-    //   const pubkeys = apps.map(e => e.pubkey)
-    //   pubkeys.push(apps.map(e => getTagValue(e, 'p')).filter(p => !!p))
-    //   const metaFilter: NDKFilter = {
-    //     authors: [...new Set(pubkeys)],
-    //     kinds: [Kinds.LIVE_EVENT]
-    //   }
-    //   await processFilter(currentTask, metaFilter)
-    // }
+    case Types.METAS:
+      await executeTaskMetas(currentTask)
+      break
   }
 }
 
@@ -469,11 +526,6 @@ export async function startSync(pubkey: string) {
     await appendTasks(appsTasks, newQueue)
   }
 
-  const appendPubkeyTasks = async (pubkeys: string[], since: number, until?: number) => {
-    const pubkeyTasks = createPubkeyTasks(pubkeys, since, until)
-    await appendTasks(pubkeyTasks, newQueue)
-  }
-
   // last cursor
   const now = Math.floor(Date.now() / 1000)
   const lastUntil = Number((await dbi.getFlag(currentPubkey, 'last_until')) || '0')
@@ -491,10 +543,18 @@ export async function startSync(pubkey: string) {
       new Date(since * 1000)
     )
 
-    // create tasks for known pubkeys
+    // apps
     await appendAppsTasks(since, now)
-    await appendPubkeyTasks([currentPubkey], since, now)
-    await appendPubkeyTasks(contacts, since, now)
+
+    // self and contacts
+    if (!isGuest(currentPubkey)) {
+      const myTasks = createPubkeyTasks(Types.PUBKEYS, [currentPubkey], since, now)
+      const metaTasks = createPubkeyTasks(Types.METAS, [currentPubkey, ...contacts], since, now)
+      const pubkeyTasks = createPubkeyTasks(Types.PUBKEYS, contacts, since, now)
+
+      // append in proper order
+      await appendTasks([...myTasks, ...metaTasks, ...pubkeyTasks], newQueue)
+    }
   } else {
     // for initial sync, create two tasks, one for the last week
     // and one for the rest of it, to make sure the first week
@@ -507,14 +567,27 @@ export async function startSync(pubkey: string) {
     // the second one is added
     // load all apps
     await appendAppsTasks(0, now)
-    // load recent events of current pubkey
-    await appendPubkeyTasks([currentPubkey], sinceNew, now) // (sinceNew, now)
-    // load recent events of contacts
-    await appendPubkeyTasks(contacts, sinceNew, now) // (sinceNew, now)
-    // load ALL events of current pubkey
-    await appendPubkeyTasks([currentPubkey], 0, sinceNew + 1) // (sinceNew, now)
-    // load last month of events of contacts
-    await appendPubkeyTasks(contacts, sinceOld, sinceNew + 1) // (sinceOld, sinceNew]
+
+    if (!isGuest(currentPubkey)) {
+      const myTasks = createPubkeyTasks(Types.PUBKEYS, [currentPubkey], sinceNew, now)
+      const metaTasks = createPubkeyTasks(Types.METAS, [currentPubkey, ...contacts], sinceNew, now)
+      const pubkeyTasks = createPubkeyTasks(Types.PUBKEYS, contacts, sinceNew, now)
+
+      // load ALL events of current pubkey and ALL metas (up to a max filter limit)
+      const myTasksOld = createPubkeyTasks(Types.PUBKEYS, [currentPubkey], 0, sinceNew + 1)
+      const metaTasksOld = createPubkeyTasks(Types.METAS, [currentPubkey, ...contacts], 0, sinceNew + 1)
+      // load last month of events of contacts
+      const pubkeyTasksOld = createPubkeyTasks(Types.PUBKEYS, contacts, sinceOld, sinceNew + 1)
+
+      // reload when we fetch all the new stuff
+      needReload = true
+
+      // append in proper order
+      await appendTasks(
+        [...myTasks, ...metaTasks, ...pubkeyTasks, ...myTasksOld, ...metaTasksOld, ...pubkeyTasksOld],
+        newQueue
+      )
+    }
   }
 
   // write new lastUntil as now
