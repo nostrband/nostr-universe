@@ -95,6 +95,8 @@ const kindAppsCache = new Map<number, AppInfos>()
 const metaCache = new Map<string, MetaEvent>()
 const eventCache = new Map<string, AugmentedEvent>()
 const addrCache = new Map<string, AugmentedEvent>()
+const noMetaCache = new Set<string>()
+const noEventCache = new Set<string>()
 
 export function nostrEvent(e: NDKEvent) {
   return {
@@ -1213,7 +1215,7 @@ export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   pubkeys.forEach((p) => {
     const meta = metaCache.get(p)
     if (meta) metas.push({ ...meta })
-    else reqPubkeys.add(p)
+    else if (!noMetaCache.has(p)) reqPubkeys.add(p)
   })
 
   const fetch = async (cacheOnly: boolean) => {
@@ -1241,6 +1243,12 @@ export async function fetchMetas(pubkeys: string[]): Promise<MetaEvent[]> {
   if (reqPubkeys.size > 0) {
     const [reqs, fetched] = await fetch(false)
     console.log('fetchMetas remote', reqs, fetched)
+  }
+
+  const foundPubkeys = new Set(metas.map(e => e.pubkey))
+  for (const p of pubkeys) {
+    if (!foundPubkeys.has(p))
+      noMetaCache.add(p)
   }
 
   return metas
@@ -1281,7 +1289,7 @@ async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise
     if (ne) {
       // make sure kinds match
       if (kinds.includes(ne.kind)) results.push({ ...ne })
-    } else {
+    } else if (!noEventCache.has(id)){
       reqIds.add(id)
     }
   })
@@ -1309,6 +1317,11 @@ async function fetchEventsByIds({ ids, kinds }: IFetchEventByIdsParams): Promise
   if (reqIds.size > 0) {
     const [reqs, fetched] = await fetch(false)
     console.log('fetchEventsByIds remote', reqs, fetched)
+  }
+
+  const resultIds = new Set(results.map(e => e.id))
+  for (const id of ids) {
+    if (!resultIds.has(id)) noEventCache.add(id)
   }
 
   // desc by tm
