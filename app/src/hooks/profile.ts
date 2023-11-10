@@ -124,6 +124,10 @@ export const useUpdateProfile = () => {
   }, [contactList, dispatch]) 
 
   useEffect(() => {
+    asyncThrottle(reloadFeeds)
+  }, [contactList])
+
+  useEffect(() => {
     const reload = sync.reload || (sync.done > 0 && sync.todo === 0)
     if (reload)
       asyncThrottle(reloadFeeds)
