@@ -62,7 +62,7 @@ export const dbi = {
         const key = `${obj.kind}_${obj.naddr}`
         occurrences[key] = (occurrences[key] || 0) + 1
 
-        return occurrences[key] === 3
+        return occurrences[key] >= 3
       })
 
       return filteredArray.sort((a, b) => b.timestamp - a.timestamp)

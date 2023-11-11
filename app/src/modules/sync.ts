@@ -367,7 +367,11 @@ async function executeTaskPubkeys(currentTask: ISyncTask) {
 async function executeTaskMetas(currentTask: ISyncTask) {
   const filter: NDKFilter = {
     authors: currentTask.params.pubkeys,
-    kinds: [Kinds.META, Kinds.CONTACT_LIST]
+    kinds: [
+      Kinds.META, 
+      Kinds.CONTACT_LIST,
+      Kinds.APP_RECOMM
+    ]
   }
 
   await processFilters(currentTask, [filter])

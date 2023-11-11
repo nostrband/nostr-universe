@@ -47,6 +47,7 @@ import { addLocalRelayEvent } from './relay'
 import { cacheRelay, nostrbandRelay, nsbRelays, allRelays, readRelays, writeRelays } from './const/relays'
 import { Kinds } from './const/kinds'
 import { overrideWebSocket } from './relay-proxy'
+import { AppRecommEvent, createAppRecommEvent } from '@/types/app-recomm-event'
 
 overrideWebSocket()
 
@@ -1554,7 +1555,7 @@ interface PromiseQueueCb {
 class PromiseQueue {
   queue: PromiseQueueCb[] = []
 
-  constructor() {}
+  constructor() { }
   // eslint-disable-next-line
   appender(cb: (...cbArgs: any[]) => void): (...apArgs: any[]) => void {
     return (...args) => {
@@ -2294,6 +2295,70 @@ export async function publishEvent(event: NostrEvent) {
   await ndk.publish(new NDKEvent(ndk, event), NDKRelaySet.fromRelayUrls(writeRelays, ndk))
 }
 
+export async function fetchAppRecomms(pubkey: string): Promise<AppRecommEvent[]> {
+  const ndkEvents = await fetchEventsRead(ndk, {
+    kinds: [Kinds.APP_RECOMM],
+    authors: [pubkey],
+  }, { cacheOnly: false })
+
+  const events = [...ndkEvents.values()].map(e => rawEvent(e))
+
+  const recomms: AppRecommEvent[] = []
+  for (const event of events) {
+    const list = createAppRecommEvent(event)
+    list.naddrs = list.tags
+      .filter((t: string[]) => t.length > 1 && t[0] === 'a')
+      .map((a: string[]) => idToAddr(a[1]))
+      .filter((addr: EventAddr | undefined) => !!addr)
+      // @ts-ignore
+      .map((addr: EventAddr) => nip19.naddrEncode({
+        pubkey: addr.pubkey || '',
+        kind: addr.kind || 0,
+        identifier: addr.d_tag || ''
+      }))
+    recomms.push(list)
+  }
+  return recomms
+}
+
+export async function publishAppRecommendation(
+  signEvent: (event: NostrEvent) => Promise<NostrEvent>,
+  pubkey: string,
+  kind: number,
+  naddr: string
+) {
+
+  let list = await fetchEventByAddr(ndk, {
+    kind: Kinds.APP_RECOMM,
+    pubkey,
+    d_tag: `${kind}`
+  }) as NostrEvent
+  console.log("list", list)
+
+  if (list === null)
+    list = {
+      kind: Kinds.APP_RECOMM as number,
+      pubkey,
+      created_at: Math.floor(Date.now() / 1000),
+      content: "",
+      tags: [
+        ["d", `${kind}`]
+      ]
+    }
+
+  const appAddr = parseAddr(naddr)
+  if (!appAddr) throw new Error("Bad naddr")
+
+  const a = appAddr.kind + ':' + appAddr.pubkey + ':' + appAddr.d_tag
+  if (!list.tags.find((t: string[]) => t.length >= 2 && t[0] === 'a' && t[1] === a)) {
+    list.tags.push(["a", a, nostrbandRelay, "web"])
+  }
+
+  const signed = await signEvent(list)
+  console.log("signed list", signed)
+  await publishEvent(signed)
+}
+
 async function checkReconnect(ndk: NDK, force: boolean = false) {
   if (!ndk) return
 
@@ -2304,30 +2369,30 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
     const alive = force
       ? false
       : await new Promise((ok) => {
-          const sub = ndk.subscribe(
-            {
-              kinds: [0, 1, 3],
-              limit: 1
-            },
-            {
-              closeOnEose: true
-            },
-            new NDKRelaySet(new Set([r]), ndk),
+        const sub = ndk.subscribe(
+          {
+            kinds: [0, 1, 3],
+            limit: 1
+          },
+          {
+            closeOnEose: true
+          },
+          new NDKRelaySet(new Set([r]), ndk),
             /* autoStart */ false
-          )
+        )
 
-          let alive = false
-          // eslint-disable-next-line
-          sub.on('event', (e: any) => {
-            console.log('checkReconnect', r.url, 'got event', e.id)
-            alive = true
-          })
-          sub.on('eose', () => {
-            console.log('checkReconnect', r.url, 'alive', alive)
-            ok(alive)
-          })
-          sub.start()
+        let alive = false
+        // eslint-disable-next-line
+        sub.on('event', (e: any) => {
+          console.log('checkReconnect', r.url, 'got event', e.id)
+          alive = true
         })
+        sub.on('eose', () => {
+          console.log('checkReconnect', r.url, 'alive', alive)
+          ok(alive)
+        })
+        sub.start()
+      })
 
     if (!alive) {
       console.log('reconnecting', r.url)

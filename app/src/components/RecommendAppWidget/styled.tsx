@@ -8,6 +8,14 @@ export const StyledTitle = styled(
   })
 )(({ theme }) => ({
   color: theme.palette.primary.contrastText,
+}))
+
+export const StyledText = styled(
+  forwardRef<HTMLAnchorElement, TypographyProps>(function TypographyDisplayName(props, ref) {
+    return <Typography variant="body2" component="div" ref={ref} {...props} />
+  })
+)(({ theme }) => ({
+  color: theme.palette.primary.contrastText,
   marginBottom: 10
 }))
 

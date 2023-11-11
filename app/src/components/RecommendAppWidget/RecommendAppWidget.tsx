@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Button, Container } from '@mui/material'
-import { StyledActions, StyledContainer, StyledTitle } from './styled'
+import { StyledActions, StyledContainer, StyledText, StyledTitle } from './styled'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { dbi } from '@/modules/db'
+import { kindNames } from '@/consts'
+import { useSigner } from '@/hooks/signer'
+import { fetchAppRecomms, publishAppRecommendation } from '@/modules/nostr'
+import { showToast } from '@/utils/helpers/general'
 
 type TypeListSelectApp = {
   name: string
@@ -15,21 +19,27 @@ type TypeListSelectApp = {
 export const RecommendAppWidget = ({ currentPubkey }: { currentPubkey: string }) => {
   const [listSelectApp, setListSelectApp] = useState<TypeListSelectApp[]>([])
   const [nextSuggestTime, setNextSuggestTime] = useState(0)
+  const { signEvent } = useSigner()
 
-  const getSelectAppHistory = async (key: string) => {
+  const getSelectAppHistory = useCallback(async (key: string) => {
     const list = await dbi.getListSelectAppHistory(key)
+    const recomms = await fetchAppRecomms(key)
+    const newApps: any[] = list.filter((r: any) => {
+      return !recomms.find(e => e.identifier === `${r.kind}` && e.naddrs.includes(r.naddr))
+    })
+    console.log("newApps", newApps, "list", list, "recomms", recomms)
 
-    setListSelectApp(list)
-  }
+    setListSelectApp(newApps)
+  }, [])
 
-  const getNextSuggestTime = async () => {
+  const getNextSuggestTime = useCallback(async () => {
     const timestamp = await dbi.getNextSuggestTime()
-    console.log({ timestamp })
+    console.log("nextSuggestTime", { timestamp })
 
     if (timestamp.length) {
       setNextSuggestTime(timestamp[0].timestamp)
     }
-  }
+  }, [])
 
   useEffect(() => {
     getSelectAppHistory(currentPubkey)
@@ -38,20 +48,25 @@ export const RecommendAppWidget = ({ currentPubkey }: { currentPubkey: string })
 
   const handleAgree = async () => {
     const currentDate = new Date()
-    const tomorrowTimestamp = currentDate.getTime() + 24 * 60 * 60 * 1000
+    // 10 minutes
+    const nextTimestamp = currentDate.getTime() + 10 * 60 * 1000
 
-    await dbi.setNextSuggestTime({ timestamp: tomorrowTimestamp })
-    setNextSuggestTime(tomorrowTimestamp)
-    // nostr.publishAppRecommendation(kind, app.naddr)
+    dbi.setNextSuggestTime({ timestamp: nextTimestamp })
+    setNextSuggestTime(nextTimestamp)
+
+    await publishAppRecommendation(signEvent, currentPubkey, app.kind, app.naddr)
+
+    showToast("Added to your app list!")
   }
 
   const handleRecent = async () => {
     const currentDate = new Date()
-    const nextWeekTimestamp = currentDate.getTime() + 7 * 24 * 60 * 60 * 1000
+    // 1 day
+    const nextTimestamp = currentDate.getTime() + 24 * 60 * 60 * 1000
 
-    await dbi.setNextSuggestTime({ timestamp: nextWeekTimestamp })
+    dbi.setNextSuggestTime({ timestamp: nextTimestamp })
 
-    setNextSuggestTime(nextWeekTimestamp)
+    setNextSuggestTime(nextTimestamp)
   }
 
   const app = listSelectApp[0]
@@ -64,13 +79,18 @@ export const RecommendAppWidget = ({ currentPubkey }: { currentPubkey: string })
     return null
   }
 
+  const kind = (kindNames[app.kind] || `kind {app.kind}`) + " events"
+
   return (
     <StyledContainer>
       <Container>
         <Wrapper>
           <StyledTitle>
-            Would you like to recommend app {app.name} for kind {app.kind} to your followers
+            Recommend <b>{app.name}</b> for <b>{kind}</b> to your followers?
           </StyledTitle>
+          <StyledText>
+            Adds <b>{app.name}</b> to your public list of apps.
+          </StyledText>
           <StyledActions>
             <Button fullWidth variant="contained" className="button" color="actionPrimary" onClick={handleAgree}>
               Yes
