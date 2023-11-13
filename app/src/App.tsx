@@ -64,20 +64,23 @@ export const App = () => {
 
   useEffect(() => {
     const load = async () => {
+      console.log("AOTD start load", Date.now())
+      let clicked = false
       // @ts-ignore
       if (window.cordova) {
         // @ts-ignore
         const clickedNotification = window.cordova.plugins.notification.local.launchDetails
-
-        if (!clickedNotification) return
-
-        const currentDate = format(new Date(), formatDate)
-        const existedApp = await dbi.getAOTDByShownDate(currentDate)
-        if (!existedApp) return
-
-        dispatch(setAppOfTheDay({ app: existedApp }))
-        handleOpen(MODAL_PARAMS_KEYS.APP_OF_THE_DAY_MODAL)
+        clicked = !!clickedNotification
       }
+
+      if (!clicked) return
+      const currentDate = format(new Date(), formatDate)
+      const existedApp = await dbi.getAOTDByShownDate(currentDate)
+      if (!existedApp) return
+
+      dispatch(setAppOfTheDay({ app: existedApp.app }))
+      handleOpen(MODAL_PARAMS_KEYS.APP_OF_THE_DAY_MODAL)
+      console.log("AOTD start loaded", Date.now(), existedApp)
     }
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps

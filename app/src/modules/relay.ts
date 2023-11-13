@@ -239,3 +239,19 @@ export async function initLocalRelay() {
 export function getEventsCount() {
   return events.length
 }
+
+export function getEventStats() {
+  const kinds = new Map<number, number>()
+  const pubkeys = new Map<number, number>()
+  for (const e of events) {
+    const k = (kinds.get(e.kind) || 0) + 1
+    const p = (pubkeys.get(e.pubkey) || 0) + 1
+    kinds.set(e.kind, k)
+    pubkeys.set(e.pubkey, p)
+  }
+
+  return {
+    kinds: [...kinds.entries()],
+    pubkeys: [...pubkeys.entries()],
+  } 
+}

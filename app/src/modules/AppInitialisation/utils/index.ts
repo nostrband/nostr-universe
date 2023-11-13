@@ -10,6 +10,7 @@ import { setCurrentPubkey, setKeys, setReadKeys, setNsbKeys } from '@/store/redu
 import { setAppOfTheDay, setIsShowAOTDWidget } from '@/store/reducers/notifications.slice'
 import { addTabs } from '@/store/reducers/tab.slice'
 import { addWorkspaces } from '@/store/reducers/workspaces.slice'
+import { AppNostr } from '@/types/app-nostr'
 import { DEFAULT_CONTENT_FEED_SETTINGS } from '@/types/content-feed'
 import { WorkSpace } from '@/types/workspace'
 import { renderDefaultAppIcon } from '@/utils/helpers/general'
@@ -593,7 +594,7 @@ const cancelAllNotifications = () => {
 const filterShownApps = async (apps = []) => {
   try {
     const shownApps = await dbi.listAOTDHistory()
-    console.log(JSON.stringify(shownApps), 'shownApps in DB')
+    console.log('AOTD shownApps in DB', JSON.stringify(shownApps))
 
     return apps.filter((app) => {
       const appIsShown = shownApps.find(({ app: shownApp }) => shownApp?.naddr === app?.naddr)
@@ -611,14 +612,19 @@ const isAppOfDayAlreadyShownToday = async () => {
   return currentDate === shownDate
 }
 
-async function getRandomAppFromFilteredApps(apps = []) {
-  const randomIndex = Math.floor(Math.random() * apps.length)
+async function getRandomAppFromFilteredApps(apps: AppNostr[], date: Date) {
+//  const randomIndex = Math.floor(Math.random() * apps.length)
+  // let's show everyone the same app so that we build
+  // waves of reviews and discussions for apps 
+  const today = 3 + Math.floor(date.getTime() / (24 * 3600 * 1000))
+  const randomIndex = today % apps.length
   const randomApp = apps[randomIndex]
-  apps.splice(randomIndex, 1)
+  console.log("AOTD randomIndex", randomIndex, "randomApp", JSON.stringify(randomApp))
+//  apps.splice(randomIndex, 1)
   return randomApp
 }
 
-const HOUR_IN_MS = 1000 * 3600
+//const HOUR_IN_MS = 1000 * 3600
 
 const random = () => {
   return parseFloat(Math.random().toFixed(3))
@@ -627,19 +633,36 @@ const random = () => {
 function randomDateTime(date = new Date()) {
   const startDateTime = date
   const endDateTime = endOfDay(startDateTime)
-  const randomEndTime = random() * (endDateTime.getTime() - startDateTime.getTime())
-  const isMoreThanHour = randomEndTime < HOUR_IN_MS ? randomEndTime + HOUR_IN_MS : randomEndTime
-  const randomTime = new Date(startDateTime.getTime() + randomEndTime)
+  // max(8:00 in local time, date)
+  const startTimeLocal = Math.max(startOfDay(date).getTime()
+    + 8 * 3600 * 1000,
+    date.getTime())
+  // max(18:00 in local time, date + 10min)
+  const endTimeLocal = Math.max(endDateTime.getTime()
+    - 6 * 3600 * 1000,
+    date.getTime() + 10 * 60 * 1000)
+  console.log("AOTD date", date, 
+    "start", startTimeLocal, new Date(startTimeLocal),
+    "end", endTimeLocal, new Date(endTimeLocal))
 
-  return randomTime
+  const randomEndTime = Math.random() * (endTimeLocal - startTimeLocal)
+//  const isMoreThanHour = randomEndTime < HOUR_IN_MS ? randomEndTime + HOUR_IN_MS : randomEndTime
+  const randomTime = new Date(startTimeLocal + randomEndTime)
+
+//  return randomTime
+  return new Date(date.getTime() + 120000)
 }
 
 const addNotification = (app = {}, notificationDate = new Date(), id = 0, onClick = () => undefined) => {
+  const icon = app.picture || renderDefaultAppIcon(app.name) || ''
   const notificationOptions = {
     id: id,
-    title: 'App of the Day',
-    text: `App of the Day: ${app.name}, check it out!`,
-    icon: app.picture || renderDefaultAppIcon(app.name) || '',
+    title: '🎉 App of the Day',
+    text: `Check out ${app.name} - ${app.about}`,
+    icon,
+    smallIcon: icon,
+    lockscreen: true,
+    silent: false,
     trigger: { at: notificationDate },
     vibrate: true,
     data: app
@@ -675,10 +698,10 @@ const addNotification = (app = {}, notificationDate = new Date(), id = 0, onClic
 
 const scheduleNotificationsForWeek = async (apps = [], dispatch) => {
   for (let day = 1; day <= 7; day++) {
-    const randomApp = await getRandomAppFromFilteredApps(apps)
-    if (!randomApp) return undefined
-
     const notificationDate = randomDateTime(startOfDay(add(new Date(), { days: day })))
+    const randomApp = await getRandomAppFromFilteredApps(apps, notificationDate)
+    if (!randomApp) continue
+
     addNotification(randomApp, notificationDate, day, (notification) => {
       updateAOTDShownDate(JSON.parse(notification.data), dispatch)
     })
@@ -700,9 +723,10 @@ const scheduleAppOfTheDayNotification = async (apps = [], dispatch) => {
   try {
     const currentDate = format(new Date(), formatDate)
     const existedApp = await dbi.getAOTDByShownDate(currentDate)
-
+    console.log("AOTD existedApp", JSON.stringify(existedApp))
+    const notificationDate = randomDateTime()
     if (!existedApp) {
-      const randomAppOfTheDay = await getRandomAppFromFilteredApps(apps)
+      const randomAppOfTheDay = await getRandomAppFromFilteredApps(apps, notificationDate)
 
       await dbi.addAOTD({
         id: uuidv4(),
@@ -711,14 +735,12 @@ const scheduleAppOfTheDayNotification = async (apps = [], dispatch) => {
       })
       dispatch(setAppOfTheDay({ app: randomAppOfTheDay }))
 
-      const notificationDate = randomDateTime()
       return addNotification(randomAppOfTheDay, notificationDate, APP_OF_THE_DAY_ID, (notification) => {
         updateAOTDShownDate(JSON.parse(notification.data), dispatch)
       })
     }
 
     dispatch(setAppOfTheDay({ app: existedApp.app }))
-    const notificationDate = randomDateTime()
     return addNotification(existedApp.app, notificationDate, APP_OF_THE_DAY_ID, (notification) => {
       updateAOTDShownDate(JSON.parse(notification.data), dispatch)
     })
@@ -729,8 +751,10 @@ const scheduleAppOfTheDayNotification = async (apps = [], dispatch) => {
 
 export const bootstrapNotifications = async (apps, dispatch) => {
   try {
+    console.log("AOTD apps", apps)
+
     const isAOTDShown = await isAppOfDayAlreadyShownToday()
-    console.log(isAOTDShown, '=> App of the Day is showed value')
+    console.log('AOTD is shown', isAOTDShown)
 
     if (isAOTDShown) {
       return dispatch(setIsShowAOTDWidget({ isShow: false }))
@@ -741,7 +765,7 @@ export const bootstrapNotifications = async (apps, dispatch) => {
 
     const filteredApps = (await filterShownApps(apps)) || []
     const filteredAppsCopy = [...filteredApps]
-
+    console.log("AOTD filteredApps", filteredApps)
     if (!filteredApps.length) return undefined
 
     await scheduleAppOfTheDayNotification(filteredAppsCopy, dispatch)

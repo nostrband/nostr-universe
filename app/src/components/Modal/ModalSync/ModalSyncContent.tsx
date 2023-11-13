@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from 'react'
+import { ReactNode, useCallback, useEffect } from 'react'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledViewTitle, StyledWrap } from './styled'
 import { useAppSelector } from '@/store/hooks/redux'
@@ -7,6 +7,7 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined'
 import { resync } from '@/modules/sync'
 import { List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
+import { getEventStats } from '@/modules/relay'
 
 export const ModalSyncContent = () => {
   const { syncState } = useAppSelector(state => state.sync)
@@ -14,9 +15,9 @@ export const ModalSyncContent = () => {
 
   const progress = 100 * syncState.done / (syncState.todo + syncState.done)
 
-  const fullSyncHandler = () => {
+  const fullSyncHandler = useCallback(() => {
     resync(currentPubkey)
-  }
+  }, [currentPubkey])
 
   const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void, danger: boolean = false) => {
     return (
@@ -30,6 +31,11 @@ export const ModalSyncContent = () => {
       </ListItem>
     )
   }, [])
+
+  useEffect(() => {
+    const stats = getEventStats()
+    console.log("sync stats", stats)
+  }, [syncState])
 
   return (
     <Container>
@@ -55,7 +61,7 @@ export const ModalSyncContent = () => {
           Received events: {syncState.newEventCount}
         </StyledViewTitle>
         <StyledViewTitle>
-          Total events: {syncState.totalEventCount}
+          Stored events: {syncState.totalEventCount}
         </StyledViewTitle>
 
       </StyledWrap>
