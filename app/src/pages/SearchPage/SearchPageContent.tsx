@@ -1,4 +1,4 @@
-import React, { useCallback, useState, FC, CSSProperties, useRef, useEffect } from 'react'
+import React, { useCallback, useState, FC, CSSProperties, useRef, useEffect, useMemo } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import CloseIcon from '@mui/icons-material/Close'
 import { searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
@@ -47,18 +47,23 @@ import { addSearchClickEventToDB } from './utils/helpers'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { useSearchHistory } from './utils/history'
 import { RecentEvents } from './components/RecentEvents/RecentEvents'
+import { TOP_DOMAINS } from '@/consts/domains'
+import { useOpenApp } from '@/hooks/open-entity'
 
 interface IDropdownOption {
   id: string
   icon: string
   label: string
   value: string
-  type: 'app' | 'tab' | 'profile'
+  type: 'app' | 'tab' | 'profile' | 'domain'
   group: string
 }
 
 export const SearchPageContent = () => {
   const [searchParams] = useSearchParams()
+  const { openBlank } = useOpenApp()
+  const dispatch = useAppDispatch()
+
   const isShow = searchParams.get('page') === 'search'
 
   const { searchValue } = useAppSelector((state) => state.searchModal)
@@ -66,7 +71,7 @@ export const SearchPageContent = () => {
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const { apps = [] } = useAppSelector((state) => state.apps)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
-  const dispatch = useAppDispatch()
+  const domains = useMemo(() => TOP_DOMAINS, [])
 
   const [suggestion, setSuggestion] = useState('')
 
@@ -86,7 +91,8 @@ export const SearchPageContent = () => {
   const [openGroup, setOpenGroup] = useState<{ [key: string]: boolean }>({
     tabs: false,
     apps: false,
-    contactList: false
+    contactList: false,
+    domains: false
   })
 
   const getTypeName = (type: string) => {
@@ -97,6 +103,8 @@ export const SearchPageContent = () => {
         return 'Tabs'
       case 'profile':
         return 'Following'
+      case 'domain':
+        return 'Websites'
     }
     return 'Other'
   }
@@ -151,7 +159,22 @@ export const SearchPageContent = () => {
     }
   })
 
-  const getOptions = [...optionsProfiles, ...optionsTabs, ...optionsApps]
+  const optionsDomains: IDropdownOption[] = useMemo(() => {
+    if (searchValue.trim().length < 2) return []
+
+    return domains.map((domain, i) => {
+      return {
+        id: `domain-${i}`,
+        icon: '',
+        label: domain,
+        value: domain,
+        type: 'domain',
+        group: getTypeName('domain')
+      }
+    })
+  }, [searchValue, domains])
+
+  const getOptions = [...optionsProfiles, ...optionsTabs, ...optionsApps, ...optionsDomains]
 
   const filterOptionsByValue = (options: IDropdownOption[], str: string) => {
     const inputValue = str.toLowerCase()
@@ -495,6 +518,9 @@ export const SearchPageContent = () => {
         break
       case 'profile':
         handleOpenProfile(option.value)
+        break
+      case 'domain':
+        openBlank({ url: 'https://' + option.value }, { replace: true })
         break
       default:
         onSearch(option.value)

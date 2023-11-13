@@ -40,16 +40,14 @@ export const Header: FC<HeaderProps> = ({ title = 'Apps' }) => {
             <AccountBalanceWalletOutlinedIcon />
           </IconButton>
           {syncState.todo > 0 && (
-            <IconButton
-              color="inherit"
-              size="medium"
-              onClick={() => handleOpen(MODAL_PARAMS_KEYS.SYNC_MODAL)}
-            >
-              <CircularProgress size={20} thickness={6}
+            <IconButton color="inherit" size="medium" onClick={() => handleOpen(MODAL_PARAMS_KEYS.SYNC_MODAL)}>
+              <CircularProgress
+                size={20}
+                thickness={6}
                 sx={{
-                  color: (theme) =>
-                    theme.palette.grey[500],
-                }} />
+                  color: (theme) => theme.palette.grey[500]
+                }}
+              />
             </IconButton>
           )}
 
