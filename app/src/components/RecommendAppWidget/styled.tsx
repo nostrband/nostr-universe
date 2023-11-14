@@ -7,7 +7,7 @@ export const StyledTitle = styled(
     return <Typography variant="body1" component="div" ref={ref} {...props} />
   })
 )(({ theme }) => ({
-  color: theme.palette.primary.contrastText,
+  color: theme.palette.primary.contrastText
 }))
 
 export const StyledText = styled(

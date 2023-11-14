@@ -19,6 +19,7 @@ import memoizeOne from 'memoize-one'
 import { feedbackInfoSlice } from './reducers/feedbackInfo.slice'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { syncSlice } from './reducers/sync.slice'
+import { selectAppHistorySlice } from './reducers/selectAppHistory.slice'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -31,6 +32,7 @@ export const rootReducer = combineReducers({
   permissionRequests: permissionRequestsSlice.reducer,
   positionScrollPage: positionScrollPageSlice.reducer,
   searchModal: searchModalSlice.reducer,
+  selectAppHistory: selectAppHistorySlice.reducer,
   [userService.reducerPath]: userService.reducer,
   [bookmarksSlice.name]: bookmarksSlice.reducer,
   [feedbackInfoSlice.name]: feedbackInfoSlice.reducer,

@@ -21,7 +21,7 @@ import { RecommendAppWidget } from '@/components/RecommendAppWidget/RecommendApp
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'content'
-  const { keys, currentPubkey } = useAppSelector(selectKeys)
+  const { keys } = useAppSelector(selectKeys)
   const { isShowWidget } = useAppSelector((state) => state.feedbackInfo)
   const guest = !keys.length || isGuest(keys[0])
 
@@ -70,7 +70,7 @@ export const MainPage = () => {
 
   return (
     <StyledWrapVisibility isShow={isShow}>
-      <RecommendAppWidget currentPubkey={currentPubkey} />
+      <RecommendAppWidget />
       {guest && <WelcomeWidget />}
       {isShowWidget && <NPSWidget />}
       {renderFeeds()}
