@@ -40,6 +40,7 @@ import { isGuest } from '@/utils/helpers/prepare-data'
 import { useSync } from './sync'
 import { useAsyncThrottle } from './async'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
+import { bootstrapNotifications } from '@/modules/AppInitialisation/utils'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
@@ -71,6 +72,7 @@ export const useUpdateProfile = () => {
   }, [])
 
   const reloadFeeds = useCallback(async () => {
+    console.log("sync reloadFeeds", Date.now())
 
     if (!isConnected()) return
 
@@ -79,9 +81,10 @@ export const useUpdateProfile = () => {
     dispatch(setApps({ apps }))
     dispatch(setLoading({ isLoading: false }))
 
+    bootstrapNotifications(apps, dispatch)
+
     if (isGuest(currentPubkey)) return
 
-    console.log("sync reloadFeeds", Date.now())
     if (contactList) {
       setContacts(contactList)
 
@@ -124,13 +127,15 @@ export const useUpdateProfile = () => {
   }, [contactList, dispatch]) 
 
   useEffect(() => {
-    asyncThrottle(reloadFeeds)
+    console.log("force reload", Date.now())
+    asyncThrottle(reloadFeeds, true)
   }, [contactList])
 
   useEffect(() => {
     const reload = sync.reload || (sync.done > 0 && sync.todo === 0)
+    console.log("maybe reload", reload, sync)
     if (reload)
-      asyncThrottle(reloadFeeds)
+      asyncThrottle(reloadFeeds, sync.todo === 0)
   }, [reloadFeeds, sync])
 
   const updateProfile = useCallback(
@@ -174,7 +179,7 @@ export const useUpdateProfile = () => {
       })
 
       subscribeContactList(currentPubkey, async (contactList: ContactListEvent) => {
-        console.log('contact list update', contactList)
+        console.log('contact list update', Date.now(), contactList)
 
         if (contactList) setContacts(contactList)
       })
