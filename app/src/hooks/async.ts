@@ -45,6 +45,6 @@ export const useAsyncThrottle = (interval?: number) => {
   }, [runNext])
 
   return async (fn: () => Promise<void>, force?: boolean) => {
-    setState(s => ({ ...s, next: fn, force: !!force }))
+    setState((s) => ({ ...s, next: fn, force: !!force }))
   }
 }

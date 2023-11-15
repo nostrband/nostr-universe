@@ -64,7 +64,7 @@ export const App = () => {
 
   useEffect(() => {
     const load = async () => {
-      console.log("AOTD start load", Date.now())
+      console.log('AOTD start load', Date.now())
       let clicked = false
       // @ts-ignore
       if (window.cordova) {
@@ -80,7 +80,7 @@ export const App = () => {
 
       dispatch(setAppOfTheDay({ app: existedApp.app }))
       handleOpen(MODAL_PARAMS_KEYS.APP_OF_THE_DAY_MODAL)
-      console.log("AOTD start loaded", Date.now(), existedApp)
+      console.log('AOTD start loaded', Date.now(), existedApp)
     }
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -20,11 +20,13 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
           if (isConnected()) {
             nostrOnResume()
             reloadFeeds()
+            // eslint-disable-next-line
             // @ts-ignore
             if (window.cordova) {
+              // eslint-disable-next-line
               // @ts-ignore
               const clickedNotification = window.cordova.plugins.notification.local.launchDetails
-              console.log("clickedNotification", clickedNotification)
+              console.log('clickedNotification', clickedNotification)
             }
           }
         },

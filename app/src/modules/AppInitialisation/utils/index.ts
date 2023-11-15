@@ -613,14 +613,14 @@ const isAppOfDayAlreadyShownToday = async () => {
 }
 
 async function getRandomAppFromFilteredApps(apps: AppNostr[], date: Date) {
-//  const randomIndex = Math.floor(Math.random() * apps.length)
+  //  const randomIndex = Math.floor(Math.random() * apps.length)
   // let's show everyone the same app so that we build
-  // waves of reviews and discussions for apps 
+  // waves of reviews and discussions for apps
   const today = Math.floor(date.getTime() / (24 * 3600 * 1000))
   const randomIndex = today % apps.length
   const randomApp = apps[randomIndex]
-  console.log("AOTD randomIndex", randomIndex, "randomApp", JSON.stringify(randomApp))
-//  apps.splice(randomIndex, 1)
+  console.log('AOTD randomIndex', randomIndex, 'randomApp', JSON.stringify(randomApp))
+  //  apps.splice(randomIndex, 1)
   return randomApp
 }
 
@@ -634,23 +634,26 @@ function randomDateTime(date = new Date()) {
   const startDateTime = date
   const endDateTime = endOfDay(startDateTime)
   // max(8:00 in local time, date)
-  const startTimeLocal = Math.max(startOfDay(date).getTime()
-    + 8 * 3600 * 1000,
-    date.getTime())
+  const startTimeLocal = Math.max(startOfDay(date).getTime() + 8 * 3600 * 1000, date.getTime())
   // max(18:00 in local time, date + 10min)
-  const endTimeLocal = Math.max(endDateTime.getTime()
-    - 6 * 3600 * 1000,
-    date.getTime() + 10 * 60 * 1000)
-  console.log("AOTD date", date, 
-    "start", startTimeLocal, new Date(startTimeLocal),
-    "end", endTimeLocal, new Date(endTimeLocal))
+  const endTimeLocal = Math.max(endDateTime.getTime() - 6 * 3600 * 1000, date.getTime() + 10 * 60 * 1000)
+  console.log(
+    'AOTD date',
+    date,
+    'start',
+    startTimeLocal,
+    new Date(startTimeLocal),
+    'end',
+    endTimeLocal,
+    new Date(endTimeLocal)
+  )
 
   const randomEndTime = Math.random() * (endTimeLocal - startTimeLocal)
-//  const isMoreThanHour = randomEndTime < HOUR_IN_MS ? randomEndTime + HOUR_IN_MS : randomEndTime
+  //  const isMoreThanHour = randomEndTime < HOUR_IN_MS ? randomEndTime + HOUR_IN_MS : randomEndTime
   const randomTime = new Date(startTimeLocal + randomEndTime)
 
   return randomTime
-//  return new Date(date.getTime() + 120000)
+  //  return new Date(date.getTime() + 120000)
 }
 
 const addNotification = (app: AppNostr = {}, notificationDate = new Date(), id = 0, onClick = () => undefined) => {
@@ -661,7 +664,7 @@ const addNotification = (app: AppNostr = {}, notificationDate = new Date(), id =
     text: `Check out ${app.name} - ${app.about}`,
     icon,
     color: '#a304db',
-    smallIcon: "res://ic_notification",
+    smallIcon: 'res://ic_notification',
     lockscreen: true,
     silent: false,
     trigger: { at: notificationDate },
@@ -724,7 +727,7 @@ const scheduleAppOfTheDayNotification = async (apps = [], dispatch) => {
   try {
     const currentDate = format(new Date(), formatDate)
     const existedApp = await dbi.getAOTDByShownDate(currentDate)
-    console.log("AOTD existedApp", JSON.stringify(existedApp))
+    console.log('AOTD existedApp', JSON.stringify(existedApp))
     const notificationDate = randomDateTime()
     if (!existedApp) {
       const randomAppOfTheDay = await getRandomAppFromFilteredApps(apps, notificationDate)
@@ -752,7 +755,7 @@ const scheduleAppOfTheDayNotification = async (apps = [], dispatch) => {
 
 export const bootstrapNotifications = async (apps, dispatch) => {
   try {
-    console.log("AOTD apps", apps)
+    console.log('AOTD apps', apps)
 
     const isAOTDShown = await isAppOfDayAlreadyShownToday()
     console.log('AOTD is shown', isAOTDShown)
@@ -766,7 +769,7 @@ export const bootstrapNotifications = async (apps, dispatch) => {
 
     const filteredApps = (await filterShownApps(apps)) || []
     const filteredAppsCopy = [...filteredApps]
-    console.log("AOTD filteredApps", filteredApps)
+    console.log('AOTD filteredApps', filteredApps)
     if (!filteredApps.length) return undefined
 
     await scheduleAppOfTheDayNotification(filteredAppsCopy, dispatch)

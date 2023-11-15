@@ -21,8 +21,7 @@ export const AppIcon = memo(function AppIcon({
 
   useEffect(() => {
     setIsFailed(true)
-    if (failedCache.has(picture))
-      return
+    if (failedCache.has(picture)) return
 
     const img = new Image()
     img.src = picture

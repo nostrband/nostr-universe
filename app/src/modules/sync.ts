@@ -6,7 +6,7 @@ import {
   // eslint-disable-next-line
   // @ts-ignore
 } from '@nostrband/ndk'
-  // eslint-disable-next-line
+// eslint-disable-next-line
 // @ts-ignore
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { getTagValue, getTags, ndk, nostrEvent } from './nostr'
