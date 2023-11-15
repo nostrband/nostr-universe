@@ -31,7 +31,7 @@ export const AppsPageContent = () => {
   const pinIds = pins.map((p) => p.id)
 
   const handleOpen = async (app: AppNostroType) => {
-    await openApp(app, { replace: true })
+    await openApp(app, { replace: false })
   }
 
   const mouseSensor = useSensor(MouseSensor, {

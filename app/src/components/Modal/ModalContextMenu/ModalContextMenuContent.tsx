@@ -274,12 +274,12 @@ export const ModalContextMenuContent = () => {
             pubkey: eventCurrent.pubkey,
             time: eventCurrent.created_at,
             kind: eventCurrent.kind,
-            content: getTagValue(eventCurrent, 'summary') ||
+            content:
+              getTagValue(eventCurrent, 'summary') ||
               getTagValue(eventCurrent, 'description') ||
-              getTagValue(eventCurrent, 'alt') || 
+              getTagValue(eventCurrent, 'alt') ||
               eventCurrent.content,
-            title: getTagValue(eventCurrent, 'title') ||
-              getTagValue(eventCurrent, 'name')
+            title: getTagValue(eventCurrent, 'title') || getTagValue(eventCurrent, 'name')
           }
 
           return <ItemEventMultipurpose event={defaultEvent} />
