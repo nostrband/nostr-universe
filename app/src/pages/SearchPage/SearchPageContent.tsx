@@ -165,7 +165,7 @@ export const SearchPageContent = () => {
     return domains.map((domain, i) => {
       return {
         id: `domain-${i}`,
-        icon: '',
+        icon: `https://${domain}/favicon.ico`,
         label: domain,
         value: domain,
         type: 'domain',
@@ -520,7 +520,7 @@ export const SearchPageContent = () => {
         handleOpenProfile(option.value)
         break
       case 'domain':
-        openBlank({ url: 'https://' + option.value }, { replace: true })
+        openBlank({ url: 'https://' + option.value, title: option.value }, {})
         break
       default:
         onSearch(option.value)

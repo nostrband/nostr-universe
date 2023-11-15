@@ -9998,5 +9998,12 @@ export const TOP_DOMAINS = [
   'juneauempire.com',
   'londonist.com',
   'ckeditor.com',
-  'nytco.com'
+  'nytco.com',
+  'nostr.com',
+  'nostr.how',
+  'nostrdesign.org',
+  'opensats.org',
+  '21ideas.org',
+  'dergigi.com',
+  'nakamotoinstitute.org'
 ]
