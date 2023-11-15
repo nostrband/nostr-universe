@@ -3,8 +3,10 @@ import {
   NDKFilter,
   NDKRelaySet,
   NostrEvent
+  // eslint-disable-next-line
   // @ts-ignore
 } from '@nostrband/ndk'
+// eslint-disable-next-line
 // @ts-ignore
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { getTagValue, getTags, ndk, nostrEvent } from './nostr'
@@ -30,6 +32,7 @@ interface ISyncTask {
   until: number
   relay: string
   order: number
+  // eslint-disable-next-line
   params: any
 }
 
@@ -54,6 +57,7 @@ let nextOrder = 0
 let needReload = false
 //const logs: string[] = []
 
+// eslint-disable-next-line
 function createTask(type: string, params: any, relay: string, since?: number, until?: number): ISyncTask {
   console.log('sync createTask', currentPubkey, type, relay, 'since', since, 'until', until, 'params', params)
   nextOrder++
@@ -317,6 +321,7 @@ function filterBigZap(e: NostrEvent) {
   } catch {
     e.bolt11 = undefined
   }
+  // eslint-disable-next-line
   const amountMsat = Number(e.bolt11?.sections?.find((s: any) => s.name === 'amount')?.value || '')
   return amountMsat >= MIN_ZAP_AMOUNT * 1000
 }
@@ -440,6 +445,7 @@ async function processNextTask() {
   )
   queue.splice(nextIndex, 1)
 
+  // eslint-disable-next-line
   const promise = new Promise<void>(async (ok) => {
     // exec
     await executeTask(currentTask)
@@ -462,10 +468,13 @@ async function processNextTask() {
   setTimeout(processNextTask, queue.length > 0 ? 0 : 1000)
 }
 
+// eslint-disable-next-line
 async function fetchLocal(filter: any): Promise<any[]> {
   // local relay direct client
+  // eslint-disable-next-line
   let fetchQueue: any[] = []
   let fetchOk: (() => void) | null = null
+  // eslint-disable-next-line
   const client = new LocalRelayClient((msg: any) => {
     console.log('local relay reply', msg)
     if (msg.length < 2) return

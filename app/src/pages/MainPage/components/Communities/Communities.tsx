@@ -67,7 +67,12 @@ export const Communities = memo(function Communities() {
     }
 
     return (
-      <HorizontalSwipeVirtualContent itemHeight={141} itemSize={225} itemCount={communities.length} RowComponent={Row} />
+      <HorizontalSwipeVirtualContent
+        itemHeight={141}
+        itemSize={225}
+        itemCount={communities.length}
+        RowComponent={Row}
+      />
     )
   }, [communities, handleReloadCommunities, handleOpenCommuniti])
 

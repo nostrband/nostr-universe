@@ -18,7 +18,7 @@ import {
   setContactList,
   setHighlights,
   setLiveEvents,
-  setLongPosts,
+  setLongPosts
 } from '@/store/reducers/contentWorkspace'
 import { MIN_ZAP_AMOUNT } from '@/consts'
 import { MetaEvent } from '@/types/meta-event'
@@ -72,7 +72,7 @@ export const useUpdateProfile = () => {
   }, [])
 
   const reloadFeeds = useCallback(async () => {
-    console.log("sync reloadFeeds", Date.now())
+    console.log('sync reloadFeeds', Date.now())
 
     if (!isConnected()) return
 
@@ -123,24 +123,21 @@ export const useUpdateProfile = () => {
     dispatch(fetchBestLongNotesThunk(currentPubkey))
     dispatch(fetchProfileListsThunk({ pubkey: currentPubkey, decrypt }))
     dispatch(fetchBookmarkListsThunk({ pubkey: currentPubkey, decrypt }))
-
-  }, [contactList, dispatch]) 
+  }, [contactList, dispatch])
 
   useEffect(() => {
-    console.log("force reload", Date.now())
+    console.log('force reload', Date.now())
     asyncThrottle(reloadFeeds, true)
   }, [contactList])
 
   useEffect(() => {
     const reload = sync.reload || (sync.done > 0 && sync.todo === 0)
-    console.log("maybe reload", reload, sync)
-    if (reload)
-      asyncThrottle(reloadFeeds, sync.todo === 0)
+    console.log('maybe reload', reload, sync)
+    if (reload) asyncThrottle(reloadFeeds, sync.todo === 0)
   }, [reloadFeeds, sync])
 
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
-
       startSync(currentPubkey)
 
       const currentProfile = getProfile(currentPubkey)

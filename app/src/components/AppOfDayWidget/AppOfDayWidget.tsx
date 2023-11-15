@@ -38,9 +38,7 @@ export const AppOfDayWidget = () => {
       <Container>
         <Wrapper>
           <StyledTitleWrapper>
-            <StyledDeleteButton
-              onClick={handleSkip}
-            />
+            <StyledDeleteButton onClick={handleSkip} />
             <StyledTitle>🎉 App Of The Day</StyledTitle>
           </StyledTitleWrapper>
           <AppNostroListItem app={appOfTheDay} onClick={handleOpenAppOfTheDayModal} />

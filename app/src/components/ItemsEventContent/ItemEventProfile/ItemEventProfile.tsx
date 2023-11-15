@@ -36,9 +36,7 @@ export const ItemEventProfile = ({ event }: IItemEventProfile) => {
         <ProfileInfo profile={event.author} pubkey={event.pubkey} />
       </Head>
 
-      {event.website && (
-        <WebsiteView url={event.website} />
-      )}
+      {event.website && <WebsiteView url={event.website} />}
       {event.content && (
         <ContentCollapse maxContentLength={MAX_LENGTH_CONTENT} open={openContent} text={event.content} />
       )}

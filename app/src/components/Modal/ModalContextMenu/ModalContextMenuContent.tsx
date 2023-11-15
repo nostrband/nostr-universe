@@ -37,20 +37,24 @@ import {
 import { useOpenApp } from '@/hooks/open-entity'
 import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
 import { ReactNode, useCallback, useEffect, useState } from 'react'
-import { useAppSelector } from '@/store/hooks/redux'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { AppEvent } from '@/types/app-event'
 import { showToast } from '@/utils/helpers/general'
 import { usePins } from '@/hooks/pins'
-import { selectCurrentWorkspace } from '@/store/store'
+import { selectCurrentWorkspace, selectKeys } from '@/store/store'
 import { AppNostr } from '@/types/app-nostr'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { Kinds } from '@/modules/const/kinds'
 import { AuthoredEvent } from '@/types/authored-event'
 import { ItemEventMultipurpose } from '@/components/ItemsEventContent/ItemEventMultipurpose/ItemEventMultipurpose'
 import { ItemEventProfile } from '@/components/ItemsEventContent/ItemEventProfile/ItemEventProfile'
+import { dbi } from '@/modules/db'
+import { setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
 
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
+  const { currentPubkey } = useAppSelector(selectKeys)
+  const dispatch = useAppDispatch()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { openApp, openBlank, sendTabPayment } = useOpenApp()
   const { onPinApp, findAppPin, onDeletePinnedApp } = usePins()
@@ -115,9 +119,22 @@ export const ModalContextMenuContent = () => {
     })
   }
 
-  const handleOpenApp = () => {
+  const handleOpenApp = async () => {
     if (!lastApp) return
+    // open the tab first
     openApp({ ...lastApp, kind: '' + kind }, { replace: true })
+
+    // then write to db in the background
+    const app = await dbi.addSelectAppHistory({
+      kind,
+      naddr: lastApp.naddr,
+      pubkey: currentPubkey,
+      timestamp: Date.now(),
+      name: lastApp.name,
+      nextSuggestTime: Date.now(),
+      numberOfLaunch: 1
+    })
+    dispatch(setSelectAppHistory({ apps: [app] }))
   }
 
   const handleZap = async () => {
