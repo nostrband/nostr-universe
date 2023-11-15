@@ -14,6 +14,7 @@ import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
 import AddIcon from '@mui/icons-material/Add'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { AppOfDayWidget } from '@/components/AppOfDayWidget/AppOfDayWidget'
 
 type PinID = string | number
 
@@ -21,6 +22,7 @@ export const AppsPageContent = () => {
   const { openApp } = useOpenApp()
   const dispatch = useAppDispatch()
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
+  const { isShowAOTDWidget } = useAppSelector((state) => state.notifications)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
   const { handleOpen: handleOpenModal } = useOpenModalSearchParams()
@@ -73,6 +75,7 @@ export const AppsPageContent = () => {
 
   return (
     <StyledSwipeableDrawerContent>
+      {isShowAOTDWidget && <AppOfDayWidget />}
       <DndContext sensors={sensors} autoScroll={false} onDragEnd={handleDragEnd}>
         <SortableContext items={pinIds} strategy={rectSwappingStrategy}>
           <Container>

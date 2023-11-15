@@ -616,7 +616,7 @@ async function getRandomAppFromFilteredApps(apps: AppNostr[], date: Date) {
 //  const randomIndex = Math.floor(Math.random() * apps.length)
   // let's show everyone the same app so that we build
   // waves of reviews and discussions for apps 
-  const today = 3 + Math.floor(date.getTime() / (24 * 3600 * 1000))
+  const today = Math.floor(date.getTime() / (24 * 3600 * 1000))
   const randomIndex = today % apps.length
   const randomApp = apps[randomIndex]
   console.log("AOTD randomIndex", randomIndex, "randomApp", JSON.stringify(randomApp))
@@ -649,18 +649,19 @@ function randomDateTime(date = new Date()) {
 //  const isMoreThanHour = randomEndTime < HOUR_IN_MS ? randomEndTime + HOUR_IN_MS : randomEndTime
   const randomTime = new Date(startTimeLocal + randomEndTime)
 
-//  return randomTime
-  return new Date(date.getTime() + 120000)
+  return randomTime
+//  return new Date(date.getTime() + 120000)
 }
 
-const addNotification = (app = {}, notificationDate = new Date(), id = 0, onClick = () => undefined) => {
+const addNotification = (app: AppNostr = {}, notificationDate = new Date(), id = 0, onClick = () => undefined) => {
   const icon = app.picture || renderDefaultAppIcon(app.name) || ''
   const notificationOptions = {
     id: id,
     title: '🎉 App of the Day',
     text: `Check out ${app.name} - ${app.about}`,
     icon,
-    smallIcon: icon,
+    color: '#a304db',
+    smallIcon: "res://ic_notification",
     lockscreen: true,
     silent: false,
     trigger: { at: notificationDate },
