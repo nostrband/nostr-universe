@@ -121,6 +121,10 @@ export const ModalContextMenuContent = () => {
 
   const handleOpenApp = async () => {
     if (!lastApp) return
+    // open the tab first
+    openApp({ ...lastApp, kind: '' + kind }, { replace: true })
+
+    // then write to db in the background
     const app = await dbi.addSelectAppHistory({
       kind,
       naddr: lastApp.naddr,
@@ -131,7 +135,6 @@ export const ModalContextMenuContent = () => {
       numberOfLaunch: 1
     })
     dispatch(setSelectAppHistory({ apps: [app] }))
-    openApp({ ...lastApp, kind: '' + kind }, { replace: true })
   }
 
   const handleZap = async () => {
