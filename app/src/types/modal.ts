@@ -25,6 +25,7 @@ export enum MODAL_PARAMS_KEYS {
   SIGNED_EVENTS_MODAL = 'signed-events-modal',
   NPS_SCORE_MODAL = 'nps-score-modal',
   PAYMENT_HISTORY_MODAL = 'payment-history-modal',
+  APP_OF_THE_DAY_MODAL = 'app-of-the-day-modal',
   SYNC_MODAL = 'sync-modal'
 }
 

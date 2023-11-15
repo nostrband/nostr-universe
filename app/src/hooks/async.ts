@@ -6,6 +6,7 @@ interface IState {
   lastStartTime: number
   // eslint-disable-next-line
   timeout: any
+  force: boolean
 }
 
 export const useAsyncThrottle = (interval?: number) => {
@@ -13,7 +14,8 @@ export const useAsyncThrottle = (interval?: number) => {
     next: null,
     active: false,
     lastStartTime: 0,
-    timeout: null
+    timeout: null,
+    force: false
   })
 
   const runNext = useCallback(async () => {
@@ -27,7 +29,7 @@ export const useAsyncThrottle = (interval?: number) => {
 
   useEffect(() => {
     const passed = Date.now() - state.lastStartTime
-    if (!interval || passed > interval) {
+    if (!interval || passed > interval || state.force) {
       runNext()
     } else if (!state.timeout) {
       const timeout = setTimeout(() => {
@@ -42,7 +44,7 @@ export const useAsyncThrottle = (interval?: number) => {
     }
   }, [runNext])
 
-  return async (fn: () => Promise<void>) => {
-    setState((s) => ({ ...s, next: fn }))
+  return async (fn: () => Promise<void>, force?: boolean) => {
+    setState(s => ({ ...s, next: fn, force: !!force }))
   }
 }

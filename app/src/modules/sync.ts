@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
   NDKFilter,
   NDKRelaySet,
@@ -5,8 +6,7 @@ import {
   // eslint-disable-next-line
   // @ts-ignore
 } from '@nostrband/ndk'
-
-// eslint-disable-next-line
+  // eslint-disable-next-line
 // @ts-ignore
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
 import { getTagValue, getTags, ndk, nostrEvent } from './nostr'
@@ -367,7 +367,7 @@ async function executeTaskPubkeys(currentTask: ISyncTask) {
 async function executeTaskMetas(currentTask: ISyncTask) {
   const filter: NDKFilter = {
     authors: currentTask.params.pubkeys,
-    kinds: [Kinds.META, Kinds.CONTACT_LIST, Kinds.APP_RECOMM]
+    kinds: [Kinds.META, Kinds.CONTACT_LIST]
   }
 
   await processFilters(currentTask, [filter])
