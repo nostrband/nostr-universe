@@ -3,7 +3,7 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import { StyledAppIcon, StyledAppImg } from './styled'
 import { IAppIcon } from './types'
 
-const failedCache = new Set<string>()
+const failedCache = new Map<string, boolean>()
 
 export const AppIcon = memo(function AppIcon({
   picture = '',
@@ -17,20 +17,25 @@ export const AppIcon = memo(function AppIcon({
   alt,
   onClick
 }: IAppIcon) {
-  const [isFailed, setIsFailed] = useState(true)
+  const [isFailed, setIsFailed] = useState(false)
 
   useEffect(() => {
+    const c = failedCache.get(picture)
+    if (c !== undefined) {
+      setIsFailed(c)
+      return
+    }
     setIsFailed(true)
-    if (failedCache.has(picture)) return
 
     const img = new Image()
     img.src = picture
     img.onerror = () => {
       setIsFailed(true)
-      failedCache.add(picture)
+      failedCache.set(picture, true)
     }
     img.onload = () => {
       setIsFailed(false)
+      failedCache.set(picture, false)
     }
   }, [picture])
 

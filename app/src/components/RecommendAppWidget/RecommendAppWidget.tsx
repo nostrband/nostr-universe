@@ -10,6 +10,7 @@ import { showToast } from '@/utils/helpers/general'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { selectKeys } from '@/store/store'
 import { TypeListSelectApp, setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
+import { isGuest } from '@/utils/helpers/prepare-data'
 
 export const RecommendAppWidget = () => {
   const { currentPubkey } = useAppSelector(selectKeys)
@@ -29,8 +30,12 @@ export const RecommendAppWidget = () => {
   }, [currentPubkey])
 
   const updateNewApps = useCallback(async (apps: any[]) => {
-    const newApps = await filterNewApps(apps)
-    setNewApps(newApps)
+    if (!isGuest(currentPubkey)) {
+      const newApps = await filterNewApps(apps)
+      setNewApps(newApps)
+    } else {
+      setNewApps(apps)
+    }
   }, [filterNewApps, setNewApps])
 
   const getSelectAppHistory = useCallback(async () => {

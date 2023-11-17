@@ -45,7 +45,7 @@ export const ModalAppOfTheDayContent: FC<ModalAppOfTheDayContentProps> = ({ hand
         const kindName = kindNames[kind]
         return kindName || kind
       })
-      .join('')
+      .join(' ')
   }
 
   const { openBlank } = useOpenApp()
