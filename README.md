@@ -21,6 +21,8 @@ cordova plugin add cordova-clipboard
 cordova plugin add cordova-plugin-x-socialsharing
 cordova plugin add cordova-plugin-statusbar
 cordova plugin add cordova-plugin-native-logs
+cordova plugin add cordova-plugin-androidx-adapter
+cordova plugin add https://github.com/nostrband/cordova-plugin-local-notifications
 cordova platform add android
 cordova build android
 ```

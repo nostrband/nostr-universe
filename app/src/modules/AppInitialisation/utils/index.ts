@@ -1,17 +1,21 @@
 /* eslint-disable */
 // @ts-nocheck
 import { coracleIcon, irisIcon, nostrIcon, satelliteIcon, snortIcon } from '@/assets'
-import { DEFAULT_PUBKEY } from '@/consts'
+import { DEFAULT_PUBKEY, formatDate } from '@/consts'
 import { db, dbi } from '@/modules/db'
 import { keystore } from '@/modules/keystore'
-import { addWalletInfo, setNsbSigner, subscribeProfiles } from '@/modules/nostr'
+import { addWalletInfo, setNsbSigner } from '@/modules/nostr'
 import { walletstore } from '@/modules/walletstore'
 import { setCurrentPubkey, setKeys, setReadKeys, setNsbKeys } from '@/store/reducers/keys.slice'
+import { setAppOfTheDay, setIsShowAOTDWidget } from '@/store/reducers/notifications.slice'
 import { addTabs } from '@/store/reducers/tab.slice'
 import { addWorkspaces } from '@/store/reducers/workspaces.slice'
+import { AppNostr } from '@/types/app-nostr'
 import { DEFAULT_CONTENT_FEED_SETTINGS } from '@/types/content-feed'
 import { WorkSpace } from '@/types/workspace'
+import { renderDefaultAppIcon } from '@/utils/helpers/general'
 import { getOrigin } from '@/utils/helpers/prepare-data'
+import { add, format, startOfDay, endOfDay } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
 
 // ?? зачем дефолтные аппы ??
@@ -572,4 +576,205 @@ export const loadKeys = async (dispatch): Promise<[keys: string[], currentPubkey
   if (nsbKey) setNsbSigner(nsbKey.token)
 
   return [keys, currentPubkey, readKeys, nsbKeys]
+}
+
+const cancelAllNotifications = () => {
+  return new Promise((resolve) => {
+    if (window.cordova) {
+      cordova.plugins.notification.local.cancelAll(() => {
+        console.log('Cancel previously scheduled notifications')
+        resolve('Cancel all event exec')
+      })
+    } else {
+      resolve('is WEB')
+    }
+  })
+}
+
+const filterShownApps = async (apps = []) => {
+  try {
+    const shownApps = await dbi.listAOTDHistory()
+    console.log('AOTD shownApps in DB', JSON.stringify(shownApps))
+
+    return apps.filter((app) => {
+      const appIsShown = shownApps.find(({ app: shownApp }) => shownApp?.naddr === app?.naddr)
+      if (appIsShown) return false
+      return true
+    })
+  } catch (error) {
+    console.log(error, '=> filterShownApps error')
+  }
+}
+
+const isAppOfDayAlreadyShownToday = async () => {
+  const currentDate = format(new Date(), formatDate)
+  const shownDate = await dbi.getAOTDShownDate()
+  return currentDate === shownDate
+}
+
+async function getRandomAppFromFilteredApps(apps: AppNostr[], date: Date) {
+  //  const randomIndex = Math.floor(Math.random() * apps.length)
+  // let's show everyone the same app so that we build
+  // waves of reviews and discussions for apps
+  const today = Math.floor(date.getTime() / (24 * 3600 * 1000))
+  const randomIndex = today % apps.length
+  const randomApp = apps[randomIndex]
+  console.log('AOTD randomIndex', randomIndex, 'randomApp', JSON.stringify(randomApp))
+  //  apps.splice(randomIndex, 1)
+  return randomApp
+}
+
+//const HOUR_IN_MS = 1000 * 3600
+
+const random = () => {
+  return parseFloat(Math.random().toFixed(3))
+}
+
+function randomDateTime(date = new Date()) {
+  const startDateTime = date
+  const endDateTime = endOfDay(startDateTime)
+  // max(8:00 in local time, date)
+  const startTimeLocal = Math.max(startOfDay(date).getTime() + 8 * 3600 * 1000, date.getTime())
+  // max(18:00 in local time, date + 10min)
+  const endTimeLocal = Math.max(endDateTime.getTime() - 6 * 3600 * 1000, date.getTime() + 10 * 60 * 1000)
+  console.log(
+    'AOTD date',
+    date,
+    'start',
+    startTimeLocal,
+    new Date(startTimeLocal),
+    'end',
+    endTimeLocal,
+    new Date(endTimeLocal)
+  )
+
+  const randomEndTime = Math.random() * (endTimeLocal - startTimeLocal)
+  //  const isMoreThanHour = randomEndTime < HOUR_IN_MS ? randomEndTime + HOUR_IN_MS : randomEndTime
+  const randomTime = new Date(startTimeLocal + randomEndTime)
+
+  return randomTime
+  //  return new Date(date.getTime() + 120000)
+}
+
+const addNotification = (app: AppNostr = {}, notificationDate = new Date(), id = 0, onClick = () => undefined) => {
+  const icon = app.picture || renderDefaultAppIcon(app.name) || ''
+  const notificationOptions = {
+    id: id,
+    title: '🎉 App of the Day',
+    text: `Check out ${app.name} - ${app.about}`,
+    icon,
+    color: '#a304db',
+    smallIcon: 'res://ic_notification',
+    lockscreen: true,
+    silent: false,
+    trigger: { at: notificationDate },
+    vibrate: true,
+    data: app
+  }
+
+  if (window.cordova) {
+    window.cordova.plugins.notification.local.schedule(
+      notificationOptions,
+      function (notification) {
+        console.log('scheduled app: ', notification.id, JSON.stringify(notification))
+      },
+      this,
+      { skipPermission: true }
+    )
+    window.cordova.plugins.notification.local.on('click', function (notification) {
+      onClick(notification)
+    })
+    window.cordova.plugins.notification.local.on('clear', function (notification) {
+      const id = notification.id
+      if (notificationOptions.id === id) {
+        window.cordova.plugins.notification.local.schedule(
+          { ...notificationOptions, trigger: { at: randomDateTime() } },
+          function (notification) {
+            console.log('reschedule today app: ', notification.id, JSON.stringify(notification))
+          },
+          this,
+          { skipPermission: true }
+        )
+      }
+    })
+  }
+}
+
+const scheduleNotificationsForWeek = async (apps = [], dispatch) => {
+  for (let day = 1; day <= 7; day++) {
+    const notificationDate = randomDateTime(startOfDay(add(new Date(), { days: day })))
+    const randomApp = await getRandomAppFromFilteredApps(apps, notificationDate)
+    if (!randomApp) continue
+
+    addNotification(randomApp, notificationDate, day, (notification) => {
+      updateAOTDShownDate(JSON.parse(notification.data), dispatch)
+    })
+  }
+}
+
+export const APP_OF_THE_DAY_ID = 999
+
+const updateAOTDShownDate = async (app, dispatch) => {
+  await dbi.addAOTD({
+    id: uuidv4(),
+    app: app,
+    date: format(new Date(), formatDate)
+  })
+  dispatch(setAppOfTheDay({ app }))
+}
+
+const scheduleAppOfTheDayNotification = async (apps = [], dispatch) => {
+  try {
+    const currentDate = format(new Date(), formatDate)
+    const existedApp = await dbi.getAOTDByShownDate(currentDate)
+    console.log('AOTD existedApp', JSON.stringify(existedApp))
+    const notificationDate = randomDateTime()
+    if (!existedApp) {
+      const randomAppOfTheDay = await getRandomAppFromFilteredApps(apps, notificationDate)
+
+      await dbi.addAOTD({
+        id: uuidv4(),
+        app: randomAppOfTheDay,
+        date: format(new Date(), formatDate)
+      })
+      dispatch(setAppOfTheDay({ app: randomAppOfTheDay }))
+
+      return addNotification(randomAppOfTheDay, notificationDate, APP_OF_THE_DAY_ID, (notification) => {
+        updateAOTDShownDate(JSON.parse(notification.data), dispatch)
+      })
+    }
+
+    dispatch(setAppOfTheDay({ app: existedApp.app }))
+    return addNotification(existedApp.app, notificationDate, APP_OF_THE_DAY_ID, (notification) => {
+      updateAOTDShownDate(JSON.parse(notification.data), dispatch)
+    })
+  } catch (error) {
+    console.log(error, 'scheduleAppOfTheDayNotification error')
+  }
+}
+
+export const bootstrapNotifications = async (apps, dispatch) => {
+  try {
+    console.log('AOTD apps', apps)
+
+    const isAOTDShown = await isAppOfDayAlreadyShownToday()
+    console.log('AOTD is shown', isAOTDShown)
+
+    if (isAOTDShown) {
+      return dispatch(setIsShowAOTDWidget({ isShow: false }))
+    }
+
+    await cancelAllNotifications()
+    dispatch(setIsShowAOTDWidget({ isShow: true }))
+
+    const filteredApps = (await filterShownApps(apps)) || []
+    const filteredAppsCopy = [...filteredApps]
+    console.log('AOTD filteredApps', filteredApps)
+    if (!filteredApps.length) return undefined
+
+    await scheduleAppOfTheDayNotification(filteredAppsCopy, dispatch)
+    await scheduleNotificationsForWeek(filteredAppsCopy, dispatch)
+  } catch (error) {
+    console.log(error, '=> bootstrapNotifications error')
+  }
 }

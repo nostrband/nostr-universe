@@ -30,8 +30,8 @@ export const BigZaps = memo(function BigZaps() {
         event = bigZap.targetEvent
       } else if (bigZap.targetMeta) {
         event = bigZap.targetMeta
-      } 
-      
+      }
+
       if (!event) {
         // eslint-disable-next-line
         // @ts-ignore
@@ -83,7 +83,9 @@ export const BigZaps = memo(function BigZaps() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHeight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
+    return (
+      <HorizontalSwipeVirtualContent itemHeight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
+    )
   }, [bigZaps, handleReloadBigZaps, handleOpenBigZap])
 
   return (

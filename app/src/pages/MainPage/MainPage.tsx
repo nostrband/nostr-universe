@@ -16,13 +16,15 @@ import { CONTENT_FEEDS } from '@/types/content-feed'
 import { useCallback, Fragment } from 'react'
 import { selectCurrentWorkspaceFeedSettings, selectKeys } from '@/store/store'
 import { NPSWidget } from '@/components/NPSWidget/NPSWidget'
+import { RecommendAppWidget } from '@/components/RecommendAppWidget/RecommendAppWidget'
+import { AppOfDayWidget } from '@/components/AppOfDayWidget/AppOfDayWidget'
 
 export const MainPage = () => {
   const [searchParams] = useSearchParams()
   const isShow = searchParams.get('page') === 'content'
-
   const { keys } = useAppSelector(selectKeys)
   const { isShowWidget } = useAppSelector((state) => state.feedbackInfo)
+  const { isShowAOTDWidget } = useAppSelector((state) => state.notifications)
 
   const guest = !keys.length || isGuest(keys[0])
 
@@ -71,8 +73,10 @@ export const MainPage = () => {
 
   return (
     <StyledWrapVisibility isShow={isShow}>
+      <RecommendAppWidget />
       {guest && <WelcomeWidget />}
       {isShowWidget && <NPSWidget />}
+      {isShowAOTDWidget && <AppOfDayWidget />}
       {renderFeeds()}
     </StyledWrapVisibility>
   )

@@ -2,11 +2,11 @@
 import { matchFilter, matchFilters } from '@nostrband/nostr-tools'
 import { dbi } from './db'
 import { getEventAddr } from './nostr'
+// eslint-disable-next-line
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
 import { Kinds } from './const/kinds'
 import { onBeforeNewEvent } from './sync'
-
 
 const events: NostrEvent[] = []
 const eventById = new Map<string, number>()
@@ -14,12 +14,13 @@ const eventsByKind = new Map<string, number[]>()
 const eventsByAuthor = new Map<string, number[]>()
 const eventsByAuthorKind = new Map<string, number[]>()
 const eventsByAddr = new Map<string, number[]>()
+// eslint-disable-next-line
 const subs = new Map<string, any>()
 
 export function addLocalRelayEvent(e: NostrEvent) {
   if (eventById.has(e.id)) return false
 
-//  console.log("addLocalRelayEvent kind", e.kind, "id", e.id, "pubkey", e.pubkey)
+  //  console.log("addLocalRelayEvent kind", e.kind, "id", e.id, "pubkey", e.pubkey)
   onBeforeNewEvent(e)
 
   const index = events.length
@@ -38,13 +39,15 @@ export function addLocalRelayEvent(e: NostrEvent) {
     }
   }
 
-  put(eventsByKind, e.kind+'')
+  put(eventsByKind, e.kind + '')
   put(eventsByAuthor, e.pubkey)
   const replaceAuthorKind = e.kind === Kinds.META || e.kind === Kinds.CONTACT_LIST
   put(eventsByAuthorKind, e.kind + ':' + e.pubkey, replaceAuthorKind)
-  const replaceAddr = e.kind === Kinds.META || e.kind === Kinds.CONTACT_LIST
-    || (e.kind >= 10000 && e.kind < 20000)
-    || (e.kind >= 30000 && e.kind < 40000)
+  const replaceAddr =
+    e.kind === Kinds.META ||
+    e.kind === Kinds.CONTACT_LIST ||
+    (e.kind >= 10000 && e.kind < 20000) ||
+    (e.kind >= 30000 && e.kind < 40000)
   put(eventsByAddr, getEventAddr(e), replaceAddr)
   eventById.set(e.id, index)
   events.push(e)
@@ -52,11 +55,13 @@ export function addLocalRelayEvent(e: NostrEvent) {
 }
 
 export class LocalRelayClient {
-
+  // eslint-disable-next-line
   _subs: Set<any>
+  // eslint-disable-next-line
   _onSend: (msg: any) => void
-
+  // eslint-disable-next-line
   constructor(onSend: (msg: any) => void) {
+    // eslint-disable-next-line
     this._subs = new Set<any>()
     this._onSend = onSend
   }
@@ -65,14 +70,16 @@ export class LocalRelayClient {
       this.removeSub(subId)
     }
   }
+  // eslint-disable-next-line
   addSub(subId: string, filters: any) {
-    subs.set(subId, {instance: this, filters})
+    subs.set(subId, { instance: this, filters })
     this._subs.add(subId)
   }
   removeSub(subId: string) {
     subs.delete(subId)
     this._subs.delete(subId)
   }
+  // eslint-disable-next-line
   send(message: any) {
     this._onSend(message)
   }
@@ -84,13 +91,15 @@ export class LocalRelayClient {
     }
 
     let verb: string = ''
+    // eslint-disable-next-line
     let payload: Array<any> = []
     try {
-      [verb, ...payload] = message
+      ;[verb, ...payload] = message
     } catch (e) {
       this.send(['NOTICE', '', 'Unable to read message'])
     }
 
+    // eslint-disable-next-line
     // @ts-ignore
     const handler = this[`on${verb}`]
 
@@ -103,22 +112,24 @@ export class LocalRelayClient {
   onCLOSE(subId: string) {
     this.removeSub(subId)
   }
+  // eslint-disable-next-line
   onREQ(subId: string, ...filters: any[]) {
     const start = Date.now()
     console.log(start, 'REQ', subId, filters)
 
     this.addSub(subId, filters)
 
-    let resultFilters = new Map<string, Set<number>>()
-    let results: NostrEvent[] = []
+    const resultFilters = new Map<string, Set<number>>()
+    const results: NostrEvent[] = []
 
+    // eslint-disable-next-line
     const matchAppend = (filter: any, filterIndex: number, e: NostrEvent) => {
       if (!e) return
 
       try {
         if (!matchFilter(filter, e)) return
       } catch {
-        console.log("invalid event?", e)
+        console.log('invalid event?', e)
         return
       }
 
@@ -152,7 +163,7 @@ export class LocalRelayClient {
         }
       } else if (filter.kinds?.length) {
         for (const kind of filter.kinds) {
-          const key = kind+''
+          const key = kind + ''
           const indexes = eventsByKind.get(key)
           if (!indexes) continue
           for (const i of indexes) {
@@ -161,20 +172,19 @@ export class LocalRelayClient {
           }
         }
       } else {
-        for (const e of events)
-          matchAppend(filter, filterIndex, e)
+        for (const e of events) matchAppend(filter, filterIndex, e)
       }
     }
 
-//     for (const event of events) {
-//       if (matchFilters(filters, event)) {
-// //        console.log('match', subId, event)
+    //     for (const event of events) {
+    //       if (matchFilters(filters, event)) {
+    // //        console.log('match', subId, event)
 
-//         this.send(['EVENT', subId, event])
-//       } else {
-// //        console.log('miss', subId, event)
-//       }
-//     }
+    //         this.send(['EVENT', subId, event])
+    //       } else {
+    // //        console.log('miss', subId, event)
+    //       }
+    //     }
 
     // sort all results by timestamp
     results.sort((a, b) => b.created_at - a.created_at)
@@ -184,8 +194,8 @@ export class LocalRelayClient {
     let sent = 0
     for (const e of results) {
       const filterIndexes = resultFilters.get(e.id)
-      if (!filterIndexes) throw new Error("Impossible")
-//      console.log("event", e.id, "filterIndexes", filterIndexes)
+      if (!filterIndexes) throw new Error('Impossible')
+      //      console.log("event", e.id, "filterIndexes", filterIndexes)
 
       // check if this event fits one of it's matching filters' limits
       let send = false
@@ -198,14 +208,14 @@ export class LocalRelayClient {
           send = true
         }
       }
-      
+
       if (send) {
         this.send(['EVENT', subId, e])
         sent++
       }
     }
 
-    console.log(Date.now(), "REQ EOSE done in ", Date.now() - start, "sent", sent, "results", results.length)
+    console.log(Date.now(), 'REQ EOSE done in ', Date.now() - start, 'sent', sent, 'results', results.length)
 
     this.send(['EOSE', subId])
   }
@@ -218,7 +228,7 @@ export class LocalRelayClient {
 
     if (!added) return
 
-    for (const [subId, {instance, filters}] of subs.entries()) {
+    for (const [subId, { instance, filters }] of subs.entries()) {
       if (matchFilters(filters, event)) {
         console.log('new match', subId, event)
 
@@ -231,9 +241,8 @@ export class LocalRelayClient {
 export async function initLocalRelay() {
   const start = Date.now()
   const dbEvents = await dbi.listLocalRelayEvents()
-  for (const e of dbEvents) 
-    addLocalRelayEvent(e)
-  console.log("local events", events.length, "loaded in", Date.now() - start, "ms")
+  for (const e of dbEvents) addLocalRelayEvent(e)
+  console.log('local events', events.length, 'loaded in', Date.now() - start, 'ms')
 }
 
 export function getEventsCount() {
@@ -252,6 +261,6 @@ export function getEventStats() {
 
   return {
     kinds: [...kinds.entries()],
-    pubkeys: [...pubkeys.entries()],
-  } 
+    pubkeys: [...pubkeys.entries()]
+  }
 }

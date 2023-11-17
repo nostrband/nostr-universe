@@ -82,7 +82,6 @@ export const useOpenModalSearchParams = () => {
 
   const handleOpenContextMenu = useCallback(
     ({ event, pubkey = '', bech32 = '', url = '', replace = false }: IContextMenuParams) => {
-
       if (!bech32 && event) bech32 = getEventNip19(event)
       if (!bech32 && pubkey) bech32 = getNprofile(pubkey)
 

@@ -10,10 +10,10 @@ import { List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { getEventStats } from '@/modules/relay'
 
 export const ModalSyncContent = () => {
-  const { syncState } = useAppSelector(state => state.sync)
-  const { currentPubkey } = useAppSelector(state => state.keys)
+  const { syncState } = useAppSelector((state) => state.sync)
+  const { currentPubkey } = useAppSelector((state) => state.keys)
 
-  const progress = 100 * syncState.done / (syncState.todo + syncState.done)
+  const progress = (100 * syncState.done) / (syncState.todo + syncState.done)
 
   const fullSyncHandler = useCallback(() => {
     resync(currentPubkey)
@@ -34,41 +34,28 @@ export const ModalSyncContent = () => {
 
   useEffect(() => {
     const stats = getEventStats()
-    console.log("sync stats", stats)
+    console.log('sync stats', stats)
   }, [syncState])
 
   return (
     <Container>
       <StyledWrap>
         <StyledViewTitle variant="h5">
-          {syncState.todo > 0 && (
-            <>Loading new events...</>
-          )}
-          {!syncState.todo && (
-            <>Done loading events</>
-          )}
+          {syncState.todo > 0 && <>Loading new events...</>}
+          {!syncState.todo && <>Done loading events</>}
         </StyledViewTitle>
 
-        {syncState.todo > 0 && (
-          <CircularProgressWithLabel value={progress} />
-        )}
+        {syncState.todo > 0 && <CircularProgressWithLabel value={progress} />}
         {!syncState.todo && (
           <StyledViewTitle variant="h4">
             <CheckCircleOutlinedIcon />
           </StyledViewTitle>
         )}
-        <StyledViewTitle>
-          Received events: {syncState.newEventCount}
-        </StyledViewTitle>
-        <StyledViewTitle>
-          Stored events: {syncState.totalEventCount}
-        </StyledViewTitle>
-
+        <StyledViewTitle>Received events: {syncState.newEventCount}</StyledViewTitle>
+        <StyledViewTitle>Stored events: {syncState.totalEventCount}</StyledViewTitle>
       </StyledWrap>
       <StyledMenuWrapper>
-        <List>
-          {renderItem('Full sync', <CloudSyncOutlinedIcon />, fullSyncHandler)}
-        </List>
+        <List>{renderItem('Full sync', <CloudSyncOutlinedIcon />, fullSyncHandler)}</List>
       </StyledMenuWrapper>
     </Container>
   )
