@@ -17,11 +17,21 @@ import {
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 import { AugmentedEvent } from '@/types/augmented-event'
+import { Chip } from '@mui/material'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const BigZaps = memo(function BigZaps() {
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
   const { bigZaps, contactList } = useAppSelector((state: RootState) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'bigZaps'
+      }
+    })
+  }
 
   const handleOpenBigZap = useCallback(
     (bigZap: ZapEvent) => {
@@ -88,11 +98,14 @@ export const BigZaps = memo(function BigZaps() {
     )
   }, [bigZaps, handleReloadBigZaps, handleOpenBigZap])
 
+  const isVisible = Boolean(bigZaps && bigZaps.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Big Zaps
+          Big Zaps{' '}
+          {isVisible && <Chip label="Show more" variant="outlined" size="small" onClick={handleOpenFeedModal} />}
         </StyledTitle>
       </Container>
       {renderContent()}

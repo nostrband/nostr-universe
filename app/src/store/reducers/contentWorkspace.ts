@@ -6,7 +6,7 @@ import { LongNoteEvent } from '@/types/long-note-event'
 import { ZapEvent } from '@/types/zap-event'
 import { createSlice } from '@reduxjs/toolkit'
 
-interface IContentWorkSpace {
+export interface IContentWorkSpace {
   contactList: ContactListEvent | null
   highlights: HighlightEvent[] | null
   bigZaps: ZapEvent[] | null
