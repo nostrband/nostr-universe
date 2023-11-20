@@ -10,8 +10,9 @@ import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 import { ContentCollapse } from '@/shared/ContentComponents/ContentCollapse/Content'
 import { KindView } from '@/shared/ContentComponents/KindView/KindView'
 import { kindNames } from '@/consts'
+import { ItemProps } from '@/utils/helpers/prepare-component'
 
-interface IItemEventMultipurpose {
+interface IItemEventMultipurpose extends ItemProps {
   event: {
     content?: string
     title?: string
@@ -22,7 +23,7 @@ interface IItemEventMultipurpose {
   }
 }
 
-export const ItemEventMultipurpose = ({ event }: IItemEventMultipurpose) => {
+export const ItemEventMultipurpose = ({ event, expandMore = true }: IItemEventMultipurpose) => {
   const MAX_LENGTH_CONTENT = 200
   const [openContent, setOpenContent] = useState(false)
 
@@ -46,7 +47,7 @@ export const ItemEventMultipurpose = ({ event }: IItemEventMultipurpose) => {
 
       <StyledItemSelectedEventActions>
         <KindView>{kind}</KindView>
-        {event.content && event.content.length > MAX_LENGTH_CONTENT && (
+        {expandMore && event.content && event.content.length > MAX_LENGTH_CONTENT && (
           <ExpandMore expand={openContent} onClick={handleExpandClick}>
             <ExpandMoreIcon />
           </ExpandMore>

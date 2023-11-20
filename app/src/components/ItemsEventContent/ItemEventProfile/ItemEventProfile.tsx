@@ -9,8 +9,9 @@ import { ContentCollapse } from '@/shared/ContentComponents/ContentCollapse/Cont
 import { KindView } from '@/shared/ContentComponents/KindView/KindView'
 import { kindNames } from '@/consts'
 import { WebsiteView } from '@/shared/ContentComponents/WebsiteView/WebsiteView'
+import { ItemProps } from '@/utils/helpers/prepare-component'
 
-interface IItemEventProfile {
+interface IItemEventProfile extends ItemProps {
   event: {
     content?: string
     author?: MetaEvent
@@ -20,7 +21,7 @@ interface IItemEventProfile {
   }
 }
 
-export const ItemEventProfile = ({ event }: IItemEventProfile) => {
+export const ItemEventProfile = ({ event, expandMore = true }: IItemEventProfile) => {
   const MAX_LENGTH_CONTENT = 200
   const [openContent, setOpenContent] = useState(false)
 
@@ -43,7 +44,7 @@ export const ItemEventProfile = ({ event }: IItemEventProfile) => {
 
       <StyledItemSelectedEventActions>
         <KindView>{kind}</KindView>
-        {event.content && event.content.length > MAX_LENGTH_CONTENT && (
+        {expandMore && event.content && event.content.length > MAX_LENGTH_CONTENT && (
           <ExpandMore expand={openContent} onClick={handleExpandClick}>
             <ExpandMoreIcon />
           </ExpandMore>

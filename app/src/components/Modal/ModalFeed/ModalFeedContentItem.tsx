@@ -16,7 +16,7 @@ export const ModalFeedContentItem = ({ data, index, setSize }: RowProps) => {
 
   return (
     <div ref={rowRef}>
-      <StyledItem>{getPreviewComponentEvent(data[index])}</StyledItem>
+      <StyledItem>{getPreviewComponentEvent(data[index], { expandMore: false })}</StyledItem>
     </div>
   )
 }

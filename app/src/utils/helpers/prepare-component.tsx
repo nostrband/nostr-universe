@@ -3,7 +3,11 @@ import { ItemEventProfile } from '@/components/ItemsEventContent/ItemEventProfil
 import { getTagValue } from '@/modules/nostr'
 import { AuthoredEvent } from '@/types/authored-event'
 
-export const getPreviewComponentEvent = (eventCurrent: AuthoredEvent | null) => {
+export interface ItemProps {
+  expandMore?: boolean
+}
+
+export const getPreviewComponentEvent = (eventCurrent: AuthoredEvent | null, props: ItemProps) => {
   if (eventCurrent) {
     switch (eventCurrent.kind) {
       case 0: {
@@ -15,7 +19,7 @@ export const getPreviewComponentEvent = (eventCurrent: AuthoredEvent | null) => 
           kind: eventCurrent.kind
         }
 
-        return <ItemEventProfile event={profileEvent} />
+        return <ItemEventProfile {...props} event={profileEvent} />
       }
 
       case 1: {
@@ -27,7 +31,7 @@ export const getPreviewComponentEvent = (eventCurrent: AuthoredEvent | null) => 
           kind: eventCurrent.kind
         }
 
-        return <ItemEventMultipurpose event={postEvent} />
+        return <ItemEventMultipurpose {...props} event={postEvent} />
       }
 
       default: {
@@ -44,7 +48,7 @@ export const getPreviewComponentEvent = (eventCurrent: AuthoredEvent | null) => 
           title: getTagValue(eventCurrent, 'title') || getTagValue(eventCurrent, 'name')
         }
 
-        return <ItemEventMultipurpose event={defaultEvent} />
+        return <ItemEventMultipurpose {...props} event={defaultEvent} />
       }
     }
   }
