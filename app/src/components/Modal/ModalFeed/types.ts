@@ -1,26 +1,13 @@
 import { AppNostr } from '@/types/app-nostr'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { AuthoredEvent } from '@/types/authored-event'
-import { HighlightEvent } from '@/types/highlight-event'
-import { SuggestedProfile } from '@/types/suggested-profiles'
-import { TrendingNote } from '@/types/trending-notes'
-import { ZapEvent } from '@/types/zap-event'
+import { ExtendedCommunityEvent } from '@/types/communities'
 
-type SuggestedProfileType = {
-  author: SuggestedProfile
-  pubkey: string
-  content: string
-  website: string
-  kind: number
+export interface MultiEvent extends AuthoredEvent {
+  post?: ExtendedCommunityEvent
 }
 
-export type ReturnDataContent =
-  | HighlightEvent[]
-  | AuthoredEvent[]
-  | ZapEvent[]
-  | SuggestedProfileType[]
-  | TrendingNote[]
-  | AppNostr[]
+export type ReturnDataContent = MultiEvent[]
 
 export interface RowProps {
   data: ReturnDataContent

@@ -10,6 +10,7 @@ import { KindView } from '@/shared/ContentComponents/KindView/KindView'
 import { kindNames } from '@/consts'
 import { WebsiteView } from '@/shared/ContentComponents/WebsiteView/WebsiteView'
 import { ItemProps } from '@/utils/helpers/prepare-component'
+import { Content } from '@/shared/ContentComponents/Content/Content'
 
 interface IItemEventProfile extends ItemProps {
   event: {
@@ -21,7 +22,7 @@ interface IItemEventProfile extends ItemProps {
   }
 }
 
-export const ItemEventProfile = ({ event, expandMore = true }: IItemEventProfile) => {
+export const ItemEventProfile = ({ event, expandMore = true, isOpenLink }: IItemEventProfile) => {
   const MAX_LENGTH_CONTENT = 200
   const [openContent, setOpenContent] = useState(false)
 
@@ -37,9 +38,11 @@ export const ItemEventProfile = ({ event, expandMore = true }: IItemEventProfile
         <ProfileInfo profile={event.author} pubkey={event.pubkey} />
       </Head>
 
-      {event.website && <WebsiteView url={event.website} />}
-      {event.content && (
+      {event.website && <WebsiteView isOpenLink={isOpenLink} url={event.website} />}
+      {expandMore && event.content ? (
         <ContentCollapse maxContentLength={MAX_LENGTH_CONTENT} open={openContent} text={event.content} />
+      ) : (
+        <Content contentLine={10}>{event.content}</Content>
       )}
 
       <StyledItemSelectedEventActions>

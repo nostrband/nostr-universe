@@ -31,6 +31,8 @@ export const Communities = memo(function Communities() {
     })
   }
 
+  console.log({ r6rg6rg36rg36rg36: communities })
+
   const handleOpenCommuniti = useCallback(
     (event: CommunityEvent) => {
       handleOpenContextMenu({ event })

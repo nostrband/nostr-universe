@@ -109,11 +109,29 @@ export const useOpenModalSearchParams = () => {
     [handleOpen]
   )
 
+  const getModalOrder = useCallback(
+    (modal: MODAL_PARAMS_KEYS) => {
+      const openedModals = []
+
+      for (const key of searchParams.keys()) {
+        openedModals.push(key)
+      }
+
+      const modalsKeysOpened = openedModals.filter((item) => Object.keys(MODAL_PARAMS_KEYS).includes(item.trim()))
+
+      const modalOrder = modalsKeysOpened.findIndex((el) => el === getEnumParam(modal))
+
+      return modalOrder < 0 ? 1300 : modalOrder + 1
+    },
+    [searchParams]
+  )
+
   return {
     handleClose,
     handleOpen,
     getModalOpened,
     handleOpenContextMenu,
-    handleOpenTab
+    handleOpenTab,
+    getModalOrder
   }
 }

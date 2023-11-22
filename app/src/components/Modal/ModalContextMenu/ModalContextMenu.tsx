@@ -4,11 +4,12 @@ import { Modal } from '@/modules/Modal/Modal'
 import { ModalContextMenuContent } from './ModalContextMenuContent'
 
 export const ModalContextMenu = () => {
-  const { getModalOpened, handleClose } = useOpenModalSearchParams()
+  const { getModalOpened, handleClose, getModalOrder } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.CONTEXT_MENU)
+  const order = getModalOrder(MODAL_PARAMS_KEYS.CONTEXT_MENU)
 
   return (
-    <Modal title="Magic menu" open={isOpen} handleClose={() => handleClose()}>
+    <Modal title="Magic menu" open={isOpen} zIndex={order} handleClose={() => handleClose()}>
       {isOpen && <ModalContextMenuContent />}
     </Modal>
   )

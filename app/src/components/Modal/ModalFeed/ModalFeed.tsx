@@ -7,9 +7,10 @@ import { IContentWorkSpace } from '@/store/reducers/contentWorkspace'
 import { useAppSelector } from '@/store/hooks/redux'
 
 export const ModalFeed = () => {
-  const { handleClose, getModalOpened } = useOpenModalSearchParams()
+  const { handleClose, getModalOpened, getModalOrder } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.FEED_MODAL)
-  const data = useAppSelector((state) => ({ ...state.contentWorkSpace, ...state.apps }))
+  const order = getModalOrder(MODAL_PARAMS_KEYS.FEED_MODAL)
+  const data = useAppSelector((state) => ({ ...state.contentWorkSpace, ...state.bookmarks }))
 
   const [searchParams] = useSearchParams()
 
@@ -24,7 +25,11 @@ export const ModalFeed = () => {
     suggestedProfiles: 'Suggested profiles',
     trendingNotes: 'Trending Notes',
     trendingProfiles: 'Trending Profiles',
-    apps: 'New Apps'
+    contactList: 'Following',
+    bestNotes: 'Favorite Notes',
+    bestLongNotes: 'Favorite Long Posts',
+    bookmarkLists: 'Bookmark Lists',
+    profileLists: 'Profile Lists'
   }
 
   const label = TITLES_FEED[keyData]
@@ -56,7 +61,7 @@ export const ModalFeed = () => {
           return []
         }
 
-        return data.communities
+        return data.communities.map((el) => ({ ...el, post: el }))
 
       case 'suggestedProfiles':
         if (!data.suggestedProfiles) {
@@ -90,12 +95,48 @@ export const ModalFeed = () => {
           return event
         })
 
-      case 'apps':
-        if (!data.apps) {
+      case 'contactList':
+        if (!data.contactList) {
           return []
         }
 
-        return data.apps
+        return data.contactList.contactEvents
+
+      case 'bestNotes':
+        if (!data.bestNotes) {
+          return []
+        }
+
+        return data.bestNotes.map((el) => {
+          const event = el.targetEvent || el
+
+          return event
+        })
+
+      case 'bestLongNotes':
+        if (!data.bestLongNotes) {
+          return []
+        }
+
+        return data.bestLongNotes.map((el) => {
+          const event = el.targetEvent || el
+
+          return event
+        })
+
+      case 'bookmarkLists':
+        if (!data.bookmarkLists) {
+          return []
+        }
+
+        return data.bookmarkLists
+
+      case 'profileLists':
+        if (!data.profileLists) {
+          return []
+        }
+
+        return data.profileLists
 
       default:
         return []
@@ -105,7 +146,7 @@ export const ModalFeed = () => {
   const dataContent = getDataContent(keyData)
 
   return (
-    <Modal title={label} open={isOpen} handleClose={() => handleClose()}>
+    <Modal title={label} open={isOpen} zIndex={order} handleClose={() => handleClose()}>
       {isOpen && dataContent && <ModalFeedContent dataContent={dataContent} />}
     </Modal>
   )

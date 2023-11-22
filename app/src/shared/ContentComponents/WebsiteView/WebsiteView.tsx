@@ -1,11 +1,13 @@
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { StyledWebsiteView } from './styled'
 
-export const WebsiteView = ({ url, ...rest }: { url: string }) => {
+export const WebsiteView = ({ url, isOpenLink = true, ...rest }: { url: string; isOpenLink?: boolean }) => {
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
   const onClick = () => {
-    handleOpenContextMenu({ url })
+    if (isOpenLink) {
+      handleOpenContextMenu({ url })
+    }
   }
 
   return (

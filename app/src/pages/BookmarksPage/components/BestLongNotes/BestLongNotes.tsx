@@ -13,12 +13,15 @@ import { BestLongNoteItem } from './BestLongNoteItem/BestLongNoteItem'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { fetchBestLongNotesThunk } from '@/store/reducers/bookmarks.slice'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const BestLongNotes = () => {
   const { bestLongNotes, isBestLongNotesLoading } = useAppSelector((state) => state.bookmarks)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
 
   const reloadBestNotes = useCallback(() => {
     dispatch(fetchBestLongNotesThunk(currentPubkey))
@@ -30,6 +33,14 @@ export const BestLongNotes = () => {
     },
     [handleOpenContextMenu]
   )
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'bestLongNotes'
+      }
+    })
+  }
 
   const renderContent = useCallback(() => {
     if (isBestLongNotesLoading) {
@@ -71,11 +82,18 @@ export const BestLongNotes = () => {
     )
   }, [bestLongNotes, handleOpenLongPosts, isBestLongNotesLoading, reloadBestNotes])
 
+  const isVisible = Boolean(bestLongNotes && bestLongNotes.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Favorite Long Posts
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

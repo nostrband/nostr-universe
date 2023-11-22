@@ -31,11 +31,7 @@ export const AppsNostro = memo(function AppsNostro() {
   )
 
   const handleOpenFeedModal = () => {
-    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
-      search: {
-        keyData: 'apps'
-      }
-    })
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL_APPS)
   }
 
   const handleReloadApps = useCallback(async () => {

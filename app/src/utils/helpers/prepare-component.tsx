@@ -1,9 +1,12 @@
+import { ItemEventCommunitie } from '@/components/ItemsEventContent/ItemEventCommunitie/ItemEventCommunitie'
 import { ItemEventMultipurpose } from '@/components/ItemsEventContent/ItemEventMultipurpose/ItemEventMultipurpose'
 import { ItemEventProfile } from '@/components/ItemsEventContent/ItemEventProfile/ItemEventProfile'
+import { ExtendedCommunityEvent } from '@/types/communities'
 import { MetaEvent } from '@/types/meta-event'
 
 export interface ItemProps {
   expandMore?: boolean
+  isOpenLink?: boolean
 }
 
 export interface IContentPreviewComponent {
@@ -13,6 +16,9 @@ export interface IContentPreviewComponent {
   kind: number
   content: string
   title?: string
+  name?: string
+  picture?: string
+  post?: ExtendedCommunityEvent
 }
 
 export const getPreviewComponentEvent = (contentPreviewComponent: IContentPreviewComponent, props?: ItemProps) => {
@@ -39,6 +45,20 @@ export const getPreviewComponentEvent = (contentPreviewComponent: IContentPrevie
       }
 
       return <ItemEventMultipurpose {...props} event={postEvent} />
+    }
+
+    case 34550: {
+      const communitietEvent = {
+        name: contentPreviewComponent.post?.name || '',
+        picture: contentPreviewComponent.post?.image || '',
+        pubkey: contentPreviewComponent.pubkey,
+        time: contentPreviewComponent.time,
+        kind: contentPreviewComponent.kind,
+        content: contentPreviewComponent.content,
+        title: `+${contentPreviewComponent.post?.posts}`
+      }
+
+      return <ItemEventCommunitie {...props} event={communitietEvent} />
     }
 
     default: {

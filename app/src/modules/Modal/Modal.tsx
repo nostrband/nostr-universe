@@ -17,9 +17,9 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="left" ref={ref} {...props} />
 })
 
-export const Modal = ({ open, children, handleClose, title }: IModal) => {
+export const Modal = ({ open, children, handleClose, title, zIndex }: IModal) => {
   return (
-    <StyledDialog fullScreen open={open} TransitionComponent={Transition}>
+    <StyledDialog zIndex={zIndex} fullScreen open={open} TransitionComponent={Transition}>
       <StyledAppBar>
         <Toolbar>
           <Typography sx={{ flex: 1 }} variant="h6" component="div">

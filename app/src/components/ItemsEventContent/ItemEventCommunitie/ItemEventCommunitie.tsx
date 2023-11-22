@@ -2,29 +2,29 @@ import { useState } from 'react'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
 import { Head } from '@/shared/ContentComponents/Head/Head'
-import { ProfileInfo } from '@/shared/ContentComponents/ProfileInfo/ProfileInfo'
 import { Time } from '@/shared/ContentComponents/Time/Time'
 import { ExpandMore, StyledItemSelectedEventActions } from './styled'
-import { MetaEvent } from '@/types/meta-event'
 import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 import { ContentCollapse } from '@/shared/ContentComponents/ContentCollapse/Content'
 import { KindView } from '@/shared/ContentComponents/KindView/KindView'
 import { kindNames } from '@/consts'
 import { ItemProps } from '@/utils/helpers/prepare-component'
+import { CommunityInfo } from '@/shared/ContentComponents/CommunityInfo/CommunityInfo'
 import { Content } from '@/shared/ContentComponents/Content/Content'
 
-interface IItemEventMultipurpose extends ItemProps {
+interface IItemEventCommunitie extends ItemProps {
   event: {
     content?: string
     title?: string
     time?: number
-    author?: MetaEvent
+    name: string
     pubkey: string
+    picture: string
     kind: number
   }
 }
 
-export const ItemEventMultipurpose = ({ event, expandMore = true }: IItemEventMultipurpose) => {
+export const ItemEventCommunitie = ({ event, expandMore = true }: IItemEventCommunitie) => {
   const MAX_LENGTH_CONTENT = 200
   const [openContent, setOpenContent] = useState(false)
 
@@ -37,7 +37,7 @@ export const ItemEventMultipurpose = ({ event, expandMore = true }: IItemEventMu
   return (
     <Wrapper>
       <Head>
-        <ProfileInfo profile={event.author} pubkey={event.pubkey} />
+        <CommunityInfo name={`/${event.name}`} picture={event.picture} />
         {event.time && <Time date={event.time} />}
       </Head>
       {event.title && <SubTitle>{event.title}</SubTitle>}
