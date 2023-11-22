@@ -29,6 +29,7 @@ import { useSearchParams } from 'react-router-dom'
 import {
   fetchExtendedEventByBech32,
   getHandlerEventUrl,
+  getTagValue,
   parseAddr,
   stringToBech32,
   stringToBolt11
@@ -258,9 +259,26 @@ export const ModalContextMenuContent = () => {
     )
   }, [lastApp])
 
+  const contentPreviewComponent = event
+    ? {
+        author: event.author || event,
+        pubkey: event.pubkey,
+        time: event.created_at,
+        kind: event.kind,
+        content:
+          getTagValue(event, 'summary') ||
+          getTagValue(event, 'description') ||
+          getTagValue(event, 'alt') ||
+          event.content,
+        title: getTagValue(event, 'title') || getTagValue(event, 'name')
+      }
+    : null
+
   return (
     <Container>
-      {event ? <StyledItemEventPreview>{getPreviewComponentEvent(event)}</StyledItemEventPreview> : null}
+      {contentPreviewComponent ? (
+        <StyledItemEventPreview>{getPreviewComponentEvent(contentPreviewComponent)}</StyledItemEventPreview>
+      ) : null}
 
       {value && (
         <StyledInput

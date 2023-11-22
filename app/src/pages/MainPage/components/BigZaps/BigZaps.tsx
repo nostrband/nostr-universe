@@ -17,7 +17,8 @@ import {
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 import { AugmentedEvent } from '@/types/augmented-event'
-import { Chip } from '@mui/material'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const BigZaps = memo(function BigZaps() {
@@ -104,8 +105,12 @@ export const BigZaps = memo(function BigZaps() {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Big Zaps{' '}
-          {isVisible && <Chip label="Show more" variant="outlined" size="small" onClick={handleOpenFeedModal} />}
+          Big Zaps
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

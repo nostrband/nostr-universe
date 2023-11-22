@@ -14,7 +14,8 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
-import { Chip } from '@mui/material'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const Highlights = memo(function Highlights() {
@@ -87,8 +88,12 @@ export const Highlights = memo(function Highlights() {
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
-          Highlights{' '}
-          {isVisible && <Chip label="Show more" variant="outlined" size="small" onClick={handleOpenFeedModal} />}
+          Highlights
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

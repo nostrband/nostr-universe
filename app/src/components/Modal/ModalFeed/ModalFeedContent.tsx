@@ -1,9 +1,8 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { AugmentedEvent } from '@/types/augmented-event'
 import { useCallback, useRef, useLayoutEffect, useState } from 'react'
 import { VariableSizeList as List } from 'react-window'
-import { ModalFeedContentProps } from './types'
+import { IEventFeed, ModalFeedContentProps } from './types'
 import { ModalFeedContentItem } from './ModalFeedContentItem'
 
 export const ModalFeedContent = ({ dataContent }: ModalFeedContentProps) => {
@@ -33,14 +32,15 @@ export const ModalFeedContent = ({ dataContent }: ModalFeedContentProps) => {
 
   const getSize = (index: number) => sizeMap.current[index] || 50
 
-  const handleOpenEvent = (event: AugmentedEvent) => {
+  const handleOpenEvent = (event: IEventFeed) => {
     if (!event) {
       // eslint-disable-next-line
       // @ts-ignore
       window.plugins.toast.showShortBottom(`Target events not found`)
     } else {
       console.log('Eevent', event)
-      handleOpenContextMenu({ event, append: true })
+      const bech32 = event.naddr || ''
+      handleOpenContextMenu({ event, bech32, append: true })
     }
   }
 

@@ -14,11 +14,22 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const LiveEvents = memo(function LiveEvents() {
   const { liveEvents, contactList } = useAppSelector((state) => state.contentWorkSpace)
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
   const dispatch = useAppDispatch()
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'liveEvents'
+      }
+    })
+  }
 
   const handleOpenLiveEvent = useCallback(
     (event: LiveEvent) => {
@@ -69,11 +80,18 @@ export const LiveEvents = memo(function LiveEvents() {
     )
   }, [liveEvents, handleReloadLiveEvents, handleOpenLiveEvent])
 
+  const isVisible = Boolean(liveEvents && liveEvents.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Live Streams
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
 

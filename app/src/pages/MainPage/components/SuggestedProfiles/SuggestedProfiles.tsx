@@ -2,8 +2,8 @@ import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
 import { userService } from '@/store/services/user.service'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { useAppSelector } from '@/store/hooks/redux'
-import { memo, useCallback, FC, CSSProperties } from 'react'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { memo, useCallback, FC, CSSProperties, useEffect } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { SkeletonProfiles } from '@/components/Skeleton/SkeletonProfiles/SkeletonProfiles'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
@@ -13,8 +13,13 @@ import {
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 import { MetaEvent } from '@/types/meta-event'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { setSuggestedProfiles } from '@/store/reducers/contentWorkspace'
 
 export const SuggestedProfiles = memo(function SuggestedProfiles() {
+  const dispatch = useAppDispatch()
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const {
     data,
@@ -23,7 +28,8 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
   } = userService.useFetchSuggestedProfilesQuery(currentPubkey, {
     skip: !currentPubkey
   })
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
 
   const handleOpenProfile = useCallback(
     (event: MetaEvent) => {
@@ -31,6 +37,18 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
     },
     [handleOpenContextMenu]
   )
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'suggestedProfiles'
+      }
+    })
+  }
+
+  useEffect(() => {
+    dispatch(setSuggestedProfiles({ suggestedProfiles: data }))
+  }, [data])
 
   const renderContent = useCallback(() => {
     if (isLoading) {
@@ -59,11 +77,18 @@ export const SuggestedProfiles = memo(function SuggestedProfiles() {
     return <HorizontalSwipeVirtualContent itemHeight={164} itemSize={140} itemCount={data.length} RowComponent={Row} />
   }, [isLoading, data, handleOpenProfile, refetchSuggestedProfiles])
 
+  const isVisible = Boolean(data && data.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Suggested profiles
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

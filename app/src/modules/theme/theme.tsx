@@ -31,6 +31,7 @@ declare module '@mui/material/Typography' {
 declare module '@mui/material/IconButton' {
   interface IconButtonPropsColorOverrides {
     decorate: true
+    light: true
   }
 }
 
@@ -48,7 +49,7 @@ export const theme = createTheme({
     },
     light: {
       light: '#fff',
-      main: '#222222',
+      main: '#fff',
       dark: '#000',
       contrastText: '#fff'
     },
