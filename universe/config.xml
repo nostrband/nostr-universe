@@ -36,5 +36,9 @@
         <category android:name="android.intent.category.BROWSABLE" />
       </intent-filter>
     </config-file>
+    <config-file parent="/manifest" target="AndroidManifest.xml">
+      <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    </config-file>
   </platform>
 </widget>
