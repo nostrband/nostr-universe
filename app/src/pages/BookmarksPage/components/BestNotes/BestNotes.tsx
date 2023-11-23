@@ -15,12 +15,15 @@ import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/Horizont
 import { SkeletonTrendingNotes } from '@/components/Skeleton/SkeletonTrendingNotes/SkeletonTrendingNotes'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { getEventNip19 } from '@/modules/nostr'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 const BestNotes = () => {
   const { bestNotes, isBestNotesLoading } = useAppSelector((state) => state.bookmarks)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
 
   const reloadBestNotes = useCallback(() => {
     dispatch(fetchBestNotesThunk(currentPubkey))
@@ -34,6 +37,14 @@ const BestNotes = () => {
     },
     [handleOpenContextMenu]
   )
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'bestNotes'
+      }
+    })
+  }
 
   const renderContent = useCallback(() => {
     if (isBestNotesLoading) {
@@ -70,11 +81,18 @@ const BestNotes = () => {
     )
   }, [bestNotes, handleOpenNote, isBestNotesLoading, reloadBestNotes])
 
+  const isVisible = Boolean(bestNotes && bestNotes.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Favorite Notes
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

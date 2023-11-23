@@ -3,7 +3,7 @@ import { userService } from '@/store/services/user.service'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { StyledTitle, StyledWrapper } from './styled'
 import { AuthoredEvent } from '@/types/authored-event'
-import { memo, useCallback, FC, CSSProperties } from 'react'
+import { memo, useCallback, FC, CSSProperties, useEffect } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
@@ -12,10 +12,16 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useAppDispatch } from '@/store/hooks/redux'
+import { setTrendingNotes } from '@/store/reducers/contentWorkspace'
 
 export const TrendingNotes = memo(function TrendingNotes() {
+  const dispatch = useAppDispatch()
   const { data, isFetching: isLoading, refetch: refetchTrendingNotes } = userService.useFetchTrendingNotesQuery('')
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
 
   const handleOpenNote = useCallback(
     (event: AuthoredEvent) => {
@@ -23,6 +29,18 @@ export const TrendingNotes = memo(function TrendingNotes() {
     },
     [handleOpenContextMenu]
   )
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'trendingNotes'
+      }
+    })
+  }
+
+  useEffect(() => {
+    dispatch(setTrendingNotes({ trendingNotes: data }))
+  }, [data])
 
   const renderContent = useCallback(() => {
     if (isLoading) {
@@ -57,11 +75,18 @@ export const TrendingNotes = memo(function TrendingNotes() {
     return <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={data.length} RowComponent={Row} />
   }, [isLoading, refetchTrendingNotes, handleOpenNote, data])
 
+  const isVisible = Boolean(data && data.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Trending Notes
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

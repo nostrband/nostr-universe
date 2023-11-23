@@ -14,11 +14,22 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const LongPosts = memo(function LongPosts() {
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
   const { longPosts, contactList } = useAppSelector((state) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'longPosts'
+      }
+    })
+  }
 
   const handleOpenLongPosts = useCallback(
     (event: LongNoteEvent) => {
@@ -71,11 +82,18 @@ export const LongPosts = memo(function LongPosts() {
     )
   }, [longPosts, handleReloadLongPosts, handleOpenLongPosts])
 
+  const isVisible = Boolean(longPosts && longPosts.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Long posts
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
 

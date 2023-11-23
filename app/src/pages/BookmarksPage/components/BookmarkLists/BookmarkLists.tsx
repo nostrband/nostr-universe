@@ -14,13 +14,16 @@ import { BookmarkListItem } from './BookmarkListItem/BookmarkListItem'
 import { BookmarkListEvent } from '@/types/bookmark-list-event'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { SkeletonBookmarkLists } from '@/components/Skeleton/SkeletonBookmarkLists/SkeletonBookmarkLists'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const BookmarkLists = () => {
   const { bookmarkLists, isBookmarkListsLoading } = useAppSelector((state) => state.bookmarks)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { decrypt } = useSigner()
   const dispatch = useAppDispatch()
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
 
   const reloadBookmarkLists = useCallback(() => {
     dispatch(fetchBookmarkListsThunk({ pubkey: currentPubkey, decrypt }))
@@ -32,6 +35,14 @@ export const BookmarkLists = () => {
     },
     [handleOpenContextMenu]
   )
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'bookmarkLists'
+      }
+    })
+  }
 
   const renderContent = useCallback(() => {
     if (isBookmarkListsLoading) {
@@ -65,11 +76,18 @@ export const BookmarkLists = () => {
     )
   }, [bookmarkLists, isBookmarkListsLoading, reloadBookmarkLists, handleOpenBookmark])
 
+  const isVisible = Boolean(bookmarkLists && bookmarkLists.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Bookmark Lists
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

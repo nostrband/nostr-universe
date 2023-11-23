@@ -16,9 +16,12 @@ import { selectKeys } from '@/store/store'
 import { setContactList } from '@/store/reducers/contentWorkspace'
 import { ContactListEvent } from '@/types/contact-list-event'
 import { MetaEvent } from '@/types/meta-event'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 
 export const ContactList = memo(function ContactList() {
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const { currentPubkey } = useAppSelector(selectKeys)
   const dispatch = useAppDispatch()
@@ -36,6 +39,14 @@ export const ContactList = memo(function ContactList() {
     subscribeContactList(currentPubkey, async (contactList: ContactListEvent) => {
       if (contactList) {
         dispatch(setContactList({ contactList }))
+      }
+    })
+  }
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'contactList'
       }
     })
   }
@@ -72,11 +83,18 @@ export const ContactList = memo(function ContactList() {
     )
   }
 
+  const isVisible = Boolean(contactList && contactList.contactEvents.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Following
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
 

@@ -14,11 +14,24 @@ import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const Communities = memo(function Communities() {
   const { communities, contactList } = useAppSelector((state) => state.contentWorkSpace)
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
   const dispatch = useAppDispatch()
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'communities'
+      }
+    })
+  }
+
+  console.log({ r6rg6rg36rg36rg36: communities })
 
   const handleOpenCommuniti = useCallback(
     (event: CommunityEvent) => {
@@ -76,11 +89,18 @@ export const Communities = memo(function Communities() {
     )
   }, [communities, handleReloadCommunities, handleOpenCommuniti])
 
+  const isVisible = Boolean(communities && communities.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Active communities
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

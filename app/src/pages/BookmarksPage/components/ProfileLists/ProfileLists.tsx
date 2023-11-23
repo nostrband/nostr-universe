@@ -14,13 +14,16 @@ import { ProfileListItem } from './ProfileListItem/ProfileListItem'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { ProfileListEvent } from '@/types/profile-list-event'
 import { SkeletonBookmarkLists } from '@/components/Skeleton/SkeletonBookmarkLists/SkeletonBookmarkLists'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const ProfileLists = () => {
   const { profileLists, isProfileListsLoading } = useAppSelector((state) => state.bookmarks)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { decrypt } = useSigner()
   const dispatch = useAppDispatch()
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
 
   const reloadProfileLists = useCallback(() => {
     dispatch(fetchProfileListsThunk({ pubkey: currentPubkey, decrypt }))
@@ -32,6 +35,14 @@ export const ProfileLists = () => {
     },
     [handleOpenContextMenu]
   )
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'profileLists'
+      }
+    })
+  }
 
   const renderContent = useCallback(() => {
     if (isProfileListsLoading) {
@@ -65,11 +76,18 @@ export const ProfileLists = () => {
     )
   }, [profileLists, isProfileListsLoading, reloadProfileLists, handleOpenProfile])
 
+  const isVisible = Boolean(profileLists && profileLists.length)
+
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Profile Lists
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}
