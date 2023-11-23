@@ -6,13 +6,15 @@ export const WebsiteView = ({ url, isOpenLink = true, ...rest }: { url: string; 
 
   const onClick = () => {
     if (isOpenLink) {
-      handleOpenContextMenu({ url })
+      let u = url
+      if (!u.split('.')[0].includes(':'))
+        u = "https://" + u
+      handleOpenContextMenu({ url: u })
     }
   }
 
   return (
     <StyledWebsiteView {...rest}>
-      Website:
       <span onClick={onClick}>{url}</span>
     </StyledWebsiteView>
   )
