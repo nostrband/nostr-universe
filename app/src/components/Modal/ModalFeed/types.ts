@@ -1,13 +1,8 @@
 import { AppNostr } from '@/types/app-nostr'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { AuthoredEvent } from '@/types/authored-event'
-import { ExtendedCommunityEvent } from '@/types/communities'
 
-export interface MultiEvent extends AuthoredEvent {
-  post?: ExtendedCommunityEvent
-}
-
-export type ReturnDataContent = MultiEvent[]
+export type ReturnDataContent = AuthoredEvent[]
 
 export interface RowProps {
   data: ReturnDataContent

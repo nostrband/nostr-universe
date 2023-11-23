@@ -29,7 +29,6 @@ import { useSearchParams } from 'react-router-dom'
 import {
   fetchExtendedEventByBech32,
   getHandlerEventUrl,
-  getTagValue,
   parseAddr,
   stringToBech32,
   stringToBolt11
@@ -47,8 +46,8 @@ import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { Kinds } from '@/modules/const/kinds'
 import { dbi } from '@/modules/db'
 import { setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
-import { getPreviewComponentEvent } from '@/utils/helpers/prepare-component'
-import { MultiEvent } from '../ModalFeed/types'
+import { createPreviewEvent, getPreviewComponentEvent } from '@/utils/helpers/prepare-component'
+import { AugmentedEvent } from '@/types/augmented-event'
 
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
@@ -58,7 +57,7 @@ export const ModalContextMenuContent = () => {
   const { openApp, openBlank, sendTabPayment } = useOpenApp()
   const { onPinApp, findAppPin, onDeletePinnedApp } = usePins()
   const [kind, setKind] = useState<number | undefined>()
-  const [event, setEvent] = useState<MultiEvent | null>(null)
+  const [event, setEvent] = useState<AugmentedEvent | null>(null)
   const [lastApp, setLastApp] = useState<AppNostr | null>(null)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
@@ -259,23 +258,7 @@ export const ModalContextMenuContent = () => {
     )
   }, [lastApp])
 
-  const contentPreviewComponent = event
-    ? {
-        author: event.author || event,
-        pubkey: event.pubkey,
-        time: event.created_at,
-        kind: event.kind,
-        content:
-          getTagValue(event, 'summary') ||
-          getTagValue(event, 'description') ||
-          getTagValue(event, 'alt') ||
-          event.content,
-        title: getTagValue(event, 'title') || getTagValue(event, 'name'),
-        post: event.post
-      }
-    : null
-
-  console.log({ gfg64fg64g46fg64: contentPreviewComponent })
+  const contentPreviewComponent = event ? createPreviewEvent(event) : null
 
   return (
     <Container>

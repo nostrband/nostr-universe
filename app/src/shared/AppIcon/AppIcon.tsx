@@ -17,7 +17,8 @@ export const AppIcon = memo(function AppIcon({
   alt,
   onClick
 }: IAppIcon) {
-  const [isFailed, setIsFailed] = useState(false)
+  const c = failedCache.get(picture)
+  const [isFailed, setIsFailed] = useState(c !== undefined ? c : true)
 
   useEffect(() => {
     const c = failedCache.get(picture)
@@ -56,8 +57,14 @@ export const AppIcon = memo(function AppIcon({
           size={size}
           alt={alt}
           isSmall={isSmall}
-          src={isFailed ? '/' : picture}
-        />
+          src={isFailed ? '' : picture}
+        >
+          {isFailed && (
+            <div className="MuiAvatar-root MuiAvatar-square MuiAvatar-colorDefault">
+              {alt.substring(0, 1).toUpperCase()}
+            </div>
+          )}
+        </StyledAppImg>
       ) : (
         <StyledAppImg
           isLight={isLight}
