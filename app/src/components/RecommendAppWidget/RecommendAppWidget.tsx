@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { Button, Container } from '@mui/material'
 import { StyledActions, StyledContainer, StyledText, StyledTitle } from './styled'
 import { Wrapper } from '@/shared/ContentComponents/Wrapper/Wrapper'
@@ -10,28 +10,48 @@ import { showToast } from '@/utils/helpers/general'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { selectKeys } from '@/store/store'
 import { TypeListSelectApp, setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
+import { isGuest } from '@/utils/helpers/prepare-data'
 
 export const RecommendAppWidget = () => {
   const { currentPubkey } = useAppSelector(selectKeys)
   const { apps } = useAppSelector((state) => state.selectAppHistory)
+  const [newApps, setNewApps] = useState<any[]>([])
   const dispatch = useAppDispatch()
   const { signEvent } = useSigner()
 
-  const getSelectAppHistory = useCallback(async (key: string) => {
-    const list = await dbi.getListSelectAppHistory(key)
-    const recomms = await fetchAppRecomms(key)
+  const filterNewApps = useCallback(async (list: any[]) => {
+    const recomms = await fetchAppRecomms(currentPubkey)
     // eslint-disable-next-line
     const newApps: any[] = list.filter((r: any) => {
       return !recomms.find((e) => e.identifier === `${r.kind}` && e.naddrs.includes(r.naddr))
     })
     console.log('newApps', newApps, 'list', list, 'recomms', recomms)
+    return newApps
+  }, [currentPubkey])
 
-    dispatch(setSelectAppHistory({ apps: newApps }))
-  }, [])
+  const updateNewApps = useCallback(async (apps: any[]) => {
+    if (!isGuest(currentPubkey)) {
+      const newApps = await filterNewApps(apps)
+      setNewApps(newApps)
+    } else {
+      setNewApps(apps)
+    }
+  }, [filterNewApps, setNewApps])
+
+  const getSelectAppHistory = useCallback(async () => {
+    const apps = await dbi.getListSelectAppHistory(currentPubkey)
+    dispatch(setSelectAppHistory({ apps }))
+  }, [currentPubkey])
 
   useEffect(() => {
-    getSelectAppHistory(currentPubkey)
+    // load all history from db on key change
+    getSelectAppHistory()
   }, [currentPubkey])
+
+  useEffect(() => {
+    // filter newApps by existing recomms on apps change
+    updateNewApps(apps)
+  }, [apps])
 
   const handleAgree = async (app: TypeListSelectApp) => {
     const currentDate = new Date()
@@ -56,7 +76,7 @@ export const RecommendAppWidget = () => {
   }
 
   const getApps =
-    apps
+    newApps
       .filter((el) => el.numberOfLaunch >= 3 && el.nextSuggestTime < Date.now())
       .sort(function (a, b) {
         const dateComparison = b.nextSuggestTime - a.nextSuggestTime
@@ -65,9 +85,6 @@ export const RecommendAppWidget = () => {
       }) || []
 
   const app = getApps[0]
-
-  console.log({ efg6fge6fge: apps })
-
   if (!app) {
     return null
   }

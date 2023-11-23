@@ -2338,7 +2338,6 @@ export async function publishAppRecommendation(
     pubkey,
     d_tag: `${kind}`
   })) as NostrEvent
-  console.log('list', list)
 
   if (list === null)
     list = {
@@ -2353,9 +2352,17 @@ export async function publishAppRecommendation(
   if (!appAddr) throw new Error('Bad naddr')
 
   const a = appAddr.kind + ':' + appAddr.pubkey + ':' + appAddr.d_tag
-  if (!list.tags.find((t: string[]) => t.length >= 2 && t[0] === 'a' && t[1] === a)) {
+  console.log("adding to list", a)
+  if (!list.tags.find((t: string[]) => {
+    return t.length >= 4 && t[0] === 'a' && t[1] === a && t[3] === 'web'
+  })) {
     list.tags.push(['a', a, nostrbandRelay, 'web'])
   }
+
+  // update
+  list.id = ''
+  list.sig = ''
+  list.created_at = Math.floor(Date.now() / 1000)
 
   const signed = await signEvent(list)
   console.log('signed list', signed)

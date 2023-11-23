@@ -26,13 +26,13 @@ export const selectAppHistorySlice = createSlice({
       const resultArray = [...state.apps]
 
       action.payload.apps.forEach((newItem: TypeListSelectApp) => {
-        const index = resultArray.findIndex((oldItem) => oldItem.timestamp === newItem.timestamp)
-
-        if (index === -1) {
+        // timestamp is id of the selectAppHistory item
+        const item = resultArray.find((oldItem) => oldItem.timestamp === newItem.timestamp)
+        if (!item) {
           resultArray.push(newItem)
         } else {
-          resultArray[index].numberOfLaunch = newItem.numberOfLaunch
-          resultArray[index].nextSuggestTime = newItem.nextSuggestTime
+          item.numberOfLaunch = newItem.numberOfLaunch
+          item.nextSuggestTime = newItem.nextSuggestTime
         }
       })
 
