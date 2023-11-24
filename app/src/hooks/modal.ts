@@ -21,6 +21,7 @@ export interface IContextMenuParams {
   bech32?: string
   url?: string
   replace?: boolean
+  append?: boolean
 }
 
 export const useOpenModalSearchParams = () => {
@@ -81,7 +82,7 @@ export const useOpenModalSearchParams = () => {
   )
 
   const handleOpenContextMenu = useCallback(
-    ({ event, pubkey = '', bech32 = '', url = '', replace = false }: IContextMenuParams) => {
+    ({ event, pubkey = '', bech32 = '', url = '', replace = false, append = false }: IContextMenuParams) => {
       if (!bech32 && event) bech32 = getEventNip19(event)
       if (!bech32 && pubkey) bech32 = getNprofile(pubkey)
 
@@ -90,7 +91,8 @@ export const useOpenModalSearchParams = () => {
           bech32: bech32,
           href: url
         },
-        replace
+        replace,
+        append
       })
     },
     [handleOpen]
@@ -107,11 +109,29 @@ export const useOpenModalSearchParams = () => {
     [handleOpen]
   )
 
+  const getModalOrder = useCallback(
+    (modal: MODAL_PARAMS_KEYS) => {
+      const openedModals = []
+
+      for (const key of searchParams.keys()) {
+        openedModals.push(key)
+      }
+
+      const modalsKeysOpened = openedModals.filter((item) => Object.keys(MODAL_PARAMS_KEYS).includes(item.trim()))
+
+      const modalOrder = modalsKeysOpened.findIndex((el) => el === getEnumParam(modal))
+
+      return modalOrder < 0 ? 1300 : modalOrder + 1
+    },
+    [searchParams]
+  )
+
   return {
     handleClose,
     handleOpen,
     getModalOpened,
     handleOpenContextMenu,
-    handleOpenTab
+    handleOpenTab,
+    getModalOrder
   }
 }
