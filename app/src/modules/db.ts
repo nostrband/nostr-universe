@@ -25,7 +25,7 @@ db.version(20).stores({
   localRelayEvents: 'id,pubkey,kind,created_at',
   payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
   searchClickHistory: 'id,pubkey,timestamp,addr,query,kind',
-  syncTasks: 'id,pubkey,type,since,until',
+  syncTasks: 'id,pubkey,type,since,until'
 })
 
 export const dbi = {
@@ -168,6 +168,13 @@ export const dbi = {
       })
     } catch (error) {
       console.log(`Update pin in DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  bulkEditPins: async (pins) => {
+    try {
+      await db.pins.bulkPut(pins)
+    } catch (error) {
+      console.log(`Bulk edit pins in DB error: ${JSON.stringify(error)}`)
     }
   },
   listTabs: async (pubkey) => {

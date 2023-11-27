@@ -424,7 +424,8 @@ const bootstrap = async (pubkey) => {
       title: app.name,
       icon: app.picture,
       order: ind,
-      pubkey: pubkey
+      pubkey: pubkey,
+      groupName: ''
     }
     pins.push(pin)
   })

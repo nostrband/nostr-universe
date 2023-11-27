@@ -78,6 +78,17 @@ export const workspacesSlice = createSlice({
         pins: ws.pins.map((pin) => (pin.id === edittedPin.id ? { ...pin, title: edittedPin.title } : pin))
       }))
     },
+    bulkEditPinsWorkspace: (state, action) => {
+      const pins = action.payload.pins
+      const pubkey = action.payload.workspacePubkey
+
+      updateWorkspace(state, pubkey, () => {
+        dbi.bulkEditPins(pins)
+        return {
+          pins
+        }
+      })
+    },
 
     addTabWorkspace: (state, action) => {
       const pubkey = action.payload.workspacePubkey
@@ -161,7 +172,8 @@ export const {
   setLastKindApp,
   updatePinWorkspace,
   updateWorkspaceContentFeedSettings,
-  switchFeedVisibilityWorkspace
+  switchFeedVisibilityWorkspace,
+  bulkEditPinsWorkspace
 } = workspacesSlice.actions
 
 export const selectPin = (state: RootState, id: string): IPin | undefined => {

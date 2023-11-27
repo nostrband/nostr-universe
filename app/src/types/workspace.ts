@@ -10,6 +10,7 @@ export interface IPin {
   icon: string
   order: number
   pubkey: string
+  groupName?: string
 }
 
 export type WorkSpace = {

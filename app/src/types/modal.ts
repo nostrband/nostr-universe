@@ -26,6 +26,7 @@ export enum MODAL_PARAMS_KEYS {
   NPS_SCORE_MODAL = 'nps-score-modal',
   PAYMENT_HISTORY_MODAL = 'payment-history-modal',
   SYNC_MODAL = 'sync-modal',
+  PIN_GROUP_MODAL = 'pin-group-modal'
 }
 
 export const EXTRA_OPTIONS = {

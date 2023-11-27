@@ -13,7 +13,8 @@ export const AppIcon = memo(function AppIcon({
   isOutline,
   isSmall,
   alt,
-  onClick
+  onClick,
+  ...rest
 }: IAppIcon) {
   const [isFailed, setIsFailed] = useState(false)
 
@@ -36,6 +37,7 @@ export const AppIcon = memo(function AppIcon({
       isActive={isActive}
       isPreviewTab={isPreviewTab}
       onClick={onClick}
+      {...rest}
     >
       {alt ? (
         <StyledAppImg

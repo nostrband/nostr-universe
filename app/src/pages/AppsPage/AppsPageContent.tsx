@@ -1,109 +1,174 @@
-import { useCallback } from 'react'
-import { Grid } from '@mui/material'
+import React, { useMemo, useState } from 'react'
+import { Badge, Fade, Grid, IconButton, Stack, Typography } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
-import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragOverlay, defaultDropAnimation, rectIntersection } from '@dnd-kit/core'
 import { StyledSwipeableDrawerContent, StyledAddButtonWrapper, StyledIconButton } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { AppNostr, AppNostr as AppNostroType } from '@/types/app-nostr'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
-import { swapPins } from '@/store/reducers/workspaces.slice'
-import { SortableContext, rectSwappingStrategy } from '@dnd-kit/sortable'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
-import AddIcon from '@mui/icons-material/Add'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-
-type PinID = string | number
+import { createPortal } from 'react-dom'
+import { restrictToWindowEdges } from '@dnd-kit/modifiers'
+import { PinsGroup } from './components/PinsGroup'
+import { PinGroupModal } from './components/PinGroupModal'
+import { useSensors } from './utils/useSensors'
+import { usePinDragAndDrop } from './utils/usePinDragAndDrop'
+import { AppNostro } from '@/shared/AppNostro/AppNostro'
+import MoreIcon from '@mui/icons-material/MoreHoriz'
+import { ExtraMenu } from './components/ExtraMenu'
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
+import DoneOutlineIcon from '@mui/icons-material/DoneOutline'
+import AppsIcon from '@mui/icons-material/Apps'
+import { useSearchParams } from 'react-router-dom'
 
 export const AppsPageContent = () => {
   const { openApp } = useOpenApp()
-  const dispatch = useAppDispatch()
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
-  const { handleOpen: handleOpenModal } = useOpenModalSearchParams()
+  const sensors = useSensors()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const pins = currentWorkSpace?.pins || []
-  const pinIds = pins.map((p) => p.id)
+  const { getModalOpened, handleClose } = useOpenModalSearchParams()
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PIN_GROUP_MODAL)
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const isExtraMenuOpen = Boolean(anchorEl)
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
+
+  const pins = useMemo(() => currentWorkSpace?.pins || [], [currentWorkSpace])
+  const {
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    pinsGroup,
+    currentGroupName,
+    pinOverlay,
+    groupedPins,
+    isOverlayActive,
+    isSwapMode
+  } = usePinDragAndDrop(pins)
 
   const handleOpen = async (app: AppNostroType) => {
     await openApp(app, { replace: true })
   }
 
-  const mouseSensor = useSensor(MouseSensor, {
-    // Require the mouse to move by 10 pixels before activating.
-    // Slight distance prevents sortable logic messing with
-    // interactive elements in the handler toolbar component.
-    activationConstraint: {
-      distance: 10
-    }
-  })
-  const touchSensor = useSensor(TouchSensor, {
-    // Press delay of 300ms, with tolerance of 5px of movement.
-    activationConstraint: {
-      delay: 200,
-      tolerance: 5
-    }
-  })
-  const sensors = useSensors(mouseSensor, touchSensor)
+  const renderPinOverlay = () => {
+    if (!pinOverlay) return null
 
-  const onSortEnd = useCallback(
-    (fromPinId: PinID, toPinId: PinID) => {
-      if (currentWorkSpace) {
-        console.log('swap pins', fromPinId, toPinId)
-        dispatch(
-          swapPins({
-            fromID: fromPinId,
-            toID: toPinId,
-            workspacePubkey: currentWorkSpace.pubkey
-          })
-        )
-      }
-    },
-    [dispatch, currentWorkSpace]
-  )
-
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (over && active.id !== over.id) {
-      onSortEnd(active.id, over.id)
+    const styles = {
+      transform: isOverlayActive && !isSwapMode ? 'scale(0.7)' : 'scale(1)',
+      transition: 'transform 0.2s linear'
     }
+
+    const badgeContent = isSwapMode ? <SwapHorizIcon fontSize="small" /> : <AppsIcon fontSize="small" />
+
+    return createPortal(
+      <DragOverlay dropAnimation={defaultDropAnimation} modifiers={[restrictToWindowEdges]}>
+        <Badge color="secondary" badgeContent={badgeContent}>
+          <AppNostro
+            containerProps={{
+              sx: styles
+            }}
+            app={pinOverlay}
+            size="small"
+            onOpen={() => undefined}
+          />
+        </Badge>
+      </DragOverlay>,
+      document.body
+    )
+  }
+
+  const handleOffSwapMode = () => {
+    searchParams.delete('mode')
+    setSearchParams(searchParams)
   }
 
   return (
     <StyledSwipeableDrawerContent>
-      <DndContext sensors={sensors} autoScroll={false} onDragEnd={handleDragEnd}>
-        <SortableContext items={pinIds} strategy={rectSwappingStrategy}>
-          <Container>
-            <Grid columns={8} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-              {pins.map((pin, i) => {
-                const app: AppNostr = {
-                  picture: pin.icon,
-                  name: pin.title,
-                  naddr: pin.appNaddr,
-                  url: pin.url,
-                  order: pin.order
-                }
+      {isSwapMode && (
+        <Fade in>
+          <Stack
+            padding={'0 1rem'}
+            flexDirection={'row'}
+            alignItems={'center'}
+            justifyContent={'space-between'}
+            marginBottom={'1rem'}
+          >
+            <Typography variant="body1">Drag the app icons to change their order.</Typography>
+            <IconButton onClick={handleOffSwapMode}>
+              <DoneOutlineIcon htmlColor="white" />
+            </IconButton>
+          </Stack>
+        </Fade>
+      )}
+      <DndContext
+        sensors={sensors}
+        autoScroll={false}
+        onDragEnd={handleDragEnd}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        collisionDetection={rectIntersection}
+      >
+        <Container>
+          <Grid columns={8} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+            {groupedPins.map((pin) => {
+              if (pin.pins && pin.pins?.length > 0) {
+                return <PinsGroup key={pin.id} group={pin.pins} id={pin.id} title={pin.id} isSwapMode={isSwapMode} />
+              }
+              const app: AppNostr = {
+                picture: pin.icon,
+                name: pin.title,
+                naddr: pin.appNaddr,
+                url: pin.url,
+                order: pin.order
+              }
 
-                const gid = getTabGroupId(pin)
-                const isActive = !!tabs.find((t) => getTabGroupId(t) === gid)
+              const gid = getTabGroupId(pin)
+              const isActive = !!tabs.find((t) => getTabGroupId(t) === gid)
 
-                return (
-                  <Grid key={i} item xs={2}>
-                    <AppNostroSortable id={pin.id} isActive={isActive} app={app} size="small" onOpen={handleOpen} />
-                  </Grid>
-                )
-              })}
-              <StyledAddButtonWrapper>
-                <StyledIconButton onClick={() => handleOpenModal(MODAL_PARAMS_KEYS.FIND_APP)}>
-                  <AddIcon />
-                </StyledIconButton>
-              </StyledAddButtonWrapper>
-            </Grid>
-          </Container>
-        </SortableContext>
+              return (
+                <AppNostroSortable
+                  key={pin.id}
+                  id={pin.id}
+                  isActive={isActive}
+                  app={app}
+                  size="small"
+                  onOpen={() => !isSwapMode && handleOpen(app)}
+                />
+              )
+            })}
+            <StyledAddButtonWrapper>
+              <StyledIconButton onClick={handleClick}>
+                <MoreIcon />
+              </StyledIconButton>
+            </StyledAddButtonWrapper>
+          </Grid>
+        </Container>
+
+        {renderPinOverlay()}
       </DndContext>
+
+      <PinGroupModal
+        groupName={currentGroupName}
+        pinsGroup={pinsGroup}
+        pins={pins}
+        open={isOpen}
+        handleClose={() => handleClose()}
+      />
+
+      <ExtraMenu open={isExtraMenuOpen} anchorEl={anchorEl} handleClose={handleMenuClose} />
     </StyledSwipeableDrawerContent>
   )
 }
