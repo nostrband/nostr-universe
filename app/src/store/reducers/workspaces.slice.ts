@@ -75,7 +75,9 @@ export const workspacesSlice = createSlice({
       const pubkey = action.payload.workspacePubkey
 
       updateWorkspace(state, pubkey, (ws: WorkSpace) => ({
-        pins: ws.pins.map((pin) => (pin.id === edittedPin.id ? { ...pin, title: edittedPin.title } : pin))
+        pins: ws.pins.map((pin) =>
+          pin.id === edittedPin.id ? { ...pin, title: edittedPin.title, groupName: edittedPin.groupName } : pin
+        )
       }))
     },
     bulkEditPinsWorkspace: (state, action) => {

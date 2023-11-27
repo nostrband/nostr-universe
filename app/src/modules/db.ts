@@ -222,7 +222,8 @@ export const dbi = {
   updatePin: async (pin) => {
     try {
       await db.pins.where('id').equals(pin.id).modify({
-        title: pin.title
+        title: pin.title,
+        groupName: pin.groupName
       })
     } catch (error) {
       console.log(`Update pin in DB error: ${JSON.stringify(error)}`)

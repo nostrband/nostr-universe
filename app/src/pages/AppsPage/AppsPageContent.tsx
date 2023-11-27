@@ -48,7 +48,8 @@ export const AppsPageContent = () => {
     setAnchorEl(null)
   }
 
-  const pins = useMemo(() => currentWorkSpace?.pins || [], [currentWorkSpace])
+  const pins = useMemo(() => currentWorkSpace?.pins || [], [currentWorkSpace?.pins])
+
   const {
     handleDragStart,
     handleDragEnd,
