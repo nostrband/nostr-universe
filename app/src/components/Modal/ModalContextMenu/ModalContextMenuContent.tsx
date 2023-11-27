@@ -29,7 +29,6 @@ import { useSearchParams } from 'react-router-dom'
 import {
   fetchExtendedEventByBech32,
   getHandlerEventUrl,
-  getTagValue,
   parseAddr,
   stringToBech32,
   stringToBolt11
@@ -37,25 +36,28 @@ import {
 import { useOpenApp } from '@/hooks/open-entity'
 import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
 import { ReactNode, useCallback, useEffect, useState } from 'react'
-import { useAppSelector } from '@/store/hooks/redux'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { AppEvent } from '@/types/app-event'
 import { showToast } from '@/utils/helpers/general'
 import { usePins } from '@/hooks/pins'
-import { selectCurrentWorkspace } from '@/store/store'
+import { selectCurrentWorkspace, selectKeys } from '@/store/store'
 import { AppNostr } from '@/types/app-nostr'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { Kinds } from '@/modules/const/kinds'
-import { AuthoredEvent } from '@/types/authored-event'
-import { ItemEventMultipurpose } from '@/components/ItemsEventContent/ItemEventMultipurpose/ItemEventMultipurpose'
-import { ItemEventProfile } from '@/components/ItemsEventContent/ItemEventProfile/ItemEventProfile'
+import { dbi } from '@/modules/db'
+import { setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
+import { createPreviewEvent, getPreviewComponentEvent } from '@/utils/helpers/prepare-component'
+import { AugmentedEvent } from '@/types/augmented-event'
 
 export const ModalContextMenuContent = () => {
   const [searchParams] = useSearchParams()
+  const { currentPubkey } = useAppSelector(selectKeys)
+  const dispatch = useAppDispatch()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
   const { openApp, openBlank, sendTabPayment } = useOpenApp()
   const { onPinApp, findAppPin, onDeletePinnedApp } = usePins()
   const [kind, setKind] = useState<number | undefined>()
-  const [event, setEvent] = useState<AuthoredEvent | null>(null)
+  const [event, setEvent] = useState<AugmentedEvent | null>(null)
   const [lastApp, setLastApp] = useState<AppNostr | null>(null)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
@@ -115,9 +117,22 @@ export const ModalContextMenuContent = () => {
     })
   }
 
-  const handleOpenApp = () => {
+  const handleOpenApp = async () => {
     if (!lastApp) return
+    // open the tab first
     openApp({ ...lastApp, kind: '' + kind }, { replace: true })
+
+    // then write to db in the background
+    const app = await dbi.addSelectAppHistory({
+      kind,
+      naddr: lastApp.naddr,
+      pubkey: currentPubkey,
+      timestamp: Date.now(),
+      name: lastApp.name,
+      nextSuggestTime: Date.now(),
+      numberOfLaunch: 1
+    })
+    dispatch(setSelectAppHistory({ apps: [app] }))
   }
 
   const handleZap = async () => {
@@ -243,56 +258,13 @@ export const ModalContextMenuContent = () => {
     )
   }, [lastApp])
 
-  const getPreviewComponentEvent = (eventCurrent: AuthoredEvent | null) => {
-    if (eventCurrent) {
-      switch (eventCurrent.kind) {
-        case 0: {
-          const profileEvent = {
-            author: eventCurrent.author,
-            pubkey: eventCurrent.pubkey,
-            content: eventCurrent.author?.profile?.about,
-            website: eventCurrent.author?.profile?.website,
-            kind: eventCurrent.kind
-          }
-
-          return <ItemEventProfile event={profileEvent} />
-        }
-        case 1: {
-          const postEvent = {
-            author: eventCurrent.author,
-            pubkey: eventCurrent.pubkey,
-            time: eventCurrent.created_at,
-            content: eventCurrent.content,
-            kind: eventCurrent.kind
-          }
-
-          return <ItemEventMultipurpose event={postEvent} />
-        }
-        default: {
-          const defaultEvent = {
-            author: eventCurrent.author,
-            pubkey: eventCurrent.pubkey,
-            time: eventCurrent.created_at,
-            kind: eventCurrent.kind,
-            content: getTagValue(eventCurrent, 'summary') ||
-              getTagValue(eventCurrent, 'description') ||
-              getTagValue(eventCurrent, 'alt') || 
-              eventCurrent.content,
-            title: getTagValue(eventCurrent, 'title') ||
-              getTagValue(eventCurrent, 'name')
-          }
-
-          return <ItemEventMultipurpose event={defaultEvent} />
-        }
-      }
-    }
-
-    return null
-  }
+  const contentPreviewComponent = event ? createPreviewEvent(event) : null
 
   return (
     <Container>
-      {event ? <StyledItemEventPreview>{getPreviewComponentEvent(event)}</StyledItemEventPreview> : null}
+      {contentPreviewComponent ? (
+        <StyledItemEventPreview>{getPreviewComponentEvent(contentPreviewComponent)}</StyledItemEventPreview>
+      ) : null}
 
       {value && (
         <StyledInput

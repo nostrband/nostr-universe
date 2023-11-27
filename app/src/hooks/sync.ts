@@ -5,11 +5,14 @@ import { useEffect, useCallback } from 'react'
 
 export const useSync = (): ISyncState => {
   const dispatch = useAppDispatch()
-  const { syncState } = useAppSelector(state => state.sync)
+  const { syncState } = useAppSelector((state) => state.sync)
 
-  const onSyncState = useCallback((s: ISyncState) => {
-    dispatch(setSyncState(s))
-  }, [dispatch])
+  const onSyncState = useCallback(
+    (s: ISyncState) => {
+      dispatch(setSyncState(s))
+    },
+    [dispatch]
+  )
 
   useEffect(() => {
     setOnSyncState(onSyncState)

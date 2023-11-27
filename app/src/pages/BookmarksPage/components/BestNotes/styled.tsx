@@ -11,7 +11,10 @@ export const StyledTitle = styled(
   })
 )({
   color: color,
-  fontWeight: 'bold'
+  fontWeight: 'bold',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between'
 })
 
 export const StyledWrapper = styled(Box)(({ theme }) => ({

@@ -17,11 +17,22 @@ import {
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 import { AugmentedEvent } from '@/types/augmented-event'
+import { IconButton } from '@mui/material'
+import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { MODAL_PARAMS_KEYS } from '@/types/modal'
 
 export const BigZaps = memo(function BigZaps() {
-  const { handleOpenContextMenu } = useOpenModalSearchParams()
+  const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
   const { bigZaps, contactList } = useAppSelector((state: RootState) => state.contentWorkSpace)
   const dispatch = useAppDispatch()
+
+  const handleOpenFeedModal = () => {
+    handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
+      search: {
+        keyData: 'bigZaps'
+      }
+    })
+  }
 
   const handleOpenBigZap = useCallback(
     (bigZap: ZapEvent) => {
@@ -30,8 +41,8 @@ export const BigZaps = memo(function BigZaps() {
         event = bigZap.targetEvent
       } else if (bigZap.targetMeta) {
         event = bigZap.targetMeta
-      } 
-      
+      }
+
       if (!event) {
         // eslint-disable-next-line
         // @ts-ignore
@@ -83,14 +94,23 @@ export const BigZaps = memo(function BigZaps() {
       )
     }
 
-    return <HorizontalSwipeVirtualContent itemHeight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
+    return (
+      <HorizontalSwipeVirtualContent itemHeight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
+    )
   }, [bigZaps, handleReloadBigZaps, handleOpenBigZap])
+
+  const isVisible = Boolean(bigZaps && bigZaps.length)
 
   return (
     <StyledWrapper>
       <Container>
         <StyledTitle variant="h5" gutterBottom component="div">
           Big Zaps
+          {isVisible && (
+            <IconButton color="light" size="small" onClick={handleOpenFeedModal}>
+              <OpenInFullOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          )}
         </StyledTitle>
       </Container>
       {renderContent()}

@@ -10,8 +10,10 @@ import { SubTitle } from '@/shared/ContentComponents/SubTitle/SubTitle'
 import { ContentCollapse } from '@/shared/ContentComponents/ContentCollapse/Content'
 import { KindView } from '@/shared/ContentComponents/KindView/KindView'
 import { kindNames } from '@/consts'
+import { ItemProps } from '@/utils/helpers/prepare-component'
+import { Content } from '@/shared/ContentComponents/Content/Content'
 
-interface IItemEventMultipurpose {
+interface IItemEventMultipurpose extends ItemProps {
   event: {
     content?: string
     title?: string
@@ -22,7 +24,7 @@ interface IItemEventMultipurpose {
   }
 }
 
-export const ItemEventMultipurpose = ({ event }: IItemEventMultipurpose) => {
+export const ItemEventMultipurpose = ({ event, expandMore = true }: IItemEventMultipurpose) => {
   const MAX_LENGTH_CONTENT = 200
   const [openContent, setOpenContent] = useState(false)
 
@@ -40,13 +42,15 @@ export const ItemEventMultipurpose = ({ event }: IItemEventMultipurpose) => {
       </Head>
       {event.title && <SubTitle>{event.title}</SubTitle>}
 
-      {event.content && (
+      {expandMore && event.content ? (
         <ContentCollapse maxContentLength={MAX_LENGTH_CONTENT} open={openContent} text={event.content} />
+      ) : (
+        <Content contentLine={10}>{event.content}</Content>
       )}
 
       <StyledItemSelectedEventActions>
         <KindView>{kind}</KindView>
-        {event.content && event.content.length > MAX_LENGTH_CONTENT && (
+        {expandMore && event.content && event.content.length > MAX_LENGTH_CONTENT && (
           <ExpandMore expand={openContent} onClick={handleExpandClick}>
             <ExpandMoreIcon />
           </ExpandMore>

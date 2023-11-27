@@ -3,6 +3,8 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import { StyledAppIcon, StyledAppImg } from './styled'
 import { IAppIcon } from './types'
 
+const failedCache = new Map<string, boolean>()
+
 export const AppIcon = memo(function AppIcon({
   picture = '',
   size,
@@ -16,15 +18,26 @@ export const AppIcon = memo(function AppIcon({
   onClick,
   ...rest
 }: IAppIcon) {
-  const [isFailed, setIsFailed] = useState(false)
+  const c = failedCache.get(picture)
+  const [isFailed, setIsFailed] = useState(c !== undefined ? c : true)
 
   useEffect(() => {
-    setIsFailed(false)
+    const c = failedCache.get(picture)
+    if (c !== undefined) {
+      setIsFailed(c)
+      return
+    }
+    setIsFailed(true)
 
     const img = new Image()
     img.src = picture
     img.onerror = () => {
       setIsFailed(true)
+      failedCache.set(picture, true)
+    }
+    img.onload = () => {
+      setIsFailed(false)
+      failedCache.set(picture, false)
     }
   }, [picture])
 
@@ -46,8 +59,14 @@ export const AppIcon = memo(function AppIcon({
           size={size}
           alt={alt}
           isSmall={isSmall}
-          src={isFailed ? '/' : picture}
-        />
+          src={isFailed ? '' : picture}
+        >
+          {isFailed && (
+            <div className="MuiAvatar-root MuiAvatar-square MuiAvatar-colorDefault">
+              {alt.substring(0, 1).toUpperCase()}
+            </div>
+          )}
+        </StyledAppImg>
       ) : (
         <StyledAppImg
           isLight={isLight}

@@ -269,7 +269,7 @@ export const useOpenApp = () => {
 
   const onSwitchTab = useCallback(
     async (tab: ITab) => {
-      await openBlank(tab, { replace: true })
+      await openBlank(tab, { replace: false })
     },
     [openBlank]
   )

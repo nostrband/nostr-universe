@@ -44,16 +44,10 @@ import { ProfileListEvent, createProfileListEvent } from '@/types/profile-list-e
 import { Bookmark, BookmarkListEvent, createBookmarkListEvent } from '@/types/bookmark-list-event'
 import { dbi } from './db'
 import { addLocalRelayEvent } from './relay'
-import { 
-  cacheRelay,
-  nostrbandRelay,
-  nsbRelays,
-  allRelays,
-  readRelays,
-  writeRelays
-} from './const/relays'
+import { cacheRelay, nostrbandRelay, nsbRelays, allRelays, readRelays, writeRelays } from './const/relays'
 import { Kinds } from './const/kinds'
 import { overrideWebSocket } from './relay-proxy'
+import { AppRecommEvent, createAppRecommEvent } from '@/types/app-recomm-event'
 
 overrideWebSocket()
 
@@ -112,7 +106,7 @@ function rawEvent(e: NDKEvent): AugmentedEvent {
   return {
     ...nostrEvent(e),
     identifier: getTagValue(e, 'd'),
-    order: e.created_at,
+    order: e.created_at
   }
 }
 
@@ -182,7 +176,7 @@ export function getEventAddr(e: NDKEvent | AugmentedEvent): string {
 }
 
 interface IFetchOptions {
-  cacheOnly?: boolean,
+  cacheOnly?: boolean
   noCache?: boolean
 }
 
@@ -191,27 +185,37 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter, options?: IFetchOptions): 
   return new Promise(async (ok) => {
     const start = Date.now()
     const relaySet = NDKRelaySet.fromRelayUrls(
-      (options?.cacheOnly) 
-      ? [cacheRelay]
-      : (options?.noCache
-        ? readRelays
-        : [cacheRelay, ...readRelays]
-      ), 
-      ndk)
-    const skipVerification = options?.cacheOnly
-      || (relaySet.relays.size === 1 
-        && relaySet.relays.values().next().value.url === cacheRelay)
-    const events = await ndk.fetchEvents(filter, {
-      skipVerification
-    }, relaySet)
+      options?.cacheOnly ? [cacheRelay] : options?.noCache ? readRelays : [cacheRelay, ...readRelays],
+      ndk
+    )
+    const skipVerification =
+      options?.cacheOnly || (relaySet.relays.size === 1 && relaySet.relays.values().next().value.url === cacheRelay)
+    const events = await ndk.fetchEvents(
+      filter,
+      {
+        skipVerification
+      },
+      relaySet
+    )
     for (const e of events.values()) {
       const augmentedEvent = rawEvent(e)
-      if (!options?.cacheOnly)
-        putEventToCache(augmentedEvent)
+      if (!options?.cacheOnly) putEventToCache(augmentedEvent)
     }
-    console.log(Date.now(), 'fetched in', Date.now() - start, 
-    'ms events', events.size, 'skipVerification', skipVerification, 
-    'from', relaySet.relays.size, relaySet.relays, 'relays, options', options, filter)
+    console.log(
+      Date.now(),
+      'fetched in',
+      Date.now() - start,
+      'ms events',
+      events.size,
+      'skipVerification',
+      skipVerification,
+      'from',
+      relaySet.relays.size,
+      relaySet.relays,
+      'relays, options',
+      options,
+      filter
+    )
     ok(events)
   })
 }
@@ -289,10 +293,14 @@ export async function fetchApps() {
     console.log('top apps empty, fetching new ones')
     // load non-best apps from other relays just to avoid
     // completely breaking the UX due to our relay being down
-    const ndkEvents = await fetchEventsRead(ndk, {
-      kinds: [Kinds.APP],
-      limit: MAX_TOP_APPS
-    }, { cacheOnly: true })
+    const ndkEvents = await fetchEventsRead(
+      ndk,
+      {
+        kinds: [Kinds.APP],
+        limit: MAX_TOP_APPS
+      },
+      { cacheOnly: true }
+    )
 
     events = [...ndkEvents.values()].map((e) => rawEvent(e))
   }
@@ -542,7 +550,7 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
 
   const ndkEvents = await collectEvents(reqs)
   events.push(...[...ndkEvents].map((e) => rawEvent(e)))
-//  events.forEach((e) => putEventToCache(e))
+  //  events.forEach((e) => putEventToCache(e))
   return events
 }
 
@@ -581,7 +589,7 @@ export async function fetchFullyAugmentedEventsByAddrs(
         a = await augmentEventAuthors(events)
 
         switch (kind) {
-          case Kinds.META: 
+          case Kinds.META:
             a = await augmentMetaEvents(a)
             break
           case Kinds.LONG_NOTE:
@@ -641,7 +649,7 @@ async function fetchEventByAddr(ndk: NDK, addr: EventAddr): Promise<AugmentedEve
 
   const events = await collectEvents(reqs)
   const event = events.length > 0 ? rawEvent(events[0]) : null
-//  if (event) putEventToCache(event)
+  //  if (event) putEventToCache(event)
   return event
 }
 
@@ -656,7 +664,7 @@ function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPu
 
   const metas = new Map<string, MetaEvent>()
   for (const e of events) {
-    if (e.kind === Kinds.META as number) {
+    if (e.kind === (Kinds.META as number)) {
       const [m] = augmentMetaEvents([e])
       metas.set(m.pubkey, m)
 
@@ -665,7 +673,7 @@ function prepareHandlers(events: AugmentedEvent[], filterKinds: number[], metaPu
   }
 
   for (const ev of events) {
-    if (ev.kind !== Kinds.APP as number) continue
+    if (ev.kind !== (Kinds.APP as number)) continue
 
     const e = createAppEvent(createAuthoredEvent(ev))
 
@@ -841,7 +849,7 @@ export function getHandlerEventUrl(app: AppEvent | AppNostr, ad: EventAddr): str
 }
 
 export async function fetchAppsForEvent(event: NostrEvent): Promise<AppInfos> {
-  const addr: EventAddr = {hex: false}
+  const addr: EventAddr = { hex: false }
 
   addr.kind = event.kind
   addr.event_id = event.id
@@ -981,7 +989,7 @@ export async function fetchProfileLists(
         const tags = JSON.parse(content) as string[][]
         list.privateProfilePubkeys = tagsToPubkeys(tags.filter((t: string[]) => t.length >= 2 && t[0] === 'p'))
       } catch (e) {
-//        console.log('bad list payload ', list.id, list.content, e)
+        //        console.log('bad list payload ', list.id, list.content, e)
       }
     }
 
@@ -1098,11 +1106,15 @@ function idToAddr(id: string, kinds?: number[]): EventAddr | undefined {
 
 async function fetchReactionTargetEventsByKind(pubkey: string, kinds: number[]): Promise<ReactionTargetEvent[]> {
   // FIXME add zap requests from our local db of signed events!
-  const ndkEvents = await fetchEventsRead(ndk, {
-    authors: [pubkey],
-    kinds: [Kinds.NOTE, Kinds.REACTION, Kinds.REPOST],
-    limit: 100
-  }, { cacheOnly: true })
+  const ndkEvents = await fetchEventsRead(
+    ndk,
+    {
+      authors: [pubkey],
+      kinds: [Kinds.NOTE, Kinds.REACTION, Kinds.REPOST],
+      limit: 100
+    },
+    { cacheOnly: true }
+  )
 
   const events: ReactionTargetEvent[] = [...ndkEvents.values()].map((e) =>
     createReactionTargetEvent(createAuthoredEvent(rawEvent(e)))
@@ -1185,8 +1197,8 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
   if (!top) return events
 
   if (top.ids.length) {
-    const augmentedEvents = await fetchEventsByIds({ 
-      ids: top.ids, 
+    const augmentedEvents = await fetchEventsByIds({
+      ids: top.ids,
       kinds: [Kinds.META],
       remote: true
     })
@@ -1223,10 +1235,14 @@ export async function fetchMetas(pubkeys: string[], remote?: boolean): Promise<M
   })
 
   const fetch = async (cacheOnly: boolean) => {
-    const ndkEvents = await fetchEventsRead(ndk, {
-      kinds: [Kinds.META],
-      authors: [...reqPubkeys]
-    }, { cacheOnly })
+    const ndkEvents = await fetchEventsRead(
+      ndk,
+      {
+        kinds: [Kinds.META],
+        authors: [...reqPubkeys]
+      },
+      { cacheOnly }
+    )
 
     const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e))
     const metaEvents = augmentMetaEvents(augmentedEvents)
@@ -1256,7 +1272,10 @@ async function augmentEventAuthors(events: AugmentedEvent[], remote?: boolean): 
   const authoredEvents = events.map((e) => createAuthoredEvent(e))
   if (authoredEvents.length > 0) {
     // profile infos
-    const metas = await fetchMetas(events.map((e) => e.pubkey), remote)
+    const metas = await fetchMetas(
+      events.map((e) => e.pubkey),
+      remote
+    )
 
     // assign to notes
     authoredEvents.forEach((e) => (e.author = metas.find((m) => m.pubkey === e.pubkey)))
@@ -1294,10 +1313,14 @@ async function fetchEventsByIds({ ids, kinds, remote = false }: IFetchEventByIds
   })
 
   const fetch = async (cacheOnly: boolean) => {
-    const ndkEvents = await fetchEventsRead(ndk, {
-      ids: [...reqIds],
-      kinds
-    }, { cacheOnly })
+    const ndkEvents = await fetchEventsRead(
+      ndk,
+      {
+        ids: [...reqIds],
+        kinds
+      },
+      { cacheOnly }
+    )
     //    console.log('ids', ids, 'reqIds', reqIds, 'kinds', kinds, 'events', ndkEvents)
 
     const wasSize = reqIds.size
@@ -1587,7 +1610,7 @@ async function fetchPubkeyEvents({
   if (identifiers && identifiers.length > 0) filter['#d'] = identifiers
 
   const ndkEvents = await fetchEventsRead(ndk, filter, { cacheOnly })
-//  console.log("fetchEventsRead ndkEvents", ndkEvents)
+  //  console.log("fetchEventsRead ndkEvents", ndkEvents)
   const augmentedEvents = [...ndkEvents.values()].map((e) => rawEvent(e))
 
   // desc by tm
@@ -1642,7 +1665,7 @@ export async function fetchFollowedCommunities(contactPubkeys: string[]): Promis
 
   // desc
   sortDesc(approvalEvents)
-  console.log("approvals", approvalEvents);
+  console.log('approvals', approvalEvents)
 
   const approvals: CommunityApprovalInfo[] = approvalEvents
     .map((e) => {
@@ -1665,7 +1688,7 @@ export async function fetchFollowedCommunities(contactPubkeys: string[]): Promis
     kind: Kinds.COMMUNITY,
     pubkeys: [...new Set(approvals.map((a) => a.communityPubkey))],
     identifiers: [...new Set(approvals.map((a) => a.communityIdentifier))],
-    limit: 100,
+    limit: 100
   })
 
   const communities = await augmentCommunities(authoredEvents)
@@ -1813,7 +1836,7 @@ async function augmentApps(augmentedEvent: AugmentedEvent[]): Promise<AppEvent[]
 }
 
 export async function fetchFollowedLiveEvents(contactPubkeys: string[], limit: number = 30): Promise<LiveEvent[]> {
-  let events = await fetchPubkeyEvents({
+  const events = await fetchPubkeyEvents({
     kind: Kinds.LIVE_EVENT,
     pubkeys: contactPubkeys,
     tagged: true,
@@ -1862,7 +1885,7 @@ class Subscription<OutputEventType> {
       NDKRelaySet.fromRelayUrls([cacheRelay], ndk),
       /* autoStart */ false
     )
-    console.log("sub start", filter)
+    console.log('sub start', filter)
 
     // ensure async callbacks are executed one by one
     const pq = new PromiseQueue()
@@ -1877,12 +1900,12 @@ class Subscription<OutputEventType> {
     }
 
     sub.on('event:dup', (event: NDKEvent, relay: NDKRelay) => {
-      console.log("sub event dup", event.id, "kind", event.kind, "from relay", relay.url)
+      console.log('sub event dup', event.id, 'kind', event.kind, 'from relay', relay.url)
     })
 
     // call cb on each event
     sub.on('event', (event: NDKEvent, relay: NDKRelay) => {
-      console.log("sub event", event.id, "at", Date.now(), "kind", event.kind, "from relay", relay.url)
+      console.log('sub event', event.id, 'at', Date.now(), 'kind', event.kind, 'from relay', relay.url)
       // dedup
       const dedupKey = event.deduplicationKey()
       const existingEvent = events.get(dedupKey)
@@ -2201,7 +2224,7 @@ export async function sendPayment(info: WalletInfo, payreq: string): Promise<{ p
 }
 
 export function putEventToCache(e: AugmentedEvent | MetaEvent) {
-  if (e.kind === Kinds.META as number) metaCache.set(e.pubkey, e)
+  if (e.kind === (Kinds.META as number)) metaCache.set(e.pubkey, e)
   eventCache.set(e.id, e)
   addrCache.set(getEventAddr(e), e)
   const ne = nostrEvent(e)
@@ -2272,6 +2295,80 @@ export async function publishEvent(event: NostrEvent) {
   await ndk.publish(new NDKEvent(ndk, event), NDKRelaySet.fromRelayUrls(writeRelays, ndk))
 }
 
+export async function fetchAppRecomms(pubkey: string): Promise<AppRecommEvent[]> {
+  const ndkEvents = await fetchEventsRead(
+    ndk,
+    {
+      kinds: [Kinds.APP_RECOMM],
+      authors: [pubkey]
+    },
+    { cacheOnly: false }
+  )
+
+  const events = [...ndkEvents.values()].map((e) => rawEvent(e))
+
+  const recomms: AppRecommEvent[] = []
+  for (const event of events) {
+    const list = createAppRecommEvent(event)
+    list.naddrs = list.tags
+      .filter((t: string[]) => t.length > 1 && t[0] === 'a')
+      .map((a: string[]) => idToAddr(a[1]))
+      .filter((addr: EventAddr | undefined) => !!addr)
+      // @ts-ignore
+      .map((addr: EventAddr) =>
+        nip19.naddrEncode({
+          pubkey: addr.pubkey || '',
+          kind: addr.kind || 0,
+          identifier: addr.d_tag || ''
+        })
+      )
+    recomms.push(list)
+  }
+  return recomms
+}
+
+export async function publishAppRecommendation(
+  signEvent: (event: NostrEvent) => Promise<NostrEvent>,
+  pubkey: string,
+  kind: number,
+  naddr: string
+) {
+  let list = (await fetchEventByAddr(ndk, {
+    kind: Kinds.APP_RECOMM,
+    pubkey,
+    d_tag: `${kind}`
+  })) as NostrEvent
+
+  if (list === null)
+    list = {
+      kind: Kinds.APP_RECOMM as number,
+      pubkey,
+      created_at: Math.floor(Date.now() / 1000),
+      content: '',
+      tags: [['d', `${kind}`]]
+    }
+
+  const appAddr = parseAddr(naddr)
+  if (!appAddr) throw new Error('Bad naddr')
+
+  const a = appAddr.kind + ':' + appAddr.pubkey + ':' + appAddr.d_tag
+  console.log("adding to list", a)
+  if (!list.tags.find((t: string[]) => {
+    return t.length >= 4 && t[0] === 'a' && t[1] === a && t[3] === 'web'
+  })) {
+    list.tags.push(['a', a, nostrbandRelay, 'web'])
+  }
+
+  // update
+  list.id = ''
+  list.sig = ''
+  list.created_at = Math.floor(Date.now() / 1000)
+
+  const signed = await signEvent(list)
+  console.log('signed list', signed)
+  await publishEvent(signed)
+}
+
 async function checkReconnect(ndk: NDK, force: boolean = false) {
   if (!ndk) return
 
@@ -2295,6 +2392,7 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
           )
 
           let alive = false
+          // eslint-disable-next-line
           sub.on('event', (e: any) => {
             console.log('checkReconnect', r.url, 'got event', e.id)
             alive = true

@@ -24,10 +24,12 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import DoneOutlineIcon from '@mui/icons-material/DoneOutline'
 import AppsIcon from '@mui/icons-material/Apps'
 import { useSearchParams } from 'react-router-dom'
+import { AppOfDayWidget } from '@/components/AppOfDayWidget/AppOfDayWidget'
 
 export const AppsPageContent = () => {
   const { openApp } = useOpenApp()
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
+  const { isShowAOTDWidget } = useAppSelector((state) => state.notifications)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
   const sensors = useSensors()
@@ -60,7 +62,7 @@ export const AppsPageContent = () => {
   } = usePinDragAndDrop(pins)
 
   const handleOpen = async (app: AppNostroType) => {
-    await openApp(app, { replace: true })
+    await openApp(app, { replace: false })
   }
 
   const renderPinOverlay = () => {
@@ -97,6 +99,7 @@ export const AppsPageContent = () => {
 
   return (
     <StyledSwipeableDrawerContent>
+      {isShowAOTDWidget && <AppOfDayWidget />}
       {isSwapMode && (
         <Fade in>
           <Stack

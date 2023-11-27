@@ -1,4 +1,4 @@
-import { IOpenAppNostr } from '@/types/app-nostr'
+import { AppNostr, IOpenAppNostr } from '@/types/app-nostr'
 import { IContentFeedSetting } from '@/types/content-feed'
 import Dexie from 'dexie'
 
@@ -91,6 +91,12 @@ export interface SearchClickEvent {
   query: string
 }
 
+export interface AppOfTheDay {
+  id: string
+  app: AppNostr
+  date: string
+}
+
 export interface DbSchema extends Dexie {
   tabs: Dexie.Table<Tab, number>
   pins: Dexie.Table<Pin, number>
@@ -105,4 +111,5 @@ export interface DbSchema extends Dexie {
   searchHistory: Dexie.Table<SearchTerm, number>
   feedbacksInfo: Dexie.Table<FeedbackInfo, number>
   searchClickHistory: Dexie.Table<SearchClickEvent, number>
+  appOfTheDayHistory: Dexie.Table<AppOfTheDay, number>
 }

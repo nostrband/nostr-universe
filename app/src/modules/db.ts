@@ -3,12 +3,15 @@
 
 import Dexie from 'dexie'
 import { DbSchema } from './types/db'
+import { feedbackPeriodMs, formatDate, formatDateHours } from '@/consts'
+import { KIND_ZAP_REQUEST } from './nostr'
+import { add, format, setDay, startOfDay } from 'date-fns'
 import { feedbackPeriodMs } from '@/consts'
 import { Kinds } from './const/kinds'
 
 export const db = new Dexie('nostrUniverseDB') as DbSchema
 
-db.version(20).stores({
+db.version(24).stores({
   tabs: 'id,pubkey,url,order,title,icon',
   pins: 'id,pubkey,url,appNaddr,order,title,icon',
   apps: '&naddr,name,picture,url,about',
@@ -25,10 +28,65 @@ db.version(20).stores({
   localRelayEvents: 'id,pubkey,kind,created_at',
   payments: 'id,pubkey,timestamp,url,walletId,walletName,amount,invoice,preimage,descriptionHash',
   searchClickHistory: 'id,pubkey,timestamp,addr,query,kind',
+  selectAppHistory: 'timestamp,pubkey,kind,naddr,name,nextSuggestTime,numberOfLaunch',
+  appOfTheDayHistory: 'id, app, date',
   syncTasks: 'id,pubkey,type,since,until'
 })
 
 export const dbi = {
+  setNextSuggestTime: async ({ nextTimestamp, app }) => {
+    try {
+      return await db.transaction('rw', db.selectAppHistory, async () => {
+        const getItem = await db.selectAppHistory.where({ naddr: app.naddr, kind: app.kind }).first()
+
+        if (getItem) {
+          await db.selectAppHistory.where({ naddr: app.naddr, kind: app.kind }).modify((item) => {
+            item.nextSuggestTime = nextTimestamp
+          })
+          console.log(`Update ${app.name} in DB in selectAppHistory`)
+
+          return db.selectAppHistory.get(getItem.timestamp)
+        } else {
+          console.log(`Add ${app.name} to DB to selectAppHistory`)
+        }
+      })
+    } catch (error) {
+      console.log(`Add nextSuggestTime to DB error: ${error}`)
+    }
+  },
+
+  addSelectAppHistory: async (app) => {
+    try {
+      return await db.transaction('rw', db.selectAppHistory, async () => {
+        const getItem = await db.selectAppHistory.where({ naddr: app.naddr, kind: app.kind }).first()
+
+        if (getItem) {
+          await db.selectAppHistory.where({ naddr: app.naddr, kind: app.kind }).modify((item) => {
+            item.numberOfLaunch += 1
+          })
+
+          console.log(`Update ${app.name} in DB in selectAppHistory`)
+
+          return db.selectAppHistory.get(getItem.timestamp)
+        } else {
+          await db.selectAppHistory.add(app)
+          console.log(`Add ${app.name} to DB to selectAppHistory`)
+
+          return db.selectAppHistory.get(app.timestamp)
+        }
+      })
+    } catch (error) {
+      console.log(`Add selectAppHistory to DB error: ${error}`)
+    }
+  },
+  getListSelectAppHistory: async (pubkey: string) => {
+    try {
+      return await db.selectAppHistory.where('pubkey').equals(pubkey).toArray()
+    } catch (error) {
+      console.log(`List selectAppHistory error: ${error}`)
+      return []
+    }
+  },
   addSignedEvent: async (signedEvent) => {
     try {
       await db.signedEvents.add(signedEvent)
@@ -451,6 +509,44 @@ export const dbi = {
       await db.searchClickHistory.delete(id)
     } catch (error) {
       console.log(`Delete searchClickEvent in DB error: ${JSON.stringify(error)}`)
+    }
+  },
+  getAOTDShownDate: async () => {
+    return (await dbi.getFlag('', 'appOfDayShownDate')) || ''
+  },
+  setAOTDShownDate: async () => {
+    await dbi.setFlag('', 'appOfDayShownDate', format(startOfDay(new Date()), formatDate))
+  },
+  resetAOTDShownDate: async () => {
+    await dbi.setFlag('', 'appOfDayShownDate', '')
+  },
+  listAOTDHistory: async () => {
+    try {
+      const list = await db.appOfTheDayHistory.toArray()
+      return list
+    } catch (error) {
+      console.log(`Get listAOTDHistory in DB error: ${error}`)
+      return []
+    }
+  },
+  addAOTD: async (appInfo) => {
+    try {
+      const existingAOTD = await db.appOfTheDayHistory.where('date').equals(appInfo.date).first()
+
+      if (existingAOTD) {
+        await db.appOfTheDayHistory.update(existingAOTD.id, appInfo)
+      } else {
+        await db.appOfTheDayHistory.add(appInfo)
+      }
+    } catch (error) {
+      console.log(`Add AOTD to history in DB error: ${error}`)
+    }
+  },
+  getAOTDByShownDate: async (date) => {
+    try {
+      return await db.appOfTheDayHistory.where({ date }).first()
+    } catch (error) {
+      console.log(`Get AOTD to history in DB error: ${error}`)
     }
   },
   listLocalRelayEvents: async () => {

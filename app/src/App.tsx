@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useEffect } from 'react'
 import { Route, Routes, useSearchParams } from 'react-router-dom'
 import { NavigationBottom } from './components/NavigationBottom/NavigationBottom'
@@ -28,13 +29,24 @@ import { ModalSignedEvents } from './components/Modal/ModalSignedEvents/ModalSig
 import { BookmarksPage } from './pages/BookmarksPage/BookmarksPage'
 import { ModalNPSScore } from './components/Modal/ModalNPSScore/ModalNPSScore'
 import { ModalPaymentHistory } from './components/Modal/ModalPaymentHistory/ModalPaymentHistory'
+import { ModalAppOfTheDay } from './components/Modal/ModalAppOfTheDay/ModalAppOfTheDay'
+import { setAppOfTheDay } from './store/reducers/notifications.slice'
+import { dbi } from './modules/db'
+import { formatDate } from './consts'
+import { format } from 'date-fns'
+import { useOpenModalSearchParams } from './hooks/modal'
+import { MODAL_PARAMS_KEYS } from './types/modal'
 import { ModalSync } from './components/Modal/ModalSync/ModalSync'
+import { ModalFeed } from './components/Modal/ModalFeed/ModalFeed'
+import { ModalFeedApp } from './components/Modal/ModalFeedApp/ModalFeedApp'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
   const { page } = useAppSelector((state) => state.positionScrollPage)
   const [searchParams] = useSearchParams()
   const dispatch = useAppDispatch()
+  const { handleOpen } = useOpenModalSearchParams()
+
   // const dispatch = useAppDispatch()
 
   // const handleScroll = () => {
@@ -53,11 +65,36 @@ export const App = () => {
   // }, [pathname])
 
   useEffect(() => {
+    const load = async () => {
+      console.log('AOTD start load', Date.now())
+      let clicked = false
+      // @ts-ignore
+      if (window.cordova) {
+        // @ts-ignore
+        const clickedNotification = window.cordova.plugins.notification.local.launchDetails
+        clicked = !!clickedNotification
+      }
+
+      if (!clicked) return
+      const currentDate = format(new Date(), formatDate)
+      const existedApp = await dbi.getAOTDByShownDate(currentDate)
+      if (!existedApp) return
+
+      dispatch(setAppOfTheDay({ app: existedApp.app }))
+      handleOpen(MODAL_PARAMS_KEYS.APP_OF_THE_DAY_MODAL)
+      console.log('AOTD start loaded', Date.now(), existedApp)
+    }
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
     dispatch(setPage({ page: searchParams.get('page') }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const getTitle = () => {
+    ;``
     switch (page) {
       case '/':
         return 'Apps'
@@ -112,7 +149,6 @@ export const App = () => {
       <ModalSelectApp />
       <ModalPermissionsRequest />
       <TabPage />
-      <ModalContextMenu />
       <ModalProfileTabMenu />
       <ModalAddKey />
       <ModalAbout />
@@ -123,7 +159,11 @@ export const App = () => {
       <ModalSignedEvents />
       <ModalNPSScore />
       <ModalPaymentHistory />
+      <ModalAppOfTheDay />
       <ModalSync />
+      <ModalFeedApp />
+      <ModalFeed />
+      <ModalContextMenu />
     </>
   )
 }
