@@ -1,19 +1,5 @@
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
-import { Input } from '@/shared/Input/Input'
-import {
-  Box,
-  Dialog,
-  DialogProps,
-  Grid,
-  GridProps,
-  InputBaseProps,
-  Menu,
-  MenuProps,
-  Typography,
-  TypographyProps,
-  Zoom,
-  styled
-} from '@mui/material'
+import { Box, Grid, GridProps, Menu, MenuProps, Typography, TypographyProps, Zoom, styled } from '@mui/material'
 import { ForwardedRef, forwardRef } from 'react'
 
 export const StyledGroupName = styled(
@@ -79,34 +65,6 @@ export const StyledAppIcon = styled(AppIcon)({
   borderRadius: 8
 })
 
-export const StyledInput = styled((props: InputBaseProps) => (
-  <Input classes={{ readOnly: 'read_only', focused: 'focused' }} {...props} />
-))(({ theme }) => ({
-  fontSize: '18px',
-  fontWeight: 'bold',
-  textAlign: 'center',
-  border: '1px solid transparent',
-  transition: 'border 0.2s ease-in-out',
-  '&:not(.read_only)': {
-    border: '1px solid ' + theme.palette.text.primary
-  }
-}))
-
-export const StyledDialog = styled((props: DialogProps) => (
-  <Dialog
-    {...props}
-    keepMounted
-    PaperProps={{
-      sx(theme) {
-        return {
-          background: theme.palette.secondary.main
-        }
-      }
-    }}
-    fullWidth
-  />
-))({})
-
 export const StyledDroppableContainer = styled(
   forwardRef(function DroppableContainer({ children, ...props }: GridProps, ref: ForwardedRef<HTMLDivElement>) {
     return (
@@ -150,3 +108,13 @@ export const StyledMenu = styled((props: MenuProps) => (
     }}
   />
 ))({})
+
+export const StyledCustomBackdrop = styled('div')({
+  position: 'fixed',
+  backgroundColor: 'rgba(0,0,0,0.5)',
+  zIndex: -1,
+  left: 0,
+  top: 0,
+  right: 0,
+  bottom: 0
+})

@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { ListItemIcon, ListItemText, MenuItem, MenuProps } from '@mui/material'
-import { StyledMenu } from './styled'
+import { StyledMenu } from '../styled'
 import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash'
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline'
 

@@ -1,40 +1,23 @@
-import { ChangeEvent, FC, forwardRef, useCallback, useEffect, useRef, useState } from 'react'
-import {
-  DialogContent,
-  DialogProps,
-  DialogTitle,
-  Grid,
-  Grow,
-  GrowProps,
-  IconButton,
-  Stack,
-  Typography
-} from '@mui/material'
+import { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import { IPin } from '@/types/workspace'
-import { getTabGroupId } from '@/modules/AppInitialisation/utils'
-import { AppNostr } from '@/types/app-nostr'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { selectCurrentWorkspaceTabs } from '@/store/store'
-import { StyledDialog, StyledInput } from './styled'
-import { useOpenApp } from '@/hooks/open-entity'
-import { bulkEditPinsWorkspace, swapPins, updatePinWorkspace } from '@/store/reducers/workspaces.slice'
+import { createPortal } from 'react-dom'
+import { restrictToWindowEdges } from '@dnd-kit/modifiers'
+import { AppNostro } from '@/shared/AppNostro/AppNostro'
+import { useSearchParams } from 'react-router-dom'
+import { addPinWorkspace, bulkEditPinsWorkspace } from '@/store/reducers/workspaces.slice'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { PinsGroupExtraMenu } from './PinsGroupExtraMenu'
 import { AppNostroRemovable } from './AppNostroRemovable'
-import { dbi } from '@/modules/db'
-import { useSearchParams } from 'react-router-dom'
-import { addPinWorkspace } from '@/store/reducers/workspaces.slice'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, pointerWithin } from '@dnd-kit/core'
-import { useSensors } from '../utils/useSensors'
-import { createPortal } from 'react-dom'
-import { restrictToWindowEdges } from '@dnd-kit/modifiers'
-import { AppNostro } from '@/shared/AppNostro/AppNostro'
-
-const Transition = forwardRef(function Transition(props: GrowProps, ref) {
-  return <Grow ref={ref} {...props} />
-})
+import { selectCurrentWorkspaceTabs } from '@/store/store'
+import { useOpenApp } from '@/hooks/open-entity'
+import { getTabGroupId } from '@/modules/AppInitialisation/utils'
+import { AppNostr } from '@/types/app-nostr'
+import { DialogContent, DialogTitle, Grid, IconButton, Stack, Typography } from '@mui/material'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { DragOverlay } from '@dnd-kit/core'
+import { StyledInput } from './styled'
 
 type PinGroupModalContentProps = {
   groupName: string
@@ -42,18 +25,17 @@ type PinGroupModalContentProps = {
   handleClose: () => void
   pins: IPin[]
   groupDefaultName: string
+  activeId: string | null
+  handleRemovePinFromGroup: (pin: IPin) => void
 }
-
-type PinGroupModalProps = DialogProps & PinGroupModalContentProps
-
-type PinID = string | number
 
 export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
   pinsGroup = [],
   groupName = '',
   pins,
   groupDefaultName = '',
-  handleClose
+  activeId,
+  handleRemovePinFromGroup
 }) => {
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
@@ -65,25 +47,6 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
   const { handleOpen: handleOpenModal } = useOpenModalSearchParams()
   const { openApp } = useOpenApp()
   const dispatch = useAppDispatch()
-
-  const sensors = useSensors()
-
-  const [activeId, setActiveId] = useState<string | null>(null)
-
-  const onSortEnd = useCallback(
-    (activeId: PinID, overId: PinID) => {
-      if (currentPubkey) {
-        dispatch(
-          swapPins({
-            fromID: activeId,
-            toID: overId,
-            workspacePubkey: currentPubkey
-          })
-        )
-      }
-    },
-    [dispatch, currentPubkey]
-  )
 
   const [newGroupName, setGroupName] = useState(groupName)
   const [editMode, setEditMode] = useState(false)
@@ -192,42 +155,12 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
     setRemoveMode(true)
   }
 
-  const handleRemovePinFromGroup = (pin: IPin) => {
-    const updatedPin = { ...pin, groupName: '' }
-    dispatch(
-      updatePinWorkspace({
-        pin: updatedPin,
-        workspacePubkey: currentPubkey
-      })
-    )
-    dbi.updatePin(updatedPin)
-    if (pinsGroup.length === 1) {
-      handleClose()
-    }
-  }
-
   useEffect(() => {
     if (isNewEmptyGroup) {
       handleRenameClick()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(active.id as string)
-  }
-
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setActiveId(null)
-
-    if (over && active.id !== over.id) {
-      const findActivePin = pins.find((pin) => pin.id === active.id)
-      const findOverPin = pins.find((pin) => pin.id === over.id)
-
-      if (!findActivePin || !findOverPin) return undefined
-      onSortEnd(findActivePin.id, findOverPin.id)
-    }
-  }
 
   const renderContent = () => {
     if (pinsGroup.length === 0) {
@@ -304,16 +237,8 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
         </Stack>
       </DialogTitle>
       <DialogContent>
-        <DndContext
-          sensors={sensors}
-          onDragEnd={handleDragEnd}
-          onDragStart={handleDragStart}
-          onDragCancel={() => setActiveId(null)}
-          collisionDetection={pointerWithin}
-        >
-          {renderContent()}
-          {renderPinOverlay()}
-        </DndContext>
+        {renderContent()}
+        {renderPinOverlay()}
       </DialogContent>
 
       <PinsGroupExtraMenu
@@ -324,13 +249,5 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
         onRemoveClick={handleRemoveClick}
       />
     </>
-  )
-}
-
-export const PinGroupModal: FC<PinGroupModalProps> = ({ open, handleClose, ...rest }) => {
-  return (
-    <StyledDialog open={open} TransitionComponent={Transition} onClose={() => handleClose()}>
-      {open && <PinGroupModalContent {...rest} handleClose={handleClose} />}
-    </StyledDialog>
   )
 }
