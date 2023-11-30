@@ -4,13 +4,13 @@ import { StyledMenu } from './styled'
 import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash'
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline'
 
-type PinsGroupExtraMenu = Omit<MenuProps, 'onClose'> & {
+type PinsGroupExtraMenuProps = Omit<MenuProps, 'onClose'> & {
   handleClose: () => void
   onRenameClick: () => void
   onRemoveClick: () => void
 }
 
-export const PinsGroupExtraMenu: FC<PinsGroupExtraMenu> = ({
+export const PinsGroupExtraMenu: FC<PinsGroupExtraMenuProps> = ({
   anchorEl,
   handleClose,
   open,

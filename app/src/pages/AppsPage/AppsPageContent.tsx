@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
-import { Badge, Fade, Grid, IconButton, Stack, Typography } from '@mui/material'
+import { Grid } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
-import { DndContext, DragOverlay, defaultDropAnimation, rectIntersection } from '@dnd-kit/core'
+import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core'
 import { StyledSwipeableDrawerContent, StyledAddButtonWrapper, StyledIconButton } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { AppNostr, AppNostr as AppNostroType } from '@/types/app-nostr'
@@ -20,11 +20,8 @@ import { usePinDragAndDrop } from './utils/usePinDragAndDrop'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
 import MoreIcon from '@mui/icons-material/MoreHoriz'
 import { ExtraMenu } from './components/ExtraMenu'
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
-import DoneOutlineIcon from '@mui/icons-material/DoneOutline'
-import AppsIcon from '@mui/icons-material/Apps'
-import { useSearchParams } from 'react-router-dom'
 import { AppOfDayWidget } from '@/components/AppOfDayWidget/AppOfDayWidget'
+import { getDefaultGroupName } from './utils/helpers'
 
 export const AppsPageContent = () => {
   const { openApp } = useOpenApp()
@@ -33,7 +30,6 @@ export const AppsPageContent = () => {
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
   const sensors = useSensors()
-  const [searchParams, setSearchParams] = useSearchParams()
 
   const { getModalOpened, handleClose } = useOpenModalSearchParams()
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PIN_GROUP_MODAL)
@@ -54,12 +50,12 @@ export const AppsPageContent = () => {
     handleDragStart,
     handleDragEnd,
     handleDragOver,
+    handleDragCancel,
     pinsGroup,
     currentGroupName,
     pinOverlay,
     groupedPins,
-    isOverlayActive,
-    isSwapMode
+    overlay
   } = usePinDragAndDrop(pins)
 
   const handleOpen = async (app: AppNostroType) => {
@@ -67,69 +63,34 @@ export const AppsPageContent = () => {
   }
 
   const renderPinOverlay = () => {
-    if (!pinOverlay) return null
-
-    const styles = {
-      transform: isOverlayActive && !isSwapMode ? 'scale(0.7)' : 'scale(1)',
-      transition: 'transform 0.2s linear'
-    }
-
-    const badgeContent = isSwapMode ? <SwapHorizIcon fontSize="small" /> : <AppsIcon fontSize="small" />
-
     return createPortal(
-      <DragOverlay dropAnimation={defaultDropAnimation} modifiers={[restrictToWindowEdges]}>
-        <Badge color="secondary" badgeContent={badgeContent}>
-          <AppNostro
-            containerProps={{
-              sx: styles
-            }}
-            app={pinOverlay}
-            size="small"
-            onOpen={() => undefined}
-          />
-        </Badge>
+      <DragOverlay modifiers={[restrictToWindowEdges]}>
+        {overlay === 'item' && pinOverlay && (
+          <AppNostro app={pinOverlay} hideName size="small" onOpen={() => undefined} />
+        )}
+
+        {overlay === 'group' && <PinsGroup group={[]} id={''} title={''} />}
       </DragOverlay>,
       document.body
     )
   }
 
-  const handleOffSwapMode = () => {
-    searchParams.delete('mode')
-    setSearchParams(searchParams)
-  }
-
   return (
     <StyledSwipeableDrawerContent>
       {isShowAOTDWidget && <AppOfDayWidget />}
-      {isSwapMode && (
-        <Fade in>
-          <Stack
-            padding={'0 1rem'}
-            flexDirection={'row'}
-            alignItems={'center'}
-            justifyContent={'space-between'}
-            marginBottom={'1rem'}
-          >
-            <Typography variant="body1">Drag the app icons to change their order.</Typography>
-            <IconButton onClick={handleOffSwapMode}>
-              <DoneOutlineIcon htmlColor="white" />
-            </IconButton>
-          </Stack>
-        </Fade>
-      )}
       <DndContext
         sensors={sensors}
-        autoScroll={false}
         onDragEnd={handleDragEnd}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
-        collisionDetection={rectIntersection}
+        onDragCancel={handleDragCancel}
+        collisionDetection={pointerWithin}
       >
         <Container>
           <Grid columns={8} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
             {groupedPins.map((pin) => {
-              if (pin.pins && pin.pins?.length > 0) {
-                return <PinsGroup key={pin.id} group={pin.pins} id={pin.id} title={pin.id} isSwapMode={isSwapMode} />
+              if (pin.groupName && pin.groupName.trim().length > 0) {
+                return <PinsGroup key={pin.id} group={pin.pins} id={pin.id} title={pin.id} />
               }
               const app: AppNostr = {
                 picture: pin.icon,
@@ -149,7 +110,7 @@ export const AppsPageContent = () => {
                   isActive={isActive}
                   app={app}
                   size="small"
-                  onOpen={() => !isSwapMode && handleOpen(app)}
+                  onOpen={() => handleOpen(app)}
                 />
               )
             })}
@@ -170,6 +131,7 @@ export const AppsPageContent = () => {
         pins={pins}
         open={isOpen}
         handleClose={() => handleClose()}
+        groupDefaultName={getDefaultGroupName(groupedPins)}
       />
 
       <ExtraMenu open={isExtraMenuOpen} anchorEl={anchorEl} handleClose={handleMenuClose} />

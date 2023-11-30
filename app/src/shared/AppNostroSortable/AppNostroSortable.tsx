@@ -7,6 +7,11 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { StyledDroppableContainer } from '@/pages/AppsPage/components/styled'
+import { Zoom } from '@mui/material'
+
+const ITEM_DATA = {
+  type: 'item'
+}
 
 export const AppNostroSortable: FC<AppNostroSortableProps> = ({ id, ...restProps }) => {
   const [isAppPressing, setIsAppPressing] = useState(false)
@@ -18,18 +23,17 @@ export const AppNostroSortable: FC<AppNostroSortableProps> = ({ id, ...restProps
     ...rest
   } = useDroppable({
     id: id,
-    data: {
-      type: 'item'
-    }
+    data: ITEM_DATA
   })
 
   const { setNodeRef, listeners, isDragging, attributes } = useDraggable({
-    id
+    id,
+    data: ITEM_DATA
   })
 
   const style = {
     opacity: isDragging ? 0.5 : 1,
-    transition: 'opacity 0.2s'
+    transition: 'opacity 0.1s'
   }
 
   const appLongPressHandler = () => {
@@ -63,17 +67,12 @@ export const AppNostroSortable: FC<AppNostroSortableProps> = ({ id, ...restProps
   }
 
   return (
-    <StyledDroppableContainer ref={setDroppableNodeRef}>
-      <Container
-        className={isDragging ? 'dragging-dbd-kit' : ''}
-        {...attributes}
-        ref={setNodeRef}
-        style={style}
-        {...listeners}
-        {...longPressHandlers}
-      >
-        <AppNostro {...restProps} containerProps={appContainerProps} />
-      </Container>
-    </StyledDroppableContainer>
+    <Zoom in>
+      <StyledDroppableContainer ref={setDroppableNodeRef}>
+        <Container {...attributes} ref={setNodeRef} style={style} {...listeners} {...longPressHandlers}>
+          <AppNostro {...restProps} containerProps={appContainerProps} />
+        </Container>
+      </StyledDroppableContainer>
+    </Zoom>
   )
 }

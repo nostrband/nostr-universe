@@ -38,7 +38,8 @@ export const usePins = () => {
         title: app?.name, // FIXME why there title instead name?
         icon: app.picture,
         order: currentWorkspace.pins.length,
-        pubkey: currentWorkspace.pubkey || ''
+        pubkey: currentWorkspace.pubkey || '',
+        pins: []
       }
 
       dispatch(addPinWorkspace({ pin, workspacePubkey: currentWorkspace.pubkey }))
@@ -57,7 +58,8 @@ export const usePins = () => {
         title: currentTab.title,
         icon: currentTab.icon,
         order: currentWorkspace.pins.length,
-        pubkey: currentTab.pubkey
+        pubkey: currentTab.pubkey,
+        pins: []
       }
 
       dispatch(addPinWorkspace({ pin, workspacePubkey: currentTab.pubkey }))

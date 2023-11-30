@@ -11,6 +11,7 @@ export interface IPin {
   order: number
   pubkey: string
   groupName?: string
+  pins: IPin[]
 }
 
 export type WorkSpace = {

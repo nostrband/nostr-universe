@@ -1,6 +1,7 @@
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { Input } from '@/shared/Input/Input'
 import {
+  Box,
   Dialog,
   DialogProps,
   Grid,
@@ -107,8 +108,12 @@ export const StyledDialog = styled((props: DialogProps) => (
 ))({})
 
 export const StyledDroppableContainer = styled(
-  forwardRef(function DroppableContainer(props: GridProps, ref: ForwardedRef<HTMLDivElement>) {
-    return <Grid ref={ref} item xs={2} {...props} />
+  forwardRef(function DroppableContainer({ children, ...props }: GridProps, ref: ForwardedRef<HTMLDivElement>) {
+    return (
+      <Grid ref={ref} item xs={2} {...props}>
+        <Box>{children}</Box>
+      </Grid>
+    )
   })
 )({
   transition: 'background 0.2s',

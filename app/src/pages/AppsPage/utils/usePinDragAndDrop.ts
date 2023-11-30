@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
-import { checkIsGroupType, getDefaultGroupName } from './helpers'
-import { DragStartEvent, DragEndEvent, DragOverEvent } from '@dnd-kit/core'
+import { checkIsGroupingMode, checkIsGroupType } from './helpers'
+import { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { IPin } from '@/types/workspace'
 import { AppNostr } from '@/types/app-nostr'
 import { useSearchParams } from 'react-router-dom'
@@ -8,7 +8,6 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { bulkEditPinsWorkspace, swapPins } from '@/store/reducers/workspaces.slice'
 import { selectCurrentWorkspace } from '@/store/store'
 
-export type GroupedPin = IPin & { pins?: IPin[] }
 type PinID = string | number
 
 export const usePinDragAndDrop = (pins: IPin[]) => {
@@ -17,24 +16,31 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
 
   const [searchParams] = useSearchParams()
   const groupName = searchParams.get('groupName') || ''
-  const isSwapMode = searchParams.get('mode') === 'swap'
 
   const [activeId, setActiveId] = useState<string | null>(null)
 
-  const [isOverlayActive, setIsOverlayActive] = useState(false)
+  const [overlay, setOverlay] = useState<'item' | 'group' | null>(null)
 
-  const groupedPins = pins.reduce((acc, current) => {
-    if (!current?.groupName) {
-      return [...acc, current]
-    }
-    const groupIndex = acc.findIndex((p) => p.id === current.groupName)
-    if (groupIndex === -1) {
-      return [...acc, { ...current, id: current.groupName, pins: [current] }]
-    }
-    const pinsGroup = acc[groupIndex]
-    acc.splice(groupIndex, 1, { ...pinsGroup, pins: [...(pinsGroup.pins || []), current] })
-    return acc
-  }, [] as GroupedPin[])
+  const groupedPins = pins
+    .reduce((acc, current, index) => {
+      if (!current.groupName) {
+        return [...acc, current]
+      }
+
+      const groupIndex = acc.findIndex((p) => p.id === current.groupName)
+
+      if (groupIndex === -1) {
+        const isEmptyGroup = current.pins === null
+        return [...acc, { ...current, id: current.groupName, pins: isEmptyGroup ? [] : [current] }]
+      }
+
+      const pinsGroup = acc[groupIndex]
+
+      acc.splice(groupIndex, 1)
+      acc.splice(index, 1, { ...pinsGroup, pins: [...pinsGroup.pins, current] })
+      return acc
+    }, [] as IPin[])
+    .sort((a, b) => a.order - b.order)
 
   const getPinOverlay = useCallback(() => {
     const pin = pins.find((pin) => pin.id === activeId)
@@ -56,19 +62,22 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
   const getPinsByGroupName = useCallback(() => {
     if (!groupName.trim().length) return []
 
-    return pins.filter((p) => p.groupName === groupName)
+    return pins.filter((p) => !!p.title && p.groupName === groupName)
   }, [groupName, pins])
 
   // Event handlers
   const handleDragStart = ({ active }: DragStartEvent) => {
     setActiveId(active.id as string)
+    if (!active) return setOverlay(null)
+
+    const isGroup = checkIsGroupType(active)
+    if (isGroup) return setOverlay('group')
+
+    return setOverlay('item')
   }
 
-  const handleDragOver = ({ over }: DragOverEvent) => {
-    const isGroup = checkIsGroupType(over)
-    if (isGroup) return setIsOverlayActive(true)
-
-    return setIsOverlayActive(false)
+  const handleDragOver = () => {
+    // setOverlay(null)
   }
 
   const onSortEnd = useCallback(
@@ -88,40 +97,51 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveId(null)
+    setOverlay(null)
 
     if (over && active.id !== over.id) {
-      const isGroup = checkIsGroupType(over)
+      const isGroupingMode = checkIsGroupingMode(active, over)
+      const activeIsGroup = checkIsGroupType(active)
+      const overIsGroup = checkIsGroupType(over)
+
       const findActivePin = groupedPins.find((pin) => pin.id === active.id)
       const findOverPin = groupedPins.find((pin) => pin.id === over.id)
 
       if (!findActivePin || !findOverPin) return undefined
 
-      if (isSwapMode) {
-        return onSortEnd(active.id, isGroup && findOverPin.pins ? findOverPin.pins[0].id : over.id)
+      if (!isGroupingMode) {
+        return onSortEnd(
+          activeIsGroup ? findActivePin.pins[0].id : active.id,
+          overIsGroup ? findOverPin.pins[0].id : over.id
+        )
       }
 
-      const newPins = pins.map((p) => {
-        const groupName = getDefaultGroupName(groupedPins)
-
-        if (p.id === findActivePin.id) return { ...p, groupName: isGroup ? over.id : groupName }
-        if (p.id === findOverPin.id && !isGroup) return { ...p, groupName: groupName }
-
-        return p
-      })
+      const newPins = pins
+        .map((p) => {
+          if (p.id === findActivePin.id) return { ...p, groupName: over.id }
+          if (p.id === findOverPin.id) return undefined
+          return p
+        })
+        .filter((p) => !!p)
 
       dispatch(bulkEditPinsWorkspace({ pins: newPins, workspacePubkey: currentWorkSpace?.pubkey }))
     }
+  }
+
+  const handleDragCancel = () => {
+    setActiveId(null)
+    setOverlay(null)
   }
 
   return {
     handleDragStart,
     handleDragEnd,
     handleDragOver,
+    handleDragCancel,
     pinsGroup: getPinsByGroupName(),
     pinOverlay: getPinOverlay(),
     currentGroupName: groupName,
     groupedPins,
-    isOverlayActive,
-    isSwapMode
+    overlay
   }
 }

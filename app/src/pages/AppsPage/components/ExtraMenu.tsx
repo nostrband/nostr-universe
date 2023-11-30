@@ -1,11 +1,10 @@
 import { FC } from 'react'
 import { ListItemIcon, ListItemText, MenuItem, MenuProps } from '@mui/material'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
+import AppRegistrationIcon from '@mui/icons-material/AppRegistration'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { StyledMenu } from './styled'
-import { useSearchParams } from 'react-router-dom'
 
 type ExtraMenuProps = Omit<MenuProps, 'onClose'> & {
   handleClose: () => void
@@ -13,17 +12,19 @@ type ExtraMenuProps = Omit<MenuProps, 'onClose'> & {
 
 export const ExtraMenu: FC<ExtraMenuProps> = ({ anchorEl, handleClose, open }) => {
   const { handleOpen } = useOpenModalSearchParams()
-  const [searchParams, setSearchParams] = useSearchParams()
 
   const handleAddApp = () => {
     handleClose()
     handleOpen(MODAL_PARAMS_KEYS.FIND_APP)
   }
 
-  const handleSwapMode = () => {
+  const handleAddGroup = () => {
     handleClose()
-    searchParams.set('mode', 'swap')
-    setSearchParams(searchParams)
+    handleOpen(MODAL_PARAMS_KEYS.PIN_GROUP_MODAL, {
+      search: {
+        groupName: 'DEFAULT_GROUPNAME'
+      }
+    })
   }
 
   return (
@@ -34,11 +35,11 @@ export const ExtraMenu: FC<ExtraMenuProps> = ({ anchorEl, handleClose, open }) =
         </ListItemIcon>
         <ListItemText>Add new app</ListItemText>
       </MenuItem>
-      <MenuItem onClick={handleSwapMode}>
+      <MenuItem onClick={handleAddGroup}>
         <ListItemIcon color="inherit">
-          <SwapHorizIcon color="inherit" />
+          <AppRegistrationIcon color="inherit" />
         </ListItemIcon>
-        <ListItemText>Change icons order</ListItemText>
+        <ListItemText>Add new group</ListItemText>
       </MenuItem>
     </StyledMenu>
   )
