@@ -101,14 +101,7 @@ export const PinGroupModal: FC<PinGroupModalProps> = ({ open, handleClose, ...re
         }}
         PaperComponent={DroppablePaper}
       >
-        {open && (
-          <PinGroupModalContent
-            {...rest}
-            handleClose={handleClose}
-            activeId={activeId}
-            handleRemovePinFromGroup={handleRemovePinFromGroup}
-          />
-        )}
+        {open && <PinGroupModalContent {...rest} handleClose={handleClose} activeId={activeId} />}
       </StyledDialog>
     </DndContext>
   )

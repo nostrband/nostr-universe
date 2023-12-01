@@ -30,7 +30,7 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
       const groupIndex = acc.findIndex((p) => p.id === current.groupName)
 
       if (groupIndex === -1) {
-        const isEmptyGroup = current.pins === null
+        const isEmptyGroup = current.pins === null && !current.title
         return [...acc, { ...current, id: current.groupName, pins: isEmptyGroup ? [] : [current] }]
       }
 
@@ -111,7 +111,7 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
 
       if (!isGroupingMode) {
         return onSortEnd(
-          activeIsGroup ? findActivePin.pins[0].id : active.id,
+          activeIsGroup && findActivePin.pins[0] ? findActivePin.pins[0].id : active.id,
           overIsGroup ? findOverPin.pins[0].id : over.id
         )
       }

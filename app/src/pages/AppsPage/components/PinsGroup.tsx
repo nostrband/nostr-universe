@@ -39,13 +39,15 @@ export const PinsGroup: FC<PinsGroupProps> = ({ group, id, title }) => {
     <Grid item xs={2} ref={setDraggableRef} onClick={handleOpenModal} {...listeners} minHeight={77}>
       <Box ref={setNodeRef}>
         <StyledGroup className={isOver ? '__over' : ''}>
-          {group.map((pin) => (
-            <Zoom in key={pin.id}>
-              <Grid item xs={1}>
-                <StyledAppIcon picture={pin.icon} alt={pin.title} isPreviewTab />
-              </Grid>
-            </Zoom>
-          ))}
+          {group
+            .filter((p) => !!p.title)
+            .map((pin) => (
+              <Zoom in key={pin.id}>
+                <Grid item xs={1}>
+                  <StyledAppIcon picture={pin.icon} alt={pin.title} isPreviewTab />
+                </Grid>
+              </Zoom>
+            ))}
         </StyledGroup>
         <StyledGroupName>{title}</StyledGroupName>
       </Box>

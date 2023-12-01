@@ -9,7 +9,6 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { PinsGroupExtraMenu } from './PinsGroupExtraMenu'
-import { AppNostroRemovable } from './AppNostroRemovable'
 import { selectCurrentWorkspaceTabs } from '@/store/store'
 import { useOpenApp } from '@/hooks/open-entity'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
@@ -18,6 +17,8 @@ import { DialogContent, DialogTitle, Grid, IconButton, Stack, Typography } from 
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { DragOverlay } from '@dnd-kit/core'
 import { StyledInput } from './styled'
+import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
+import { dbi } from '@/modules/db'
 
 type PinGroupModalContentProps = {
   groupName: string
@@ -26,7 +27,6 @@ type PinGroupModalContentProps = {
   pins: IPin[]
   groupDefaultName: string
   activeId: string | null
-  handleRemovePinFromGroup: (pin: IPin) => void
 }
 
 export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
@@ -34,8 +34,7 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
   groupName = '',
   pins,
   groupDefaultName = '',
-  activeId,
-  handleRemovePinFromGroup
+  activeId
 }) => {
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
@@ -50,7 +49,6 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
 
   const [newGroupName, setGroupName] = useState(groupName)
   const [editMode, setEditMode] = useState(false)
-  const [removeMode, setRemoveMode] = useState(false)
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const isMenuOpen = Boolean(anchorEl)
@@ -82,7 +80,7 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
       appNaddr: '',
       title: '',
       icon: '',
-      order: 1000,
+      order: pins.length,
       pubkey: currentPubkey,
       groupName: groupName,
       pins: null
@@ -101,9 +99,12 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
         pin: newEmptyGroup
       })
     )
+    dbi.addPin(newEmptyGroup)
   }
 
   const handleBlurInput = () => {
+    if (newGroupName === groupName) return setEditMode(false)
+
     const isGroupNameExists = pins.some((p) => p.groupName === newGroupName)
 
     if (newGroupName.trim().length === 0 || isGroupNameExists) {
@@ -151,10 +152,6 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
     setEditMode(true)
   }
 
-  const handleRemoveClick = () => {
-    setRemoveMode(true)
-  }
-
   useEffect(() => {
     if (isNewEmptyGroup) {
       handleRenameClick()
@@ -181,14 +178,12 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
           const isActive = !!tabs.find((t) => getTabGroupId(t) === gid)
           return (
             <Grid item xs={1} key={pin.id}>
-              <AppNostroRemovable
+              <AppNostroSortable
                 id={pin.id}
                 isActive={isActive}
                 app={app}
                 size="small"
-                onOpen={() => !removeMode && handleOpen(app)}
-                isRemoveMode={removeMode}
-                handleRemovePin={() => handleRemovePinFromGroup(pin)}
+                onOpen={() => handleOpen(app)}
               />
             </Grid>
           )
@@ -246,7 +241,6 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
         handleClose={handleCloseMenu}
         anchorEl={anchorEl}
         onRenameClick={handleRenameClick}
-        onRemoveClick={handleRemoveClick}
       />
     </>
   )
