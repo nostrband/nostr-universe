@@ -27,6 +27,7 @@ export enum MODAL_PARAMS_KEYS {
   PAYMENT_HISTORY_MODAL = 'payment-history-modal',
   APP_OF_THE_DAY_MODAL = 'app-of-the-day-modal',
   SYNC_MODAL = 'sync-modal',
+  PIN_GROUP_MODAL = 'pin-group-modal',
   FEED_MODAL = 'feed-modal',
   FEED_MODAL_APPS = 'feed-modal-apps'
 }

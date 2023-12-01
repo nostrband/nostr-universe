@@ -1,112 +1,140 @@
-import { useCallback } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Grid } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
-import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core'
 import { StyledSwipeableDrawerContent, StyledAddButtonWrapper, StyledIconButton } from './styled'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { AppNostr, AppNostr as AppNostroType } from '@/types/app-nostr'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
-import { swapPins } from '@/store/reducers/workspaces.slice'
-import { SortableContext, rectSwappingStrategy } from '@dnd-kit/sortable'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { selectCurrentWorkspace, selectCurrentWorkspaceTabs } from '@/store/store'
-import AddIcon from '@mui/icons-material/Add'
 import { useOpenModalSearchParams } from '@/hooks/modal'
+import { createPortal } from 'react-dom'
+import { restrictToWindowEdges } from '@dnd-kit/modifiers'
+import { PinsGroup } from './components/PinsGroup'
+import { PinGroupModal } from './components/PinGroupModal/PinGroupModal'
+import { useSensors } from './utils/useSensors'
+import { usePinDragAndDrop } from './utils/usePinDragAndDrop'
+import { AppNostro } from '@/shared/AppNostro/AppNostro'
+import MoreIcon from '@mui/icons-material/MoreHoriz'
+import { ExtraMenu } from './components/ExtraMenu'
 import { AppOfDayWidget } from '@/components/AppOfDayWidget/AppOfDayWidget'
-
-type PinID = string | number
+import { getDefaultGroupName } from './utils/helpers'
 
 export const AppsPageContent = () => {
   const { openApp } = useOpenApp()
-  const dispatch = useAppDispatch()
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const { isShowAOTDWidget } = useAppSelector((state) => state.notifications)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
-  const { handleOpen: handleOpenModal } = useOpenModalSearchParams()
+  const sensors = useSensors()
 
-  const pins = currentWorkSpace?.pins || []
-  const pinIds = pins.map((p) => p.id)
+  const { getModalOpened, handleClose } = useOpenModalSearchParams()
+  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PIN_GROUP_MODAL)
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const isExtraMenuOpen = Boolean(anchorEl)
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
+
+  const pins = useMemo(() => currentWorkSpace?.pins || [], [currentWorkSpace?.pins])
+
+  const {
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDragCancel,
+    pinsGroup,
+    currentGroupName,
+    pinOverlay,
+    groupedPins,
+    overlay
+  } = usePinDragAndDrop(pins)
 
   const handleOpen = async (app: AppNostroType) => {
     await openApp(app, { replace: false })
   }
 
-  const mouseSensor = useSensor(MouseSensor, {
-    // Require the mouse to move by 10 pixels before activating.
-    // Slight distance prevents sortable logic messing with
-    // interactive elements in the handler toolbar component.
-    activationConstraint: {
-      distance: 10
-    }
-  })
-  const touchSensor = useSensor(TouchSensor, {
-    // Press delay of 300ms, with tolerance of 5px of movement.
-    activationConstraint: {
-      delay: 200,
-      tolerance: 5
-    }
-  })
-  const sensors = useSensors(mouseSensor, touchSensor)
+  const renderPinOverlay = () => {
+    return createPortal(
+      <DragOverlay modifiers={[restrictToWindowEdges]}>
+        {overlay === 'item' && pinOverlay && (
+          <AppNostro app={pinOverlay} hideName size="small" onOpen={() => undefined} />
+        )}
 
-  const onSortEnd = useCallback(
-    (fromPinId: PinID, toPinId: PinID) => {
-      if (currentWorkSpace) {
-        console.log('swap pins', fromPinId, toPinId)
-        dispatch(
-          swapPins({
-            fromID: fromPinId,
-            toID: toPinId,
-            workspacePubkey: currentWorkSpace.pubkey
-          })
-        )
-      }
-    },
-    [dispatch, currentWorkSpace]
-  )
-
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (over && active.id !== over.id) {
-      onSortEnd(active.id, over.id)
-    }
+        {overlay === 'group' && <PinsGroup group={[]} id={''} title={''} />}
+      </DragOverlay>,
+      document.body
+    )
   }
 
   return (
     <StyledSwipeableDrawerContent>
       {isShowAOTDWidget && <AppOfDayWidget />}
-      <DndContext sensors={sensors} autoScroll={false} onDragEnd={handleDragEnd}>
-        <SortableContext items={pinIds} strategy={rectSwappingStrategy}>
-          <Container>
-            <Grid columns={8} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-              {pins.map((pin, i) => {
-                const app: AppNostr = {
-                  picture: pin.icon,
-                  name: pin.title,
-                  naddr: pin.appNaddr,
-                  url: pin.url,
-                  order: pin.order
-                }
+      <DndContext
+        sensors={sensors}
+        onDragEnd={handleDragEnd}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragCancel={handleDragCancel}
+        collisionDetection={pointerWithin}
+      >
+        <Container>
+          <Grid columns={8} container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+            {groupedPins.map((pin) => {
+              if (pin.groupName && pin.groupName.trim().length > 0) {
+                return <PinsGroup key={pin.id} group={pin.pins} id={pin.id} title={pin.id} />
+              }
+              const app: AppNostr = {
+                picture: pin.icon,
+                name: pin.title,
+                naddr: pin.appNaddr,
+                url: pin.url,
+                order: pin.order
+              }
 
-                const gid = getTabGroupId(pin)
-                const isActive = !!tabs.find((t) => getTabGroupId(t) === gid)
+              const gid = getTabGroupId(pin)
+              const isActive = !!tabs.find((t) => getTabGroupId(t) === gid)
 
-                return (
-                  <Grid key={i} item xs={2}>
-                    <AppNostroSortable id={pin.id} isActive={isActive} app={app} size="small" onOpen={handleOpen} />
-                  </Grid>
-                )
-              })}
-              <StyledAddButtonWrapper>
-                <StyledIconButton onClick={() => handleOpenModal(MODAL_PARAMS_KEYS.FIND_APP)}>
-                  <AddIcon />
-                </StyledIconButton>
-              </StyledAddButtonWrapper>
-            </Grid>
-          </Container>
-        </SortableContext>
+              return (
+                <AppNostroSortable
+                  key={pin.id}
+                  id={pin.id}
+                  isActive={isActive}
+                  app={app}
+                  size="small"
+                  onOpen={() => handleOpen(app)}
+                />
+              )
+            })}
+            <StyledAddButtonWrapper>
+              <StyledIconButton onClick={handleClick}>
+                <MoreIcon />
+              </StyledIconButton>
+            </StyledAddButtonWrapper>
+          </Grid>
+        </Container>
+
+        {renderPinOverlay()}
       </DndContext>
+
+      <PinGroupModal
+        groupName={currentGroupName}
+        pinsGroup={pinsGroup}
+        pins={pins}
+        open={isOpen}
+        handleClose={() => handleClose()}
+        groupDefaultName={getDefaultGroupName(groupedPins)}
+      />
+
+      <ExtraMenu open={isExtraMenuOpen} anchorEl={anchorEl} handleClose={handleMenuClose} />
     </StyledSwipeableDrawerContent>
   )
 }
