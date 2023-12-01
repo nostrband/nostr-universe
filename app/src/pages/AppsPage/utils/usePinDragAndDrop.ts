@@ -21,26 +21,37 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
 
   const [overlay, setOverlay] = useState<'item' | 'group' | null>(null)
 
-  const groupedPins = pins
-    .reduce((acc, current, index) => {
-      if (!current.groupName) {
-        return [...acc, current]
-      }
+  const folders = pins
+    .filter((p) => p.pins === null)
+    .reduce(
+      (acc, current) => {
+        return { ...acc, [current.id]: current }
+      },
+      {} as { [id: string]: IPin }
+    )
 
-      const groupIndex = acc.findIndex((p) => p.id === current.groupName)
+  const groupedPins = pins.reduce((acc, current) => {
+    if (!current.groupName) {
+      return [...acc, current]
+    }
 
-      if (groupIndex === -1) {
-        const isEmptyGroup = current.pins === null && !current.title
-        return [...acc, { ...current, id: current.groupName, pins: isEmptyGroup ? [] : [current] }]
-      }
+    const isFolderAdded = acc.some((p) => p.id === current.groupName)
 
-      const pinsGroup = acc[groupIndex]
+    if (folders[current.groupName] && !isFolderAdded) {
+      return [...acc, { ...folders[current.groupName], pins: [current] }]
+    }
 
-      acc.splice(groupIndex, 1)
-      acc.splice(index, 1, { ...pinsGroup, pins: [...pinsGroup.pins, current] })
-      return acc
-    }, [] as IPin[])
-    .sort((a, b) => a.order - b.order)
+    return acc
+      .map((p) => {
+        if (p.groupName === current.groupName && p.id !== current.id) {
+          return { ...p, pins: [...p.pins, current] }
+        }
+        return p
+      })
+      .sort((a, b) => a.order - b.order)
+  }, [] as IPin[])
+
+  // console.log({ groupedPins, pins, folders, groupedPins2 }, 'HISH')
 
   const getPinOverlay = useCallback(() => {
     const pin = pins.find((pin) => pin.id === activeId)
@@ -99,30 +110,23 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
     setActiveId(null)
     setOverlay(null)
 
+    console.log({ over, active }, 'HISH')
+
     if (over && active.id !== over.id) {
       const isGroupingMode = checkIsGroupingMode(active, over)
-      const activeIsGroup = checkIsGroupType(active)
-      const overIsGroup = checkIsGroupType(over)
-
       const findActivePin = groupedPins.find((pin) => pin.id === active.id)
       const findOverPin = groupedPins.find((pin) => pin.id === over.id)
 
       if (!findActivePin || !findOverPin) return undefined
 
       if (!isGroupingMode) {
-        return onSortEnd(
-          activeIsGroup && findActivePin.pins[0] ? findActivePin.pins[0].id : active.id,
-          overIsGroup ? findOverPin.pins[0].id : over.id
-        )
+        return onSortEnd(active.id, over.id)
       }
 
-      const newPins = pins
-        .map((p) => {
-          if (p.id === findActivePin.id) return { ...p, groupName: over.id }
-          if (p.id === findOverPin.id) return undefined
-          return p
-        })
-        .filter((p) => !!p)
+      const newPins = pins.map((p) => {
+        if (p.id === findActivePin.id) return { ...p, groupName: over.id }
+        return p
+      })
 
       dispatch(bulkEditPinsWorkspace({ pins: newPins, workspacePubkey: currentWorkSpace?.pubkey }))
     }

@@ -60,11 +60,13 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
       if (pin.groupName === groupName) {
         return {
           ...pin,
-          groupName: newGroupName
+          groupName: newGroupName,
+          id: newGroupName
         }
       }
       return pin
     })
+    dbi.deletePin(groupName)
     dispatch(bulkEditPinsWorkspace({ pins: newPins, workspacePubkey: currentPubkey }))
   }
 
