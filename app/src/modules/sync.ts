@@ -55,6 +55,7 @@ let newEventCount = 0
 let onSyncState: ((s: ISyncState) => void) | null = null
 let nextOrder = 0
 let needReload = false
+let pause = false
 //const logs: string[] = []
 
 // eslint-disable-next-line
@@ -398,6 +399,11 @@ async function executeTask(currentTask: ISyncTask) {
 }
 
 async function processNextTask() {
+  if (pause) {
+    setTimeout(processNextTask, 1000)
+    return
+  }
+
   await processNewEvents()
   if (!queue.length) {
     setTimeout(processNextTask, 1000)
@@ -606,6 +612,18 @@ export async function resync(pubkey: string) {
   await dbi.setFlag(currentPubkey, 'last_until', '')
   currentPubkey = ''
   startSync(pubkey)
+}
+
+export function pauseSync() {
+  pause = true
+}
+
+export function resumeSync() {
+  pause = false
+}
+
+export function isSyncPaused() {
+  return pause
 }
 
 export function setOnSyncState(cb: (state: ISyncState) => void) {

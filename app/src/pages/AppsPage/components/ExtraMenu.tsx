@@ -39,7 +39,7 @@ export const ExtraMenu: FC<ExtraMenuProps> = ({ anchorEl, handleClose, open }) =
         <ListItemIcon color="inherit">
           <AppRegistrationIcon color="inherit" />
         </ListItemIcon>
-        <ListItemText>Add new group</ListItemText>
+        <ListItemText>Add new folder</ListItemText>
       </MenuItem>
     </StyledMenu>
   )
