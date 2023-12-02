@@ -4,8 +4,10 @@ import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledViewTitl
 import { useAppSelector } from '@/store/hooks/redux'
 import { CircularProgressWithLabel } from './CircularProgressWithLabel'
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
+import PauseCircleOutlineOutlinedIcon from '@mui/icons-material/PauseCircleOutlineOutlined'
+import PlayCircleFilledWhiteOutlinedIcon from '@mui/icons-material/PlayCircleFilledWhiteOutlined'
 import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined'
-import { resync } from '@/modules/sync'
+import { resync, pauseSync, resumeSync, isSyncPaused } from '@/modules/sync'
 import { List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { getEventStats } from '@/modules/relay'
 
@@ -55,7 +57,11 @@ export const ModalSyncContent = () => {
         <StyledViewTitle>Stored events: {syncState.totalEventCount}</StyledViewTitle>
       </StyledWrap>
       <StyledMenuWrapper>
-        <List>{renderItem('Full sync', <CloudSyncOutlinedIcon />, fullSyncHandler)}</List>
+        <List>
+          {renderItem('Full sync', <CloudSyncOutlinedIcon />, fullSyncHandler)}
+          {!isSyncPaused() && renderItem('Pause sync', <PauseCircleOutlineOutlinedIcon />, pauseSync)}
+          {isSyncPaused() && renderItem('Resume sync', <PlayCircleFilledWhiteOutlinedIcon />, resumeSync)}
+        </List>
       </StyledMenuWrapper>
     </Container>
   )
