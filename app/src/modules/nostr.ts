@@ -1580,7 +1580,7 @@ class PromiseQueue {
 }
 
 interface IFetchPubkeyEventsParams {
-  kind: number
+  kind?: number
   pubkeys: string[]
   tagged?: boolean
   limit?: number
@@ -1588,7 +1588,7 @@ interface IFetchPubkeyEventsParams {
   cacheOnly?: boolean
 }
 
-async function fetchPubkeyEvents({
+export async function fetchPubkeyEvents({
   kind,
   pubkeys,
   tagged = false,
@@ -1600,9 +1600,10 @@ async function fetchPubkeyEvents({
   if (pks.length > 200) pks.length = 200
 
   const filter: NDKFilter = {
-    kinds: [kind],
     limit
   }
+
+  if (kind !== undefined) filter.kinds = [kind]
 
   if (tagged) filter['#p'] = pks
   else filter.authors = pks
