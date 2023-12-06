@@ -42,6 +42,7 @@
     "react-router-dom": "^6.15.0",
     "react-virtualized-auto-sizer": "^1.0.20",
     "react-window": "^1.8.9",
+    "trustnet": "^1.0.1",
     "use-long-press": "^3.2.0",
     "uuid": "^9.0.0"
   },

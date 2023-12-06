@@ -51,8 +51,6 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
       .sort((a, b) => a.order - b.order)
   }, [] as IPin[])
 
-  // console.log({ groupedPins, pins, folders, groupedPins2 }, 'HISH')
-
   const getPinOverlay = useCallback(() => {
     const pin = pins.find((pin) => pin.id === activeId)
 
@@ -109,8 +107,6 @@ export const usePinDragAndDrop = (pins: IPin[]) => {
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveId(null)
     setOverlay(null)
-
-    console.log({ over, active }, 'HISH')
 
     if (over && active.id !== over.id) {
       const isGroupingMode = checkIsGroupingMode(active, over)

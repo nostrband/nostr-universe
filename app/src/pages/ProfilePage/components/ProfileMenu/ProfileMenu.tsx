@@ -8,7 +8,7 @@ import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import PublishedWithChangesOutlinedIcon from '@mui/icons-material/PublishedWithChangesOutlined'
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined'
-// import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapper } from './styled'
 import { useOpenModalSearchParams } from '@/hooks/modal'
@@ -95,6 +95,7 @@ export const ProfilMenu = () => {
             {renderItem('Payment history', <PaymentIcon />, () => handleOpen(MODAL_PARAMS_KEYS.PAYMENT_HISTORY_MODAL))}
             {isNsb && renderItem('Check NsecBunker', <PublishedWithChangesOutlinedIcon />, handleNsbConnect)}
             {renderItem('Event database', <StorageOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.SYNC_MODAL))}
+            {renderItem('Trust', <PeopleAltOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.TRUST_MODAL))}
           </StyledMenuList>
         </StyledMenuWrapper>
         <ModalPermissions />
