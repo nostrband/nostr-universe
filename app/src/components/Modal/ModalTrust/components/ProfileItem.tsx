@@ -10,7 +10,7 @@ type ProfileItemProps = {
 }
 
 const getFixedScore = (score: number) => {
-  return score.toFixed(3)
+  return score.toFixed(0)
 }
 
 export const ProfileItem: FC<ProfileItemProps> = ({ profile, score }) => {

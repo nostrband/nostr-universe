@@ -62,18 +62,31 @@ export const useTrustRankings = () => {
       const topRankedProfiles = Object.entries(pubkeysWithRankingObject)
         .sort((a, b) => b[1] - a[1])
         .slice(0, TOP_EVENTS_COUNT)
+      if (!topRankedProfiles.length) return
 
+      const minScore = topRankedProfiles[topRankedProfiles.length - 1][1]
+      const maxScore = topRankedProfiles[0][1]
       const topPubkeys = topRankedProfiles.map(([pubkey]) => pubkey)
-
       const metas = await fetchMetas(topPubkeys, false)
 
-      const metasWithScore = metas.map((meta) => {
-        const score = pubkeysWithRankingObject[meta.pubkey]
+      const metasWithScore = topRankedProfiles.map(r => {
+        const pubkey = r[0]
+        const trustNetScore = r[1]
+        const meta = metas.find(m => m.pubkey === pubkey) || {} as MetaEvent
+        const score = Math.ceil(75 * (trustNetScore - minScore * 0.99) / maxScore)
         return {
           ...meta,
           score
         }
-      })
+      }).filter(m => !!m.pubkey)
+
+      // const metasWithScore = metas.map((meta) => {
+      //   const score = pubkeysWithRankingObject[meta.pubkey]
+      //   return {
+      //     ...meta,
+      //     score
+      //   }
+      // }).sort((a, b) => b.score - a.score)
 
       setProfiles(metasWithScore)
       setIsLoading(false)
