@@ -4,12 +4,12 @@ import { purple } from '@mui/material/colors'
 export const StyledProfile = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  padding: '0.5rem 1rem',
+  padding: '0.5rem 1rem 0 1rem',
   width: '100%',
   overflow: 'hidden',
   background: theme.palette.secondary.main,
   borderRadius: theme.shape.borderRadius,
-  gap: '0.5rem',
+  gap: '0rem',
   boxSizing: 'border-box'
 }))
 

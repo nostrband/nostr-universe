@@ -27,8 +27,10 @@ export const ProfileItem: FC<ProfileItemProps> = ({ profile, onScoreChange }) =>
     <StyledProfile>
       <Stack gap={'1rem'} alignItems={'center'} direction={'row'}>
         <StyledProfileAvatar src={url} ref={viewRef} imgProps={{ loading: 'lazy' }} />
-        <Box marginTop={'0.25rem'}>
+        <Box marginTop={'0.25rem'} flexGrow={'1'}>
           <StyledProfileName>{name}</StyledProfileName>
+        </Box>
+        <Box marginTop={'0.25rem'}>
           <Typography>{scoreLabel}</Typography>
         </Box>
       </Stack>
