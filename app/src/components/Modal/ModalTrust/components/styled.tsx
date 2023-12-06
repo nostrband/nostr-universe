@@ -1,14 +1,15 @@
-import { Avatar, Box, Typography, styled } from '@mui/material'
+import { Avatar, Box, Slider, Typography, styled } from '@mui/material'
+import { purple } from '@mui/material/colors'
 
 export const StyledProfile = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'center',
+  flexDirection: 'column',
   padding: '0.5rem 1rem',
   width: '100%',
   overflow: 'hidden',
   background: theme.palette.secondary.main,
   borderRadius: theme.shape.borderRadius,
-  gap: 10,
+  gap: '0.5rem',
   boxSizing: 'border-box'
 }))
 
@@ -23,7 +24,8 @@ export const StyledProfileName = styled(Typography)(({ theme }) => ({
   textWrap: 'nowrap',
   flex: 1,
   overflow: 'hidden',
-  textOverflow: 'ellipsis'
+  textOverflow: 'ellipsis',
+  marginBottom: '2px'
 }))
 
 export const StyledScore = styled(Typography)(({ theme }) => ({
@@ -32,5 +34,46 @@ export const StyledScore = styled(Typography)(({ theme }) => ({
   textWrap: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  fontSize: '18px'
+  fontSize: '1.25rem'
 }))
+
+export const StyledSlider = styled(Slider)({
+  color: purple[500],
+  height: 8,
+  margin: '0 0.5rem',
+  flex: 1,
+  '& .MuiSlider-track': {
+    border: 'none'
+  },
+  '& .MuiSlider-thumb': {
+    height: 24,
+    width: 24,
+    backgroundColor: '#fff',
+    border: '2px solid currentColor',
+    '&:focus, &:hover, &.Mui-active, &.Mui-focusVisible': {
+      boxShadow: 'inherit'
+    },
+    '&:before': {
+      display: 'none'
+    }
+  },
+  '& .MuiSlider-valueLabel': {
+    lineHeight: 1.2,
+    fontSize: 12,
+    background: 'unset',
+    padding: 0,
+    width: 32,
+    height: 32,
+    borderRadius: '50% 50% 50% 0',
+    backgroundColor: '#52af77',
+    transformOrigin: 'bottom left',
+    transform: 'translate(50%, -100%) rotate(-45deg) scale(0)',
+    '&:before': { display: 'none' },
+    '&.MuiSlider-valueLabelOpen': {
+      transform: 'translate(50%, -100%) rotate(-45deg) scale(1)'
+    },
+    '& > *': {
+      transform: 'rotate(45deg)'
+    }
+  }
+})

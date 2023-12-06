@@ -2,18 +2,17 @@ import { FC } from 'react'
 import { MetaEvent } from '@/types/meta-event'
 import { getProfileName } from '@/utils/helpers/prepare-data'
 import { useProfileImageSource } from '@/hooks/profile-image'
-import { StyledProfile, StyledProfileAvatar, StyledProfileName, StyledScore } from './styled'
+import { StyledProfile, StyledProfileAvatar, StyledProfileName, StyledScore, StyledSlider } from './styled'
+import { Box, Stack, Typography } from '@mui/material'
+import { getFixedScore, getScoreLabel } from './helpers'
 
 type ProfileItemProps = {
-  profile: MetaEvent
-  score: number
+  profile: MetaEvent & { score: number }
+
+  onScoreChange: (pubkey: string, value: number) => void
 }
 
-const getFixedScore = (score: number) => {
-  return score.toFixed(0)
-}
-
-export const ProfileItem: FC<ProfileItemProps> = ({ profile, score }) => {
+export const ProfileItem: FC<ProfileItemProps> = ({ profile, onScoreChange }) => {
   const name = getProfileName(profile.pubkey, profile)
 
   const { url, viewRef } = useProfileImageSource({
@@ -21,13 +20,25 @@ export const ProfileItem: FC<ProfileItemProps> = ({ profile, score }) => {
     originalImage: profile.profile?.picture
   })
 
-  const scoreValue = getFixedScore(score)
+  const scoreValue = getFixedScore(profile.score)
+  const scoreLabel = getScoreLabel(profile.score)
 
   return (
     <StyledProfile>
-      <StyledProfileAvatar src={url} ref={viewRef} imgProps={{ loading: 'lazy' }} />
-      <StyledProfileName>{name}</StyledProfileName>
-      <StyledScore>{scoreValue}</StyledScore>
+      <Stack gap={'1rem'} alignItems={'center'} direction={'row'}>
+        <StyledProfileAvatar src={url} ref={viewRef} imgProps={{ loading: 'lazy' }} />
+        <Box marginTop={'0.25rem'}>
+          <StyledProfileName>{name}</StyledProfileName>
+          <Typography>{scoreLabel}</Typography>
+        </Box>
+      </Stack>
+      <Stack gap={'1rem'} alignItems={'center'} direction={'row'}>
+        <StyledSlider
+          value={profile.score}
+          onChange={(_, value) => onScoreChange(profile.pubkey, Array.isArray(value) ? value[0] : value)}
+        />
+        <StyledScore>{scoreValue}</StyledScore>
+      </Stack>
     </StyledProfile>
   )
 }

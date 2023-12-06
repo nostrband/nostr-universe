@@ -1,10 +1,11 @@
+import { useEffect } from 'react'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { TrustNet } from 'trustnet'
 import { fetchMetas, fetchPubkeyEvents } from '@/modules/nostr'
 import { MetaEvent } from '@/types/meta-event'
 import { useAppSelector } from '@/store/hooks/redux'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 type TrustAssignment = {
   src: string
@@ -19,10 +20,12 @@ export const useTrustRankings = () => {
 
   const [profiles, setProfiles] = useState<(MetaEvent & { score: number })[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isEmpty, setIsEmpty] = useState(false)
 
   const getTopRankedEvents = async () => {
     try {
       setIsLoading(true)
+      setIsEmpty(false)
       const pubkeysMentionsMap = new Map()
 
       const events = await fetchPubkeyEvents({
@@ -59,29 +62,36 @@ export const useTrustRankings = () => {
 
       const pubkeysWithRankingObject: { [pubkey: string]: number } = trust.getRankings() || {}
 
-      const topRankedProfilesAll = Object.entries(pubkeysWithRankingObject)
-        .sort((a, b) => b[1] - a[1])
+      const topRankedProfilesAll = Object.entries(pubkeysWithRankingObject).sort((a, b) => b[1] - a[1])
       let sum = 0
-      const topRankedProfiles = topRankedProfilesAll
-        .filter(r => { sum += r[1]; return sum < TOP_EVENTS_SCORE_SUM })
-      console.log("topRankedProfiles", topRankedProfiles.length)
-      if (!topRankedProfiles.length) return
+      const topRankedProfiles = topRankedProfilesAll.filter((r) => {
+        sum += r[1]
+        return sum < TOP_EVENTS_SCORE_SUM
+      })
+      console.log('topRankedProfiles', topRankedProfiles.length)
+
+      if (!topRankedProfiles.length) {
+        setIsEmpty(true)
+        return setIsLoading(false)
+      }
 
       const minScore = topRankedProfiles[topRankedProfiles.length - 1][1]
       const maxScore = topRankedProfiles[0][1]
       const topPubkeys = topRankedProfiles.map(([pubkey]) => pubkey)
       const metas = await fetchMetas(topPubkeys, false)
 
-      const metasWithScore = topRankedProfiles.map(r => {
-        const pubkey = r[0]
-        const trustNetScore = r[1]
-        const meta = metas.find(m => m.pubkey === pubkey) || {} as MetaEvent
-        const score = Math.ceil(75 * (trustNetScore - minScore * 0.99) / maxScore)
-        return {
-          ...meta,
-          score
-        }
-      }).filter(m => !!m.pubkey)
+      const metasWithScore = topRankedProfiles
+        .map((r) => {
+          const pubkey = r[0]
+          const trustNetScore = r[1]
+          const meta = metas.find((m) => m.pubkey === pubkey) || ({} as MetaEvent)
+          const score = Math.ceil((75 * (trustNetScore - minScore * 0.99)) / maxScore)
+          return {
+            ...meta,
+            score
+          }
+        })
+        .filter((m) => !!m.pubkey)
 
       // const metasWithScore = metas.map((meta) => {
       //   const score = pubkeysWithRankingObject[meta.pubkey]
@@ -93,14 +103,27 @@ export const useTrustRankings = () => {
 
       setProfiles(metasWithScore)
       setIsLoading(false)
+      setIsEmpty(false)
     } catch (error) {
       setIsLoading(false)
+      setIsEmpty(false)
     }
   }
+
+  useEffect(() => {
+    return () => {
+      setIsLoading(false)
+      setIsEmpty(false)
+    }
+  }, [])
+
+  const memoizedProfiles = useMemo(() => profiles, [profiles])
 
   return {
     getTopRankedEvents,
     isLoading,
-    profiles
+    profiles: memoizedProfiles,
+    setProfiles,
+    isEmpty: isEmpty && profiles.length === 0
   }
 }
