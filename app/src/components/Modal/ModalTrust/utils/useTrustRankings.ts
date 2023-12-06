@@ -12,7 +12,7 @@ type TrustAssignment = {
   dst: string
 }
 
-const TOP_EVENTS_COUNT = 100
+const TOP_EVENTS_SCORE_SUM = 0.5
 
 export const useTrustRankings = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
@@ -59,9 +59,12 @@ export const useTrustRankings = () => {
 
       const pubkeysWithRankingObject: { [pubkey: string]: number } = trust.getRankings() || {}
 
-      const topRankedProfiles = Object.entries(pubkeysWithRankingObject)
+      const topRankedProfilesAll = Object.entries(pubkeysWithRankingObject)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, TOP_EVENTS_COUNT)
+      let sum = 0
+      const topRankedProfiles = topRankedProfilesAll
+        .filter(r => { sum += r[1]; return sum < TOP_EVENTS_SCORE_SUM })
+      console.log("topRankedProfiles", topRankedProfiles.length)
       if (!topRankedProfiles.length) return
 
       const minScore = topRankedProfiles[topRankedProfiles.length - 1][1]
