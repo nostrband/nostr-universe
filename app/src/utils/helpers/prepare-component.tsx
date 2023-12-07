@@ -28,19 +28,14 @@ export interface IContentPreviewComponent {
 export const createPreviewEvent = (event: AugmentedEvent): IContentPreviewComponent => {
   const kind = event.kind as number
   return {
-    author: (kind === Kinds.META) ? (event as MetaEvent) : (event as AuthoredEvent).author,
+    author: kind === Kinds.META ? (event as MetaEvent) : (event as AuthoredEvent).author,
     pubkey: event.pubkey,
     time: event.created_at,
     kind: event.kind,
     content:
-      getTagValue(event, 'summary') ||
-      getTagValue(event, 'description') ||
-      getTagValue(event, 'alt') ||
-      event.content,
+      getTagValue(event, 'summary') || getTagValue(event, 'description') || getTagValue(event, 'alt') || event.content,
     title: getTagValue(event, 'title') || getTagValue(event, 'name'),
-    community: (event.kind as number) === Kinds.COMMUNITY 
-      ? event as ExtendedCommunityEvent
-       : undefined
+    community: (event.kind as number) === Kinds.COMMUNITY ? (event as ExtendedCommunityEvent) : undefined
   }
 }
 

@@ -554,6 +554,14 @@ async function fetchEventsByAddrs(ndk: NDK, addrs: EventAddr[]): Promise<Augment
   return events
 }
 
+export async function fetchMuteLists(pubkey: string) {
+  const addrs: EventAddr[] = [
+    { pubkey, kind: Kinds.MUTE_LIST },
+    { pubkey, kind: Kinds.PROFILE_LIST, d_tag: 'mute' }
+  ]
+  return await fetchEventsByAddrs(ndk, addrs)
+}
+
 export async function fetchFullyAugmentedEventsByAddrs(
   addrs: EventAddr[],
   contactList?: string[]
@@ -2326,6 +2334,29 @@ export async function fetchAppRecomms(pubkey: string): Promise<AppRecommEvent[]>
     recomms.push(list)
   }
   return recomms
+}
+
+export async function publishTrustScores(
+  signEvent: (event: NostrEvent) => Promise<NostrEvent>,
+  pubkey: string,
+  scores: { pubkey: string, score: number }[]
+) {
+  const e: NostrEvent = {
+    kind: Kinds.TRUST_SCORES,
+    pubkey,
+    created_at: Math.floor(Date.now() / 1000),
+    content: '',
+    tags: []
+  }
+  scores.forEach(ps => {
+    if (ps.score > 0 && ps.score < 100)
+      e.tags.push(['p', ps.pubkey, Number(ps.score / 100).toFixed(2)])
+  })
+
+  console.log('trust scores', e)
+  const signed = await signEvent(e)
+  console.log('signed trust scores', signed)
+  await publishEvent(signed)
 }
 
 export async function publishAppRecommendation(

@@ -1,4 +1,6 @@
 import { StyledContainer } from './styled'
 import { IContainer } from './types'
 
-export const Container = ({ children }: IContainer) => <StyledContainer>{children}</StyledContainer>
+export const Container = ({ children, ...props }: IContainer) => (
+  <StyledContainer {...props}>{children}</StyledContainer>
+)

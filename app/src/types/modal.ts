@@ -29,7 +29,8 @@ export enum MODAL_PARAMS_KEYS {
   SYNC_MODAL = 'sync-modal',
   PIN_GROUP_MODAL = 'pin-group-modal',
   FEED_MODAL = 'feed-modal',
-  FEED_MODAL_APPS = 'feed-modal-apps'
+  FEED_MODAL_APPS = 'feed-modal-apps',
+  TRUST_MODAL = 'trust-modal'
 }
 
 export const EXTRA_OPTIONS = {
