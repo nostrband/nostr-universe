@@ -84,18 +84,18 @@ export const ProfilMenu = () => {
             {renderItem('Key permissions', <ChecklistOutlinedIcon />, () =>
               handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL, { append: true })
             )}
+            {renderItem('Trust scores', <PeopleAltOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.TRUST_MODAL))}
             {renderItem('Content feeds', <TocOutlinedIcon />, () =>
               handleOpen(MODAL_PARAMS_KEYS.CONTENT_FEEDS_SETTINGS_MODAL)
             )}
             {false && renderItem('Test sign event', <ChecklistOutlinedIcon />, () => testSignEvent())}
-            {renderItem('Reconnect relays', <CachedOutlinedIcon />, handleReconnect)}
+            {false && renderItem('Reconnect relays', <CachedOutlinedIcon />, handleReconnect)}
             {renderItem('Signed events', <AssignmentOutlinedIcon />, () =>
               handleOpen(MODAL_PARAMS_KEYS.SIGNED_EVENTS_MODAL)
             )}
             {renderItem('Payment history', <PaymentIcon />, () => handleOpen(MODAL_PARAMS_KEYS.PAYMENT_HISTORY_MODAL))}
             {isNsb && renderItem('Check NsecBunker', <PublishedWithChangesOutlinedIcon />, handleNsbConnect)}
             {renderItem('Event database', <StorageOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.SYNC_MODAL))}
-            {renderItem('Trust', <PeopleAltOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.TRUST_MODAL))}
           </StyledMenuList>
         </StyledMenuWrapper>
         <ModalPermissions />

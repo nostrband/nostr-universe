@@ -1,19 +1,36 @@
 import { useEffect } from 'react'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { TrustNet } from 'trustnet'
-import { fetchMetas, fetchPubkeyEvents } from '@/modules/nostr'
+//import { TrustNet } from 'trustnet'
+import { fetchMetas, fetchMuteLists, fetchPubkeyEvents } from '@/modules/nostr'
 import { MetaEvent } from '@/types/meta-event'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useMemo, useState } from 'react'
+import { Kinds } from '@/modules/const/kinds'
+import { AugmentedEvent } from '@/types/augmented-event'
 
-type TrustAssignment = {
-  src: string
-  weight: number
-  dst: string
+// type TrustAssignment = {
+//   src: string
+//   weight: number
+//   dst: string
+// }
+
+function getWeight(e: AugmentedEvent) {
+  switch (e.kind as number) {
+    case Kinds.CONTACT_LIST:
+      return 1000
+    case Kinds.PROFILE_LIST:
+      return 10
+    case Kinds.BOOKMARKS:
+      return 5
+    case Kinds.NOTE:
+      return 1
+    default:
+      return 3
+  }
 }
 
-const TOP_EVENTS_SCORE_SUM = 0.5
+const TOP_EVENTS_SCORE_SUM = 0.6
 
 export const useTrustRankings = () => {
   const { currentPubkey } = useAppSelector((state) => state.keys)
@@ -26,41 +43,40 @@ export const useTrustRankings = () => {
     try {
       setIsLoading(true)
       setIsEmpty(false)
-      const pubkeysMentionsMap = new Map()
+      const pubkeysWeightsMap = new Map()
+
+      const mutes = await fetchMuteLists(currentPubkey)
+      const distrusted = [...new Set(mutes
+        .map(e => e.tags.filter(t => t.length >= 2 && t[0] === 'p'))
+        .flat().map(t => t[1]))]
 
       const events = await fetchPubkeyEvents({
         cacheOnly: true,
         limit: 2000,
         pubkeys: [currentPubkey]
       })
-      events.forEach((e) =>
-        e.tags
-          .filter((tag) => tag[0] === 'p')
-          .forEach((t) => {
-            if (t[1] === currentPubkey) return undefined
+      events.forEach((e) => {
+        const pubkeys = e.tags
+          .filter((tag) => tag.length > 1 && tag[0] === 'p')
+          .map(t => t[1])
+          .filter(p => p !== currentPubkey && !distrusted.includes(p))
 
-            if (pubkeysMentionsMap.has(t[1])) {
-              return pubkeysMentionsMap.set(t[1], pubkeysMentionsMap.get(t[1]) + 1)
-            }
-            return pubkeysMentionsMap.set(t[1], 1)
-          })
-      )
-      const totalMentions = [...pubkeysMentionsMap.values()].reduce((acc, c) => acc + c, 0)
-
-      const trustAssignments: TrustAssignment[] = []
-
-      pubkeysMentionsMap.forEach((count, pubkey) => {
-        return trustAssignments.push({
-          src: currentPubkey,
-          dst: pubkey,
-          weight: count / totalMentions
+        pubkeys.forEach((pubkey) => {
+          // the more pubkeys a single event mentions,
+          // the less weight goes to each one of them
+          const weight = getWeight(e) / pubkeys.length
+          const total = (pubkeysWeightsMap.get(pubkey) || 0) + weight
+          //console.log("weight", pubkey, e.kind, weight, pubkeys.length, total)
+          pubkeysWeightsMap.set(pubkey, total)
         })
       })
+      const totalWeights = [...pubkeysWeightsMap.values()].reduce((acc, c) => acc + c, 0)
 
-      const trust = new TrustNet()
-      await trust.load(currentPubkey, trustAssignments)
-
-      const pubkeysWithRankingObject: { [pubkey: string]: number } = trust.getRankings() || {}
+      const pubkeysWithRankingObject: { [pubkey: string]: number } = {}
+      pubkeysWeightsMap.forEach((weight, pubkey) => {
+        pubkeysWithRankingObject[pubkey] = weight / totalWeights
+        //console.log("weight total", pubkey, weight, totalWeights)
+      })
 
       const topRankedProfilesAll = Object.entries(pubkeysWithRankingObject).sort((a, b) => b[1] - a[1])
       let sum = 0
@@ -85,6 +101,7 @@ export const useTrustRankings = () => {
           const pubkey = r[0]
           const trustNetScore = r[1]
           const meta = metas.find((m) => m.pubkey === pubkey) || ({} as MetaEvent)
+          // Do not put anyone above 75 score, let the user do it themselves
           const score = Math.ceil((75 * (trustNetScore - minScore * 0.99)) / maxScore)
           return {
             ...meta,
@@ -92,14 +109,6 @@ export const useTrustRankings = () => {
           }
         })
         .filter((m) => !!m.pubkey)
-
-      // const metasWithScore = metas.map((meta) => {
-      //   const score = pubkeysWithRankingObject[meta.pubkey]
-      //   return {
-      //     ...meta,
-      //     score
-      //   }
-      // }).sort((a, b) => b.score - a.score)
 
       setProfiles(metasWithScore)
       setIsLoading(false)

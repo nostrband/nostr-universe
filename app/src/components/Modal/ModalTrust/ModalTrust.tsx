@@ -8,7 +8,7 @@ export const ModalTrust = () => {
   const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TRUST_MODAL)
 
   return (
-    <Modal open={isOpen} title="Trust" handleClose={() => handleClose()}>
+    <Modal open={isOpen} title="Trust scores" handleClose={() => handleClose()}>
       {isOpen && <ModalTrustContent />}
     </Modal>
   )

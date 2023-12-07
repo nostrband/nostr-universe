@@ -21,7 +21,8 @@ import { isGuest } from '@/utils/helpers/prepare-data'
 export const enum Types {
   APPS = 'apps',
   PUBKEYS = 'pubkeys',
-  METAS = 'metas'
+  METAS = 'metas',
+  V12 = 'v12'
 }
 
 interface ISyncTask {
@@ -335,6 +336,8 @@ async function executeTaskPubkeys(currentTask: ISyncTask) {
       Kinds.COMMUNITY_APPROVAL,
       Kinds.HIGHLIGHT,
       Kinds.PROFILE_LIST,
+      Kinds.MUTE_LIST,
+      Kinds.TRUST_SCORES,
       Kinds.BOOKMARKS,
       Kinds.COMMUNITY
     ]
@@ -342,7 +345,15 @@ async function executeTaskPubkeys(currentTask: ISyncTask) {
   // frequent kinds
   const mainFilter: NDKFilter = {
     authors: currentTask.params.pubkeys,
-    kinds: [Kinds.NOTE, Kinds.REPOST, Kinds.REPORT, Kinds.LABEL, Kinds.REACTION, Kinds.DELETE]
+    kinds: [
+      Kinds.NOTE,
+      Kinds.REPOST,
+      Kinds.REPORT,
+      Kinds.LABEL,
+      Kinds.REACTION,
+      Kinds.DELETE,
+      Kinds.DM
+    ]
   }
 
   const refFilter: NDKFilter = {
@@ -374,6 +385,15 @@ async function executeTaskMetas(currentTask: ISyncTask) {
   await processFilters(currentTask, [filter])
 }
 
+async function executeTaskV12(currentTask: ISyncTask) {
+  const filter: NDKFilter = {
+    authors: currentTask.params.pubkeys,
+    kinds: [Kinds.MUTE_LIST, Kinds.TRUST_SCORES, Kinds.DM]
+  }
+
+  await processFilters(currentTask, [filter])
+}
+
 async function executeTaskApps(currentTask: ISyncTask) {
   const filter: NDKFilter = {
     kinds: [Kinds.APP]
@@ -394,6 +414,10 @@ async function executeTask(currentTask: ISyncTask) {
 
     case Types.METAS:
       await executeTaskMetas(currentTask)
+      break
+
+    case Types.V12:
+      await executeTaskV12(currentTask)
       break
   }
 }
@@ -558,8 +582,15 @@ export async function startSync(pubkey: string) {
       const metaTasks = createPubkeyTasks(Types.METAS, [currentPubkey, ...contacts], since, now)
       const pubkeyTasks = createPubkeyTasks(Types.PUBKEYS, contacts, since, now)
 
+      const migrationTasks = []
+      if ((await dbi.getFlag(currentPubkey, 'v12')) !== '1') {
+        const muteTrustTasks = createPubkeyTasks(Types.V12, [currentPubkey], 0, now)
+        migrationTasks.push(...muteTrustTasks)
+        await dbi.setFlag(currentPubkey, 'v12', '1')
+      }
+
       // append in proper order
-      await appendTasks([...myTasks, ...metaTasks, ...pubkeyTasks], newQueue)
+      await appendTasks([...myTasks, ...metaTasks, ...pubkeyTasks, ...migrationTasks], newQueue)
     }
   } else {
     // for initial sync, create two tasks, one for the last week
