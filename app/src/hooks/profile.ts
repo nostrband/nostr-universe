@@ -138,7 +138,7 @@ export const useUpdateProfile = () => {
 
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
-      startSync(currentPubkey)
+      // startSync(currentPubkey)
 
       const currentProfile = getProfile(currentPubkey)
 

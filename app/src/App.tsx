@@ -160,7 +160,7 @@ export const App = () => {
       <ModalNPSScore />
       <ModalPaymentHistory />
       <ModalAppOfTheDay />
-      <ModalSync />
+        <ModalSync />
       <ModalFeedApp />
       <ModalFeed />
       <ModalContextMenu />
