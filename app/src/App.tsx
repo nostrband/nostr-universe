@@ -39,6 +39,7 @@ import { MODAL_PARAMS_KEYS } from './types/modal'
 import { ModalSync } from './components/Modal/ModalSync/ModalSync'
 import { ModalFeed } from './components/Modal/ModalFeed/ModalFeed'
 import { ModalFeedApp } from './components/Modal/ModalFeedApp/ModalFeedApp'
+import { ModalTrust } from './components/Modal/ModalTrust/ModalTrust'
 
 export const App = () => {
   // const { pathname,search } = useLocation()
@@ -164,6 +165,7 @@ export const App = () => {
       <ModalFeedApp />
       <ModalFeed />
       <ModalContextMenu />
+      <ModalTrust />
     </>
   )
 }

@@ -8,7 +8,7 @@ import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import PublishedWithChangesOutlinedIcon from '@mui/icons-material/PublishedWithChangesOutlined'
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined'
-// import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledListItemIcon, StyledListItemText, StyledMenuList, StyledMenuWrapper } from './styled'
 import { useOpenModalSearchParams } from '@/hooks/modal'
@@ -84,11 +84,12 @@ export const ProfilMenu = () => {
             {renderItem('Key permissions', <ChecklistOutlinedIcon />, () =>
               handleOpen(MODAL_PARAMS_KEYS.PERMISSIONS_MODAL, { append: true })
             )}
+            {renderItem('Trust scores', <PeopleAltOutlinedIcon />, () => handleOpen(MODAL_PARAMS_KEYS.TRUST_MODAL))}
             {renderItem('Content feeds', <TocOutlinedIcon />, () =>
               handleOpen(MODAL_PARAMS_KEYS.CONTENT_FEEDS_SETTINGS_MODAL)
             )}
             {false && renderItem('Test sign event', <ChecklistOutlinedIcon />, () => testSignEvent())}
-            {renderItem('Reconnect relays', <CachedOutlinedIcon />, handleReconnect)}
+            {false && renderItem('Reconnect relays', <CachedOutlinedIcon />, handleReconnect)}
             {renderItem('Signed events', <AssignmentOutlinedIcon />, () =>
               handleOpen(MODAL_PARAMS_KEYS.SIGNED_EVENTS_MODAL)
             )}
