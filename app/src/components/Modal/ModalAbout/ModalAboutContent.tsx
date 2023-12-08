@@ -24,12 +24,14 @@ export const ModalAboutContent = () => {
     }
   }, [])
 
+  const suffix = import.meta.env.DEV ? '-dev' : ''
+
   return (
     <Container>
       <StyledWrap>
         <AppIcon isLight size="big" isOutline={false} picture={AppLogo} />
         <StyledViewTitle variant="h5">The Nostr Browser</StyledViewTitle>
-        <StyledViewTitle variant="body1">0.11.0</StyledViewTitle>
+        <StyledViewTitle variant="body1">0.12.0{suffix}</StyledViewTitle>
         <Typography variant="body1">Spring is an open-source project by Nostr.Band.</Typography>
         {logs && <StyledLogs readOnly={true}>{logs}</StyledLogs>}
       </StyledWrap>

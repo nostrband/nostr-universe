@@ -7,16 +7,16 @@ import { useAddKey } from '@/hooks/workspaces'
 
 export const ModalAddNSBKeyContent = ({ handleCloseModal }: { handleCloseModal: () => void }) => {
   const { addNSBKey } = useAddKey()
-  const [token, setToken] = useState('')
+  const [url, setUrl] = useState('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    await addNSBKey(token)
+    await addNSBKey(url)
     handleCloseModal()
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setToken(e.target.value)
+    setUrl(e.target.value)
   }
 
   return (
@@ -24,14 +24,14 @@ export const ModalAddNSBKeyContent = ({ handleCloseModal }: { handleCloseModal: 
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledInput
-            placeholder="Enter npub or token"
+            placeholder="Enter npub or token from your nsecbunker"
             endAdornment={
               <IconButton type="submit" color="inherit" size="medium">
                 <AddCircleOutlineOutlinedIcon />
               </IconButton>
             }
             onChange={handleChange}
-            value={token}
+            value={url}
             inputProps={{
               autoFocus: true
             }}
