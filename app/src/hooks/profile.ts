@@ -35,7 +35,7 @@ import {
 } from '@/store/reducers/bookmarks.slice'
 import { getFeedbackInfoThunk } from '@/store/reducers/feedbackInfo.slice'
 import { useSigner } from './signer'
-import { startSync } from '@/modules/sync'
+// import { startSync } from '@/modules/sync'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { useSync } from './sync'
 import { useAsyncThrottle } from './async'
@@ -138,7 +138,7 @@ export const useUpdateProfile = () => {
 
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
-      startSync(currentPubkey)
+      // startSync(currentPubkey)
 
       const currentProfile = getProfile(currentPubkey)
 

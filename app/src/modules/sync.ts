@@ -345,15 +345,7 @@ async function executeTaskPubkeys(currentTask: ISyncTask) {
   // frequent kinds
   const mainFilter: NDKFilter = {
     authors: currentTask.params.pubkeys,
-    kinds: [
-      Kinds.NOTE,
-      Kinds.REPOST,
-      Kinds.REPORT,
-      Kinds.LABEL,
-      Kinds.REACTION,
-      Kinds.DELETE,
-      Kinds.DM
-    ]
+    kinds: [Kinds.NOTE, Kinds.REPOST, Kinds.REPORT, Kinds.LABEL, Kinds.REACTION, Kinds.DELETE, Kinds.DM]
   }
 
   const refFilter: NDKFilter = {

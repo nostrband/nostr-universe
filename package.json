@@ -18,6 +18,10 @@
   },
   "homepage": "https://github.com/nostrband/nostr-universe#readme",
   "devDependencies": {
-    "husky": "^8.0.3"
+    "husky": "^8.0.3",
+    "vite-plugin-comlink": "^3.0.5"
+  },
+  "dependencies": {
+    "comlink": "^4.4.1"
   }
 }

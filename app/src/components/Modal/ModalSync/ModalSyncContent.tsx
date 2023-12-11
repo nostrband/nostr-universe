@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { ReactNode, useCallback, useEffect } from 'react'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledViewTitle, StyledWrap } from './styled'
@@ -7,9 +9,10 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 import PauseCircleOutlineOutlinedIcon from '@mui/icons-material/PauseCircleOutlineOutlined'
 import PlayCircleFilledWhiteOutlinedIcon from '@mui/icons-material/PlayCircleFilledWhiteOutlined'
 import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined'
-import { resync, pauseSync, resumeSync, isSyncPaused } from '@/modules/sync'
+import { pauseSync, resumeSync, isSyncPaused } from '@/modules/sync'
 import { List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { getEventStats } from '@/modules/relay'
+import { workerInstance } from '@/hooks/testWorker.ts'
 
 export const ModalSyncContent = () => {
   const { syncState } = useAppSelector((state) => state.sync)
@@ -17,8 +20,16 @@ export const ModalSyncContent = () => {
 
   const progress = (100 * syncState.done) / (syncState.todo + syncState.done)
 
+  // const {result, actionWorker} = useWebWorker()
+  const workerCall = async () => {
+    await workerInstance.someMethod(currentPubkey)
+  }
+
   const fullSyncHandler = useCallback(() => {
-    resync(currentPubkey)
+    // resync(currentPubkey)
+    workerCall()
+    // actionWorker('start')
+    // console.log('Worker res:', result)
   }, [currentPubkey])
 
   const renderItem = useCallback((label: string, icon: ReactNode, handler: () => void, danger: boolean = false) => {

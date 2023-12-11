@@ -2339,7 +2339,7 @@ export async function fetchAppRecomms(pubkey: string): Promise<AppRecommEvent[]>
 export async function publishTrustScores(
   signEvent: (event: NostrEvent) => Promise<NostrEvent>,
   pubkey: string,
-  scores: { pubkey: string, score: number }[]
+  scores: { pubkey: string; score: number }[]
 ) {
   const e: NostrEvent = {
     kind: Kinds.TRUST_SCORES,
@@ -2348,9 +2348,8 @@ export async function publishTrustScores(
     content: '',
     tags: []
   }
-  scores.forEach(ps => {
-    if (ps.score > 0 && ps.score < 100)
-      e.tags.push(['p', ps.pubkey, Number(ps.score / 100).toFixed(2)])
+  scores.forEach((ps) => {
+    if (ps.score > 0 && ps.score < 100) e.tags.push(['p', ps.pubkey, Number(ps.score / 100).toFixed(2)])
   })
 
   console.log('trust scores', e)
@@ -2384,10 +2383,12 @@ export async function publishAppRecommendation(
   if (!appAddr) throw new Error('Bad naddr')
 
   const a = appAddr.kind + ':' + appAddr.pubkey + ':' + appAddr.d_tag
-  console.log("adding to list", a)
-  if (!list.tags.find((t: string[]) => {
-    return t.length >= 4 && t[0] === 'a' && t[1] === a && t[3] === 'web'
-  })) {
+  console.log('adding to list', a)
+  if (
+    !list.tags.find((t: string[]) => {
+      return t.length >= 4 && t[0] === 'a' && t[1] === a && t[3] === 'web'
+    })
+  ) {
     list.tags.push(['a', a, nostrbandRelay, 'web'])
   }
 
