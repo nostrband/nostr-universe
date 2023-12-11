@@ -2468,4 +2468,4 @@ export function reconnect() {
   checkReconnect(nsbNDK, true)
 }
 
-localStorage.debug = ''
+// localStorage.debug = ''

@@ -80,12 +80,15 @@ class LocalRelayWebSocket extends EventTarget {
 }
 
 export function overrideWebSocket() {
-  const Src = window.WebSocket
+  // const Src = window.WebSocket
+  const cont = typeof window !== 'undefined' ? window : self
+  const Src = cont.WebSocket
+
   // eslint-disable-next-line
   // @ts-ignore
   // NOTE: must be a 'function() {}', not '() => {}'
   // eslint-disable-next-line
-  window.WebSocket = function (url: string | URL, protocols: any) {
+  cont.WebSocket = function (url: string | URL, protocols: any) {
     try {
       const u = new URL(url)
       if (u.hostname === cacheRelayHostname) {

@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
 import { ReactNode, useCallback, useEffect } from 'react'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledViewTitle, StyledWrap } from './styled'
@@ -9,7 +7,7 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 import PauseCircleOutlineOutlinedIcon from '@mui/icons-material/PauseCircleOutlineOutlined'
 import PlayCircleFilledWhiteOutlinedIcon from '@mui/icons-material/PlayCircleFilledWhiteOutlined'
 import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined'
-import { pauseSync, resumeSync, isSyncPaused } from '@/modules/sync'
+import { isSyncPaused } from '@/modules/sync'
 import { List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
 import { getEventStats } from '@/modules/relay'
 import { workerInstance } from '@/hooks/testWorker.ts'
@@ -20,14 +18,21 @@ export const ModalSyncContent = () => {
 
   const progress = (100 * syncState.done) / (syncState.todo + syncState.done)
 
-  // const {result, actionWorker} = useWebWorker()
-  const workerCall = async () => {
-    await workerInstance.someMethod(currentPubkey)
+  const workerCallResync = async () => {
+    await workerInstance.resync(currentPubkey)
+  }
+
+  const workerCallPause = async () => {
+    await workerInstance.pause()
+  }
+
+  const workerCallResume = async () => {
+    await workerInstance.resume()
   }
 
   const fullSyncHandler = useCallback(() => {
     // resync(currentPubkey)
-    workerCall()
+    workerCallResync()
     // actionWorker('start')
     // console.log('Worker res:', result)
   }, [currentPubkey])
@@ -70,8 +75,8 @@ export const ModalSyncContent = () => {
       <StyledMenuWrapper>
         <List>
           {renderItem('Full sync', <CloudSyncOutlinedIcon />, fullSyncHandler)}
-          {!isSyncPaused() && renderItem('Pause sync', <PauseCircleOutlineOutlinedIcon />, pauseSync)}
-          {isSyncPaused() && renderItem('Resume sync', <PlayCircleFilledWhiteOutlinedIcon />, resumeSync)}
+          {!isSyncPaused() && renderItem('Pause sync', <PauseCircleOutlineOutlinedIcon />, workerCallPause)}
+          {isSyncPaused() && renderItem('Resume sync', <PlayCircleFilledWhiteOutlinedIcon />, workerCallResume)}
         </List>
       </StyledMenuWrapper>
     </Container>
