@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useEffect } from 'react'
+import { ReactNode, useCallback, useEffect, useState } from 'react'
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledViewTitle, StyledWrap } from './styled'
 import { useAppSelector } from '@/store/hooks/redux'
@@ -7,27 +7,27 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 import PauseCircleOutlineOutlinedIcon from '@mui/icons-material/PauseCircleOutlineOutlined'
 import PlayCircleFilledWhiteOutlinedIcon from '@mui/icons-material/PlayCircleFilledWhiteOutlined'
 import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined'
-import { isSyncPaused } from '@/modules/sync'
 import { List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
-import { getEventStats } from '@/modules/relay'
-import { workerInstance } from '@/hooks/testWorker.ts'
+import { worker } from '@/workers/client'
 
 export const ModalSyncContent = () => {
   const { syncState } = useAppSelector((state) => state.sync)
   const { currentPubkey } = useAppSelector((state) => state.keys)
+  const [isPaused, setIsPaused] = useState(false)
+  const [eventCount, setEventCount] = useState(0)
 
   const progress = (100 * syncState.done) / (syncState.todo + syncState.done)
 
   const workerCallResync = async () => {
-    await workerInstance.resync(currentPubkey)
+    await worker.syncResync(currentPubkey)
   }
 
   const workerCallPause = async () => {
-    await workerInstance.pause()
+    await worker.syncPause()
   }
 
   const workerCallResume = async () => {
-    await workerInstance.resume()
+    await worker.syncResume()
   }
 
   const fullSyncHandler = useCallback(() => {
@@ -51,8 +51,10 @@ export const ModalSyncContent = () => {
   }, [])
 
   useEffect(() => {
-    const stats = getEventStats()
-    console.log('sync stats', stats)
+    worker.syncIsPaused().then(setIsPaused)
+    worker.relayGetEventsCount().then(setEventCount)
+    worker.relayGetEventStats()
+      .then(stats => console.log('sync stats', stats))
   }, [syncState])
 
   return (
@@ -70,13 +72,13 @@ export const ModalSyncContent = () => {
           </StyledViewTitle>
         )}
         <StyledViewTitle>Received events: {syncState.newEventCount}</StyledViewTitle>
-        <StyledViewTitle>Stored events: {syncState.totalEventCount}</StyledViewTitle>
+        <StyledViewTitle>Stored events: {eventCount}</StyledViewTitle>
       </StyledWrap>
       <StyledMenuWrapper>
         <List>
           {renderItem('Full sync', <CloudSyncOutlinedIcon />, fullSyncHandler)}
-          {!isSyncPaused() && renderItem('Pause sync', <PauseCircleOutlineOutlinedIcon />, workerCallPause)}
-          {isSyncPaused() && renderItem('Resume sync', <PlayCircleFilledWhiteOutlinedIcon />, workerCallResume)}
+          {!isPaused && renderItem('Pause sync', <PauseCircleOutlineOutlinedIcon />, workerCallPause)}
+          {isPaused && renderItem('Resume sync', <PlayCircleFilledWhiteOutlinedIcon />, workerCallResume)}
         </List>
       </StyledMenuWrapper>
     </Container>

@@ -1,4 +1,4 @@
-import { ISyncState } from '@/modules/sync'
+import { ISyncState } from '@/types/sync-state'
 import { createSlice } from '@reduxjs/toolkit'
 
 interface ISyncStateInfo {
@@ -10,7 +10,6 @@ const initialState: ISyncStateInfo = {
     done: 0,
     todo: 0,
     newEventCount: 0,
-    totalEventCount: 0
   }
 }
 

@@ -6,7 +6,7 @@ import { IInitialisationProvider } from './types'
 import { connect, isConnected, nostrOnResume } from '../nostr'
 import { loadKeys, loadWorkspace, reloadWallets } from './utils'
 import { dbi } from '../db'
-import { initLocalRelay } from '../relay'
+import { worker } from '@/workers/client'
 
 export const InitialisationProvider = ({ children }: IInitialisationProvider) => {
   const dispatch = useAppDispatch()
@@ -43,7 +43,8 @@ export const InitialisationProvider = ({ children }: IInitialisationProvider) =>
 
       console.log('ndk connected')
 
-      await initLocalRelay()
+      worker.relayInitLocal()
+
       for (const key of keys) await loadWorkspace(key, dispatch)
 
       await reloadWallets()

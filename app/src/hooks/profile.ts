@@ -40,7 +40,7 @@ import { useSync } from './sync'
 import { useAsyncThrottle } from './async'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { bootstrapNotifications } from '@/modules/AppInitialisation/utils'
-import { workerInstance } from '@/hooks/testWorker.ts'
+import { worker } from '@/workers/client'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
@@ -138,7 +138,7 @@ export const useUpdateProfile = () => {
 
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
-      await workerInstance.start(currentPubkey)
+      await worker.syncStart(currentPubkey)
 
       const currentProfile = getProfile(currentPubkey)
 
