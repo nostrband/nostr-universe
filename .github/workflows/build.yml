@@ -105,3 +105,23 @@ jobs:
           asset_path: universe/platforms/android/app/build/outputs/apk/release/app-release-unsigned-signed.apk
           asset_name: spring-nostr-browser-${{ github.ref_name }}.apk
           asset_content_type: application/zip
+
+      - name: Sign AAB
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: universe/platforms/android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload AAB Universal Asset (signed asset)
+        id: upload-release-asset-universal-aab-signed
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: universe/platforms/android/app/build/outputs/bundle/release/app-release.aab
+          asset_name: spring-nostr-browser-${{ github.ref_name }}.aab
+          asset_content_type: application/zip
