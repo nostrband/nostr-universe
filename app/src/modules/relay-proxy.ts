@@ -1,5 +1,6 @@
+import { worker } from '@/workers/client'
 import { cacheRelayHostname } from './const/relays'
-import { LocalRelayClient } from './relay'
+import { proxy } from 'comlink'
 
 class LocalRelayWebSocket extends EventTarget {
   closed: boolean = false
@@ -8,15 +9,10 @@ class LocalRelayWebSocket extends EventTarget {
   onclose: ((event: CloseEvent) => void) | null = null
   onmessage: ((event: MessageEvent) => void) | null = null
   onerror: ((event: Event) => void) | null = null
-  relay: LocalRelayClient
+  relayId: string = ''
 
   constructor(url: string) {
     super()
-
-    // eslint-disable-next-line
-    this.relay = new LocalRelayClient((msg: any) => {
-      this.reply(msg)
-    })
 
     // eslint-disable-next-line
     const self = this
@@ -41,12 +37,15 @@ class LocalRelayWebSocket extends EventTarget {
       value: url
     })
 
-    // call onopen on next cycle
-    setTimeout(() => {
+    // eslint-disable-next-line
+    worker.relayCreateLocalClient(
+      proxy(this.reply.bind(this))
+    ).then(id => {
+      this.relayId = id
       if (this.closed) return
       if (this.onopen) this.onopen(new Event('open'))
       this.dispatchEvent(new Event('open'))
-    }, 0)
+    })
   }
 
   // eslint-disable-next-line
@@ -67,7 +66,7 @@ class LocalRelayWebSocket extends EventTarget {
 
   send(data: string) {
     if (this.closed || typeof data !== 'string') return
-    this.relay.handle(data)
+    worker.relayLocalSend(this.relayId, data)
   }
 
   close() {
@@ -75,25 +74,31 @@ class LocalRelayWebSocket extends EventTarget {
     this.closed = true
     if (this.onclose) this.onclose(new CloseEvent('close', { wasClean: true }))
     this.dispatchEvent(new CloseEvent('close', { wasClean: true }))
-    this.relay.cleanup()
+    worker.relayLocalDestroy(this.relayId)
   }
 }
 
 export function overrideWebSocket() {
-  const Src = window.WebSocket
+  // const Src = window.WebSocket
+  const cont = typeof window !== 'undefined' ? window : self
+  const Src = cont.WebSocket
+
   // eslint-disable-next-line
   // @ts-ignore
   // NOTE: must be a 'function() {}', not '() => {}'
   // eslint-disable-next-line
-  window.WebSocket = function (url: string | URL, protocols: any) {
+  cont.WebSocket = function (url: string | URL, protocols: any) {
     try {
       const u = new URL(url)
       if (u.hostname === cacheRelayHostname) {
+        console.log("connect to local", url)
         return new LocalRelayWebSocket(u.toString())
       }
-    } catch {
+    } catch (e) {
       // empty
+      console.log("LocalRelayWebSocket error ", e)
     }
+    console.log("connect to remote", url)
     return new Src(url, protocols)
   }
 }

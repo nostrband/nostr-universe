@@ -28,6 +28,7 @@
     "@types/lodash.debounce": "^4.0.9",
     "@types/react-redux": "^7.1.25",
     "axios": "^1.5.0",
+    "comlink": "^4.4.1",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.10",
     "dexie": "^3.2.4",
@@ -70,6 +71,7 @@
     "prettier": "^3.0.1",
     "sass": "^1.65.1",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "vite": "^4.4.5",
+    "vite-plugin-comlink": "^3.0.5"
   }
 }

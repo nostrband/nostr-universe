@@ -7,6 +7,13 @@ import { InitialisationProvider } from '@/modules/AppInitialisation/Initialisati
 import { App } from './App.tsx'
 import { createStore } from './store/store.ts'
 import './index.css'
+import { startWorker, worker } from './workers/client.ts'
+import { overrideWebSocket } from './modules/relay-proxy.ts'
+import { setOnAddLocalRelayEvents } from './modules/nostr.ts'
+
+overrideWebSocket()
+startWorker()
+setOnAddLocalRelayEvents((events: any) => worker.relayAddLocalEvents(events))
 
 const store = createStore()
 

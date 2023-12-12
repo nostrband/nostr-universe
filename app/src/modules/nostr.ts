@@ -43,13 +43,9 @@ import { EventAddr } from '@/types/event-addr'
 import { ProfileListEvent, createProfileListEvent } from '@/types/profile-list-event'
 import { Bookmark, BookmarkListEvent, createBookmarkListEvent } from '@/types/bookmark-list-event'
 import { dbi } from './db'
-import { addLocalRelayEvent } from './relay'
 import { cacheRelay, nostrbandRelay, nsbRelays, allRelays, readRelays, writeRelays } from './const/relays'
 import { Kinds } from './const/kinds'
-import { overrideWebSocket } from './relay-proxy'
 import { AppRecommEvent, createAppRecommEvent } from '@/types/app-recomm-event'
-
-overrideWebSocket()
 
 const MAX_TOP_APPS = 500
 
@@ -89,6 +85,9 @@ const kindAppsCache = new Map<number, AppInfos>()
 const metaCache = new Map<string, MetaEvent>()
 const eventCache = new Map<string, AugmentedEvent>()
 const addrCache = new Map<string, AugmentedEvent>()
+
+let onAddLocalRelayEvents: ((e: NostrEvent[]) => Promise<boolean[]>) | null = null
+
 
 export function nostrEvent(e: NDKEvent) {
   return {
@@ -197,10 +196,12 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter, options?: IFetchOptions): 
       },
       relaySet
     )
-    for (const e of events.values()) {
-      const augmentedEvent = rawEvent(e)
-      if (!options?.cacheOnly) putEventToCache(augmentedEvent)
+    if (!options?.cacheOnly)
+    {
+      const aus = [...events.values()].map((e: any) => rawEvent(e))
+      putEventsToCache(aus)
     }
+
     console.log(
       Date.now(),
       'fetched in',
@@ -1215,7 +1216,7 @@ export async function searchProfiles(q: string): Promise<MetaEvent[]> {
     const metaEvents = augmentMetaEvents(augmentedEvents)
 
     // put to cache
-    metaEvents.forEach((e) => putEventToCache(e))
+    putEventsToCache(metaEvents)
 
     events.push(...metaEvents)
   }
@@ -1257,7 +1258,7 @@ export async function fetchMetas(pubkeys: string[], remote?: boolean): Promise<M
 
     const wasSize = reqPubkeys.size
     metaEvents.forEach((e) => reqPubkeys.delete(e.pubkey))
-    metaEvents.forEach((e) => putEventToCache(e))
+    putEventsToCache(metaEvents)
     metas.push(...metaEvents)
 
     return [wasSize, metaEvents.length]
@@ -1334,7 +1335,7 @@ async function fetchEventsByIds({ ids, kinds, remote = false }: IFetchEventByIds
     const wasSize = reqIds.size
     const events = [...ndkEvents.values()].filter((e) => ids.includes(e.id)).map((e) => rawEvent(e))
     events.forEach((e) => reqIds.delete(e.id))
-    events.forEach((e) => putEventToCache(e))
+    putEventsToCache(events)
     results.push(...events)
     return [wasSize, events.length]
   }
@@ -1902,7 +1903,7 @@ class Subscription<OutputEventType> {
     // helper to transform and return the event
     const returnEvent = async (event: NDKEvent) => {
       const ae = rawEvent(event)
-      putEventToCache(ae)
+      putEventsToCache([ae])
       const e = await this.onEvent(ae)
       console.log('returning', this.label, e)
       await cb(e)
@@ -2232,14 +2233,22 @@ export async function sendPayment(info: WalletInfo, payreq: string): Promise<{ p
   })
 }
 
-export function putEventToCache(e: AugmentedEvent | MetaEvent) {
-  if (e.kind === (Kinds.META as number)) metaCache.set(e.pubkey, e)
-  eventCache.set(e.id, e)
-  addrCache.set(getEventAddr(e), e)
-  const ne = nostrEvent(e)
-  if (addLocalRelayEvent(ne)) {
-    dbi.putLocalRelayEvents([ne])
-  }
+export function setOnAddLocalRelayEvents(cb: (e: NostrEvent[]) => Promise<boolean[]>) {
+  onAddLocalRelayEvents = cb
+}
+
+export function putEventsToCache(events: AugmentedEvent[] | MetaEvent[]) {
+  const nes = events.map(e => {
+    if (e.kind === (Kinds.META as number)) metaCache.set(e.pubkey, e)
+    eventCache.set(e.id, e)
+    addrCache.set(getEventAddr(e), e)
+    return nostrEvent(e)    
+  })
+  onAddLocalRelayEvents?.(nes)
+    .then((oks) => {
+      dbi.putLocalRelayEvents(
+        nes.filter((_, i) => oks[i]))
+    })
 }
 
 export function setNsbSigner(token: string) {
@@ -2339,7 +2348,7 @@ export async function fetchAppRecomms(pubkey: string): Promise<AppRecommEvent[]>
 export async function publishTrustScores(
   signEvent: (event: NostrEvent) => Promise<NostrEvent>,
   pubkey: string,
-  scores: { pubkey: string, score: number }[]
+  scores: { pubkey: string; score: number }[]
 ) {
   const e: NostrEvent = {
     kind: Kinds.TRUST_SCORES,
@@ -2348,9 +2357,8 @@ export async function publishTrustScores(
     content: '',
     tags: []
   }
-  scores.forEach(ps => {
-    if (ps.score > 0 && ps.score < 100)
-      e.tags.push(['p', ps.pubkey, Number(ps.score / 100).toFixed(2)])
+  scores.forEach((ps) => {
+    if (ps.score > 0 && ps.score < 100) e.tags.push(['p', ps.pubkey, Number(ps.score / 100).toFixed(2)])
   })
 
   console.log('trust scores', e)
@@ -2384,10 +2392,12 @@ export async function publishAppRecommendation(
   if (!appAddr) throw new Error('Bad naddr')
 
   const a = appAddr.kind + ':' + appAddr.pubkey + ':' + appAddr.d_tag
-  console.log("adding to list", a)
-  if (!list.tags.find((t: string[]) => {
-    return t.length >= 4 && t[0] === 'a' && t[1] === a && t[3] === 'web'
-  })) {
+  console.log('adding to list', a)
+  if (
+    !list.tags.find((t: string[]) => {
+      return t.length >= 4 && t[0] === 'a' && t[1] === a && t[3] === 'web'
+    })
+  ) {
     list.tags.push(['a', a, nostrbandRelay, 'web'])
   }
 
@@ -2467,4 +2477,4 @@ export function reconnect() {
   checkReconnect(nsbNDK, true)
 }
 
-localStorage.debug = ''
+// localStorage.debug = ''

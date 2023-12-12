@@ -6,7 +6,6 @@ import { getEventAddr } from './nostr'
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
 import { Kinds } from './const/kinds'
-import { onBeforeNewEvent } from './sync'
 
 const events: NostrEvent[] = []
 const eventById = new Map<string, number>()
@@ -17,11 +16,24 @@ const eventsByAddr = new Map<string, number[]>()
 // eslint-disable-next-line
 const subs = new Map<string, any>()
 
-export function addLocalRelayEvent(e: NostrEvent) {
+let onBeforeNewEvent: ((e: NostrEvent) => void) | null = null
+
+export function addLocalRelayEvents(events: NostrEvent[], fromSync?: boolean) {
+  return events.map(e => addLocalRelayEvent(e, fromSync))
+}
+
+export function setOnBeforeNewEvent(cb: (e: NostrEvent) => void) {
+  onBeforeNewEvent = cb
+}
+
+function addLocalRelayEvent(e: NostrEvent, fromSync?: boolean) {
   if (eventById.has(e.id)) return false
 
   //  console.log("addLocalRelayEvent kind", e.kind, "id", e.id, "pubkey", e.pubkey)
-  onBeforeNewEvent(e)
+  if (!fromSync) {
+    // @ts-ignore
+    onBeforeNewEvent(e)
+  }
 
   const index = events.length
 
@@ -238,10 +250,30 @@ export class LocalRelayClient {
   }
 }
 
+const clients = new Map<string, LocalRelayClient>()
+
+export function createLocalRelayClient(onReply: (msg: any) => void): string {
+  const id = Math.random()+''
+  const client = new LocalRelayClient(onReply)
+  clients.set(id, client)
+  return id
+}
+
+export function localRelayHandle(id: string, data: string) {
+  const client = clients.get(id)
+  client?.handle(data)
+}
+
+export function localRelayDestroy(id: string) {
+  const client = clients.get(id)
+  client?.cleanup()
+  clients.delete(id)
+}
+
 export async function initLocalRelay() {
   const start = Date.now()
   const dbEvents = await dbi.listLocalRelayEvents()
-  for (const e of dbEvents) addLocalRelayEvent(e)
+  for (const e of dbEvents) addLocalRelayEvent(e, true)
   console.log('local events', events.length, 'loaded in', Date.now() - start, 'ms')
 }
 

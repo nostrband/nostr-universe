@@ -19,24 +19,30 @@ export const RecommendAppWidget = () => {
   const dispatch = useAppDispatch()
   const { signEvent } = useSigner()
 
-  const filterNewApps = useCallback(async (list: any[]) => {
-    const recomms = await fetchAppRecomms(currentPubkey)
-    // eslint-disable-next-line
-    const newApps: any[] = list.filter((r: any) => {
-      return !recomms.find((e) => e.identifier === `${r.kind}` && e.naddrs.includes(r.naddr))
-    })
-    console.log('newApps', newApps, 'list', list, 'recomms', recomms)
-    return newApps
-  }, [currentPubkey])
+  const filterNewApps = useCallback(
+    async (list: any[]) => {
+      const recomms = await fetchAppRecomms(currentPubkey)
+      // eslint-disable-next-line
+      const newApps: any[] = list.filter((r: any) => {
+        return !recomms.find((e) => e.identifier === `${r.kind}` && e.naddrs.includes(r.naddr))
+      })
+      console.log('newApps', newApps, 'list', list, 'recomms', recomms)
+      return newApps
+    },
+    [currentPubkey]
+  )
 
-  const updateNewApps = useCallback(async (apps: any[]) => {
-    if (!isGuest(currentPubkey)) {
-      const newApps = await filterNewApps(apps)
-      setNewApps(newApps)
-    } else {
-      setNewApps(apps)
-    }
-  }, [filterNewApps, setNewApps])
+  const updateNewApps = useCallback(
+    async (apps: any[]) => {
+      if (!isGuest(currentPubkey)) {
+        const newApps = await filterNewApps(apps)
+        setNewApps(newApps)
+      } else {
+        setNewApps(apps)
+      }
+    },
+    [filterNewApps, setNewApps]
+  )
 
   const getSelectAppHistory = useCallback(async () => {
     const apps = await dbi.getListSelectAppHistory(currentPubkey)

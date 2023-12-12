@@ -35,12 +35,12 @@ import {
 } from '@/store/reducers/bookmarks.slice'
 import { getFeedbackInfoThunk } from '@/store/reducers/feedbackInfo.slice'
 import { useSigner } from './signer'
-import { startSync } from '@/modules/sync'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { useSync } from './sync'
 import { useAsyncThrottle } from './async'
 import { setApps, setLoading } from '@/store/reducers/apps.slice'
 import { bootstrapNotifications } from '@/modules/AppInitialisation/utils'
+import { worker } from '@/workers/client'
 
 export const useUpdateProfile = () => {
   const dispatch = useAppDispatch()
@@ -138,7 +138,7 @@ export const useUpdateProfile = () => {
 
   const updateProfile = useCallback(
     async (keys: string[], currentPubkey: string) => {
-      startSync(currentPubkey)
+      await worker.syncStart(currentPubkey)
 
       const currentProfile = getProfile(currentPubkey)
 
