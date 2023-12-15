@@ -64,13 +64,14 @@ export const ModalTrustContent = () => {
   return (
     <StyledContainer>
       <Typography marginBottom={'1rem'}>
-        Estimate trust scores from your past interactions.
-        You can adjust them and publish. Trust scores may be
-        used for decentralized algorithms.
+        Estimate trust scores from your past interactions. You can adjust them and publish. Trust scores may be used for
+        decentralized algorithms.
       </Typography>
       <Stack alignItems={'center'} marginBottom={'1rem'} direction={'row'} gap={'1rem'}>
         <StyledButton onClick={handleCalculateEvents}>Estimate</StyledButton>
-        <StyledButton onClick={publishTrustAssignments} disabled={profiles.length === 0}>Publish</StyledButton>
+        <StyledButton onClick={publishTrustAssignments} disabled={profiles.length === 0}>
+          Publish
+        </StyledButton>
       </Stack>
       {renderContent()}
     </StyledContainer>

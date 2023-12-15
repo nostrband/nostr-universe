@@ -10,22 +10,18 @@ import {
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
 import { BestLongNoteItem } from './BestLongNoteItem/BestLongNoteItem'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { fetchBestLongNotesThunk } from '@/store/reducers/bookmarks.slice'
+import { useAppSelector } from '@/store/hooks/redux'
+import { selectBestLongNotes } from '@/store/reducers/bookmarks.slice'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { IconButton } from '@mui/material'
 import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useFeeds } from '@/hooks/feeds'
 
 export const BestLongNotes = () => {
-  const { bestLongNotes, isBestLongNotesLoading } = useAppSelector((state) => state.bookmarks)
-  const { currentPubkey } = useAppSelector((state) => state.keys)
-  const dispatch = useAppDispatch()
+  const bestLongNotes = useAppSelector(selectBestLongNotes)
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
-
-  const reloadBestNotes = useCallback(() => {
-    dispatch(fetchBestLongNotesThunk(currentPubkey))
-  }, [currentPubkey, dispatch])
+  const { reloadBestLongNotes } = useFeeds()
 
   const handleOpenLongPosts = useCallback(
     (event: LongNoteEvent) => {
@@ -43,15 +39,15 @@ export const BestLongNotes = () => {
   }
 
   const renderContent = useCallback(() => {
-    if (isBestLongNotesLoading) {
+    if (!bestLongNotes) {
       return (
         <HorizontalSwipeContent childrenWidth={225}>
           <SkeletonLongPosts />
         </HorizontalSwipeContent>
       )
     }
-    if (!bestLongNotes.length && !isBestLongNotesLoading) {
-      return <EmptyListMessage onReload={reloadBestNotes} />
+    if (!bestLongNotes.length) {
+      return <EmptyListMessage onReload={reloadBestLongNotes} />
     }
 
     const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
@@ -80,7 +76,7 @@ export const BestLongNotes = () => {
         RowComponent={Row}
       />
     )
-  }, [bestLongNotes, handleOpenLongPosts, isBestLongNotesLoading, reloadBestNotes])
+  }, [bestLongNotes, handleOpenLongPosts, reloadBestLongNotes])
 
   const isVisible = Boolean(bestLongNotes && bestLongNotes.length)
 

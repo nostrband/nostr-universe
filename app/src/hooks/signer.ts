@@ -5,7 +5,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { sha256 } from '@noble/hashes/sha256'
 import { bytesToHex } from '@noble/hashes/utils'
 import { v4 } from 'uuid'
@@ -58,9 +58,13 @@ export const useSigner = () => {
     [currentPubkey, nsbKeys]
   )
 
-  return {
+  return useMemo(() => ({
     signEvent,
     encrypt,
     decrypt
-  }
+  }), [
+    signEvent,
+    encrypt,
+    decrypt
+  ])
 }

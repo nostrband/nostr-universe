@@ -2,13 +2,13 @@ import { CSSProperties, FC, useCallback } from 'react'
 import { StyledTitle, StyledWrapper } from './styled'
 import { Container } from '@/layout/Container/Conatiner'
 
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { useAppSelector } from '@/store/hooks/redux'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
 } from '@/shared/HorizontalSwipeVirtualContent/HorizontalSwipeVirtualContent'
-import { fetchBestNotesThunk } from '@/store/reducers/bookmarks.slice'
+import { selectBestNotes } from '@/store/reducers/bookmarks.slice'
 import { BestNoteItem } from './BestNoteItem/BestNoteItem'
 import { AuthoredEvent } from '@/types/authored-event'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
@@ -18,16 +18,12 @@ import { getEventNip19 } from '@/modules/nostr'
 import { IconButton } from '@mui/material'
 import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useFeeds } from '@/hooks/feeds'
 
 const BestNotes = () => {
-  const { bestNotes, isBestNotesLoading } = useAppSelector((state) => state.bookmarks)
-  const { currentPubkey } = useAppSelector((state) => state.keys)
-  const dispatch = useAppDispatch()
+  const bestNotes = useAppSelector(selectBestNotes)
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
-
-  const reloadBestNotes = useCallback(() => {
-    dispatch(fetchBestNotesThunk(currentPubkey))
-  }, [currentPubkey, dispatch])
+  const { reloadBestNotes } = useFeeds()
 
   const handleOpenNote = useCallback(
     (note: AuthoredEvent) => {
@@ -47,14 +43,14 @@ const BestNotes = () => {
   }
 
   const renderContent = useCallback(() => {
-    if (isBestNotesLoading) {
+    if (!bestNotes) {
       return (
         <HorizontalSwipeContent childrenWidth={225}>
           <SkeletonTrendingNotes />
         </HorizontalSwipeContent>
       )
     }
-    if (!bestNotes.length && !isBestNotesLoading) {
+    if (!bestNotes.length) {
       return <EmptyListMessage onReload={reloadBestNotes} />
     }
 
@@ -79,7 +75,7 @@ const BestNotes = () => {
     return (
       <HorizontalSwipeVirtualContent itemHeight={125} itemSize={225} itemCount={bestNotes.length} RowComponent={Row} />
     )
-  }, [bestNotes, handleOpenNote, isBestNotesLoading, reloadBestNotes])
+  }, [bestNotes, handleOpenNote, reloadBestNotes])
 
   const isVisible = Boolean(bestNotes && bestNotes.length)
 

@@ -7,8 +7,7 @@ export const WebsiteView = ({ url, isOpenLink = true, ...rest }: { url: string; 
   const onClick = () => {
     if (isOpenLink) {
       let u = url
-      if (!u.split('.')[0].includes(':'))
-        u = "https://" + u
+      if (!u.split('.')[0].includes(':')) u = 'https://' + u
       handleOpenContextMenu({ url: u })
     }
   }

@@ -1,17 +1,14 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { fetchFollowedZaps } from '@/modules/nostr'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { ZapEvent } from '@/types/zap-event'
-import { setBigZaps } from '@/store/reducers/contentWorkspace'
-import { MIN_ZAP_AMOUNT } from '@/consts'
+import { selectBigZaps } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { SkeletonBigZaps } from '@/components/Skeleton/SkeletonBigZaps/SkeletonBigZaps'
 import { ItemBigZap } from '@/components/ItemsContent/ItemBigZap/ItemBigZap'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
-import { RootState } from '@/store/store'
 import {
   HorizontalSwipeVirtualContent,
   HorizontalSwipeVirtualItem
@@ -20,11 +17,12 @@ import { AugmentedEvent } from '@/types/augmented-event'
 import { IconButton } from '@mui/material'
 import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useFeeds } from '@/hooks/feeds'
 
 export const BigZaps = memo(function BigZaps() {
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
-  const { bigZaps, contactList } = useAppSelector((state: RootState) => state.contentWorkSpace)
-  const dispatch = useAppDispatch()
+  const bigZaps = useAppSelector(selectBigZaps)
+  const { reloadBigZaps } = useFeeds()
 
   const handleOpenFeedModal = () => {
     handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
@@ -55,16 +53,6 @@ export const BigZaps = memo(function BigZaps() {
     [handleOpenContextMenu]
   )
 
-  const handleReloadBigZaps = useCallback(async () => {
-    if (contactList) {
-      dispatch(setBigZaps({ bigZaps: null }))
-      const bigZaps = await fetchFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT).catch(() => {
-        dispatch(setBigZaps({ bigZaps: null }))
-      })
-      dispatch(setBigZaps({ bigZaps }))
-    }
-  }, [contactList, dispatch])
-
   const renderContent = useCallback(() => {
     if (bigZaps === null) {
       return (
@@ -75,7 +63,7 @@ export const BigZaps = memo(function BigZaps() {
     }
 
     if (!bigZaps || !bigZaps.length) {
-      return <EmptyListMessage onReload={handleReloadBigZaps} />
+      return <EmptyListMessage onReload={reloadBigZaps} />
     }
 
     const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
@@ -97,7 +85,7 @@ export const BigZaps = memo(function BigZaps() {
     return (
       <HorizontalSwipeVirtualContent itemHeight={73} itemSize={225} itemCount={bigZaps.length} RowComponent={Row} />
     )
-  }, [bigZaps, handleReloadBigZaps, handleOpenBigZap])
+  }, [bigZaps, reloadBigZaps, handleOpenBigZap])
 
   const isVisible = Boolean(bigZaps && bigZaps.length)
 

@@ -1,4 +1,4 @@
-import { parseProfileJson, putEventToCache } from '@/modules/nostr'
+import { parseProfileJson, putEventsToCache } from '@/modules/nostr'
 import { createAugmentedEvent, createEvent } from '@/types/augmented-event'
 import { AuthoredEvent, createAuthoredEvent } from '@/types/authored-event'
 import { MetaEvent, createMetaEvent } from '@/types/meta-event'
@@ -26,7 +26,7 @@ export const userService = createApi({
           })
           .filter((m) => !!m.pubkey)
 
-        trendingProfiles.forEach((e) => putEventToCache(e))
+        putEventsToCache(trendingProfiles)
 
         return trendingProfiles
       },
@@ -47,7 +47,9 @@ export const userService = createApi({
           })
           .filter((a) => !!a.pubkey)
 
-        trendingNotes.forEach((e) => putEventToCache(e))
+        putEventsToCache(trendingNotes)
+        // @ts-ignore
+        putEventsToCache(trendingNotes.map(n => n.author).filter(m => !!m))
 
         return trendingNotes
       },
@@ -67,7 +69,7 @@ export const userService = createApi({
           })
           .filter((m) => !!m.pubkey)
 
-        suggestedProfiles.forEach((e) => putEventToCache(e))
+        putEventsToCache(suggestedProfiles)
 
         return suggestedProfiles
       }

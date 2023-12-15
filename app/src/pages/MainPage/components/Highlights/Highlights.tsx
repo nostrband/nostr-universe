@@ -1,10 +1,9 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { fetchFollowedHighlights } from '@/modules/nostr'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { HighlightEvent } from '@/types/highlight-event'
-import { setHighlights } from '@/store/reducers/contentWorkspace'
+import { selectHighlights } from '@/store/reducers/contentWorkspace'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { ItemHighlight } from '@/components/ItemsContent/ItemHighlight/ItemHighlight'
@@ -17,11 +16,13 @@ import {
 import { IconButton } from '@mui/material'
 import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useFeeds } from '@/hooks/feeds'
 
 export const Highlights = memo(function Highlights() {
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
-  const { highlights, contactList } = useAppSelector((state) => state.contentWorkSpace)
-  const dispatch = useAppDispatch()
+  const highlights = useAppSelector(selectHighlights)
+  const { reloadHighlights } = useFeeds()
+  console.log("rerender highlights")
 
   const handleOpenFeedModal = () => {
     handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
@@ -38,16 +39,6 @@ export const Highlights = memo(function Highlights() {
     [handleOpenContextMenu]
   )
 
-  const handleReloadHighlights = useCallback(async () => {
-    if (contactList) {
-      dispatch(setHighlights({ highlights: null }))
-      const highlights = await fetchFollowedHighlights(contactList.contactPubkeys).catch(() => {
-        dispatch(setHighlights({ highlights: null }))
-      })
-      dispatch(setHighlights({ highlights }))
-    }
-  }, [dispatch, contactList])
-
   const renderContent = useCallback(() => {
     if (highlights === null) {
       return (
@@ -58,7 +49,7 @@ export const Highlights = memo(function Highlights() {
     }
 
     if (!highlights || !highlights.length) {
-      return <EmptyListMessage onReload={handleReloadHighlights} />
+      return <EmptyListMessage onReload={reloadHighlights} />
     }
 
     const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
@@ -80,7 +71,7 @@ export const Highlights = memo(function Highlights() {
     return (
       <HorizontalSwipeVirtualContent itemHeight={113} itemSize={225} itemCount={highlights.length} RowComponent={Row} />
     )
-  }, [highlights, handleReloadHighlights, handleOpenHighlight])
+  }, [highlights, reloadHighlights, handleOpenHighlight])
 
   const isVisible = Boolean(highlights && highlights.length)
 

@@ -1,7 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { useOpenModalSearchParams } from '@/hooks/modal'
-import { subscribeContactList } from '@/modules/nostr'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { useAppSelector } from '@/store/hooks/redux'
 import { StyledTitle, StyledWrapper } from './styled'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { Profile } from '@/shared/Profile/Profile'
@@ -12,19 +11,17 @@ import {
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
 import { EmptyListMessage } from '@/shared/EmptyListMessage/EmptyListMessage'
 import { SkeletonContactList } from '@/components/Skeleton/SkeletonContactList/SkeletonContactList'
-import { selectKeys } from '@/store/store'
-import { setContactList } from '@/store/reducers/contentWorkspace'
-import { ContactListEvent } from '@/types/contact-list-event'
+import { selectContactList } from '@/store/reducers/contentWorkspace'
 import { MetaEvent } from '@/types/meta-event'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { IconButton } from '@mui/material'
 import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
+import { useFeeds } from '@/hooks/feeds'
 
 export const ContactList = memo(function ContactList() {
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
-  const { contactList } = useAppSelector((state) => state.contentWorkSpace)
-  const { currentPubkey } = useAppSelector(selectKeys)
-  const dispatch = useAppDispatch()
+  const contactList = useAppSelector(selectContactList)
+  const { reloadContactList } = useFeeds()
 
   const handleOpenProfile = useCallback(
     (event: MetaEvent) => {
@@ -32,16 +29,6 @@ export const ContactList = memo(function ContactList() {
     },
     [handleOpenContextMenu]
   )
-
-  const handleReloadContactList = () => {
-    dispatch(setContactList({ contactList: null }))
-
-    subscribeContactList(currentPubkey, async (contactList: ContactListEvent) => {
-      if (contactList) {
-        dispatch(setContactList({ contactList }))
-      }
-    })
-  }
 
   const handleOpenFeedModal = () => {
     handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {
@@ -51,7 +38,7 @@ export const ContactList = memo(function ContactList() {
     })
   }
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (contactList === null) {
       return (
         <HorizontalSwipeContent childrenWidth={115}>
@@ -60,7 +47,7 @@ export const ContactList = memo(function ContactList() {
       )
     }
     if (!contactList || !contactList?.contactEvents.length) {
-      return <EmptyListMessage onReload={handleReloadContactList} />
+      return <EmptyListMessage onReload={reloadContactList} />
     }
 
     const RowContact: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
@@ -81,7 +68,7 @@ export const ContactList = memo(function ContactList() {
         RowComponent={RowContact}
       />
     )
-  }
+  }, [contactList, reloadContactList, handleOpenProfile])
 
   const isVisible = Boolean(contactList && contactList.contactEvents.length)
 

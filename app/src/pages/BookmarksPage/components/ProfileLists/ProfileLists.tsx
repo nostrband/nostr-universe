@@ -7,9 +7,8 @@ import {
 import { CSSProperties, FC, useCallback } from 'react'
 import { StyledTitle, StyledWrapper } from './styled'
 import { Container } from '@/layout/Container/Conatiner'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { fetchProfileListsThunk } from '@/store/reducers/bookmarks.slice'
-import { useSigner } from '@/hooks/signer'
+import { useAppSelector } from '@/store/hooks/redux'
+import { selectProfileLists } from '@/store/reducers/bookmarks.slice'
 import { ProfileListItem } from './ProfileListItem/ProfileListItem'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { ProfileListEvent } from '@/types/profile-list-event'
@@ -17,17 +16,12 @@ import { SkeletonBookmarkLists } from '@/components/Skeleton/SkeletonBookmarkLis
 import { IconButton } from '@mui/material'
 import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useFeeds } from '@/hooks/feeds'
 
 export const ProfileLists = () => {
-  const { profileLists, isProfileListsLoading } = useAppSelector((state) => state.bookmarks)
-  const { currentPubkey } = useAppSelector((state) => state.keys)
-  const { decrypt } = useSigner()
-  const dispatch = useAppDispatch()
+  const profileLists = useAppSelector(selectProfileLists)
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
-
-  const reloadProfileLists = useCallback(() => {
-    dispatch(fetchProfileListsThunk({ pubkey: currentPubkey, decrypt }))
-  }, [currentPubkey, dispatch, decrypt])
+  const { reloadProfileLists } = useFeeds()
 
   const handleOpenProfile = useCallback(
     (event: ProfileListEvent) => {
@@ -45,14 +39,14 @@ export const ProfileLists = () => {
   }
 
   const renderContent = useCallback(() => {
-    if (isProfileListsLoading) {
+    if (!profileLists) {
       return (
         <HorizontalSwipeContent childrenWidth={225}>
           <SkeletonBookmarkLists />
         </HorizontalSwipeContent>
       )
     }
-    if (!profileLists.length && !isProfileListsLoading) {
+    if (!profileLists.length) {
       return <EmptyListMessage onReload={reloadProfileLists} />
     }
 
@@ -74,7 +68,7 @@ export const ProfileLists = () => {
         RowComponent={Row}
       />
     )
-  }, [profileLists, isProfileListsLoading, reloadProfileLists, handleOpenProfile])
+  }, [profileLists, reloadProfileLists, handleOpenProfile])
 
   const isVisible = Boolean(profileLists && profileLists.length)
 

@@ -46,9 +46,14 @@ export const useTrustRankings = () => {
       const pubkeysWeightsMap = new Map()
 
       const mutes = await fetchMuteLists(currentPubkey)
-      const distrusted = [...new Set(mutes
-        .map(e => e.tags.filter(t => t.length >= 2 && t[0] === 'p'))
-        .flat().map(t => t[1]))]
+      const distrusted = [
+        ...new Set(
+          mutes
+            .map((e) => e.tags.filter((t) => t.length >= 2 && t[0] === 'p'))
+            .flat()
+            .map((t) => t[1])
+        )
+      ]
 
       const events = await fetchPubkeyEvents({
         cacheOnly: true,
@@ -58,8 +63,8 @@ export const useTrustRankings = () => {
       events.forEach((e) => {
         const pubkeys = e.tags
           .filter((tag) => tag.length > 1 && tag[0] === 'p')
-          .map(t => t[1])
-          .filter(p => p !== currentPubkey && !distrusted.includes(p))
+          .map((t) => t[1])
+          .filter((p) => p !== currentPubkey && !distrusted.includes(p))
 
         pubkeys.forEach((pubkey) => {
           // the more pubkeys a single event mentions,

@@ -6,7 +6,6 @@ import { getEventAddr } from './nostr'
 // @ts-ignore
 import { NostrEvent } from '@nostrband/ndk'
 import { Kinds } from './const/kinds'
-import { onBeforeNewEvent } from './sync'
 
 const events: NostrEvent[] = []
 const eventById = new Map<string, number>()
@@ -16,12 +15,29 @@ const eventsByAuthorKind = new Map<string, number[]>()
 const eventsByAddr = new Map<string, number[]>()
 // eslint-disable-next-line
 const subs = new Map<string, any>()
+const clients = new Map<string, LocalRelayClient>()
 
-export function addLocalRelayEvent(e: NostrEvent) {
+// set to true when all events are loaded from db
+let started = false
+
+let onBeforeNewEvent: ((e: NostrEvent) => void) | null = null
+
+export function addLocalRelayEvents(events: NostrEvent[], fromSync?: boolean) {
+  return events.map(e => addLocalRelayEvent(e, fromSync))
+}
+
+export function setOnBeforeNewEvent(cb: (e: NostrEvent) => void) {
+  onBeforeNewEvent = cb
+}
+
+function addLocalRelayEvent(e: NostrEvent, fromSync?: boolean) {
   if (eventById.has(e.id)) return false
 
   //  console.log("addLocalRelayEvent kind", e.kind, "id", e.id, "pubkey", e.pubkey)
-  onBeforeNewEvent(e)
+  if (!fromSync) {
+    // @ts-ignore
+    onBeforeNewEvent(e)
+  }
 
   const index = events.length
 
@@ -51,39 +67,68 @@ export function addLocalRelayEvent(e: NostrEvent) {
   put(eventsByAddr, getEventAddr(e), replaceAddr)
   eventById.set(e.id, index)
   events.push(e)
+
+  // broadcast to all clients
+  for (const c of clients.values()) 
+    c.onNewEvent(e)
+
   return true
 }
 
 export class LocalRelayClient {
   // eslint-disable-next-line
-  _subs: Set<any>
+  private subs: Set<any>
   // eslint-disable-next-line
-  _onSend: (msg: any) => void
+  private onSend: (msg: any) => void
+
+  private buffer: string[] = []
+
+  private started = false
+
+  readonly id: string
+
   // eslint-disable-next-line
   constructor(onSend: (msg: any) => void) {
     // eslint-disable-next-line
-    this._subs = new Set<any>()
-    this._onSend = onSend
+    this.subs = new Set<any>()
+    this.onSend = onSend
+
+    this.id = Math.random()+''
+    clients.set(this.id, this)
+
+    this.started = started
+  }
+  start() {
+    this.started = true
+    for (const message of this.buffer)
+      this.handle(message)
+    this.buffer.length = 0
   }
   cleanup() {
-    for (const subId of this._subs) {
+    for (const subId of this.subs) {
       this.removeSub(subId)
     }
+    clients.delete(this.id)
   }
   // eslint-disable-next-line
   addSub(subId: string, filters: any) {
     subs.set(subId, { instance: this, filters })
-    this._subs.add(subId)
+    this.subs.add(subId)
   }
   removeSub(subId: string) {
     subs.delete(subId)
-    this._subs.delete(subId)
+    this.subs.delete(subId)
   }
   // eslint-disable-next-line
   send(message: any) {
-    this._onSend(message)
+    this.onSend(message)
   }
   handle(message: string) {
+    if (!this.started) {
+      this.buffer.push(message)
+      return
+    }
+
     try {
       message = JSON.parse(message)
     } catch (e) {
@@ -220,14 +265,15 @@ export class LocalRelayClient {
     this.send(['EOSE', subId])
   }
   onEVENT(event: NostrEvent) {
+    // this method will broadcast the added
+    // event to all clients, including this one
     const added = addLocalRelayEvent(event)
 
-    console.log('EVENT', event, true)
+    console.log('EVENT', event, added)
 
     this.send(['OK', event.id])
-
-    if (!added) return
-
+  }
+  onNewEvent(event: NostrEvent) {
     for (const [subId, { instance, filters }] of subs.entries()) {
       if (matchFilters(filters, event)) {
         console.log('new match', subId, event)
@@ -238,11 +284,29 @@ export class LocalRelayClient {
   }
 }
 
+export function createLocalRelayClient(onReply: (msg: any) => void): string {
+  const client = new LocalRelayClient(onReply)
+  return client.id
+}
+
+export function localRelayHandle(id: string, data: string) {
+  const client = clients.get(id)
+  client?.handle(data)
+}
+
+export function localRelayDestroy(id: string) {
+  const client = clients.get(id)
+  client?.cleanup()
+}
+
 export async function initLocalRelay() {
   const start = Date.now()
   const dbEvents = await dbi.listLocalRelayEvents()
-  for (const e of dbEvents) addLocalRelayEvent(e)
+  for (const e of dbEvents) addLocalRelayEvent(e, true)
   console.log('local events', events.length, 'loaded in', Date.now() - start, 'ms')
+  started = true
+  for (const c of clients.values())
+    c.start()
 }
 
 export function getEventsCount() {

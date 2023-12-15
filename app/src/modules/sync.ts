@@ -9,14 +9,15 @@ import {
 // eslint-disable-next-line
 // @ts-ignore
 import { decode as bolt11Decode } from 'light-bolt11-decoder'
-import { getTagValue, getTags, ndk, nostrEvent } from './nostr'
+import { connect, getTagValue, getTags, isConnected, ndk, nostrEvent } from './nostr'
 import { nostrbandRelay, readRelays } from './const/relays'
-import { LocalRelayClient, addLocalRelayEvent, getEventsCount } from './relay'
 import { dbi } from './db'
 import { v4 } from 'uuid'
 import { Kinds } from './const/kinds'
 import { MIN_ZAP_AMOUNT } from '@/consts'
 import { isGuest } from '@/utils/helpers/prepare-data'
+import { ISyncState } from '@/types/sync-state'
+import { LocalRelayClient } from './relay'
 
 export const enum Types {
   APPS = 'apps',
@@ -37,14 +38,6 @@ interface ISyncTask {
   params: any
 }
 
-export interface ISyncState {
-  todo: number
-  done: number
-  totalEventCount: number
-  newEventCount: number
-  reload?: boolean
-}
-
 const MAX_ACTIVE_TASKS = 5
 const activeTasks = new Map<string, { relay: string; promise: Promise<void> }>()
 let currentPubkey = ''
@@ -57,7 +50,12 @@ let onSyncState: ((s: ISyncState) => void) | null = null
 let nextOrder = 0
 let needReload = false
 let pause = false
+let onAddLocalRelayEvents: ((events: NostrEvent[]) => Promise<boolean[]>) | null = null
 //const logs: string[] = []
+
+export function setAddLocalRelayEvents(cb: (events: NostrEvent[]) => Promise<boolean[]>) {
+  onAddLocalRelayEvents = cb
+}
 
 // eslint-disable-next-line
 function createTask(type: string, params: any, relay: string, since?: number, until?: number): ISyncTask {
@@ -80,11 +78,10 @@ async function appendTasks(tasks: ISyncTask[], taskQueue: ISyncTask[]) {
   taskQueue.push(...tasks)
 }
 
-function updateSyncState() {
+async function updateSyncState() {
   const state = {
     todo: queue.length + activeTasks.size,
     done,
-    totalEventCount: getEventsCount(),
     newEventCount,
     reload: needReload
   }
@@ -236,7 +233,6 @@ async function processFilters(task: ISyncTask, filterTmpls: NDKFilter[], postFil
   let nextUntil = task.until
   let lastUntil = 0
   let lastUpdate = 0
-  const results: NostrEvent[] = []
   do {
     lastUntil = nextUntil
     count = 0
@@ -270,20 +266,26 @@ async function processFilters(task: ISyncTask, filterTmpls: NDKFilter[], postFil
       { subId: task.id },
       NDKRelaySet.fromRelayUrls([task.relay || nostrbandRelay], ndk)
     )
-    const newEvents = []
+    const validEvents = []
     for (const ndkEvent of events.values()) {
       const e = nostrEvent(ndkEvent)
       if (postFilter && !postFilter(e)) continue
-      const added = addLocalRelayEvent(e)
-      if (added) newEvents.push(e)
+      validEvents.push(e)
       //console.log("sync event", e.kind, e.id, e.pubkey, added)
       nextUntil = Math.min(e.created_at, nextUntil)
       ++count
     }
 
+    // @ts-ignore
+    const added = await onAddLocalRelayEvents(validEvents)
+    const newEvents = validEvents.filter((_, i) => added[i])
+
     if (newEvents.length > 0) dbi.putLocalRelayEvents(newEvents)
 
-    results.push(...newEvents)
+    // some checks for new events
+    newEvents.forEach(e => onBeforeNewEvent(e))
+
+    // put to results
     total += count
     newEventCount += count
 
@@ -312,8 +314,6 @@ async function processFilters(task: ISyncTask, filterTmpls: NDKFilter[], postFil
     // let other stuff work too
     await new Promise((ok) => setTimeout(ok, 2000))
   } while (nextUntil < lastUntil && total < totalLimit && nextUntil > task.since)
-
-  return results
 }
 
 function filterBigZap(e: NostrEvent) {
@@ -345,15 +345,7 @@ async function executeTaskPubkeys(currentTask: ISyncTask) {
   // frequent kinds
   const mainFilter: NDKFilter = {
     authors: currentTask.params.pubkeys,
-    kinds: [
-      Kinds.NOTE,
-      Kinds.REPOST,
-      Kinds.REPORT,
-      Kinds.LABEL,
-      Kinds.REACTION,
-      Kinds.DELETE,
-      Kinds.DM
-    ]
+    kinds: [Kinds.NOTE, Kinds.REPOST, Kinds.REPORT, Kinds.LABEL, Kinds.REACTION, Kinds.DELETE, Kinds.DM]
   }
 
   const refFilter: NDKFilter = {
@@ -500,10 +492,10 @@ async function processNextTask() {
 
 // eslint-disable-next-line
 async function fetchLocal(filter: any): Promise<any[]> {
-  // local relay direct client
   // eslint-disable-next-line
   let fetchQueue: any[] = []
   let fetchOk: (() => void) | null = null
+
   // eslint-disable-next-line
   const client = new LocalRelayClient((msg: any) => {
     console.log('local relay reply', msg)
@@ -534,6 +526,8 @@ function getInitSyncRanges() {
 
 export async function startSync(pubkey: string) {
   if (currentPubkey === pubkey) return
+
+  if (!isConnected()) await connect()
 
   currentPubkey = pubkey
 

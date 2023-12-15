@@ -69,7 +69,7 @@ export const SearchPageContent = () => {
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
-  const { apps = [] } = useAppSelector((state) => state.apps)
+  const { apps } = useAppSelector((state) => state.apps)
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
   const domains = useMemo(() => TOP_DOMAINS, [])
 
@@ -110,7 +110,7 @@ export const SearchPageContent = () => {
   }
 
   // FIXME add pins!
-  const optionsApps: IDropdownOption[] = apps.map((app, i) => {
+  const optionsApps: IDropdownOption[] = (apps || []).map((app, i) => {
     return {
       id: `app-${i}`,
       icon: app.picture,

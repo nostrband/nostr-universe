@@ -24,7 +24,7 @@ export const ModalFindAppContent: FC<ModalFindAppContentProps> = ({ handleClose 
     setSearchValue(e.target.value)
   }
 
-  const filteredApps = apps.filter((app) => {
+  const filteredApps = (apps || []).filter((app) => {
     const search = searchValue.toLowerCase()
     return app.name.toLowerCase().includes(search) || app.about?.toLowerCase().includes(search)
   })

@@ -142,9 +142,11 @@ const defaultApps = [
   {
     naddr: 'naddr1qqxnzdesxqmnxv3cxu6nwdphqgszpxr0hql8whvk6xyv5hya7yxwd4snur4hu4mg5rctz2ehekkzrvcrqsqqql8kderdvm',
     name: 'YakiHonne',
-    picture: 'https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png',
+    picture:
+      'https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png',
     url: 'https://yakihonne.com/',
-    about: 'YakiHonne is a Nostr-based decentralized content media protocol, which supports free curation, creation, publishing, and reporting by various media.',
+    about:
+      'YakiHonne is a Nostr-based decentralized content media protocol, which supports free curation, creation, publishing, and reporting by various media.',
     kinds: [0, 30023],
     groupName: 'Blogging',
     urls: [
@@ -218,7 +220,7 @@ const defaultApps = [
     about: 'Nostr Nests is an audio space for chatting, brainstorming, debating, jamming, micro-conferences and more.',
     groupName: 'Live'
   },
-  
+
   // Lists
 
   {
@@ -309,7 +311,7 @@ const defaultApps = [
     urls: [{ url: 'https://www.nostrchat.io/dm/<bech32>', type: 'npub' }],
     groupName: 'Chat'
   },
-  
+
   // Funding
 
   {
@@ -357,9 +359,7 @@ const defaultApps = [
     about: 'Your places. Your friends. Your world.™️',
     groupName: 'Geo Apps',
     kinds: [37515],
-    urls: [
-      { url: 'https://go.yondar.me/place/<bech32>', type: 'naddr' },
-    ],
+    urls: [{ url: 'https://go.yondar.me/place/<bech32>', type: 'naddr' }]
   },
   {
     naddr: 'naddr1qqxnzd3exumnqvenxgunqdfhqgsrmd0ph8d22lxx5l2492r2sat5a63xtcr4nh0tsl2yupe8770d3rgrqsqqql8k0ayk9u',
@@ -367,7 +367,7 @@ const defaultApps = [
     picture: 'https://wherostr.social/favicon.svg',
     url: 'https://wherostr.social/',
     about: 'Maps | Notes | Social',
-    groupName: 'Geo Apps',
+    groupName: 'Geo Apps'
   },
   {
     naddr: 'naddr1qqxnzd3e8qurzde5xvenxvesqgsrx4k7vxeev3unrn5ty9qt9w4cxlsgzrqw752mh6fduqjgqs9chhgrqsqqql8kta2xel',
@@ -375,7 +375,7 @@ const defaultApps = [
     picture: '',
     url: 'https://mapnos.vercel.app/',
     about: 'Nostr notes mapped on a map.',
-    groupName: 'Geo Apps',
+    groupName: 'Geo Apps'
   },
 
   // Cool Apps
@@ -438,9 +438,11 @@ const defaultApps = [
   {
     naddr: 'naddr1qqxnzdesxqcnvdfnxs6nxwpsqgsw3mfhnrr0l6ll5zzsrtpeufckv2lazc8k3ru5c3wkjtv8vlwngksrqsqqql8ktx0qhz',
     name: 'ONOSENDAI オノセンダイ',
-    picture: 'https://raw.githubusercontent.com/arkin0x/ONOSENDAI/5a0f3fe7626b3443ba4b91a3c17dfbc6658e552e/public/android-chrome-384x384.png',
+    picture:
+      'https://raw.githubusercontent.com/arkin0x/ONOSENDAI/5a0f3fe7626b3443ba4b91a3c17dfbc6658e552e/public/android-chrome-384x384.png',
     url: 'https://onosendai.tech/',
-    about: 'The reference metaverse client for the permissionless, decentralized, thermodynamic cyberspace meta-protocol built on nostr',
+    about:
+      'The reference metaverse client for the permissionless, decentralized, thermodynamic cyberspace meta-protocol built on nostr',
     groupName: 'Cool Apps'
   },
 
@@ -540,7 +542,6 @@ const defaultApps = [
     about: 'Relay.tools is a web based control panel and deployment system for relays.',
     groupName: 'Relays'
   },
-  
 
   // Tools
 
@@ -635,7 +636,7 @@ const defaultApps = [
       { url: 'https://dtan.xyz/e/<bech32>', type: 'nevent' },
       { url: 'https://dtan.xyz/e/<bech32>', type: 'note' },
       { url: 'https://dtan.xyz/p/<bech32>', type: 'nprofile' },
-      { url: 'https://dtan.xyz/p/<bech32>', type: 'npub' },
+      { url: 'https://dtan.xyz/p/<bech32>', type: 'npub' }
     ],
     groupName: 'Media'
   },
@@ -652,7 +653,8 @@ const defaultApps = [
     name: 'Nostrcheck.me',
     picture: 'https://nostrcheck.me/img/nostrcheck_logo_nostr.jpg',
     url: 'https://nostrcheck.me/',
-    about: 'Free nostr address for 5 different domains , upload avatar, banner, images, gifs or videos to use in your favourite nostr client.',
+    about:
+      'Free nostr address for 5 different domains , upload avatar, banner, images, gifs or videos to use in your favourite nostr client.',
     groupName: 'Media'
   },
   {
@@ -663,7 +665,7 @@ const defaultApps = [
     about: 'Express yourself with images or talk to your audience. Share media across Nostr with Nostrfiles.',
     groupName: 'Media'
   },
-  
+
   // DVM
 
   {
@@ -672,17 +674,17 @@ const defaultApps = [
     picture: 'https://cdn.nostr.build/i/5405e8be436c0ed902846119f351f8898aa06ec94b51e635f0ed50d727a9fc68.png',
     url: 'https://vendata.io/',
     about: 'Client to interact with Data Vending Machines',
-    groupName: "DVM"
+    groupName: 'DVM'
   },
   {
-    naddr: 'naddr1qqsxzwfex9jkzetrxa3xxvpcx3jkzdnpxgcrgdp3xa3nzd3s8p3rjcczyr2g8y6ad07w7dj9r9wqfjtmhdc2akmwv4n9ch4g8etzeg784juhsqcyqqq8easfkt86n',
+    naddr:
+      'naddr1qqsxzwfex9jkzetrxa3xxvpcx3jkzdnpxgcrgdp3xa3nzd3s8p3rjcczyr2g8y6ad07w7dj9r9wqfjtmhdc2akmwv4n9ch4g8etzeg784juhsqcyqqq8easfkt86n',
     name: 'TaskTiger',
     picture: 'https://api.tasktiger.io/media/profile.png',
     url: 'https://tasktiger.io/',
     about: 'Crowdsource your tasks like the tiger commands the wild 🐯',
-    groupName: "DVM"
-  },
-
+    groupName: 'DVM'
+  }
 ]
 
 const bootstrap = async (pubkey) => {
@@ -707,7 +709,7 @@ const bootstrap = async (pubkey) => {
     pins.push(appToPin(app, ind))
   })
 
-  const groups = new Set(defaultApps.map(a => a.groupName).filter(g => !!g))
+  const groups = new Set(defaultApps.map((a) => a.groupName).filter((g) => !!g))
   for (const g of groups.values()) {
     const group = {
       id: g,
@@ -718,7 +720,7 @@ const bootstrap = async (pubkey) => {
       title: '',
       url: '',
       appNaddr: '',
-      icon: '',
+      icon: ''
     }
 
     pins.push(group)
