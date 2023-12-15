@@ -8,6 +8,7 @@ import { MetaEvent } from '@/types/meta-event'
 import { SuggestedProfile } from '@/types/suggested-profiles'
 import { ZapEvent } from '@/types/zap-event'
 import { createSlice } from '@reduxjs/toolkit'
+import { RootState } from '../store'
 
 export interface IContentWorkSpace {
   contactList: ContactListEvent | null
@@ -86,3 +87,27 @@ export const {
   setTrendingNotes,
   setTrendingProfiles
 } = contentWorkSpaceSlice.actions
+
+export const selectLongPosts = (state: RootState): LongNoteEvent[] | null => {
+  return state.contentWorkSpace.longPosts
+}
+
+export const selectLiveEvets = (state: RootState): LiveEvent[] | null => {
+  return state.contentWorkSpace.liveEvents
+}
+
+export const selectBigZaps = (state: RootState): ZapEvent[] | null => {
+  return state.contentWorkSpace.bigZaps
+}
+
+export const selectCommunities = (state: RootState): ExtendedCommunityEvent[] | null => {
+  return state.contentWorkSpace.communities
+}
+
+export const selectHighlights = (state: RootState): HighlightEvent[] | null => {
+  return state.contentWorkSpace.highlights
+}
+
+export const selectContactList = (state: RootState): ContactListEvent | null => {
+  return state.contentWorkSpace.contactList
+}

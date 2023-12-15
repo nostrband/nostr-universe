@@ -13,7 +13,7 @@ export const ModalFeedAppContent = () => {
   const [searchValue, setSearchValue] = useState('')
   const { handleOpenContextMenu } = useOpenModalSearchParams()
 
-  const { apps = [] } = useAppSelector((state) => state.apps)
+  const { apps } = useAppSelector((state) => state.apps)
 
   const handleOpenApp = useCallback(
     async (app: AppNostr) => {
@@ -26,7 +26,7 @@ export const ModalFeedAppContent = () => {
     setSearchValue(e.target.value)
   }
 
-  const filteredApps = apps.filter((app) => {
+  const filteredApps = (apps || []).filter((app) => {
     const search = searchValue.toLowerCase()
     return app.name.toLowerCase().includes(search) || app.about?.toLowerCase().includes(search)
   })

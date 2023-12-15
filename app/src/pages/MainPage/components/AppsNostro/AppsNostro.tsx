@@ -1,8 +1,6 @@
 import { Container } from '@/layout/Container/Conatiner'
 import { StyledTitle, StyledWrapper } from './styled'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { setApps, setLoading } from '@/store/reducers/apps.slice'
-import { fetchApps } from '@/modules/nostr'
+import { useAppSelector } from '@/store/hooks/redux'
 import { memo, useCallback, FC, CSSProperties } from 'react'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
@@ -17,11 +15,14 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { IconButton } from '@mui/material'
 import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useFeeds } from '@/hooks/feeds'
 
 export const AppsNostro = memo(function AppsNostro() {
-  const { apps, isLoading } = useAppSelector((state) => state.apps)
-  const dispatch = useAppDispatch()
+  const { apps } = useAppSelector((state) => state.apps)
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
+  const { reloadApps } = useFeeds()
+
+  const isLoading = apps === null
 
   const handleOpenApp = useCallback(
     async (app: AppNostr) => {
@@ -34,16 +35,8 @@ export const AppsNostro = memo(function AppsNostro() {
     handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL_APPS)
   }
 
-  const handleReloadApps = useCallback(async () => {
-    dispatch(setLoading({ isLoading: true }))
-    const apps = await fetchApps().finally(() => {
-      dispatch(setLoading({ isLoading: false }))
-    })
-    dispatch(setApps({ apps }))
-  }, [dispatch])
-
   const renderContent = useCallback(() => {
-    if (isLoading && !apps.length) {
+    if (isLoading) {
       return (
         <HorizontalSwipeContent>
           <SkeletonApps />
@@ -51,8 +44,8 @@ export const AppsNostro = memo(function AppsNostro() {
       )
     }
 
-    if (!apps.length && !isLoading) {
-      return <EmptyListMessage onReload={handleReloadApps} />
+    if (!apps.length) {
+      return <EmptyListMessage onReload={reloadApps} />
     }
 
     const Row: FC<{ index: number; style: CSSProperties }> = ({ index, style }) => {
@@ -66,7 +59,7 @@ export const AppsNostro = memo(function AppsNostro() {
     }
 
     return <HorizontalSwipeVirtualContent itemHeight={105} itemSize={80} itemCount={apps.length} RowComponent={Row} />
-  }, [handleOpenApp, apps, isLoading, handleReloadApps])
+  }, [handleOpenApp, apps, isLoading, reloadApps])
 
   const isVisible = Boolean(apps && apps.length)
 

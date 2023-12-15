@@ -7,9 +7,8 @@ import {
 import { CSSProperties, FC, useCallback } from 'react'
 import { StyledTitle, StyledWrapper } from './styled'
 import { Container } from '@/layout/Container/Conatiner'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
-import { fetchBookmarkListsThunk } from '@/store/reducers/bookmarks.slice'
-import { useSigner } from '@/hooks/signer'
+import { useAppSelector } from '@/store/hooks/redux'
+import { selectBookmarkLists } from '@/store/reducers/bookmarks.slice'
 import { BookmarkListItem } from './BookmarkListItem/BookmarkListItem'
 import { BookmarkListEvent } from '@/types/bookmark-list-event'
 import { useOpenModalSearchParams } from '@/hooks/modal'
@@ -17,17 +16,12 @@ import { SkeletonBookmarkLists } from '@/components/Skeleton/SkeletonBookmarkLis
 import { IconButton } from '@mui/material'
 import OpenInFullOutlinedIcon from '@mui/icons-material/OpenInFullOutlined'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
+import { useFeeds } from '@/hooks/feeds'
 
 export const BookmarkLists = () => {
-  const { bookmarkLists, isBookmarkListsLoading } = useAppSelector((state) => state.bookmarks)
-  const { currentPubkey } = useAppSelector((state) => state.keys)
-  const { decrypt } = useSigner()
-  const dispatch = useAppDispatch()
+  const bookmarkLists = useAppSelector(selectBookmarkLists)
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
-
-  const reloadBookmarkLists = useCallback(() => {
-    dispatch(fetchBookmarkListsThunk({ pubkey: currentPubkey, decrypt }))
-  }, [currentPubkey, dispatch, decrypt])
+  const { reloadBookmarkLists } = useFeeds()
 
   const handleOpenBookmark = useCallback(
     (event: BookmarkListEvent) => {
@@ -45,14 +39,14 @@ export const BookmarkLists = () => {
   }
 
   const renderContent = useCallback(() => {
-    if (isBookmarkListsLoading) {
+    if (!bookmarkLists) {
       return (
         <HorizontalSwipeContent childrenWidth={225}>
           <SkeletonBookmarkLists />
         </HorizontalSwipeContent>
       )
     }
-    if (!bookmarkLists.length && !isBookmarkListsLoading) {
+    if (!bookmarkLists.length) {
       return <EmptyListMessage onReload={reloadBookmarkLists} />
     }
 
@@ -74,7 +68,7 @@ export const BookmarkLists = () => {
         RowComponent={Row}
       />
     )
-  }, [bookmarkLists, isBookmarkListsLoading, reloadBookmarkLists, handleOpenBookmark])
+  }, [bookmarkLists, reloadBookmarkLists, handleOpenBookmark])
 
   const isVisible = Boolean(bookmarkLists && bookmarkLists.length)
 

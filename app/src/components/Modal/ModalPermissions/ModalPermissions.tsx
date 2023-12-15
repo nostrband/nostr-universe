@@ -18,7 +18,7 @@ export const ModalPermissions = () => {
   const { apps: appsList } = useAppSelector((state) => state.apps)
 
   const apps = [...new Set(currentWorkSpace?.perms.map((p) => p.app))].map((id) => {
-    const app = appsList.find((app) => app.naddr === id)
+    const app = (appsList || []).find((app) => app.naddr === id)
 
     let title = app?.name || id
     try {
