@@ -65,7 +65,7 @@ export const useOpenModalSearchParams = () => {
         console.log('path close', path)
         navigate(path, { replace: true })
       } else {
-        navigate(-1)
+        navigate(-1) // remove from slugs
       }
     },
     [navigate]

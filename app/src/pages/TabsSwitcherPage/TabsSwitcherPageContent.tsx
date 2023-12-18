@@ -1,4 +1,4 @@
-import { MouseEvent, useCallback } from 'react'
+import { MouseEvent, memo, useCallback } from 'react'
 import { Box, IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { Container } from '@/layout/Container/Conatiner'
@@ -8,13 +8,13 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { ITabGroup, selectTabGroups } from '@/store/store'
 import { ITab } from '@/types/tab'
-import { useSearchParams } from 'react-router-dom'
 import { StyledWrapVisibility } from '../styled'
 import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/HorizontalSwipeContent'
+import { getSlug } from '@/utils/helpers/general'
 
-export const TabsSwitcherPageContent = () => {
-  const [searchParams] = useSearchParams()
-  const isShow = searchParams.get('page') === 'tabs-switcher'
+export const TabsSwitcherPageContent = memo(function TabsSwitcherPageContent() {
+  // const isShow = searchParams.get('page') === 'tabs-switcher'
+  const isShow = useAppSelector((state) => getSlug(state.router.slugs, 'tabs-switcher'))
   const { onSwitchTab, onCloseTab, onCloseTabs } = useOpenApp()
   const tgs = useAppSelector(selectTabGroups)
 
@@ -92,4 +92,4 @@ export const TabsSwitcherPageContent = () => {
       )}
     </StyledWrapVisibility>
   )
-}
+})

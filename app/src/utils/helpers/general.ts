@@ -60,3 +60,13 @@ export const showToast = (message: string) => {
     console.log('Show toast failed')
   }
 }
+
+export const getSlug = (slugs: string[], curSlug: string) => Boolean(slugs.find((slug) => slug.includes(curSlug)))
+
+export const getValuePageSlug = (slugs: string[]) => {
+  const slug = slugs.find((slug) => slug.includes('?page=')) as string
+
+  const startIndex = slug.indexOf('=') + 1
+
+  return slug.substring(startIndex)
+}

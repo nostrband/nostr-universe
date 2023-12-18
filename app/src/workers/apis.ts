@@ -15,7 +15,8 @@ export interface WorkerAPI {
 
   relayInitLocal(): void
   relayGetEventsCount(): number
-  relayGetEventStats(): { kinds: [number, number][], pubkeys: [number, number][]}
+  relayGetEventStats(): { kinds: [number, number][]; pubkeys: [number, number][] }
+  // eslint-disable-next-line
   relayCreateLocalClient(onReply: (msg: any) => void): string
   relayLocalSend(id: string, data: string): void
   relayLocalDestroy(id: string): void

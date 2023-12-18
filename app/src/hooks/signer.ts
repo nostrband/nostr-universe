@@ -58,13 +58,12 @@ export const useSigner = () => {
     [currentPubkey, nsbKeys]
   )
 
-  return useMemo(() => ({
-    signEvent,
-    encrypt,
-    decrypt
-  }), [
-    signEvent,
-    encrypt,
-    decrypt
-  ])
+  return useMemo(
+    () => ({
+      signEvent,
+      encrypt,
+      decrypt
+    }),
+    [signEvent, encrypt, decrypt]
+  )
 }

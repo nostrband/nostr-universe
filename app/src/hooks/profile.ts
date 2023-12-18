@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react'
 
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { setCurrentProfile } from '@/store/reducers/profile.slice'
-import {
-  selectContactList
-} from '@/store/reducers/contentWorkspace'
+import { selectContactList } from '@/store/reducers/contentWorkspace'
 import { getFeedbackInfoThunk } from '@/store/reducers/feedbackInfo.slice'
 import { useSync } from './sync'
 import { useAsyncThrottle } from './async'
@@ -26,15 +24,16 @@ export const useUpdateProfile = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const reloadFeeds = useCallback(async (full?: boolean) => {
-    console.log(Date.now(), 'sync reloadFeeds full:', full, "cl", contactList)
+  const reloadFeeds = useCallback(
+    async (full?: boolean) => {
+      console.log(Date.now(), 'sync reloadFeeds full:', full, 'cl', contactList)
 
-    feeds.reload(full)
-  }, [feeds, contactList])
-
-  const reloadFeedsFull = useCallback(async () => reloadFeeds(true),
-    [reloadFeeds]
+      feeds.reload(full)
+    },
+    [feeds, contactList]
   )
+
+  const reloadFeedsFull = useCallback(async () => reloadFeeds(true), [reloadFeeds])
 
   useEffect(() => {
     console.log('force reload', Date.now())
@@ -72,11 +71,11 @@ export const useUpdateProfile = () => {
     [dispatch, getProfile]
   )
 
-  return useMemo(() => ({
-    updateProfile,
-    reloadFeeds,
-  }), [
-    updateProfile,
-    reloadFeeds,
-  ])
+  return useMemo(
+    () => ({
+      updateProfile,
+      reloadFeeds
+    }),
+    [updateProfile, reloadFeeds]
+  )
 }

@@ -13,6 +13,7 @@ import { setOnAddLocalRelayEvents } from './modules/nostr.ts'
 
 overrideWebSocket()
 startWorker()
+// eslint-disable-next-line
 setOnAddLocalRelayEvents((events: any) => worker.relayAddLocalEvents(events))
 
 const store = createStore()

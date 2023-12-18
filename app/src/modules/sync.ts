@@ -283,7 +283,7 @@ async function processFilters(task: ISyncTask, filterTmpls: NDKFilter[], postFil
     if (newEvents.length > 0) dbi.putLocalRelayEvents(newEvents)
 
     // some checks for new events
-    newEvents.forEach(e => onBeforeNewEvent(e))
+    newEvents.forEach((e) => onBeforeNewEvent(e))
 
     // put to results
     total += count

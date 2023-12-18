@@ -21,6 +21,7 @@ import { isGuest } from '@/utils/helpers/prepare-data'
 import { notificationsSlice } from './reducers/notifications.slice'
 import { syncSlice } from './reducers/sync.slice'
 import { selectAppHistorySlice } from './reducers/selectAppHistory.slice'
+import { routerSlice } from './reducers/router.slice'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -38,7 +39,8 @@ export const rootReducer = combineReducers({
   [bookmarksSlice.name]: bookmarksSlice.reducer,
   [feedbackInfoSlice.name]: feedbackInfoSlice.reducer,
   [notificationsSlice.name]: notificationsSlice.reducer,
-  [syncSlice.name]: syncSlice.reducer
+  [syncSlice.name]: syncSlice.reducer,
+  [routerSlice.name]: routerSlice.reducer
 })
 
 export const createStore = () => {

@@ -15,11 +15,13 @@ import { isGuest } from '@/utils/helpers/prepare-data'
 export const RecommendAppWidget = () => {
   const { currentPubkey } = useAppSelector(selectKeys)
   const { apps } = useAppSelector((state) => state.selectAppHistory)
+  // eslint-disable-next-line
   const [newApps, setNewApps] = useState<any[]>([])
   const dispatch = useAppDispatch()
   const { signEvent } = useSigner()
 
   const filterNewApps = useCallback(
+    // eslint-disable-next-line
     async (list: any[]) => {
       const recomms = await fetchAppRecomms(currentPubkey)
       // eslint-disable-next-line
@@ -33,6 +35,7 @@ export const RecommendAppWidget = () => {
   )
 
   const updateNewApps = useCallback(
+    // eslint-disable-next-line
     async (apps: any[]) => {
       if (!isGuest(currentPubkey)) {
         const newApps = await filterNewApps(apps)

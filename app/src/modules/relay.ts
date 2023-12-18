@@ -23,7 +23,7 @@ let started = false
 let onBeforeNewEvent: ((e: NostrEvent) => void) | null = null
 
 export function addLocalRelayEvents(events: NostrEvent[], fromSync?: boolean) {
-  return events.map(e => addLocalRelayEvent(e, fromSync))
+  return events.map((e) => addLocalRelayEvent(e, fromSync))
 }
 
 export function setOnBeforeNewEvent(cb: (e: NostrEvent) => void) {
@@ -35,6 +35,7 @@ function addLocalRelayEvent(e: NostrEvent, fromSync?: boolean) {
 
   //  console.log("addLocalRelayEvent kind", e.kind, "id", e.id, "pubkey", e.pubkey)
   if (!fromSync) {
+    // eslint-disable-next-line
     // @ts-ignore
     onBeforeNewEvent(e)
   }
@@ -69,8 +70,7 @@ function addLocalRelayEvent(e: NostrEvent, fromSync?: boolean) {
   events.push(e)
 
   // broadcast to all clients
-  for (const c of clients.values()) 
-    c.onNewEvent(e)
+  for (const c of clients.values()) c.onNewEvent(e)
 
   return true
 }
@@ -93,15 +93,14 @@ export class LocalRelayClient {
     this.subs = new Set<any>()
     this.onSend = onSend
 
-    this.id = Math.random()+''
+    this.id = Math.random() + ''
     clients.set(this.id, this)
 
     this.started = started
   }
   start() {
     this.started = true
-    for (const message of this.buffer)
-      this.handle(message)
+    for (const message of this.buffer) this.handle(message)
     this.buffer.length = 0
   }
   cleanup() {
@@ -284,6 +283,7 @@ export class LocalRelayClient {
   }
 }
 
+// eslint-disable-next-line
 export function createLocalRelayClient(onReply: (msg: any) => void): string {
   const client = new LocalRelayClient(onReply)
   return client.id
@@ -305,8 +305,7 @@ export async function initLocalRelay() {
   for (const e of dbEvents) addLocalRelayEvent(e, true)
   console.log('local events', events.length, 'loaded in', Date.now() - start, 'ms')
   started = true
-  for (const c of clients.values())
-    c.start()
+  for (const c of clients.values()) c.start()
 }
 
 export function getEventsCount() {
