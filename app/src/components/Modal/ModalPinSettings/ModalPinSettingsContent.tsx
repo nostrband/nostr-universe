@@ -1,6 +1,5 @@
 import { ChangeEvent, FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { Container } from '@/layout/Container/Conatiner'
-import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
 import { selectPin } from '@/store/reducers/workspaces.slice'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
@@ -13,17 +12,18 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { Input } from '@/shared/Input/Input'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
+import { getSearchParams } from '@/utils/helpers/general.ts'
 
 type ModalPinSettingsContentProps = {
   handleClose: () => void
   handleSetAppTitle: (appTitle: string) => void
+  slug?: string | undefined
 }
 
-export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ handleClose, handleSetAppTitle }) => {
-  const [searchParams] = useSearchParams()
+export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ handleClose, handleSetAppTitle, slug }) => {
   const { onDeletePinnedApp, onUpdatePinnedApp } = usePins()
 
-  const id = searchParams.get('pinId') || ''
+  const id = getSearchParams(slug, 'pinId')
   const currentPin = useAppSelector((state) => selectPin(state, id))
 
   const { title = '', url = '' } = currentPin || {}

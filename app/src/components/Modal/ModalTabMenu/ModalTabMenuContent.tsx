@@ -10,7 +10,6 @@ import OpenInBrowserOutlinedIcon from '@mui/icons-material/OpenInBrowserOutlined
 import { StyledItemIconAvatar, StyledItemText, StyledMenuWrapper, StyledWrapInput } from './styled'
 import { ListItem, ListItemAvatar } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
-import { useSearchParams } from 'react-router-dom'
 import React, { useCallback, useEffect, useState } from 'react'
 import { stringToBech32 } from '@/modules/nostr'
 import { selectTab } from '@/store/reducers/tab.slice'
@@ -18,15 +17,14 @@ import { Input } from '@/shared/Input/Input'
 import { IModalTabMenuContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
+import { getSearchParams } from '@/utils/helpers/general.ts'
 
-export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) => {
-  const [searchParams] = useSearchParams()
+export const ModalTabMenuContent = ({ handleCloseModal, slug }: IModalTabMenuContent) => {
   const { onCloseTab, openBlank } = useOpenApp()
   const { onPinTab, onUnPinTab, findTabPin } = usePins()
   const [, setEventAddr] = useState('')
-  const id = searchParams.get('tabId') || ''
+  const id = getSearchParams(slug, 'tabId')
   const currentTab = useAppSelector((state) => selectTab(state, id))
-  const { page } = useAppSelector((state) => state.positionScrollPage)
   // const location = useLocation()
   const isPin = currentTab ? !!findTabPin(currentTab) : false
   const url = currentTab?.url
@@ -41,11 +39,7 @@ export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) 
   }, [url])
 
   const handleCloseTab = () => {
-    if (page === '/') {
-      handleCloseModal('/')
-    } else {
-      handleCloseModal(`?page=${page}`)
-    }
+    handleCloseModal()
 
     onCloseTab(id)
   }

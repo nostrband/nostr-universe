@@ -4,28 +4,27 @@ import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined'
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
-import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { useAppSelector } from '@/store/hooks/redux'
 import { StyledBottomNavigationAction } from './styled'
-import { navigate } from '@/store/reducers/router.slice'
 import { getValuePageSlug } from '@/utils/helpers/general'
+import { useCustomNavigate } from '@/hooks/useCustomNavigate.ts'
 
 export const NavigationBottom = () => {
-  const dispatch = useAppDispatch()
+  const navigate = useCustomNavigate()
   const activeValueTab = useAppSelector((state) => getValuePageSlug(state.router.slugs))
+
+  const slugs = useAppSelector((state) => state.router)
+  console.log({ slugs_store: slugs })
 
   return (
     <BottomNavigation
       showLabels
       value={activeValueTab}
       onChange={(_, path) => {
-        dispatch(
-          navigate({
-            navigateOptions: {
-              pathname: '/',
-              search: `?page=${path}`
-            }
-          })
-        )
+        navigate({
+          pathname: '/',
+          search: `?page=${path}`
+        })
       }}
     >
       <StyledBottomNavigationAction label="Apps" icon={<AppsOutlinedIcon />} value="apps" />

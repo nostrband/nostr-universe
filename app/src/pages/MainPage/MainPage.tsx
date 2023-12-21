@@ -21,7 +21,7 @@ import { getSlug } from '@/utils/helpers/general'
 
 export const MainPage = memo(function MainPage() {
   // const isShow = searchParams.get('page') === 'content'
-  const isShow = useAppSelector((state) => getSlug(state.router.slugs, 'content'))
+  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'content'))
 
   const { keys } = useAppSelector(selectKeys)
   const { isShowWidget } = useAppSelector((state) => state.feedbackInfo)
@@ -73,7 +73,7 @@ export const MainPage = memo(function MainPage() {
   }, [contentFeedSettings, guest])
 
   return (
-    <StyledWrapVisibility isShow={isShow}>
+    <StyledWrapVisibility isShow={isOpen}>
       <RecommendAppWidget />
       {guest && <WelcomeWidget />}
       {isShowWidget && <NPSWidget />}

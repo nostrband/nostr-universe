@@ -38,10 +38,11 @@ import { ModalSync } from './components/Modal/ModalSync/ModalSync'
 import { ModalFeed } from './components/Modal/ModalFeed/ModalFeed'
 import { ModalFeedApp } from './components/Modal/ModalFeedApp/ModalFeedApp'
 import { ModalTrust } from './components/Modal/ModalTrust/ModalTrust'
-import { navigate } from './store/reducers/router.slice'
+import { useCustomNavigate } from '@/hooks/useCustomNavigate.ts'
 
 export const App = memo(function App() {
   const dispatch = useAppDispatch()
+  const navigate = useCustomNavigate()
   const { handleOpen } = useOpenModalSearchParams()
 
   useEffect(() => {
@@ -72,8 +73,9 @@ export const App = memo(function App() {
     <>
       {import.meta.env.DEV && (
         <button
+          style={{ position: 'fixed', zIndex: 9999 }}
           onClick={() => {
-            dispatch(navigate(-1))
+            navigate(-1)
           }}
         >
           back

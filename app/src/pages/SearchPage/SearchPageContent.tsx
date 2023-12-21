@@ -64,7 +64,7 @@ export const SearchPageContent = memo(function SearchPageContent() {
   const dispatch = useAppDispatch()
 
   // const isShow = searchParams.get('page') === 'search'
-  const isShow = useAppSelector((state) => getSlug(state.router.slugs, 'search'))
+  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'search'))
 
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
@@ -536,10 +536,10 @@ export const SearchPageContent = memo(function SearchPageContent() {
     if (contactList) {
       dispatch(fetchRecentEventsThunk({ currentPubkey, contactList: contactList.contactPubkeys }))
     }
-  }, [currentPubkey, contactList, dispatch, isShow])
+  }, [currentPubkey, contactList, dispatch, isOpen])
 
   return (
-    <StyledWrapVisibility isShow={isShow}>
+    <StyledWrapVisibility isShow={isOpen}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledAutocomplete>

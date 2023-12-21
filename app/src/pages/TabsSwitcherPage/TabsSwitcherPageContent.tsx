@@ -14,7 +14,7 @@ import { getSlug } from '@/utils/helpers/general'
 
 export const TabsSwitcherPageContent = memo(function TabsSwitcherPageContent() {
   // const isShow = searchParams.get('page') === 'tabs-switcher'
-  const isShow = useAppSelector((state) => getSlug(state.router.slugs, 'tabs-switcher'))
+  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'tabs-switcher'))
   const { onSwitchTab, onCloseTab, onCloseTabs } = useOpenApp()
   const tgs = useAppSelector(selectTabGroups)
 
@@ -41,7 +41,7 @@ export const TabsSwitcherPageContent = memo(function TabsSwitcherPageContent() {
   )
 
   return (
-    <StyledWrapVisibility isShow={isShow}>
+    <StyledWrapVisibility isShow={isOpen}>
       {!tgs.length ? (
         <>No active tabs.</>
       ) : (

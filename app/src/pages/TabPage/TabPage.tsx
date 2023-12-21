@@ -2,9 +2,10 @@ import { forwardRef } from 'react'
 import Slide from '@mui/material/Slide'
 import { TransitionProps } from '@mui/material/transitions'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
-import { useOpenModalSearchParams } from '@/hooks/modal'
 import { StyledDialog } from './styled'
 import { TabPageContent } from './TabPageContent'
+import { useAppSelector } from '@/store/hooks/redux.ts'
+import { getSlug } from '@/utils/helpers/general.ts'
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -16,12 +17,11 @@ const Transition = forwardRef(function Transition(
 })
 
 export const TabPage = () => {
-  const { getModalOpened } = useOpenModalSearchParams()
-  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.TAB_MODAL)
+  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.TAB_MODAL))
 
   return (
     <StyledDialog fullScreen open={isOpen} TransitionComponent={Transition}>
-      {isOpen && <TabPageContent />}
+      {isOpen && <TabPageContent slug={slug} />}
     </StyledDialog>
   )
 }

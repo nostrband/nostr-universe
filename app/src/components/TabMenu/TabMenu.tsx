@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
 import { useOpenApp } from '@/hooks/open-entity'
 import { IconButton } from '@mui/material'
@@ -13,12 +12,12 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
 import { selectTab } from '@/store/reducers/tab.slice'
+import { getSearchParams } from '@/utils/helpers/general.ts'
 
-export const TabMenu = () => {
+export const TabMenu = ({ slug }: { slug: string | undefined }) => {
   const { handleOpen } = useOpenModalSearchParams()
-  const [searchParams] = useSearchParams()
   const { onStopLoadTab, onReloadTab, backToLastPage } = useOpenApp()
-  const id = searchParams.get('tabId') || ''
+  const id = getSearchParams(slug, 'tabId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const currentTab = useAppSelector((state) => selectTab(state, id))
 

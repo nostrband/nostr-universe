@@ -61,7 +61,13 @@ export const showToast = (message: string) => {
   }
 }
 
-export const getSlug = (slugs: string[], curSlug: string) => Boolean(slugs.find((slug) => slug.includes(curSlug)))
+export const getSlug = (slugs: string[], curSlug: string) => ({
+  isOpen: Boolean(slugs.find((slug) => slug.includes(curSlug))),
+  order: slugs.findIndex((slug) => slug.includes(curSlug)) + 1,
+  slug: slugs.find((slug) => slug.includes(curSlug))
+})
+
+export const getOrderSlug = (slugs: string[], curSlug: string) => slugs.findIndex((slug) => slug.includes(curSlug))
 
 export const getValuePageSlug = (slugs: string[]) => {
   const slug = slugs.find((slug) => slug.includes('?page=')) as string
@@ -69,4 +75,18 @@ export const getValuePageSlug = (slugs: string[]) => {
   const startIndex = slug.indexOf('=') + 1
 
   return slug.substring(startIndex)
+}
+
+export const getSearchParams = (str: string | undefined, name: string): string => {
+  if (str) {
+    const params = new URLSearchParams(str)
+
+    if (params.get(name)) {
+      return params.get(name)
+    }
+
+    return ''
+  }
+
+  return ''
 }

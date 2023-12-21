@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { EXTRA_OPTIONS, MODAL_PARAMS_KEYS } from '@/types/modal'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
@@ -18,9 +17,9 @@ import { Input } from '@/shared/Input/Input'
 import { IModalSelectAppContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
-import { showToast } from '@/utils/helpers/general'
+import { getSearchParams, showToast } from '@/utils/helpers/general'
 
-export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent) => {
+export const ModalSelectAppContent = ({ handleSetKind, slug }: IModalSelectAppContent) => {
   const { openApp } = useOpenApp()
   const { findAppPin } = usePins()
   const [searchValue, setSearchValue] = useState('')
@@ -31,9 +30,8 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
 
-  const [searchParams] = useSearchParams()
-  const getParamKind = searchParams.get(MODAL_PARAMS_KEYS.KIND) || ''
-  const getParamB32 = searchParams.get(EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP]) || ''
+  const getParamKind = getSearchParams(slug, MODAL_PARAMS_KEYS.KIND)
+  const getParamB32 = getSearchParams(slug, EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value)

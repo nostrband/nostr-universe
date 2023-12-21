@@ -15,11 +15,12 @@ type PinGroupModalProps = DialogProps & {
   handleClose: () => void
   pins: IPin[]
   groupDefaultName: string
+  slug?: string | undefined
 }
 
 type PinID = string | number
 
-export const PinGroupModal: FC<PinGroupModalProps> = ({ open, handleClose, ...rest }) => {
+export const PinGroupModal: FC<PinGroupModalProps> = ({ open, slug, handleClose, ...rest }) => {
   const sensors = useSensors()
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const dispatch = useAppDispatch()
@@ -101,7 +102,7 @@ export const PinGroupModal: FC<PinGroupModalProps> = ({ open, handleClose, ...re
         }}
         PaperComponent={DroppablePaper}
       >
-        {open && <PinGroupModalContent {...rest} handleClose={handleClose} activeId={activeId} />}
+        {open && <PinGroupModalContent slug={slug} {...rest} handleClose={handleClose} activeId={activeId} />}
       </StyledDialog>
     </DndContext>
   )

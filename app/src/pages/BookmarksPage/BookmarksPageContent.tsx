@@ -10,10 +10,10 @@ import { memo } from 'react'
 
 export const BookmarksPageContent = memo(function BookmarksPageContent() {
   // const isShow = searchParams.get('page') === 'bookmarks'
-  const isShow = useAppSelector((state) => getSlug(state.router.slugs, 'bookmarks'))
+  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'bookmarks'))
 
   return (
-    <StyledWrapVisibility isShow={isShow}>
+    <StyledWrapVisibility isShow={isOpen}>
       <ContactList />
       <BestNotes />
       <BestLongNotes />

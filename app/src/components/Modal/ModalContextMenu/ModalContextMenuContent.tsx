@@ -25,7 +25,6 @@ import {
   StyledItemEventPreview
 } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
-import { useSearchParams } from 'react-router-dom'
 import {
   fetchExtendedEventByBech32,
   getHandlerEventUrl,
@@ -38,7 +37,7 @@ import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
 import { ReactNode, useCallback, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { AppEvent } from '@/types/app-event'
-import { showToast } from '@/utils/helpers/general'
+import { getSearchParams, showToast } from '@/utils/helpers/general'
 import { usePins } from '@/hooks/pins'
 import { selectCurrentWorkspace, selectKeys } from '@/store/store'
 import { AppNostr } from '@/types/app-nostr'
@@ -49,8 +48,7 @@ import { setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
 import { createPreviewEvent, getPreviewComponentEvent } from '@/utils/helpers/prepare-component'
 import { AugmentedEvent } from '@/types/augmented-event'
 
-export const ModalContextMenuContent = () => {
-  const [searchParams] = useSearchParams()
+export const ModalContextMenuContent = ({ slug }: { slug: string | undefined }) => {
   const { currentPubkey } = useAppSelector(selectKeys)
   const dispatch = useAppDispatch()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
@@ -61,14 +59,14 @@ export const ModalContextMenuContent = () => {
   const [lastApp, setLastApp] = useState<AppNostr | null>(null)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
-  const tabId = searchParams.get('tabId') || ''
-  const tabUrl = searchParams.get('tabUrl') || ''
-  const text = searchParams.get('text') || ''
-  const href = searchParams.get('href') || ''
-  const imgSrc = searchParams.get('imgSrc') || ''
-  const videoSrc = searchParams.get('videoSrc') || ''
-  const audioSrc = searchParams.get('audioSrc') || ''
-  let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
+  const tabId = getSearchParams(slug, 'tabId')
+  const tabUrl = getSearchParams(slug, 'tabUrl')
+  const text = getSearchParams(slug, 'text')
+  const href = getSearchParams(slug, 'href')
+  const imgSrc = getSearchParams(slug, 'imgSrc')
+  const videoSrc = getSearchParams(slug, 'videoSrc')
+  const audioSrc = getSearchParams(slug, 'audioSrc')
+  let value = getSearchParams(slug, 'bech32') || href || text || imgSrc || videoSrc || audioSrc
   const b32 = stringToBech32(value || tabUrl)
   const [invoice] = stringToBolt11(value || tabUrl)
   if (!value) value = b32 || invoice || tabUrl // from tabUrl

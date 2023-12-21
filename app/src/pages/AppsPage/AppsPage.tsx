@@ -5,10 +5,10 @@ import { StyledWrapVisibility } from '../styled'
 import { memo } from 'react'
 
 export const AppsPage = memo(function AppsPage() {
-  const isShow = useAppSelector((state) => getSlug(state.router.slugs, 'apps'))
+  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'apps'))
 
   return (
-    <StyledWrapVisibility isShow={isShow}>
+    <StyledWrapVisibility isShow={isOpen}>
       <AppsPageContent />
     </StyledWrapVisibility>
   )

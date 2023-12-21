@@ -3,19 +3,18 @@ import { checkIsGroupingMode, checkIsGroupType } from './helpers'
 import { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { IPin } from '@/types/workspace'
 import { AppNostr } from '@/types/app-nostr'
-import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { bulkEditPinsWorkspace, swapPins } from '@/store/reducers/workspaces.slice'
 import { selectCurrentWorkspace } from '@/store/store'
+import { getSearchParams } from '@/utils/helpers/general.ts'
 
 type PinID = string | number
 
-export const usePinDragAndDrop = (pins: IPin[]) => {
+export const usePinDragAndDrop = (pins: IPin[], slug: string | undefined) => {
   const dispatch = useAppDispatch()
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
 
-  const [searchParams] = useSearchParams()
-  const groupName = searchParams.get('groupName') || ''
+  const groupName = getSearchParams(slug, 'groupName')
 
   const [activeId, setActiveId] = useState<string | null>(null)
 

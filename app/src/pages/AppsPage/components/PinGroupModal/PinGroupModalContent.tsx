@@ -3,7 +3,6 @@ import { IPin } from '@/types/workspace'
 import { createPortal } from 'react-dom'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { AppNostro } from '@/shared/AppNostro/AppNostro'
-import { useSearchParams } from 'react-router-dom'
 import { addPinWorkspace, bulkEditPinsWorkspace } from '@/store/reducers/workspaces.slice'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
@@ -19,6 +18,7 @@ import { DragOverlay } from '@dnd-kit/core'
 import { StyledInput } from './styled'
 import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
 import { dbi } from '@/modules/db'
+import { getSearchParams } from '@/utils/helpers/general.ts'
 
 type PinGroupModalContentProps = {
   groupName: string
@@ -27,6 +27,7 @@ type PinGroupModalContentProps = {
   pins: IPin[]
   groupDefaultName: string
   activeId: string | null
+  slug?: string | undefined
 }
 
 export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
@@ -34,14 +35,14 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
   groupName = '',
   pins,
   groupDefaultName = '',
-  activeId
+  activeId,
+  slug
 }) => {
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
   const { currentPubkey } = useAppSelector((state) => state.keys)
 
-  const [searchParams] = useSearchParams()
-  const isNewEmptyGroup = searchParams.get('groupName') === 'DEFAULT_GROUPNAME'
+  const isNewEmptyGroup = getSearchParams(slug, 'groupName') === 'DEFAULT_GROUPNAME'
 
   const { handleOpen: handleOpenModal } = useOpenModalSearchParams()
   const { openApp } = useOpenApp()

@@ -2,9 +2,8 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import { Avatar, ListItemAvatar, ListItemText } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
 import { useAppSelector } from '@/store/hooks/redux'
-import { useSearchParams } from 'react-router-dom'
 import { StyledViewTitle, StyledListItem, StyledListItemText, StyledList } from './styled'
-import { getRenderedUsername } from '@/utils/helpers/general'
+import { getRenderedUsername, getSearchParams } from '@/utils/helpers/general'
 import { getOrigin, getProfileImage } from '@/utils/helpers/prepare-data'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { IPerm } from '@/types/permission-req'
@@ -13,10 +12,9 @@ import { walletstore } from '@/modules/walletstore'
 import { useEffect, useState } from 'react'
 import { selectCurrentWorkspace } from '@/store/store'
 
-export const ModalProfileTabMenuContent = () => {
-  const [searchParams] = useSearchParams()
+export const ModalProfileTabMenuContent = ({ slug }: { slug: string | undefined }) => {
   const [perms, setPerms] = useState<IPerm[]>([])
-  const id = searchParams.get('tabId') || ''
+  const id = getSearchParams(slug, 'tabId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { currentPubkey } = useAppSelector((state) => state.keys)
 
