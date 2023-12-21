@@ -37,7 +37,7 @@ import { copyToClipBoard, getDomain } from '@/utils/helpers/prepare-data'
 import { ReactNode, useCallback, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { AppEvent } from '@/types/app-event'
-import { getSearchParams, showToast } from '@/utils/helpers/general'
+import { showToast } from '@/utils/helpers/general'
 import { usePins } from '@/hooks/pins'
 import { selectCurrentWorkspace, selectKeys } from '@/store/store'
 import { AppNostr } from '@/types/app-nostr'
@@ -47,8 +47,9 @@ import { dbi } from '@/modules/db'
 import { setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
 import { createPreviewEvent, getPreviewComponentEvent } from '@/utils/helpers/prepare-component'
 import { AugmentedEvent } from '@/types/augmented-event'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
-export const ModalContextMenuContent = ({ slug }: { slug: string | undefined }) => {
+export const ModalContextMenuContent = () => {
   const { currentPubkey } = useAppSelector(selectKeys)
   const dispatch = useAppDispatch()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
@@ -59,14 +60,15 @@ export const ModalContextMenuContent = ({ slug }: { slug: string | undefined }) 
   const [lastApp, setLastApp] = useState<AppNostr | null>(null)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
-  const tabId = getSearchParams(slug, 'tabId')
-  const tabUrl = getSearchParams(slug, 'tabUrl')
-  const text = getSearchParams(slug, 'text')
-  const href = getSearchParams(slug, 'href')
-  const imgSrc = getSearchParams(slug, 'imgSrc')
-  const videoSrc = getSearchParams(slug, 'videoSrc')
-  const audioSrc = getSearchParams(slug, 'audioSrc')
-  let value = getSearchParams(slug, 'bech32') || href || text || imgSrc || videoSrc || audioSrc
+  const getSearchParams = useSearchParams()
+  const tabId = getSearchParams('tabId')
+  const tabUrl = getSearchParams('tabUrl')
+  const text = getSearchParams('text')
+  const href = getSearchParams('href')
+  const imgSrc = getSearchParams('imgSrc')
+  const videoSrc = getSearchParams('videoSrc')
+  const audioSrc = getSearchParams('audioSrc')
+  let value = getSearchParams('bech32') || href || text || imgSrc || videoSrc || audioSrc
   const b32 = stringToBech32(value || tabUrl)
   const [invoice] = stringToBolt11(value || tabUrl)
   if (!value) value = b32 || invoice || tabUrl // from tabUrl

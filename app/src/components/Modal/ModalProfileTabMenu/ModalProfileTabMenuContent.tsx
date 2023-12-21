@@ -3,7 +3,7 @@ import { Avatar, ListItemAvatar, ListItemText } from '@mui/material'
 import { Container } from '@/layout/Container/Conatiner'
 import { useAppSelector } from '@/store/hooks/redux'
 import { StyledViewTitle, StyledListItem, StyledListItemText, StyledList } from './styled'
-import { getRenderedUsername, getSearchParams } from '@/utils/helpers/general'
+import { getRenderedUsername } from '@/utils/helpers/general'
 import { getOrigin, getProfileImage } from '@/utils/helpers/prepare-data'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { IPerm } from '@/types/permission-req'
@@ -11,10 +11,13 @@ import { selectTab } from '@/store/reducers/tab.slice'
 import { walletstore } from '@/modules/walletstore'
 import { useEffect, useState } from 'react'
 import { selectCurrentWorkspace } from '@/store/store'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
-export const ModalProfileTabMenuContent = ({ slug }: { slug: string | undefined }) => {
+export const ModalProfileTabMenuContent = () => {
   const [perms, setPerms] = useState<IPerm[]>([])
-  const id = getSearchParams(slug, 'tabId')
+
+  const getSearchParams = useSearchParams()
+  const id = getSearchParams('tabId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { currentPubkey } = useAppSelector((state) => state.keys)
 

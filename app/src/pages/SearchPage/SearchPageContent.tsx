@@ -63,8 +63,7 @@ export const SearchPageContent = memo(function SearchPageContent() {
   const { openBlank } = useOpenApp()
   const dispatch = useAppDispatch()
 
-  // const isShow = searchParams.get('page') === 'search'
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'search'))
+  const isOpen = useAppSelector((state) => getSlug(state, 'search'))
 
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)

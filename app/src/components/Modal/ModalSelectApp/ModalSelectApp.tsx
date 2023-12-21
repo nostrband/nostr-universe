@@ -10,7 +10,7 @@ import { getSlug } from '@/utils/helpers/general.ts'
 export const ModalSelectApp = () => {
   const [kind, setKind] = useState('')
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.SELECT_APP))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.SELECT_APP))
 
   const handleSetKind = (k: string) => {
     setKind(k)
@@ -25,7 +25,7 @@ export const ModalSelectApp = () => {
 
   return (
     <Modal title={label} open={isOpen} handleClose={() => handleClose()}>
-      {isOpen && <ModalSelectAppContent slug={slug} handleSetKind={handleSetKind} />}
+      {isOpen && <ModalSelectAppContent handleSetKind={handleSetKind} />}
     </Modal>
   )
 }

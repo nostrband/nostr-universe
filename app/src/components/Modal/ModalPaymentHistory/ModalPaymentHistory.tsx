@@ -7,7 +7,7 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalPaymentHistory = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.PAYMENT_HISTORY_MODAL))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.PAYMENT_HISTORY_MODAL))
 
   return (
     <Modal title="Payment history" open={isOpen} handleClose={() => handleClose()}>

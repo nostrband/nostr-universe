@@ -7,13 +7,11 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalProfileTabMenu = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen, slug } = useAppSelector((state) =>
-    getSlug(state.router.slugs, MODAL_PARAMS_KEYS.PROFILE_TAB_MENU_MODAL)
-  )
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.PROFILE_TAB_MENU_MODAL))
 
   return (
     <Modal title="App permissions" open={isOpen} handleClose={() => handleClose()}>
-      {isOpen && <ModalProfileTabMenuContent slug={slug} />}
+      {isOpen && <ModalProfileTabMenuContent />}
     </Modal>
   )
 }

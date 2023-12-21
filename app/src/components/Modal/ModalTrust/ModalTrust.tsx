@@ -7,7 +7,7 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalTrust = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.TRUST_MODAL))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.TRUST_MODAL))
 
   return (
     <Modal open={isOpen} title="Trust scores" handleClose={() => handleClose()}>

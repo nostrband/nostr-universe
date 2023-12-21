@@ -3,6 +3,7 @@
 import { MetaEvent } from '@/types/meta-event'
 import { nip19 } from '@nostrband/nostr-tools'
 import { isGuest } from './prepare-data'
+import { RootState } from '@/store/store.ts'
 
 export const getShortenText = (str) => {
   const string = String(str)
@@ -61,32 +62,17 @@ export const showToast = (message: string) => {
   }
 }
 
-export const getSlug = (slugs: string[], curSlug: string) => ({
-  isOpen: Boolean(slugs.find((slug) => slug.includes(curSlug))),
-  order: slugs.findIndex((slug) => slug.includes(curSlug)) + 1,
-  slug: slugs.find((slug) => slug.includes(curSlug))
-})
+export const getSlug = (store: RootState, curSlug: string) => {
+  const url = new URLSearchParams(store.router.url)
 
-export const getOrderSlug = (slugs: string[], curSlug: string) => slugs.findIndex((slug) => slug.includes(curSlug))
+  for (const key of url.keys()) {
+    const value = url.get(key) as string
+    url.set(key, value)
 
-export const getValuePageSlug = (slugs: string[]) => {
-  const slug = slugs.find((slug) => slug.includes('?page=')) as string
-
-  const startIndex = slug.indexOf('=') + 1
-
-  return slug.substring(startIndex)
-}
-
-export const getSearchParams = (str: string | undefined, name: string): string => {
-  if (str) {
-    const params = new URLSearchParams(str)
-
-    if (params.get(name)) {
-      return params.get(name)
+    if (value === curSlug) {
+      return true
     }
-
-    return ''
   }
 
-  return ''
+  return false
 }

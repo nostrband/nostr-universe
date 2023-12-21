@@ -1,13 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 export interface IRouterState {
-  slugs: string[]
+  url: string
   historySlugs: string[]
 }
 
 const initialState: IRouterState = {
-  slugs: ['?page=apps'],
-  historySlugs: ['?page=apps']
+  url: 'page=apps',
+  historySlugs: ['page=apps']
+}
+const findLastStringWithSubstring = (arr: string[], substring: string) => {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i].includes(substring)) {
+      return { slug: arr[i], index: i + 1 }
+    }
+  }
+
+  return { slug: null, index: null }
 }
 
 export const routerSlice = createSlice({
@@ -15,75 +24,68 @@ export const routerSlice = createSlice({
   initialState,
   reducers: {
     navigate: (state, action) => {
-      const options = action.payload.options
+      const options = action.payload?.options
       const search = action.payload.to.search
+      let initialPath = ''
 
-      // start screens
-      if (search.includes('?page=')) {
-        state.slugs = state.slugs.map((slug) => {
-          if (slug.includes('?page=')) {
-            return search
-          }
+      if (options?.append) {
+        initialPath = state.url
+      }
 
-          return slug
-        })
+      const url = new URLSearchParams(initialPath)
 
-        state.historySlugs = state.historySlugs.map((slug) => {
-          if (slug.includes('?page=')) {
-            return search
-          }
+      const searchParams = new URLSearchParams(search)
 
-          return slug
-        })
+      const { slug, index } = findLastStringWithSubstring(state.historySlugs, 'page=')
+      const startScreen = slug || initialState.url
+      const startScreenUrl = new URLSearchParams(startScreen)
+
+      for (const key of startScreenUrl.keys()) {
+        const value = startScreenUrl.get(key) as string
+        url.set(key, value)
+      }
+
+      for (const key of searchParams.keys()) {
+        const value = searchParams.get(key) as string
+        url.set(key, value)
+      }
+
+      state.url = url.toString()
+
+      if (options?.replace && index) {
+        const history = state.historySlugs.slice(0, index)
+
+        state.historySlugs = [...history, searchParams.toString()]
 
         return
       }
 
-      // modal screens
-      if (!state.slugs.some((str: string) => str.includes(search))) {
-        if (options.append) {
-          state.slugs = [...state.slugs, `&${search}&append=true`]
-
-          state.historySlugs = [...state.historySlugs, `&${search}&append=true`]
-          return
-        }
-
-        if (options.replace) {
-          state.slugs = [state.slugs[0], `&${search}&replace=true`]
-
-          state.historySlugs = [...state.historySlugs, `&${search}&replace=true`]
-          return
-        }
-
-        state.slugs = [state.slugs[0], `&${search}`]
-        state.historySlugs = [...state.historySlugs, `&${search}`]
-      }
+      state.historySlugs = [...state.historySlugs, searchParams.toString()]
     },
     forwardBack: (state) => {
       const historySlugs = state.historySlugs
-      let slugs = state.slugs
 
       if (historySlugs.length > 1) {
-        const lastSlug = historySlugs[historySlugs.length - 1] as string
+        const rmSlug = historySlugs[historySlugs.length - 1] as string
 
-        if (lastSlug.includes('replace=true')) {
-          state.slugs = [slugs[0]]
-          state.historySlugs = [historySlugs[0]]
-          return
+        const url = new URLSearchParams(state.url)
+        const rmSlugUrl = new URLSearchParams(rmSlug)
+
+        for (const key of rmSlugUrl.keys()) {
+          url.delete(key)
         }
 
-        const prevLastSlug = historySlugs[historySlugs.length - 2]
-
-        const indexSlug = slugs.lastIndexOf(lastSlug)
-
-        slugs.splice(indexSlug, 1)
         historySlugs.splice(-1)
 
-        if (slugs.length === 1 && historySlugs.length > 1) {
-          slugs = [...slugs, prevLastSlug]
+        const lastSlug = historySlugs[historySlugs.length - 1] as string
+        const lastSlugUrl = new URLSearchParams(lastSlug)
+
+        for (const key of lastSlugUrl.keys()) {
+          const value = lastSlugUrl.get(key) as string
+          url.set(key, value)
         }
 
-        state.slugs = slugs
+        state.url = url.toString()
 
         state.historySlugs = historySlugs
       }

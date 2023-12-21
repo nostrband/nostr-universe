@@ -10,15 +10,13 @@ export const ModalPinSettings = () => {
   const [appTitle, setAppTitle] = useState('')
   const { handleClose } = useOpenModalSearchParams()
 
-  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.PIN_SETTINGS_MODAL))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.PIN_SETTINGS_MODAL))
 
   const handleSetAppTitle = (title: string) => setAppTitle(title)
 
   return (
     <Modal title={`${appTitle ? `«${appTitle}»` : 'App'} settings`} open={isOpen} handleClose={() => handleClose()}>
-      {isOpen && (
-        <ModalPinSettingsContent slug={slug} handleClose={() => handleClose()} handleSetAppTitle={handleSetAppTitle} />
-      )}
+      {isOpen && <ModalPinSettingsContent handleClose={() => handleClose()} handleSetAppTitle={handleSetAppTitle} />}
     </Modal>
   )
 }

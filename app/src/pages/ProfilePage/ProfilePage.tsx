@@ -8,7 +8,7 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ProfilePage = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.PROFILE_PAGE))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.PROFILE_PAGE))
 
   return (
     <Modal title="My profile" open={isOpen} handleClose={() => handleClose()}>

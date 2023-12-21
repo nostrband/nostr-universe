@@ -13,8 +13,7 @@ import { HorizontalSwipeContent } from '@/shared/HorizontalSwipeContent/Horizont
 import { getSlug } from '@/utils/helpers/general'
 
 export const TabsSwitcherPageContent = memo(function TabsSwitcherPageContent() {
-  // const isShow = searchParams.get('page') === 'tabs-switcher'
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'tabs-switcher'))
+  const isOpen = useAppSelector((state) => getSlug(state, 'tabs-switcher'))
   const { onSwitchTab, onCloseTab, onCloseTabs } = useOpenApp()
   const tgs = useAppSelector(selectTabGroups)
 

@@ -7,11 +7,11 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalContextMenu = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.CONTEXT_MENU))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.CONTEXT_MENU))
 
   return (
     <Modal title="Magic menu" open={isOpen} handleClose={() => handleClose()}>
-      {isOpen && <ModalContextMenuContent slug={slug} />}
+      {isOpen && <ModalContextMenuContent />}
     </Modal>
   )
 }

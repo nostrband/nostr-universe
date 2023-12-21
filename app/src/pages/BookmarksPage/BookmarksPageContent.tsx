@@ -9,8 +9,7 @@ import { useAppSelector } from '@/store/hooks/redux'
 import { memo } from 'react'
 
 export const BookmarksPageContent = memo(function BookmarksPageContent() {
-  // const isShow = searchParams.get('page') === 'bookmarks'
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'bookmarks'))
+  const isOpen = useAppSelector((state) => getSlug(state, 'bookmarks'))
 
   return (
     <StyledWrapVisibility isShow={isOpen}>

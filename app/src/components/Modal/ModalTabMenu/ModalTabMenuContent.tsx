@@ -17,15 +17,15 @@ import { Input } from '@/shared/Input/Input'
 import { IModalTabMenuContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
-import { getSearchParams } from '@/utils/helpers/general.ts'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
-export const ModalTabMenuContent = ({ handleCloseModal, slug }: IModalTabMenuContent) => {
+export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) => {
   const { onCloseTab, openBlank } = useOpenApp()
   const { onPinTab, onUnPinTab, findTabPin } = usePins()
   const [, setEventAddr] = useState('')
-  const id = getSearchParams(slug, 'tabId')
+  const getSearchParams = useSearchParams()
+  const id = getSearchParams('tabId')
   const currentTab = useAppSelector((state) => selectTab(state, id))
-  // const location = useLocation()
   const isPin = currentTab ? !!findTabPin(currentTab) : false
   const url = currentTab?.url
 

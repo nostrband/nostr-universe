@@ -7,7 +7,7 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalSync = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.SYNC_MODAL))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.SYNC_MODAL))
 
   return (
     <Modal title="Sync with relays" open={isOpen} handleClose={() => handleClose()}>

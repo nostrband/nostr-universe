@@ -17,9 +17,10 @@ import { Input } from '@/shared/Input/Input'
 import { IModalSelectAppContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
-import { getSearchParams, showToast } from '@/utils/helpers/general'
+import { showToast } from '@/utils/helpers/general'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
-export const ModalSelectAppContent = ({ handleSetKind, slug }: IModalSelectAppContent) => {
+export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent) => {
   const { openApp } = useOpenApp()
   const { findAppPin } = usePins()
   const [searchValue, setSearchValue] = useState('')
@@ -30,8 +31,9 @@ export const ModalSelectAppContent = ({ handleSetKind, slug }: IModalSelectAppCo
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
 
-  const getParamKind = getSearchParams(slug, MODAL_PARAMS_KEYS.KIND)
-  const getParamB32 = getSearchParams(slug, EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP])
+  const getSearchParams = useSearchParams()
+  const getParamKind = getSearchParams(MODAL_PARAMS_KEYS.KIND)
+  const getParamB32 = getSearchParams(EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value)

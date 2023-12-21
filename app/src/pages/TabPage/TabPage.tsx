@@ -17,11 +17,11 @@ const Transition = forwardRef(function Transition(
 })
 
 export const TabPage = () => {
-  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.TAB_MODAL))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.TAB_MODAL))
 
   return (
     <StyledDialog fullScreen open={isOpen} TransitionComponent={Transition}>
-      {isOpen && <TabPageContent slug={slug} />}
+      {isOpen && <TabPageContent />}
     </StyledDialog>
   )
 }

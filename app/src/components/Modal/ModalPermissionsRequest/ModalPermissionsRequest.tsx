@@ -7,13 +7,13 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalPermissionsRequest = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.PERMISSIONS_REQ))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.PERMISSIONS_REQ))
 
   // NOTE: always render the content, it must work even
   // if !isOpen
   return (
     <Modal title="Permission request" open={isOpen} handleClose={() => handleClose()}>
-      <ModalPermissionsRequestContent slug={slug} isOpen={isOpen} handleCloseModal={handleClose} />
+      <ModalPermissionsRequestContent isOpen={isOpen} handleCloseModal={handleClose} />
     </Modal>
   )
 }

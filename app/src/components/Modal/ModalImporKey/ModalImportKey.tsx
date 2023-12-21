@@ -9,14 +9,14 @@ import { getSlug } from '@/utils/helpers/general.ts'
 export const ModalImportKey = () => {
   const { handleClose } = useOpenModalSearchParams()
   // const isOpen = getModalOpened(MODAL_PARAMS_KEYS.KEY_IMPORT)
-  const { isOpen, order } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.KEY_IMPORT))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.KEY_IMPORT))
 
   const handleCloseModal = useCallback(() => {
     handleClose()
   }, [handleClose])
 
   return (
-    <Modal title="Add read-only keys" open={isOpen} zIndex={order} handleClose={handleCloseModal}>
+    <Modal title="Add read-only keys" open={isOpen} handleClose={handleCloseModal}>
       {isOpen && <ModalImportKeyContent handleCloseModal={handleCloseModal} />}
     </Modal>
   )

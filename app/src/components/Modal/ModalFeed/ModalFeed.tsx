@@ -4,15 +4,18 @@ import { Modal } from '@/modules/Modal/Modal'
 import { ModalFeedContent } from './ModalFeedContent'
 import { IContentWorkSpace } from '@/store/reducers/contentWorkspace'
 import { useAppSelector } from '@/store/hooks/redux'
-import { getSearchParams, getSlug } from '@/utils/helpers/general.ts'
+import { getSlug } from '@/utils/helpers/general.ts'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
 export const ModalFeed = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.FEED_MODAL))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.FEED_MODAL))
 
   const data = useAppSelector((state) => ({ ...state.contentWorkSpace, ...state.bookmarks }))
 
-  const keyData = getSearchParams(slug, 'keyData') as keyof IContentWorkSpace
+  const getSearchParams = useSearchParams()
+
+  const keyData = getSearchParams('keyData') as keyof IContentWorkSpace
 
   const TITLES_FEED: Record<string, string> = {
     highlights: 'Highlights',

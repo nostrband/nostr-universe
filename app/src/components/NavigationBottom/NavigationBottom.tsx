@@ -6,12 +6,14 @@ import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined'
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
 import { useAppSelector } from '@/store/hooks/redux'
 import { StyledBottomNavigationAction } from './styled'
-import { getValuePageSlug } from '@/utils/helpers/general'
 import { useCustomNavigate } from '@/hooks/useCustomNavigate.ts'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
 export const NavigationBottom = () => {
   const navigate = useCustomNavigate()
-  const activeValueTab = useAppSelector((state) => getValuePageSlug(state.router.slugs))
+
+  const getSearchParams = useSearchParams()
+  const activeValueTab = getSearchParams('page')
 
   const slugs = useAppSelector((state) => state.router)
   console.log({ slugs_store: slugs })

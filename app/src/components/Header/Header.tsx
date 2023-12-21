@@ -16,7 +16,7 @@ import {
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useSync } from '@/hooks/sync'
-import { getValuePageSlug } from '@/utils/helpers/general'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
 export const Header = () => {
   // const [searchParams] = useSearchParams()
@@ -26,7 +26,8 @@ export const Header = () => {
   // const id = searchParams.get('tabId') || ''
   const syncState = useSync()
 
-  const activeValueTab = useAppSelector((state) => getValuePageSlug(state.router.slugs))
+  const getSearchParams = useSearchParams()
+  const activeValueTab = getSearchParams('page')
 
   const getTitle = () => {
     switch (activeValueTab) {

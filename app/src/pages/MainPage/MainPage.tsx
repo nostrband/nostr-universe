@@ -21,7 +21,7 @@ import { getSlug } from '@/utils/helpers/general'
 
 export const MainPage = memo(function MainPage() {
   // const isShow = searchParams.get('page') === 'content'
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, 'content'))
+  const isOpen = useAppSelector((state) => getSlug(state, 'content'))
 
   const { keys } = useAppSelector(selectKeys)
   const { isShowWidget } = useAppSelector((state) => state.feedbackInfo)

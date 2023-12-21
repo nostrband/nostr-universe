@@ -7,7 +7,7 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalFindApp = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.FIND_APP))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.FIND_APP))
 
   const handleCloseModal = () => {
     handleClose()

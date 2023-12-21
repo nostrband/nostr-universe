@@ -7,11 +7,11 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalTabMenu = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.TAB_MENU))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.TAB_MENU))
 
   return (
     <Modal title="Tab Menu" open={isOpen} handleClose={() => handleClose()}>
-      {isOpen && <ModalTabMenuContent slug={slug} handleCloseModal={handleClose} />}
+      {isOpen && <ModalTabMenuContent handleCloseModal={handleClose} />}
     </Modal>
   )
 }

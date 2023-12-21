@@ -12,12 +12,13 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
 import { selectTab } from '@/store/reducers/tab.slice'
-import { getSearchParams } from '@/utils/helpers/general.ts'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
-export const TabMenu = ({ slug }: { slug: string | undefined }) => {
+export const TabMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const { onStopLoadTab, onReloadTab, backToLastPage } = useOpenApp()
-  const id = getSearchParams(slug, 'tabId')
+  const getSearchParams = useSearchParams()
+  const id = getSearchParams('tabId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const currentTab = useAppSelector((state) => selectTab(state, id))
 

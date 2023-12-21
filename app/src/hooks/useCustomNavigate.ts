@@ -1,7 +1,7 @@
 import { useAppDispatch } from '@/store/hooks/redux.ts'
 import { forwardBack, navigate } from '@/store/reducers/router.slice.ts'
-import { To, NavigateOptions } from 'react-router-dom'
 import { useCallback } from 'react'
+import { NavigateOptions, To } from '@/types/custom-router-types.ts'
 
 type CustomNavigateOptions = NavigateOptions & { append?: boolean }
 interface NavigateFunction {

@@ -34,7 +34,7 @@ export const AppsPageContent = () => {
 
   const { handleClose } = useOpenModalSearchParams()
 
-  const { isOpen, slug } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.PIN_GROUP_MODAL))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.PIN_GROUP_MODAL))
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const isExtraMenuOpen = Boolean(anchorEl)
@@ -58,7 +58,7 @@ export const AppsPageContent = () => {
     pinOverlay,
     groupedPins,
     overlay
-  } = usePinDragAndDrop(pins, slug)
+  } = usePinDragAndDrop(pins)
 
   const handleOpen = async (app: AppNostroType) => {
     await openApp(app, { replace: false })
@@ -134,7 +134,6 @@ export const AppsPageContent = () => {
         open={isOpen}
         handleClose={() => handleClose()}
         groupDefaultName={getDefaultGroupName(groupedPins)}
-        slug={slug}
       />
 
       <ExtraMenu open={isExtraMenuOpen} anchorEl={anchorEl} handleClose={handleMenuClose} />

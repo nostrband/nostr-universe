@@ -18,7 +18,7 @@ import { DragOverlay } from '@dnd-kit/core'
 import { StyledInput } from './styled'
 import { AppNostroSortable } from '@/shared/AppNostroSortable/AppNostroSortable'
 import { dbi } from '@/modules/db'
-import { getSearchParams } from '@/utils/helpers/general.ts'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
 type PinGroupModalContentProps = {
   groupName: string
@@ -27,7 +27,6 @@ type PinGroupModalContentProps = {
   pins: IPin[]
   groupDefaultName: string
   activeId: string | null
-  slug?: string | undefined
 }
 
 export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
@@ -35,14 +34,14 @@ export const PinGroupModalContent: FC<PinGroupModalContentProps> = ({
   groupName = '',
   pins,
   groupDefaultName = '',
-  activeId,
-  slug
+  activeId
 }) => {
   const tabs = useAppSelector(selectCurrentWorkspaceTabs)
 
   const { currentPubkey } = useAppSelector((state) => state.keys)
 
-  const isNewEmptyGroup = getSearchParams(slug, 'groupName') === 'DEFAULT_GROUPNAME'
+  const getSearchParams = useSearchParams()
+  const isNewEmptyGroup = getSearchParams('groupName') === 'DEFAULT_GROUPNAME'
 
   const { handleOpen: handleOpenModal } = useOpenModalSearchParams()
   const { openApp } = useOpenApp()

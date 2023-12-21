@@ -7,14 +7,14 @@ import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalFeedApp = () => {
   const { handleClose } = useOpenModalSearchParams()
-  const { isOpen } = useAppSelector((state) => getSlug(state.router.slugs, MODAL_PARAMS_KEYS.FEED_MODAL_APPS))
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.FEED_MODAL_APPS))
 
   const handleCloseModal = () => {
     handleClose()
   }
 
   return (
-    <Modal title="New apps" open={isOpen} handleClose={handleCloseModal}>
+    <Modal title="New apps 555" open={isOpen} handleClose={handleCloseModal}>
       {isOpen && <ModalFeedAppContent />}
     </Modal>
   )

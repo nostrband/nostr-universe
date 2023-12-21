@@ -6,15 +6,16 @@ import { AppNostr } from '@/types/app-nostr'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { bulkEditPinsWorkspace, swapPins } from '@/store/reducers/workspaces.slice'
 import { selectCurrentWorkspace } from '@/store/store'
-import { getSearchParams } from '@/utils/helpers/general.ts'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
 type PinID = string | number
 
-export const usePinDragAndDrop = (pins: IPin[], slug: string | undefined) => {
+export const usePinDragAndDrop = (pins: IPin[]) => {
   const dispatch = useAppDispatch()
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
+  const getSearchParams = useSearchParams()
 
-  const groupName = getSearchParams(slug, 'groupName')
+  const groupName = getSearchParams('groupName')
 
   const [activeId, setActiveId] = useState<string | null>(null)
 

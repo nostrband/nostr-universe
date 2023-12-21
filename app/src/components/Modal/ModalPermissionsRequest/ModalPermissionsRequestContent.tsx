@@ -20,14 +20,16 @@ import { Container } from '@/layout/Container/Conatiner'
 import { selectTab } from '@/store/reducers/tab.slice'
 import { IModalPermissionsRequestContent } from './types'
 import { copyToClipBoard, getProfileImage } from '@/utils/helpers/prepare-data'
-import { getRenderedUsername, getSearchParams } from '@/utils/helpers/general'
+import { getRenderedUsername } from '@/utils/helpers/general'
 import { Input } from '@/shared/Input/Input'
+import { useSearchParams } from '@/hooks/useSearchParams.ts'
 
-export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen, slug }: IModalPermissionsRequestContent) => {
+export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IModalPermissionsRequestContent) => {
   const { replyCurrentPermRequest } = useOpenApp()
   const [isRemember, setIsRemember] = useState(false)
   const [lastPermRequestId, setLastPermRequestId] = useState('')
-  const currentPermId = getSearchParams(slug, 'permId')
+  const getSearchParams = useSearchParams()
+  const currentPermId = getSearchParams('permId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)
