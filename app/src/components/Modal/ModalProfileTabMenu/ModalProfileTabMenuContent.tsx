@@ -11,12 +11,12 @@ import { selectTab } from '@/store/reducers/tab.slice'
 import { walletstore } from '@/modules/walletstore'
 import { useEffect, useState } from 'react'
 import { selectCurrentWorkspace } from '@/store/store'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalProfileTabMenuContent = () => {
   const [perms, setPerms] = useState<IPerm[]>([])
 
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const id = getSearchParams('tabId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { currentPubkey } = useAppSelector((state) => state.keys)

@@ -5,13 +5,12 @@ import { StyledViewName, StyledWrap } from './styled'
 import { useAppSelector } from '@/store/hooks/redux'
 import { AppIcon } from '@/shared/AppIcon/AppIcon'
 import { selectTab } from '@/store/reducers/tab.slice'
-import { useCustomNavigate } from '@/hooks/useCustomNavigate.ts'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomNavigate, useCustomSearchParams } from '@/hooks/navigate'
 
 export const TabPageContent = () => {
   const { openTabWindow, onHideTabInBrowser } = useOpenApp()
   const navigate = useCustomNavigate()
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const id = getSearchParams('tabId')
   const tab = useAppSelector((state) => selectTab(state, id))
   const tabExists: boolean = !!tab

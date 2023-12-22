@@ -17,13 +17,13 @@ import { Input } from '@/shared/Input/Input'
 import { IModalTabMenuContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalTabMenuContent = ({ handleCloseModal }: IModalTabMenuContent) => {
   const { onCloseTab, openBlank } = useOpenApp()
   const { onPinTab, onUnPinTab, findTabPin } = usePins()
   const [, setEventAddr] = useState('')
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const id = getSearchParams('tabId')
   const currentTab = useAppSelector((state) => selectTab(state, id))
   const isPin = currentTab ? !!findTabPin(currentTab) : false

@@ -4,19 +4,14 @@ import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined'
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
-import { useAppSelector } from '@/store/hooks/redux'
 import { StyledBottomNavigationAction } from './styled'
-import { useCustomNavigate } from '@/hooks/useCustomNavigate.ts'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomNavigate, useCustomSearchParams } from '@/hooks/navigate'
 
 export const NavigationBottom = () => {
   const navigate = useCustomNavigate()
 
-  const getSearchParams = useSearchParams()
-  const activeValueTab = getSearchParams('page')
-
-  const slugs = useAppSelector((state) => state.router)
-  console.log({ slugs_store: slugs })
+  const getSearchParams = useCustomSearchParams()
+  const activeValueTab = getSearchParams('page') || 'apps'
 
   return (
     <BottomNavigation

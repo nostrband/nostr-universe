@@ -1,11 +1,12 @@
 import { useAppSelector } from '@/store/hooks/redux'
 import { AppsPageContent } from './AppsPageContent'
-import { getSlug } from '@/utils/helpers/general'
 import { StyledWrapVisibility } from '../styled'
 import { memo } from 'react'
+import { selectSearchParam } from '@/store/reducers/router.slice'
 
 export const AppsPage = memo(function AppsPage() {
-  const isOpen = useAppSelector((state) => getSlug(state, 'apps'))
+  const page = useAppSelector((state) => selectSearchParam(state, 'page'))
+  const isOpen = page === 'apps' || !page
 
   return (
     <StyledWrapVisibility isShow={isOpen}>

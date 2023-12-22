@@ -22,13 +22,13 @@ import { IModalPermissionsRequestContent } from './types'
 import { copyToClipBoard, getProfileImage } from '@/utils/helpers/prepare-data'
 import { getRenderedUsername } from '@/utils/helpers/general'
 import { Input } from '@/shared/Input/Input'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IModalPermissionsRequestContent) => {
   const { replyCurrentPermRequest } = useOpenApp()
   const [isRemember, setIsRemember] = useState(false)
   const [lastPermRequestId, setLastPermRequestId] = useState('')
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const currentPermId = getSearchParams('permId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { currentPubkey } = useAppSelector((state) => state.keys)

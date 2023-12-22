@@ -1,96 +1,59 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { RootState } from '../store'
+import memoizeOne from 'memoize-one'
 
 export interface IRouterState {
   url: string
-  historySlugs: string[]
 }
 
 const initialState: IRouterState = {
-  url: 'page=apps',
-  historySlugs: ['page=apps']
-}
-const findLastStringWithSubstring = (arr: string[], substring: string) => {
-  for (let i = arr.length - 1; i >= 0; i--) {
-    if (arr[i].includes(substring)) {
-      return { slug: arr[i], index: i + 1 }
-    }
-  }
-
-  return { slug: null, index: null }
+  url: '?page=apps',
 }
 
 export const routerSlice = createSlice({
   name: 'router',
   initialState,
   reducers: {
+    onPopState: (state) => {
+      // just replace the current url in redux
+      const url = new URL(window.location.href)
+      state.url = url.toString()
+    },
     navigate: (state, action) => {
       const options = action.payload?.options
-      const search = action.payload.to.search
-      let initialPath = ''
+      const to = action.payload.to
 
-      if (options?.append) {
-        initialPath = state.url
-      }
+      const location = new URL(state.url, window.location.href)
 
-      const url = new URLSearchParams(initialPath)
+      const params = new URLSearchParams(to.search)
 
-      const searchParams = new URLSearchParams(search)
+      const searchString =
+        !options?.append || !location.searchParams.size
+          ? params.toString()
+          : `${location.search}&${params.toString()}`
 
-      const { slug, index } = findLastStringWithSubstring(state.historySlugs, 'page=')
-      const startScreen = slug || initialState.url
-      const startScreenUrl = new URLSearchParams(startScreen)
+      location.search = searchString
 
-      for (const key of startScreenUrl.keys()) {
-        const value = startScreenUrl.get(key) as string
-        url.set(key, value)
-      }
-
-      for (const key of searchParams.keys()) {
-        const value = searchParams.get(key) as string
-        url.set(key, value)
-      }
-
-      state.url = url.toString()
-
-      if (options?.replace && index) {
-        const history = state.historySlugs.slice(0, index)
-
-        state.historySlugs = [...history, searchParams.toString()]
-
-        return
-      }
-
-      state.historySlugs = [...state.historySlugs, searchParams.toString()]
-    },
-    forwardBack: (state) => {
-      const historySlugs = state.historySlugs
-
-      if (historySlugs.length > 1) {
-        const rmSlug = historySlugs[historySlugs.length - 1] as string
-
-        const url = new URLSearchParams(state.url)
-        const rmSlugUrl = new URLSearchParams(rmSlug)
-
-        for (const key of rmSlugUrl.keys()) {
-          url.delete(key)
-        }
-
-        historySlugs.splice(-1)
-
-        const lastSlug = historySlugs[historySlugs.length - 1] as string
-        const lastSlugUrl = new URLSearchParams(lastSlug)
-
-        for (const key of lastSlugUrl.keys()) {
-          const value = lastSlugUrl.get(key) as string
-          url.set(key, value)
-        }
-
-        state.url = url.toString()
-
-        state.historySlugs = historySlugs
-      }
+      state.url = location.toString()
+      // @ts-ignore
+      window.history[
+        options?.replace ? "replaceState" : "pushState"](
+          {}, "", state.url)
     }
   }
 })
 
-export const { navigate, forwardBack } = routerSlice.actions
+export const { navigate, onPopState } = routerSlice.actions
+
+const returnCached = memoizeOne((_, v) => {
+  // console.log("selectSearchParam", key, v)
+  return v
+})
+
+export const selectSearchParam = (state: RootState, key: string) => {
+  const url = state.router.url
+  const params = new URL(url, window.location.href).searchParams
+  const value = params.get(key) || ''
+  return returnCached(key, value)
+}
+

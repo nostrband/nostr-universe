@@ -5,7 +5,7 @@ import { ModalFeedContent } from './ModalFeedContent'
 import { IContentWorkSpace } from '@/store/reducers/contentWorkspace'
 import { useAppSelector } from '@/store/hooks/redux'
 import { getSlug } from '@/utils/helpers/general.ts'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalFeed = () => {
   const { handleClose } = useOpenModalSearchParams()
@@ -13,7 +13,7 @@ export const ModalFeed = () => {
 
   const data = useAppSelector((state) => ({ ...state.contentWorkSpace, ...state.bookmarks }))
 
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
 
   const keyData = getSearchParams('keyData') as keyof IContentWorkSpace
 

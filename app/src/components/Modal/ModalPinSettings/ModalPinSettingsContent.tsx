@@ -12,7 +12,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { Input } from '@/shared/Input/Input'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 type ModalPinSettingsContentProps = {
   handleClose: () => void
@@ -22,7 +22,7 @@ type ModalPinSettingsContentProps = {
 export const ModalPinSettingsContent: FC<ModalPinSettingsContentProps> = ({ handleClose, handleSetAppTitle }) => {
   const { onDeletePinnedApp, onUpdatePinnedApp } = usePins()
 
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const id = getSearchParams('pinId')
   const currentPin = useAppSelector((state) => selectPin(state, id))
 

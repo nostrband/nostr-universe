@@ -2,7 +2,7 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useCallback } from 'react'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { getEventNip19, getNprofile } from '@/modules/nostr'
-import { useCustomNavigate } from '@/hooks/useCustomNavigate.ts'
+import { useCustomNavigate } from '@/hooks/navigate'
 
 type SearchParamsType = {
   [key: string]: string
@@ -23,32 +23,34 @@ export interface IContextMenuParams {
   append?: boolean
 }
 
+const getEnumParam = (modal: MODAL_PARAMS_KEYS) => {
+  return Object.keys(MODAL_PARAMS_KEYS)[Object.values(MODAL_PARAMS_KEYS).indexOf(modal)]
+}
+
 export const useOpenModalSearchParams = () => {
   const navigate = useCustomNavigate()
-
-  const getEnumParam = useCallback((modal: MODAL_PARAMS_KEYS) => {
-    return Object.keys(MODAL_PARAMS_KEYS)[Object.values(MODAL_PARAMS_KEYS).indexOf(modal)]
-  }, [])
 
   const handleOpen = useCallback(
     (modal: MODAL_PARAMS_KEYS, extraOptions?: IExtraOptions) => {
       const enumKey = getEnumParam(modal)
-      let searchString = `${enumKey}=${modal}`
 
+      let searchParamsData: SearchParamsType = { [enumKey]: modal }
       if (extraOptions?.search) {
-        const search = extraOptions.search
-
-        searchString = `${searchString}${Object.keys(search)
-          .map((key) => `&${key}=${search[key]}`)
-          .join('')}`
+        searchParamsData = { ...searchParamsData, ...extraOptions.search }
       }
 
       navigate(
         {
-          // pathname: '/',
-          search: searchString
+          search: new URLSearchParams(searchParamsData).toString()
         },
-        { replace: extraOptions?.replace, append: extraOptions?.append }
+        {
+          replace: extraOptions?.replace,
+          // we had to move 'append' login into navigate (and change 
+          // it's interface) bcs otherwise this hook would be dependent
+          // on the current url in redux and would cause rerenders on every 
+          // navigation
+          append: extraOptions?.append
+        }
       )
     },
     [navigate, getEnumParam]

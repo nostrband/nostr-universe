@@ -38,7 +38,7 @@ import { ModalSync } from './components/Modal/ModalSync/ModalSync'
 import { ModalFeed } from './components/Modal/ModalFeed/ModalFeed'
 import { ModalFeedApp } from './components/Modal/ModalFeedApp/ModalFeedApp'
 import { ModalTrust } from './components/Modal/ModalTrust/ModalTrust'
-import { useCustomNavigate } from '@/hooks/useCustomNavigate.ts'
+import { initCustomNavigate, useCustomNavigate } from '@/hooks/navigate'
 
 export const App = memo(function App() {
   const dispatch = useAppDispatch()
@@ -46,6 +46,9 @@ export const App = memo(function App() {
   const { handleOpen } = useOpenModalSearchParams()
 
   useEffect(() => {
+
+    initCustomNavigate(dispatch)
+
     const load = async () => {
       console.log('AOTD start load', Date.now())
       let clicked = false

@@ -47,7 +47,7 @@ import { dbi } from '@/modules/db'
 import { setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
 import { createPreviewEvent, getPreviewComponentEvent } from '@/utils/helpers/prepare-component'
 import { AugmentedEvent } from '@/types/augmented-event'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalContextMenuContent = () => {
   const { currentPubkey } = useAppSelector(selectKeys)
@@ -60,7 +60,7 @@ export const ModalContextMenuContent = () => {
   const [lastApp, setLastApp] = useState<AppNostr | null>(null)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const tabId = getSearchParams('tabId')
   const tabUrl = getSearchParams('tabUrl')
   const text = getSearchParams('text')

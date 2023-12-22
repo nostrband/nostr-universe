@@ -1,4 +1,3 @@
-// import { useSearchParams } from 'react-router-dom'
 import { Avatar, IconButton } from '@mui/material'
 // import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
@@ -16,17 +15,16 @@ import {
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { useSync } from '@/hooks/sync'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const Header = () => {
-  // const [searchParams] = useSearchParams()
   const { handleOpen } = useOpenModalSearchParams()
   const { currentProfile } = useAppSelector((state) => state.profile)
   // const { currentTabId } = useAppSelector((state) => state.tab)
   // const id = searchParams.get('tabId') || ''
   const syncState = useSync()
 
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const activeValueTab = getSearchParams('page')
 
   const getTitle = () => {

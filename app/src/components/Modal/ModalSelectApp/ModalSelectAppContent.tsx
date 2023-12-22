@@ -18,7 +18,7 @@ import { IModalSelectAppContent } from './types'
 import { copyToClipBoard } from '@/utils/helpers/prepare-data'
 import { usePins } from '@/hooks/pins'
 import { showToast } from '@/utils/helpers/general'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent) => {
   const { openApp } = useOpenApp()
@@ -31,7 +31,7 @@ export const ModalSelectAppContent = ({ handleSetKind }: IModalSelectAppContent)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
 
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const getParamKind = getSearchParams(MODAL_PARAMS_KEYS.KIND)
   const getParamB32 = getSearchParams(EXTRA_OPTIONS[MODAL_PARAMS_KEYS.SELECT_APP])
 

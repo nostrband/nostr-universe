@@ -12,12 +12,12 @@ import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { getProfileImage } from '@/utils/helpers/prepare-data'
 import { selectTab } from '@/store/reducers/tab.slice'
-import { useSearchParams } from '@/hooks/useSearchParams.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const TabMenu = () => {
   const { handleOpen } = useOpenModalSearchParams()
   const { onStopLoadTab, onReloadTab, backToLastPage } = useOpenApp()
-  const getSearchParams = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
   const id = getSearchParams('tabId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const currentTab = useAppSelector((state) => selectTab(state, id))
