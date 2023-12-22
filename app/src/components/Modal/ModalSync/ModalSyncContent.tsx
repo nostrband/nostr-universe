@@ -53,8 +53,7 @@ export const ModalSyncContent = () => {
   useEffect(() => {
     worker.syncIsPaused().then(setIsPaused)
     worker.relayGetEventsCount().then(setEventCount)
-    worker.relayGetEventStats()
-      .then(stats => console.log('sync stats', stats))
+    worker.relayGetEventStats().then((stats) => console.log('sync stats', stats))
   }, [syncState])
 
   return (

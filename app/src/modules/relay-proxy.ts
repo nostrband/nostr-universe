@@ -38,9 +38,7 @@ class LocalRelayWebSocket extends EventTarget {
     })
 
     // eslint-disable-next-line
-    worker.relayCreateLocalClient(
-      proxy(this.reply.bind(this))
-    ).then(id => {
+    worker.relayCreateLocalClient(proxy(this.reply.bind(this))).then((id) => {
       this.relayId = id
       if (this.closed) return
       if (this.onopen) this.onopen(new Event('open'))
@@ -91,14 +89,14 @@ export function overrideWebSocket() {
     try {
       const u = new URL(url)
       if (u.hostname === cacheRelayHostname) {
-        console.log("connect to local", url)
+        console.log('connect to local', url)
         return new LocalRelayWebSocket(u.toString())
       }
     } catch (e) {
       // empty
-      console.log("LocalRelayWebSocket error ", e)
+      console.log('LocalRelayWebSocket error ', e)
     }
-    console.log("connect to remote", url)
+    console.log('connect to remote', url)
     return new Src(url, protocols)
   }
 }

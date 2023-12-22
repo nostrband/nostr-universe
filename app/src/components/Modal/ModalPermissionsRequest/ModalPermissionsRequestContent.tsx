@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Button } from '@mui/material'
 import { useOpenApp } from '@/hooks/open-entity'
@@ -23,13 +22,14 @@ import { IModalPermissionsRequestContent } from './types'
 import { copyToClipBoard, getProfileImage } from '@/utils/helpers/prepare-data'
 import { getRenderedUsername } from '@/utils/helpers/general'
 import { Input } from '@/shared/Input/Input'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalPermissionsRequestContent = ({ handleCloseModal, isOpen }: IModalPermissionsRequestContent) => {
   const { replyCurrentPermRequest } = useOpenApp()
   const [isRemember, setIsRemember] = useState(false)
   const [lastPermRequestId, setLastPermRequestId] = useState('')
-  const [searchParams] = useSearchParams()
-  const currentPermId = searchParams.get('permId') || ''
+  const getSearchParams = useCustomSearchParams()
+  const currentPermId = getSearchParams('permId')
   const { currentProfile } = useAppSelector((state) => state.profile)
   const { currentPubkey } = useAppSelector((state) => state.keys)
   const { permissionRequests } = useAppSelector((state) => state.permissionRequests)

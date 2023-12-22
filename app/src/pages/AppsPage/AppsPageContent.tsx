@@ -22,6 +22,7 @@ import MoreIcon from '@mui/icons-material/MoreHoriz'
 import { ExtraMenu } from './components/ExtraMenu'
 import { AppOfDayWidget } from '@/components/AppOfDayWidget/AppOfDayWidget'
 import { getDefaultGroupName } from './utils/helpers'
+import { getSlug } from '@/utils/helpers/general.ts'
 
 export const AppsPageContent = () => {
   const { openApp } = useOpenApp()
@@ -31,8 +32,9 @@ export const AppsPageContent = () => {
 
   const sensors = useSensors()
 
-  const { getModalOpened, handleClose } = useOpenModalSearchParams()
-  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.PIN_GROUP_MODAL)
+  const { handleClose } = useOpenModalSearchParams()
+
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.PIN_GROUP_MODAL))
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const isExtraMenuOpen = Boolean(anchorEl)

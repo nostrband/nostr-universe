@@ -9,19 +9,20 @@ import { Communities } from './components/Communities/Communities'
 import { SuggestedProfiles } from './components/SuggestedProfiles/SuggestedProfiles'
 import { WelcomeWidget } from '@/components/WelcomeWidget/WelcomeWidget'
 import { StyledWrapVisibility } from '../styled'
-import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/store/hooks/redux'
 import { isGuest } from '@/utils/helpers/prepare-data'
 import { CONTENT_FEEDS } from '@/types/content-feed'
-import { useCallback, Fragment } from 'react'
+import { useCallback, Fragment, memo } from 'react'
 import { selectCurrentWorkspaceFeedSettings, selectKeys } from '@/store/store'
 import { NPSWidget } from '@/components/NPSWidget/NPSWidget'
 import { RecommendAppWidget } from '@/components/RecommendAppWidget/RecommendAppWidget'
 import { AppOfDayWidget } from '@/components/AppOfDayWidget/AppOfDayWidget'
+import { getSlug } from '@/utils/helpers/general'
 
-export const MainPage = () => {
-  const [searchParams] = useSearchParams()
-  const isShow = searchParams.get('page') === 'content'
+export const MainPage = memo(function MainPage() {
+  // const isShow = searchParams.get('page') === 'content'
+  const isOpen = useAppSelector((state) => getSlug(state, 'content'))
+
   const { keys } = useAppSelector(selectKeys)
   const { isShowWidget } = useAppSelector((state) => state.feedbackInfo)
   const { isShowAOTDWidget } = useAppSelector((state) => state.notifications)
@@ -72,7 +73,7 @@ export const MainPage = () => {
   }, [contentFeedSettings, guest])
 
   return (
-    <StyledWrapVisibility isShow={isShow}>
+    <StyledWrapVisibility isShow={isOpen}>
       <RecommendAppWidget />
       {guest && <WelcomeWidget />}
       {isShowWidget && <NPSWidget />}
@@ -80,4 +81,4 @@ export const MainPage = () => {
       {renderFeeds()}
     </StyledWrapVisibility>
   )
-}
+})

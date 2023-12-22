@@ -31,7 +31,8 @@ export const PinsGroup: FC<PinsGroupProps> = ({ group, id, title }) => {
     return handleOpen(MODAL_PARAMS_KEYS.PIN_GROUP_MODAL, {
       search: {
         groupName: id
-      }
+      },
+      append: true
     })
   }
 

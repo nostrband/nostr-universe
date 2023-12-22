@@ -11,7 +11,6 @@ import { permissionRequestsSlice } from './reducers/permissionRequests.slice'
 import { WorkSpace } from '@/types/workspace'
 import { getTabGroupId } from '@/modules/AppInitialisation/utils'
 import { ITab } from '@/types/tab'
-import { positionScrollPageSlice } from './reducers/positionScrollPage.slice'
 import { searchModalSlice } from './reducers/searchModal.slice'
 import { IContentFeedSetting } from '@/types/content-feed'
 import { bookmarksSlice } from './reducers/bookmarks.slice'
@@ -21,6 +20,7 @@ import { isGuest } from '@/utils/helpers/prepare-data'
 import { notificationsSlice } from './reducers/notifications.slice'
 import { syncSlice } from './reducers/sync.slice'
 import { selectAppHistorySlice } from './reducers/selectAppHistory.slice'
+import { routerSlice } from './reducers/router.slice'
 
 export const rootReducer = combineReducers({
   userReducer,
@@ -31,14 +31,14 @@ export const rootReducer = combineReducers({
   contentWorkSpace: contentWorkSpaceSlice.reducer,
   workspaces: workspacesSlice.reducer,
   permissionRequests: permissionRequestsSlice.reducer,
-  positionScrollPage: positionScrollPageSlice.reducer,
   searchModal: searchModalSlice.reducer,
   selectAppHistory: selectAppHistorySlice.reducer,
   [userService.reducerPath]: userService.reducer,
   [bookmarksSlice.name]: bookmarksSlice.reducer,
   [feedbackInfoSlice.name]: feedbackInfoSlice.reducer,
   [notificationsSlice.name]: notificationsSlice.reducer,
-  [syncSlice.name]: syncSlice.reducer
+  [syncSlice.name]: syncSlice.reducer,
+  [routerSlice.name]: routerSlice.reducer
 })
 
 export const createStore = () => {

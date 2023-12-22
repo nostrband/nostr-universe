@@ -25,7 +25,6 @@ import {
   StyledItemEventPreview
 } from './styled'
 import { IconButton, List, ListItem, ListItemAvatar, ListItemButton } from '@mui/material'
-import { useSearchParams } from 'react-router-dom'
 import {
   fetchExtendedEventByBech32,
   getHandlerEventUrl,
@@ -48,9 +47,9 @@ import { dbi } from '@/modules/db'
 import { setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
 import { createPreviewEvent, getPreviewComponentEvent } from '@/utils/helpers/prepare-component'
 import { AugmentedEvent } from '@/types/augmented-event'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalContextMenuContent = () => {
-  const [searchParams] = useSearchParams()
   const { currentPubkey } = useAppSelector(selectKeys)
   const dispatch = useAppDispatch()
   const { handleOpen, handleClose } = useOpenModalSearchParams()
@@ -61,14 +60,15 @@ export const ModalContextMenuContent = () => {
   const [lastApp, setLastApp] = useState<AppNostr | null>(null)
   const { contactList } = useAppSelector((state) => state.contentWorkSpace)
   const currentWorkSpace = useAppSelector(selectCurrentWorkspace)
-  const tabId = searchParams.get('tabId') || ''
-  const tabUrl = searchParams.get('tabUrl') || ''
-  const text = searchParams.get('text') || ''
-  const href = searchParams.get('href') || ''
-  const imgSrc = searchParams.get('imgSrc') || ''
-  const videoSrc = searchParams.get('videoSrc') || ''
-  const audioSrc = searchParams.get('audioSrc') || ''
-  let value = searchParams.get('bech32') || href || text || imgSrc || videoSrc || audioSrc
+  const getSearchParams = useCustomSearchParams()
+  const tabId = getSearchParams('tabId')
+  const tabUrl = getSearchParams('tabUrl')
+  const text = getSearchParams('text')
+  const href = getSearchParams('href')
+  const imgSrc = getSearchParams('imgSrc')
+  const videoSrc = getSearchParams('videoSrc')
+  const audioSrc = getSearchParams('audioSrc')
+  let value = getSearchParams('bech32') || href || text || imgSrc || videoSrc || audioSrc
   const b32 = stringToBech32(value || tabUrl)
   const [invoice] = stringToBolt11(value || tabUrl)
   if (!value) value = b32 || invoice || tabUrl // from tabUrl
