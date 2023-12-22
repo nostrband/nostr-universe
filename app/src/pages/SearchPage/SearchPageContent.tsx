@@ -1,4 +1,4 @@
-import React, { useCallback, useState, FC, CSSProperties, useRef, useEffect, useMemo } from 'react'
+import React, { useCallback, useState, FC, CSSProperties, useRef, useEffect, useMemo, memo } from 'react'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import CloseIcon from '@mui/icons-material/Close'
 import { searchLongNotes, searchNotes, searchProfiles, stringToBech32 } from '@/modules/nostr'
@@ -22,7 +22,6 @@ import {
 import { StyledInputBox } from './styled'
 import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
 import { fetchRecentEventsThunk, setSearchValue } from '@/store/reducers/searchModal.slice'
-import { useSearchParams } from 'react-router-dom'
 import { StyledWrapVisibility } from '../styled'
 import { ItemTrendingNote } from '@/components/ItemsContent/ItemTrendingNote/ItemTrendingNote'
 import { Profile } from '@/shared/Profile/Profile'
@@ -49,6 +48,7 @@ import { useSearchHistory } from './utils/history'
 import { RecentEvents } from './components/RecentEvents/RecentEvents'
 import { TOP_DOMAINS } from '@/consts/domains'
 import { useOpenApp } from '@/hooks/open-entity'
+import { getSlug } from '@/utils/helpers/general'
 
 interface IDropdownOption {
   id: string
@@ -59,12 +59,11 @@ interface IDropdownOption {
   group: string
 }
 
-export const SearchPageContent = () => {
-  const [searchParams] = useSearchParams()
+export const SearchPageContent = memo(function SearchPageContent() {
   const { openBlank } = useOpenApp()
   const dispatch = useAppDispatch()
 
-  const isShow = searchParams.get('page') === 'search'
+  const isOpen = useAppSelector((state) => getSlug(state, 'search'))
 
   const { searchValue } = useAppSelector((state) => state.searchModal)
   const { currentPubkey } = useAppSelector((state) => state.keys)
@@ -536,10 +535,10 @@ export const SearchPageContent = () => {
     if (contactList) {
       dispatch(fetchRecentEventsThunk({ currentPubkey, contactList: contactList.contactPubkeys }))
     }
-  }, [currentPubkey, contactList, dispatch, isShow])
+  }, [currentPubkey, contactList, dispatch, isOpen])
 
   return (
-    <StyledWrapVisibility isShow={isShow}>
+    <StyledWrapVisibility isShow={isOpen}>
       <Container>
         <StyledForm onSubmit={handleSubmit}>
           <StyledAutocomplete>
@@ -633,4 +632,4 @@ export const SearchPageContent = () => {
       {searchValue === lastValue && renderContent()}
     </StyledWrapVisibility>
   )
-}
+})

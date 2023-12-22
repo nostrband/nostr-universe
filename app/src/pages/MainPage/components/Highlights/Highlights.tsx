@@ -22,7 +22,7 @@ export const Highlights = memo(function Highlights() {
   const { handleOpenContextMenu, handleOpen } = useOpenModalSearchParams()
   const highlights = useAppSelector(selectHighlights)
   const { reloadHighlights } = useFeeds()
-  console.log("rerender highlights")
+  console.log('rerender highlights')
 
   const handleOpenFeedModal = () => {
     handleOpen(MODAL_PARAMS_KEYS.FEED_MODAL, {

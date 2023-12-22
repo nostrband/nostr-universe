@@ -4,11 +4,12 @@ import { ModalAppOfTheDayContent } from './ModalAppOfTheDayContent'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useOpenModalSearchParams } from '@/hooks/modal'
 import { APP_OF_THE_DAY_ID } from '@/modules/AppInitialisation/utils'
+import { useAppSelector } from '@/store/hooks/redux.ts'
+import { getSlug } from '@/utils/helpers/general.ts'
 
 export const ModalAppOfTheDay = () => {
-  const { getModalOpened, handleClose } = useOpenModalSearchParams()
-
-  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.APP_OF_THE_DAY_MODAL)
+  const { handleClose } = useOpenModalSearchParams()
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.APP_OF_THE_DAY_MODAL))
 
   const hideAOTDWidgetHandler = () => {
     // @ts-ignore

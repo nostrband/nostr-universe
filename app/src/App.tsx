@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { useEffect } from 'react'
-import { Route, Routes, useSearchParams } from 'react-router-dom'
+import { memo, useEffect } from 'react'
 import { NavigationBottom } from './components/NavigationBottom/NavigationBottom'
 import { AppsPage } from './pages/AppsPage/AppsPage'
 import { MainPage } from './pages/MainPage/MainPage'
@@ -19,8 +18,7 @@ import { Header } from './components/Header/Header'
 import { SearchPage } from './pages/SearchPage/SearchPage'
 import { ModalAddKey } from './components/Modal/ModalAddKey/ModalAddKey'
 import { ModalAbout } from './components/Modal/ModalAbout/ModalAbout'
-import { useAppDispatch, useAppSelector } from './store/hooks/redux'
-import { setPage } from './store/reducers/positionScrollPage.slice'
+import { useAppDispatch } from './store/hooks/redux'
 import { ModalFindApp } from './components/Modal/ModalFindApp/ModalFindApp'
 import { ModalAddNSBKey } from './components/Modal/ModalAddNSBKey/ModalAddNSBKey'
 import { ModalPinSettings } from './components/Modal/ModalPinSettings/ModalPinSettings'
@@ -40,32 +38,17 @@ import { ModalSync } from './components/Modal/ModalSync/ModalSync'
 import { ModalFeed } from './components/Modal/ModalFeed/ModalFeed'
 import { ModalFeedApp } from './components/Modal/ModalFeedApp/ModalFeedApp'
 import { ModalTrust } from './components/Modal/ModalTrust/ModalTrust'
+import { initCustomNavigate, useCustomNavigate } from '@/hooks/navigate'
 
-export const App = () => {
-  // const { pathname,search } = useLocation()
-  const { page } = useAppSelector((state) => state.positionScrollPage)
-  const [searchParams] = useSearchParams()
+export const App = memo(function App() {
   const dispatch = useAppDispatch()
+  const navigate = useCustomNavigate()
   const { handleOpen } = useOpenModalSearchParams()
 
-  // const dispatch = useAppDispatch()
-
-  // const handleScroll = () => {
-  //   dispatch(setPositionScroll({ page: pathname, value: window.scrollY }))
-  // }
-
-  // useEffect(() => {
-  //   window.addEventListener('scroll', handleScroll)
-  //   return () => {
-  //     window.removeEventListener('scroll', handleScroll)
-  //   }
-  // }, [pathname])
-
-  // useEffect(() => {
-  //   window.scrollTo(0, position[pathname])
-  // }, [pathname])
-
   useEffect(() => {
+
+    initCustomNavigate(dispatch)
+
     const load = async () => {
       console.log('AOTD start load', Date.now())
       let clicked = false
@@ -89,51 +72,22 @@ export const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    dispatch(setPage({ page: searchParams.get('page') }))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const getTitle = () => {
-    ;``
-    switch (page) {
-      case '/':
-        return 'Apps'
-
-      case 'content':
-        return 'New'
-
-      case 'tabs-switcher':
-        return 'Tabs'
-
-      case 'bookmarks':
-        return 'Best'
-
-      case 'search':
-        return 'Search'
-
-      default:
-        return 'Apps'
-    }
-  }
-
   return (
     <>
+      {import.meta.env.DEV && (
+        <button
+          style={{ position: 'fixed', zIndex: 9999 }}
+          onClick={() => {
+            navigate(-1)
+          }}
+        >
+          back
+        </button>
+      )}
       <StyledWrapper>
-        <Header title={getTitle()} />
+        <Header />
 
-        {/* <Routes>
-          <Route index path="/" element={<AppsPage />} />
-          <Route path="/content" element={<MainPage />} />
-          <Route path="/tabs-switcher" element={<TabsSwitcherPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="*" element={<AppsPage />} />
-        </Routes> */}
-        <Routes>
-          <Route index path="/" element={<AppsPage />} />
-          <Route path="*" element={<AppsPage />} />
-        </Routes>
-
+        <AppsPage />
         <MainPage />
         <TabsSwitcherPage />
         <BookmarksPage />
@@ -168,4 +122,4 @@ export const App = () => {
       <ModalTrust />
     </>
   )
-}
+})

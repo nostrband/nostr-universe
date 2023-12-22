@@ -88,7 +88,6 @@ const addrCache = new Map<string, AugmentedEvent>()
 
 let onAddLocalRelayEvents: ((e: NostrEvent[]) => Promise<boolean[]>) | null = null
 
-
 export function nostrEvent(e: NDKEvent) {
   return {
     id: e.id,
@@ -197,6 +196,7 @@ function fetchEventsRead(ndk: NDK, filter: NDKFilter, options?: IFetchOptions): 
       relaySet
     )
     if (!options?.cacheOnly) {
+      // eslint-disable-next-line
       const aus = [...events.values()].map((e: any) => rawEvent(e))
       putEventsToCache(aus)
     }
@@ -233,10 +233,9 @@ function subscribe(ndk: NDK, filter: NDKFilter, options?: IFetchOptions): NDKSub
       skipVerification
     },
     relaySet,
-    /* autoStart */false
+    /* autoStart */ false
   )
-  if (!options?.cacheOnly)
-    sub.on("event", (e: NDKEvent) => putEventsToCache([rawEvent(e)]))
+  if (!options?.cacheOnly) sub.on('event', (e: NDKEvent) => putEventsToCache([rawEvent(e)]))
 
   console.log(
     Date.now(),
@@ -399,7 +398,7 @@ export function subscribeApps() {
       if (app.name && app.url) apps.push(app)
     })
 
-//    console.log("new apps events", apps)
+    //    console.log("new apps events", apps)
 
     // @ts-ignore
     return apps
@@ -1046,7 +1045,6 @@ export function subscribeBookmarkLists(
     cacheOnly: true
   })
   feed.onAugments.push(async (authoredLists: AuthoredEvent[]) => {
-
     const tagsToBookmarks = (tags?: string[][]): Bookmark[] => {
       return (
         (tags
@@ -1087,7 +1085,9 @@ export function subscribeBookmarkLists(
     }
 
     if (loadListedEvents) {
-      const eventIds = events.map((e) => e.publicBookmarks.map((b) => b.eventId).filter((id) => !!id)).flat() as string[]
+      const eventIds = events
+        .map((e) => e.publicBookmarks.map((b) => b.eventId).filter((id) => !!id))
+        .flat() as string[]
       const eventAddrs = events
         .map((e) => e.publicBookmarks.map((b) => b.eventAddr).filter((id) => !!id))
         .flat() as string[]
@@ -1591,7 +1591,7 @@ interface PromiseQueueCb {
 class PromiseQueue {
   queue: PromiseQueueCb[] = []
 
-  constructor() { }
+  constructor() {}
   // eslint-disable-next-line
   appender(cb: (...cbArgs: any[]) => void): (...apArgs: any[]) => void {
     return (...args) => {
@@ -1658,14 +1658,14 @@ export async function fetchPubkeyEvents({
   return augmentedEvents
 }
 
-export class EventFeed<T extends (AugmentedEvent | AppNostr)> {
-
+export class EventFeed<T extends AugmentedEvent | AppNostr> {
   private sub: NDKSubscription
   private events: T[] = []
   private buffer: AugmentedEvent[] = []
   private eose: boolean = false
   private wasEose: boolean = false
   private augmenting: boolean = false
+  // eslint-disable-next-line
   private augmentTimer: any = undefined
 
   onUpdate?: (events: T[]) => void
@@ -1688,13 +1688,8 @@ export class EventFeed<T extends (AugmentedEvent | AppNostr)> {
   reload() {
     this.sub.stop()
 
-    this.sub = new NDKSubscription(
-      this.sub.ndk,
-      this.sub.filters,
-      this.sub.opts,
-      this.sub.relaySet
-    )
-    
+    this.sub = new NDKSubscription(this.sub.ndk, this.sub.filters, this.sub.opts, this.sub.relaySet)
+
     this.initSub()
 
     this.wasEose = false
@@ -1710,22 +1705,22 @@ export class EventFeed<T extends (AugmentedEvent | AppNostr)> {
   }
 
   private initSub() {
-    this.sub.on("event", this.onEvent.bind(this))
-    this.sub.on("eose", (() => {
-      this.onEvent(undefined)
-    }).bind(this))
+    this.sub.on('event', this.onEvent.bind(this))
+    this.sub.on(
+      'eose',
+      (() => {
+        this.onEvent(undefined)
+      }).bind(this)
+    )
   }
 
   private onEvent(e?: NDKEvent) {
     // put to buffer
-    if (e)
-      this.buffer.push(rawEvent(e))
-    else
-      this.eose = true
+    if (e) this.buffer.push(rawEvent(e))
+    else this.eose = true
 
     if (this.augmentTimer || this.augmenting) return
-    if (!this.augmenting)
-      this.augmentTimer = setTimeout(this.augment.bind(this), 10)
+    if (!this.augmenting) this.augmentTimer = setTimeout(this.augment.bind(this), 10)
   }
 
   private merge(batch: AugmentedEvent[] | AppNostr[]) {
@@ -1733,29 +1728,25 @@ export class EventFeed<T extends (AugmentedEvent | AppNostr)> {
     for (const e of batch) {
       // @ts-ignore
       const a = e.id ? getEventAddr(e) : e.naddr
-      const i = events.findIndex(o => getEventAddr(o) === a)
+      const i = events.findIndex((o) => getEventAddr(o) === a)
       const t = e as T
       if (i >= 0) {
-        events[i] = t;
+        events[i] = t
       } else {
         events.push(t)
       }
     }
 
-    if (this.sortAsc)
-      sortAsc(events as AugmentedEvent[])
-    else
-      sortDesc(events as AugmentedEvent[])
+    if (this.sortAsc) sortAsc(events as AugmentedEvent[])
+    else sortDesc(events as AugmentedEvent[])
 
-    if (this.limit && events.length > this.limit)
-      events.length = this.limit
+    if (this.limit && events.length > this.limit) events.length = this.limit
 
     this.events = events
   }
 
   private async augmentBuffer(buffer: AugmentedEvent[]): Promise<AugmentedEvent[] | AppNostr[]> {
-    for (const a of this.onAugments)
-      buffer = await a(buffer)
+    for (const a of this.onAugments) buffer = await a(buffer)
     return buffer
   }
 
@@ -1769,14 +1760,11 @@ export class EventFeed<T extends (AugmentedEvent | AppNostr)> {
     this.buffer.length = 0
 
     // process
-    if (this.onAugments.length)
-      this.merge(await this.augmentBuffer(buffer))
-    else
-      this.merge(buffer)
+    if (this.onAugments.length) this.merge(await this.augmentBuffer(buffer))
+    else this.merge(buffer)
 
     // notify client
-    if (this.stream || this.wasEose)
-      this.onUpdate?.(this.events)
+    if (this.stream || this.wasEose) this.onUpdate?.(this.events)
 
     // if eose arrived and there's nothing else buffered
     if (!this.wasEose && this.eose && !this.buffer.length) {
@@ -1788,9 +1776,8 @@ export class EventFeed<T extends (AugmentedEvent | AppNostr)> {
     // done
     this.augmenting = false
 
-    // next batch? arm the timer 
-    if (this.buffer.length)
-      this.augmentTimer = setTimeout(this.augment.bind(this), 10)
+    // next batch? arm the timer
+    if (this.buffer.length) this.augmentTimer = setTimeout(this.augment.bind(this), 10)
   }
 }
 
@@ -1823,7 +1810,7 @@ function subscribePubkeyAuthoredEvents<T extends AuthoredEvent>(params: IFetchPu
   const sub = subscribePubkeyEvents(params)
   const feed = new EventFeed<T>(sub)
   feed.onAugments.push(async (events: AugmentedEvent[]) => {
-    return await augmentEventAuthors(events, !params.cacheOnly);
+    return await augmentEventAuthors(events, !params.cacheOnly)
   })
   feed.limit = params.limit || 30
   return feed
@@ -2446,17 +2433,15 @@ export function setOnAddLocalRelayEvents(cb: (e: NostrEvent[]) => Promise<boolea
 }
 
 export function putEventsToCache(events: AugmentedEvent[] | MetaEvent[]) {
-  const nes = events.map(e => {
+  const nes = events.map((e) => {
     if (e.kind === (Kinds.META as number)) metaCache.set(e.pubkey, e)
     eventCache.set(e.id, e)
     addrCache.set(getEventAddr(e), e)
     return nostrEvent(e)
   })
-  onAddLocalRelayEvents?.(nes)
-    .then((oks) => {
-      dbi.putLocalRelayEvents(
-        nes.filter((_, i) => oks[i]))
-    })
+  onAddLocalRelayEvents?.(nes).then((oks) => {
+    dbi.putLocalRelayEvents(nes.filter((_, i) => oks[i]))
+  })
 }
 
 export function setNsbSigner(token: string) {
@@ -2629,30 +2614,30 @@ async function checkReconnect(ndk: NDK, force: boolean = false) {
     const alive = force
       ? false
       : await new Promise((ok) => {
-        const sub = ndk.subscribe(
-          {
-            kinds: [0, 1, 3],
-            limit: 1
-          },
-          {
-            closeOnEose: true
-          },
-          new NDKRelaySet(new Set([r]), ndk),
+          const sub = ndk.subscribe(
+            {
+              kinds: [0, 1, 3],
+              limit: 1
+            },
+            {
+              closeOnEose: true
+            },
+            new NDKRelaySet(new Set([r]), ndk),
             /* autoStart */ false
-        )
+          )
 
-        let alive = false
-        // eslint-disable-next-line
-        sub.on('event', (e: any) => {
-          console.log('checkReconnect', r.url, 'got event', e.id)
-          alive = true
+          let alive = false
+          // eslint-disable-next-line
+          sub.on('event', (e: any) => {
+            console.log('checkReconnect', r.url, 'got event', e.id)
+            alive = true
+          })
+          sub.on('eose', () => {
+            console.log('checkReconnect', r.url, 'alive', alive)
+            ok(alive)
+          })
+          sub.start()
         })
-        sub.on('eose', () => {
-          console.log('checkReconnect', r.url, 'alive', alive)
-          ok(alive)
-        })
-        sub.start()
-      })
 
     if (!alive) {
       console.log('reconnecting', r.url)

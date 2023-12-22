@@ -43,7 +43,6 @@ export const useOpenApp = () => {
   const { apps } = useAppSelector((state) => state.apps)
   const { tabs } = useAppSelector((state) => state.tab)
   const currentWorkSpaceTabs = useAppSelector(selectCurrentWorkspaceTabs)
-  const { page } = useAppSelector((state) => state.positionScrollPage)
   const { signEvent, encrypt, decrypt } = useSigner()
   const { showPendingPermRequest, requestPermExec, replyCurrentPermRequest, hasPerm, deletePermission } = usePerms()
 
@@ -416,12 +415,8 @@ export const useOpenApp = () => {
   )
 
   const backToLastPage = useCallback(() => {
-    if (page === '/') {
-      handleClose('/')
-    } else {
-      handleClose(`?page=${page}`)
-    }
-  }, [page, handleClose])
+    handleClose()
+  }, [handleClose])
 
   const releaseTab = useCallback(async (tabId: string) => {
     console.log('releaseTab', tabId)

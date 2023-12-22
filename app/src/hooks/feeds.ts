@@ -1,24 +1,47 @@
-import { MIN_ZAP_AMOUNT } from "@/consts"
-import { bootstrapNotifications } from "@/modules/AppInitialisation/utils"
-import { EventFeed, fetchFollowedCommunities, fetchReactionTargetLongNotes, fetchReactionTargetNotes, isConnected, subscribeApps, subscribeBookmarkLists, subscribeContactList, subscribeFollowedHighlights, subscribeFollowedLiveEvents, subscribeFollowedLongNotes, subscribeFollowedZaps, subscribeProfileLists, subscribeProfiles } from "@/modules/nostr"
-import { useAppDispatch, useAppSelector } from "@/store/hooks/redux"
-import { setApps } from "@/store/reducers/apps.slice"
-import { selectContactList, setBigZaps, setCommunities, setContactList, setHighlights, setLiveEvents, setLongPosts } from "@/store/reducers/contentWorkspace"
-import { AppNostr } from "@/types/app-nostr"
-import { AugmentedEvent } from "@/types/augmented-event"
-import { BookmarkListEvent } from "@/types/bookmark-list-event"
-import { HighlightEvent } from "@/types/highlight-event"
-import { LiveEvent } from "@/types/live-events"
-import { LongNoteEvent } from "@/types/long-note-event"
-import { ProfileListEvent } from "@/types/profile-list-event"
-import { ZapEvent } from "@/types/zap-event"
-import { isGuest } from "@/utils/helpers/prepare-data"
-import { useCallback, useMemo } from "react"
-import { useSigner } from "./signer"
-import { ContactListEvent } from "@/types/contact-list-event"
-import { setBestLongNotes, setBestNotes, setBookmarkLists, setProfileLists } from "@/store/reducers/bookmarks.slice"
-import { MetaEvent } from "@/types/meta-event"
-import { setCurrentProfile, setProfiles } from "@/store/reducers/profile.slice"
+import { MIN_ZAP_AMOUNT } from '@/consts'
+import { bootstrapNotifications } from '@/modules/AppInitialisation/utils'
+import {
+  EventFeed,
+  fetchFollowedCommunities,
+  fetchReactionTargetLongNotes,
+  fetchReactionTargetNotes,
+  isConnected,
+  subscribeApps,
+  subscribeBookmarkLists,
+  subscribeContactList,
+  subscribeFollowedHighlights,
+  subscribeFollowedLiveEvents,
+  subscribeFollowedLongNotes,
+  subscribeFollowedZaps,
+  subscribeProfileLists,
+  subscribeProfiles
+} from '@/modules/nostr'
+import { useAppDispatch, useAppSelector } from '@/store/hooks/redux'
+import { setApps } from '@/store/reducers/apps.slice'
+import {
+  selectContactList,
+  setBigZaps,
+  setCommunities,
+  setContactList,
+  setHighlights,
+  setLiveEvents,
+  setLongPosts
+} from '@/store/reducers/contentWorkspace'
+import { AppNostr } from '@/types/app-nostr'
+import { AugmentedEvent } from '@/types/augmented-event'
+import { BookmarkListEvent } from '@/types/bookmark-list-event'
+import { HighlightEvent } from '@/types/highlight-event'
+import { LiveEvent } from '@/types/live-events'
+import { LongNoteEvent } from '@/types/long-note-event'
+import { ProfileListEvent } from '@/types/profile-list-event'
+import { ZapEvent } from '@/types/zap-event'
+import { isGuest } from '@/utils/helpers/prepare-data'
+import { useCallback, useMemo } from 'react'
+import { useSigner } from './signer'
+import { ContactListEvent } from '@/types/contact-list-event'
+import { setBestLongNotes, setBestNotes, setBookmarkLists, setProfileLists } from '@/store/reducers/bookmarks.slice'
+import { MetaEvent } from '@/types/meta-event'
+import { setCurrentProfile, setProfiles } from '@/store/reducers/profile.slice'
 
 let appsFeed: EventFeed<AppNostr> | null = null
 let highlightsFeed: EventFeed<HighlightEvent> | null = null
@@ -53,86 +76,112 @@ export const useFeeds = () => {
     dispatch(setBestLongNotes({ bestLongNotes: null }))
     dispatch(setProfileLists({ profileLists: null }))
     dispatch(setBookmarkLists({ bookmarkLists: null }))
-
   }, [dispatch])
 
-  const reload = useCallback(async (full?: boolean) => {
+  const reload = useCallback(
+    async (full?: boolean) => {
+      if (!isConnected()) return
 
-    if (!isConnected()) return
-
-    if (!appsFeed) {
-      appsFeed = subscribeApps()
-      const cb = (apps: AppNostr[]) => { dispatch(setApps({ apps })); console.log('new apps', apps) }
-      appsFeed.onUpdate = cb
-      appsFeed.onEOSE = (events: AppNostr[]) => {
-        cb(events)
-        bootstrapNotifications(events, dispatch)
-      }
-      appsFeed.start()
-    }
-
-    if (isGuest(currentPubkey)) return
-
-    if (contactList) {
-      //setContacts(contactList)
-
-      if (full) {
-        function setOnEvents<T extends AugmentedEvent>(feed: EventFeed<T>, cb: (events: T[]) => void) {
-          feed.onUpdate = cb
-          feed.onEOSE = cb
-          feed.start()
+      if (!appsFeed) {
+        appsFeed = subscribeApps()
+        const cb = (apps: AppNostr[]) => {
+          dispatch(setApps({ apps }))
+          console.log('new apps', apps)
         }
-
-        highlightsFeed = subscribeFollowedHighlights(contactList.contactPubkeys)
-        setOnEvents(highlightsFeed, highlights => { dispatch(setHighlights({ highlights })); console.log('new highlights', highlights) })
-
-        bigZapFeed = subscribeFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT)
-        setOnEvents(bigZapFeed, bigZaps => { dispatch(setBigZaps({ bigZaps })); console.log('new setBigZaps', bigZaps) })
-
-        longPostFeed = subscribeFollowedLongNotes(contactList.contactPubkeys)
-        setOnEvents(longPostFeed, longPosts => { dispatch(setLongPosts({ longPosts })); console.log('new longPosts', longPosts) })
-
-        liveEventFeed = subscribeFollowedLiveEvents(contactList.contactPubkeys)
-        setOnEvents(liveEventFeed, liveEvents => { dispatch(setLiveEvents({ liveEvents })); console.log('new liveEvents', liveEvents) })
-
-        profileListFeed = subscribeProfileLists(currentPubkey, decrypt)
-        setOnEvents(profileListFeed, profileLists => { dispatch(setProfileLists({ profileLists })); console.log('new profileLists', profileLists) })
-
-        bookmarkListFeed = subscribeBookmarkLists(currentPubkey, decrypt)
-        setOnEvents(bookmarkListFeed, bookmarkLists => { dispatch(setBookmarkLists({ bookmarkLists })); console.log('new bookmarkLists', bookmarkLists) })
-
+        appsFeed.onUpdate = cb
+        appsFeed.onEOSE = (events: AppNostr[]) => {
+          cb(events)
+          bootstrapNotifications(events, dispatch)
+        }
+        appsFeed.start()
       }
 
-      reloadCommunities()
-    }
+      if (isGuest(currentPubkey)) return
 
-    reloadBestNotes()
-    reloadBestLongNotes()
+      if (contactList) {
+        //setContacts(contactList)
 
-  }, [currentPubkey, contactList, dispatch, decrypt])
+        if (full) {
+          // eslint-disable-next-line
+          function setOnEvents<T extends AugmentedEvent>(feed: EventFeed<T>, cb: (events: T[]) => void) {
+            feed.onUpdate = cb
+            feed.onEOSE = cb
+            feed.start()
+          }
 
-  const reloadContactList = useCallback((pubkey?: string) => {
-    dispatch(setContactList({ contactList: null }))
+          highlightsFeed = subscribeFollowedHighlights(contactList.contactPubkeys)
+          setOnEvents(highlightsFeed, (highlights) => {
+            dispatch(setHighlights({ highlights }))
+            console.log('new highlights', highlights)
+          })
 
-    subscribeContactList(pubkey || currentPubkey, async (contactList: ContactListEvent) => {
-      dispatch(setContactList({ contactList }))
-    })
-  }, [dispatch, currentPubkey])
+          bigZapFeed = subscribeFollowedZaps(contactList.contactPubkeys, MIN_ZAP_AMOUNT)
+          setOnEvents(bigZapFeed, (bigZaps) => {
+            dispatch(setBigZaps({ bigZaps }))
+            console.log('new setBigZaps', bigZaps)
+          })
 
-  const reloadProfiles = useCallback((keys: string[], pubkey: string) => {
-    subscribeProfiles(keys, async (profile: MetaEvent) => {
-      if (profile) {
-        if (profile.pubkey === pubkey) {
-          dispatch(setCurrentProfile({ profile }))
+          longPostFeed = subscribeFollowedLongNotes(contactList.contactPubkeys)
+          setOnEvents(longPostFeed, (longPosts) => {
+            dispatch(setLongPosts({ longPosts }))
+            console.log('new longPosts', longPosts)
+          })
+
+          liveEventFeed = subscribeFollowedLiveEvents(contactList.contactPubkeys)
+          setOnEvents(liveEventFeed, (liveEvents) => {
+            dispatch(setLiveEvents({ liveEvents }))
+            console.log('new liveEvents', liveEvents)
+          })
+
+          profileListFeed = subscribeProfileLists(currentPubkey, decrypt)
+          setOnEvents(profileListFeed, (profileLists) => {
+            dispatch(setProfileLists({ profileLists }))
+            console.log('new profileLists', profileLists)
+          })
+
+          bookmarkListFeed = subscribeBookmarkLists(currentPubkey, decrypt)
+          setOnEvents(bookmarkListFeed, (bookmarkLists) => {
+            dispatch(setBookmarkLists({ bookmarkLists }))
+            console.log('new bookmarkLists', bookmarkLists)
+          })
         }
 
-        if (keys.find((key) => profile.pubkey === key)) {
-          dispatch(setProfiles({ profiles: [profile] }))
-        }
+        reloadCommunities()
       }
-    })
 
-  }, [dispatch])
+      reloadBestNotes()
+      reloadBestLongNotes()
+    },
+    [currentPubkey, contactList, dispatch, decrypt]
+  )
+
+  const reloadContactList = useCallback(
+    (pubkey?: string) => {
+      dispatch(setContactList({ contactList: null }))
+
+      subscribeContactList(pubkey || currentPubkey, async (contactList: ContactListEvent) => {
+        dispatch(setContactList({ contactList }))
+      })
+    },
+    [dispatch, currentPubkey]
+  )
+
+  const reloadProfiles = useCallback(
+    (keys: string[], pubkey: string) => {
+      subscribeProfiles(keys, async (profile: MetaEvent) => {
+        if (profile) {
+          if (profile.pubkey === pubkey) {
+            dispatch(setCurrentProfile({ profile }))
+          }
+
+          if (keys.find((key) => profile.pubkey === key)) {
+            dispatch(setProfiles({ profiles: [profile] }))
+          }
+        }
+      })
+    },
+    [dispatch]
+  )
 
   const reloadApps = useCallback(() => {
     dispatch(setApps({ apps: null }))
@@ -184,7 +233,6 @@ export const useFeeds = () => {
       .catch(() => {
         dispatch(setCommunities({ communities: [] }))
       })
-
   }, [dispatch, contactList])
 
   const reloadBestNotes = useCallback(() => {
@@ -203,7 +251,6 @@ export const useFeeds = () => {
       .catch(() => {
         dispatch(setBestNotes({ bestNotes: [] }))
       })
-
   }, [dispatch, currentPubkey])
 
   const reloadBestLongNotes = useCallback(() => {
@@ -222,38 +269,40 @@ export const useFeeds = () => {
       .catch(() => {
         dispatch(setBestLongNotes({ bestLongNotes: [] }))
       })
-
   }, [dispatch, currentPubkey])
 
-  return useMemo(() => ({
-    stop,
-    reload,
-    reloadContactList,
-    reloadProfiles,
-    reloadApps,
-    reloadHighlights,
-    reloadBigZaps,
-    reloadLongPosts,
-    reloadLiveEvents,
-    reloadCommunities,
-    reloadBestNotes,
-    reloadBestLongNotes,
-    reloadProfileLists,
-    reloadBookmarkLists
-  }), [
-    stop,
-    reload,
-    reloadContactList,
-    reloadProfiles,
-    reloadApps,
-    reloadHighlights,
-    reloadBigZaps,
-    reloadLongPosts,
-    reloadLiveEvents,
-    reloadCommunities,
-    reloadBestNotes,
-    reloadBestLongNotes,
-    reloadProfileLists,
-    reloadBookmarkLists
-  ])
+  return useMemo(
+    () => ({
+      stop,
+      reload,
+      reloadContactList,
+      reloadProfiles,
+      reloadApps,
+      reloadHighlights,
+      reloadBigZaps,
+      reloadLongPosts,
+      reloadLiveEvents,
+      reloadCommunities,
+      reloadBestNotes,
+      reloadBestLongNotes,
+      reloadProfileLists,
+      reloadBookmarkLists
+    }),
+    [
+      stop,
+      reload,
+      reloadContactList,
+      reloadProfiles,
+      reloadApps,
+      reloadHighlights,
+      reloadBigZaps,
+      reloadLongPosts,
+      reloadLiveEvents,
+      reloadCommunities,
+      reloadBestNotes,
+      reloadBestLongNotes,
+      reloadProfileLists,
+      reloadBookmarkLists
+    ]
+  )
 }

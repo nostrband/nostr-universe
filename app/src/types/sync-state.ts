@@ -4,4 +4,3 @@ export interface ISyncState {
   newEventCount: number
   reload?: boolean
 }
-

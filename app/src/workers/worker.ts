@@ -13,6 +13,7 @@ import { ISyncState } from '@/types/sync-state'
 import { WorkerAPI } from '@/workers/apis'
 import { setOnAddLocalRelayEvents } from '@/modules/nostr'
 
+// eslint-disable-next-line
 // @ts-ignore
 //declare const self: SharedWorkerGlobalScope;
 
@@ -45,6 +46,8 @@ const api: WorkerAPI = {
   relayGetEventStats() {
     return relay.getEventStats()
   },
+
+  // eslint-disable-next-line
   relayCreateLocalClient(onReply: (msg: any) => void) {
     return relay.createLocalRelayClient(onReply)
   },
@@ -59,11 +62,9 @@ const api: WorkerAPI = {
   }
 }
 
-setOnAddLocalRelayEvents(
-  (events: any) => Promise.resolve(relay.addLocalRelayEvents(events)))
-sync.setAddLocalRelayEvents(
-  (es: NostrEvent[]) => Promise.resolve(relay.addLocalRelayEvents(es)))
-relay.setOnBeforeNewEvent(
-  sync.onBeforeNewEvent)
+// eslint-disable-next-line
+setOnAddLocalRelayEvents((events: any) => Promise.resolve(relay.addLocalRelayEvents(events)))
+sync.setAddLocalRelayEvents((es: NostrEvent[]) => Promise.resolve(relay.addLocalRelayEvents(es)))
+relay.setOnBeforeNewEvent(sync.onBeforeNewEvent)
 
 expose(api)

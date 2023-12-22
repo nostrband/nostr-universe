@@ -1,9 +1,8 @@
-import { useNavigate, useSearchParams, createSearchParams, useLocation } from 'react-router-dom'
-import queryString from 'query-string'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { useCallback } from 'react'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { getEventNip19, getNprofile } from '@/modules/nostr'
+import { useCustomNavigate } from '@/hooks/navigate'
 
 type SearchParamsType = {
   [key: string]: string
@@ -24,39 +23,37 @@ export interface IContextMenuParams {
   append?: boolean
 }
 
-export const useOpenModalSearchParams = () => {
-  const [searchParams] = useSearchParams()
-  const location = useLocation()
-  const navigate = useNavigate()
+const getEnumParam = (modal: MODAL_PARAMS_KEYS) => {
+  return Object.keys(MODAL_PARAMS_KEYS)[Object.values(MODAL_PARAMS_KEYS).indexOf(modal)]
+}
 
-  const getEnumParam = useCallback((modal: MODAL_PARAMS_KEYS) => {
-    return Object.keys(MODAL_PARAMS_KEYS)[Object.values(MODAL_PARAMS_KEYS).indexOf(modal)]
-  }, [])
+export const useOpenModalSearchParams = () => {
+  const navigate = useCustomNavigate()
 
   const handleOpen = useCallback(
     (modal: MODAL_PARAMS_KEYS, extraOptions?: IExtraOptions) => {
       const enumKey = getEnumParam(modal)
-      const getSearchParamsLength = Object.keys(queryString.parse(location.search)).length
 
       let searchParamsData: SearchParamsType = { [enumKey]: modal }
       if (extraOptions?.search) {
         searchParamsData = { ...searchParamsData, ...extraOptions.search }
       }
 
-      const searchString =
-        !extraOptions?.append || !getSearchParamsLength
-          ? createSearchParams(searchParamsData).toString()
-          : `${location.search}&${createSearchParams(searchParamsData).toString()}`
-
       navigate(
         {
-          pathname: location.pathname,
-          search: searchString
+          search: new URLSearchParams(searchParamsData).toString()
         },
-        { replace: extraOptions?.replace }
+        {
+          replace: extraOptions?.replace,
+          // we had to move 'append' login into navigate (and change 
+          // it's interface) bcs otherwise this hook would be dependent
+          // on the current url in redux and would cause rerenders on every 
+          // navigation
+          append: extraOptions?.append
+        }
       )
     },
-    [location, navigate, getEnumParam]
+    [navigate, getEnumParam]
   )
 
   const handleClose = useCallback(
@@ -69,16 +66,6 @@ export const useOpenModalSearchParams = () => {
       }
     },
     [navigate]
-  )
-
-  const getModalOpened = useCallback(
-    (modal: MODAL_PARAMS_KEYS) => {
-      const enumKey = getEnumParam(modal)
-      const modalOpened = searchParams.get(enumKey) === modal
-
-      return modalOpened
-    },
-    [getEnumParam, searchParams]
   )
 
   const handleOpenContextMenu = useCallback(
@@ -109,29 +96,10 @@ export const useOpenModalSearchParams = () => {
     [handleOpen]
   )
 
-  const getModalOrder = useCallback(
-    (modal: MODAL_PARAMS_KEYS) => {
-      const openedModals = []
-
-      for (const key of searchParams.keys()) {
-        openedModals.push(key)
-      }
-
-      const modalsKeysOpened = openedModals.filter((item) => Object.keys(MODAL_PARAMS_KEYS).includes(item.trim()))
-
-      const modalOrder = modalsKeysOpened.findIndex((el) => el === getEnumParam(modal))
-
-      return modalOrder < 0 ? 1300 : modalOrder + 1
-    },
-    [searchParams]
-  )
-
   return {
     handleClose,
     handleOpen,
-    getModalOpened,
     handleOpenContextMenu,
-    handleOpenTab,
-    getModalOrder
+    handleOpenTab
   }
 }

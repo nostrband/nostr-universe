@@ -3,6 +3,7 @@
 import { MetaEvent } from '@/types/meta-event'
 import { nip19 } from '@nostrband/nostr-tools'
 import { isGuest } from './prepare-data'
+import { RootState } from '@/store/store.ts'
 
 export const getShortenText = (str) => {
   const string = String(str)
@@ -59,4 +60,19 @@ export const showToast = (message: string) => {
   } catch {
     console.log('Show toast failed')
   }
+}
+
+export const getSlug = (store: RootState, curSlug: string) => {
+  const url = new URLSearchParams(store.router.url)
+
+  for (const key of url.keys()) {
+    const value = url.get(key) as string
+    url.set(key, value)
+
+    if (value === curSlug) {
+      return true
+    }
+  }
+
+  return false
 }

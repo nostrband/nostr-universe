@@ -48,8 +48,9 @@ export const userService = createApi({
           .filter((a) => !!a.pubkey)
 
         putEventsToCache(trendingNotes)
+        // eslint-disable-next-line
         // @ts-ignore
-        putEventsToCache(trendingNotes.map(n => n.author).filter(m => !!m))
+        putEventsToCache(trendingNotes.map((n) => n.author).filter((m) => !!m))
 
         return trendingNotes
       },

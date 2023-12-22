@@ -2,19 +2,20 @@ import { useOpenModalSearchParams } from '@/hooks/modal'
 import { MODAL_PARAMS_KEYS } from '@/types/modal'
 import { Modal } from '@/modules/Modal/Modal'
 import { ModalFeedContent } from './ModalFeedContent'
-import { useSearchParams } from 'react-router-dom'
 import { IContentWorkSpace } from '@/store/reducers/contentWorkspace'
 import { useAppSelector } from '@/store/hooks/redux'
+import { getSlug } from '@/utils/helpers/general.ts'
+import { useCustomSearchParams } from '@/hooks/navigate'
 
 export const ModalFeed = () => {
-  const { handleClose, getModalOpened, getModalOrder } = useOpenModalSearchParams()
-  const isOpen = getModalOpened(MODAL_PARAMS_KEYS.FEED_MODAL)
-  const order = getModalOrder(MODAL_PARAMS_KEYS.FEED_MODAL)
+  const { handleClose } = useOpenModalSearchParams()
+  const isOpen = useAppSelector((state) => getSlug(state, MODAL_PARAMS_KEYS.FEED_MODAL))
+
   const data = useAppSelector((state) => ({ ...state.contentWorkSpace, ...state.bookmarks }))
 
-  const [searchParams] = useSearchParams()
+  const getSearchParams = useCustomSearchParams()
 
-  const keyData = (searchParams.get('keyData') || '') as keyof IContentWorkSpace
+  const keyData = getSearchParams('keyData') as keyof IContentWorkSpace
 
   const TITLES_FEED: Record<string, string> = {
     highlights: 'Highlights',
@@ -146,7 +147,7 @@ export const ModalFeed = () => {
   const dataContent = getDataContent(keyData)
 
   return (
-    <Modal title={label} open={isOpen} zIndex={order} handleClose={() => handleClose()}>
+    <Modal title={label} open={isOpen} handleClose={() => handleClose()}>
       {isOpen && dataContent && <ModalFeedContent dataContent={dataContent} />}
     </Modal>
   )

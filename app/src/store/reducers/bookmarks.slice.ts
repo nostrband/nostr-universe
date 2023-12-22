@@ -15,7 +15,7 @@ const initialState: IBookmarksContent = {
   bestNotes: null,
   bestLongNotes: null,
   profileLists: null,
-  bookmarkLists: null,
+  bookmarkLists: null
 }
 
 export const bookmarksSlice = createSlice({
@@ -33,8 +33,8 @@ export const bookmarksSlice = createSlice({
     },
     setBookmarkLists: (state, action) => {
       state.bookmarkLists = action.payload.bookmarkLists
-    },
-  },
+    }
+  }
 })
 
 export const { setBestNotes, setBestLongNotes, setProfileLists, setBookmarkLists } = bookmarksSlice.actions

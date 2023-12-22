@@ -9,7 +9,7 @@ const initialState: ISyncStateInfo = {
   syncState: {
     done: 0,
     todo: 0,
-    newEventCount: 0,
+    newEventCount: 0
   }
 }
 

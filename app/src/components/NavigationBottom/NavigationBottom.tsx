@@ -1,38 +1,27 @@
-import { useNavigate, useSearchParams } from 'react-router-dom'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined'
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
-import { useAppDispatch } from '@/store/hooks/redux'
-import { setPage } from '@/store/reducers/positionScrollPage.slice'
 import { StyledBottomNavigationAction } from './styled'
+import { useCustomNavigate, useCustomSearchParams } from '@/hooks/navigate'
 
 export const NavigationBottom = () => {
-  const [searchParams] = useSearchParams()
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
+  const navigate = useCustomNavigate()
 
-  const activeTab = searchParams.get('page') ? searchParams.get('page') : 'apps'
+  const getSearchParams = useCustomSearchParams()
+  const activeValueTab = getSearchParams('page') || 'apps'
 
   return (
     <BottomNavigation
       showLabels
-      value={activeTab}
+      value={activeValueTab}
       onChange={(_, path) => {
-        if (path === 'apps') {
-          navigate({
-            pathname: '/'
-          })
-          dispatch(setPage({ page: '/' }))
-        } else {
-          navigate({
-            pathname: '/',
-            search: `?page=${path}`
-          })
-          dispatch(setPage({ page: path }))
-        }
+        navigate({
+          pathname: '/',
+          search: `?page=${path}`
+        })
       }}
     >
       <StyledBottomNavigationAction label="Apps" icon={<AppsOutlinedIcon />} value="apps" />
