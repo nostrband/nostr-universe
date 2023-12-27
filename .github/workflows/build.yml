@@ -1,0 +1,127 @@
+name: Build Android Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    branches: [main]
+
+jobs:
+  build-android-release:
+    name: Build APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: "zulu"
+          java-version: 17
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Build Android APK
+        run: |
+          # build and bundle web app
+          cd app
+          npm install
+          npm run build
+
+          # prepare cordova app
+          cd ../universe
+          cordova plugin add https://github.com/nostrband/nostr-keystore-cordova-plugin
+          cordova plugin add https://github.com/nostrband/cordova-plugin-inappbrowser
+          cordova plugin add https://github.com/nostrband/nostr-walletstore-cordova-plugin/tree/without-nostr-utils
+          cordova plugin add cordova-clipboard
+          cordova plugin add cordova-plugin-x-socialsharing
+          cordova plugin add cordova-plugin-statusbar
+          cordova plugin add cordova-plugin-native-logs
+          cordova plugin add cordova-plugin-androidx-adapter
+          cordova plugin add https://github.com/nostrband/cordova-plugin-local-notifications
+          cordova platform add android
+
+          # build apk debug version
+          cordova build android
+          ls -lah platforms/android/app/build/outputs/apk/debug/
+          sha256sum platforms/android/app/build/outputs/apk/debug/app-debug.apk
+
+          # build apk release version
+          cordova build android --release --prod -- --packageType=apk
+          ls -lah platforms/android/app/build/outputs/apk/release/
+          sha256sum platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+
+          # build aab bundle release version
+          cordova build android --release --prod
+          ls -lah platforms/android/app/build/outputs/bundle/release
+          sha256sum platforms/android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: true
+
+      - name: Upload APK Universal Asset (unsigned asset)
+        id: upload-release-asset-universal-apk-unsigned
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: universe/platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          asset_name: spring-nostr-browser-${{ github.ref_name }}-unsigned.apk
+          asset_content_type: application/zip
+
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: universe/platforms/android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload APK Universal Asset (signed asset)
+        id: upload-release-asset-universal-apk-signed
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: universe/platforms/android/app/build/outputs/apk/release/app-release-unsigned-signed.apk
+          asset_name: spring-nostr-browser-${{ github.ref_name }}.apk
+          asset_content_type: application/zip
+
+      - name: Sign AAB
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: universe/platforms/android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload AAB Universal Asset (signed asset)
+        id: upload-release-asset-universal-aab-signed
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: universe/platforms/android/app/build/outputs/bundle/release/app-release.aab
+          asset_name: spring-nostr-browser-${{ github.ref_name }}.aab
+          asset_content_type: application/zip
