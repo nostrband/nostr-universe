@@ -40,6 +40,7 @@ export const createPreviewEvent = (event: AugmentedEvent): IContentPreviewCompon
 }
 
 export const getPreviewComponentEvent = (e: IContentPreviewComponent, props?: ItemProps) => {
+
   switch (e.kind) {
     case Kinds.META: {
       const profileEvent = {
