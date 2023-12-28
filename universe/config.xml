@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.nostr.universe" version="0.14.1"
+<widget id="com.nostr.universe" version="0.15.0"
 	xmlns="http://www.w3.org/ns/widgets"
 	xmlns:cdv="http://cordova.apache.org/ns/1.0"
 	xmlns:android="http://schemas.android.com/apk/res/android"
@@ -20,6 +20,7 @@
   <icon src="www/img/icon.png" />
   <preference name="StatusBarOverlaysWebView" value="false" />
   <preference name="AndroidWindowSplashScreenAnimatedIcon" value="www/img/splash_spring.png" />
+  <preference name="AndroidLaunchMode" value="singleTask"/>
   <edit-config 
       xmlns:android="http://schemas.android.com/apk/res/android" 
       file="app/src/main/AndroidManifest.xml" 

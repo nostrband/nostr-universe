@@ -48,6 +48,7 @@ import { setSelectAppHistory } from '@/store/reducers/selectAppHistory.slice'
 import { createPreviewEvent, getPreviewComponentEvent } from '@/utils/helpers/prepare-component'
 import { AugmentedEvent } from '@/types/augmented-event'
 import { useCustomSearchParams } from '@/hooks/navigate'
+import { SkeletonNote } from '@/components/Skeleton/SkeletonNote'
 
 export const ModalContextMenuContent = () => {
   const { currentPubkey } = useAppSelector(selectKeys)
@@ -262,9 +263,13 @@ export const ModalContextMenuContent = () => {
 
   return (
     <Container>
-      {contentPreviewComponent ? (
-        <StyledItemEventPreview>{getPreviewComponentEvent(contentPreviewComponent)}</StyledItemEventPreview>
-      ) : null}
+      <StyledItemEventPreview>
+      {contentPreviewComponent ? 
+        getPreviewComponentEvent(contentPreviewComponent)
+      : (
+        <SkeletonNote />
+      )}
+      </StyledItemEventPreview>
 
       {value && (
         <StyledInput

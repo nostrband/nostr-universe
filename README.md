@@ -23,6 +23,7 @@ cordova plugin add cordova-plugin-statusbar
 cordova plugin add cordova-plugin-native-logs
 cordova plugin add cordova-plugin-androidx-adapter
 cordova plugin add https://github.com/nostrband/cordova-plugin-local-notifications
+cordova plugin add https://github.com/nostrband/cordova-plugin-intent
 cordova platform add android
 cordova build android
 ```
